@@ -1,0 +1,6 @@
+﻿=== SCAN: async def / await in route files ===
+
+[OK] ventas/routes.py: clean
+[OK] contabilidad/routes.py: clean
+[OK] compras/routes.py: clean
+[OK] core/routes.py: clean

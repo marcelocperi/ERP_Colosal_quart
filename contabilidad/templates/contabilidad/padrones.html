@@ -1,0 +1,523 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-light"><i class="fas fa-file-invoice me-2 text-warning"></i>Gestión de Padrones IIBB</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#guiaAfipModal">
+                <i class="fas fa-book me-1"></i> Guía Conexión AFIP
+            </button>
+            <a href="{{ url_for('contabilidad.config_fiscal') }}" class="btn btn-outline-info">
+                <i class="fas fa-cogs me-1"></i> Configuración Fiscal (AFIP)
+            </a>
+            <a href="{{ url_for('contabilidad.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Dashboard de Estado de Padrones -->
+        <div class="col-md-12 mb-4">
+            <div class="card bg-dark border-secondary shadow-lg">
+                <div class="card-header bg-secondary border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white"><i class="fas fa-chart-pie me-2"></i>Estado de los Padrones</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-md-4 border-end border-secondary">
+                            <h3 class="text-warning" id="count_total">{{ stats.total_count if stats else 0 }}</h3>
+                            <p class="text-muted mb-0 uppercase small fw-bold">Registros Totales</p>
+                            <span class="badge bg-{{ 'success' if stats and stats.vigente else 'danger' }} mt-2">
+                                {{ 'SISTEMA CARGADO' if stats and stats.vigente else 'SIN DATOS' }}
+                            </span>
+                        </div>
+                        <div class="col-md-4 border-end border-secondary">
+                            <h3 class="text-info" id="count_cuits">{{ stats.cuit_count if stats else 0 }}</h3>
+                            <p class="text-muted mb-0 uppercase small fw-bold">CUITs con Alícuota</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="text-success" id="count_juris">{{ stats.juris_count if stats else 0 }}</h3>
+                            <p class="text-muted mb-0 uppercase small fw-bold">Jurisdicciones Cubiertas</p>
+                        </div>
+                    </div>
+
+                    <!-- Historial de Importaciones -->
+                    <h6 class="text-white border-bottom border-secondary pb-2 mb-3"><i
+                            class="fas fa-history me-2"></i>Historial de Procesos Recientes</h6>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm table-hover text-center align-middle">
+                            <thead>
+                                <tr class="text-muted small uppercase">
+                                    <th>Fecha</th>
+                                    <th>Jurisdicción</th>
+                                    <th>Tipo</th>
+                                    <th>Archivo</th>
+                                    <th>Registros</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if logs %}
+                                {% for log in logs %}
+                                <tr>
+                                    <td>{{ log.fecha_ejecucion }}</td>
+                                    <td><span class="badge bg-secondary">{{ log.jurisdiccion }}</span></td>
+                                    <td>{{ log.tipo_proceso }}</td>
+                                    <td class="text-start text-truncate" style="max-width: 150px;"
+                                        title="{{ log.archivo_origen }}">{{ log.archivo_origen }}</td>
+                                    <td>{{ log.registros_procesados }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if log.status == 'SUCCESS' else 'danger' }}">
+                                            {{ log.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-muted py-3">No hay registros de procesos recientes.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formularios de Carga -->
+        <div class="col-md-6">
+            <div class="card bg-dark border-warning shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-warning"><i class="fas fa-upload me-2"></i>Importar Padrones ARBA</h5>
+                    <p class="text-muted small">Cargue el archivo TXT comprimido (.zip) o el archivo plano (.txt) de
+                        ARBA.</p>
+                    <form action="{{ url_for('contabilidad.importar_padron', jurisdiccion='ARBA') }}" method="POST"
+                        enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" name="archivo" class="form-control bg-dark text-light border-secondary"
+                                accept=".txt,.zip" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-database me-2"></i> Procesar ARBA
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-dark border-info shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-info"><i class="fas fa-upload me-2"></i>Importar Padrones AGIP</h5>
+                    <p class="text-muted small">Cargue el archivo TXT o ZIP de AGIP (Régimen General).</p>
+                    <form action="{{ url_for('contabilidad.importar_padron', jurisdiccion='AGIP') }}" method="POST"
+                        enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" name="archivo" class="form-control bg-dark text-light border-secondary"
+                                accept=".txt,.zip,.csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-info w-100">
+                            <i class="fas fa-database me-2"></i> Procesar AGIP
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Santa Fe (API) y Córdoba (Rentas) -->
+        <div class="col-md-6">
+            <div class="card bg-dark border-primary shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-upload me-2"></i>Importar Santa Fe (API)</h5>
+                    <p class="text-muted small">Cargue el archivo de Alícuotas API Santa Fe (TXT/ZIP).</p>
+                    <form action="{{ url_for('contabilidad.importar_padron', jurisdiccion='SANTA_FE') }}" method="POST"
+                        enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" name="archivo" class="form-control bg-dark text-light border-secondary"
+                                accept=".txt,.zip" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-database me-2"></i> Procesar Santa Fe
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-dark border-success shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-success"><i class="fas fa-upload me-2"></i>Importar Córdoba (Rentas)</h5>
+                    <p class="text-muted small">Cargue el archivo de Alícuotas Rentas Córdoba (TXT/ZIP).</p>
+                    <form action="{{ url_for('contabilidad.importar_padron', jurisdiccion='CORDOBA') }}" method="POST"
+                        enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" name="archivo" class="form-control bg-dark text-light border-secondary"
+                                accept=".txt,.zip,.csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-database me-2"></i> Procesar Córdoba
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Misiones (ATM) y Entre Ríos (ATER) -->
+        <div class="col-md-6">
+            <div class="card bg-dark border-danger shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-danger"><i class="fas fa-upload me-2"></i>Importar Misiones (ATM)</h5>
+                    <p class="text-muted small">Cargue el archivo de Alícuotas ATM Misiones (TXT/ZIP).</p>
+                    <form action="{{ url_for('contabilidad.importar_padron', jurisdiccion='MISIONES') }}" method="POST"
+                        enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" name="archivo" class="form-control bg-dark text-light border-secondary"
+                                accept=".txt,.zip" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-database me-2"></i> Procesar Misiones
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-dark border-secondary shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="fas fa-upload me-2"></i>Importar Entre Ríos (ATER)
+                    </h5>
+                    <p class="text-muted small">Cargue el archivo de Alícuotas ATER Entre Ríos (TXT/ZIP).</p>
+                    <form action="{{ url_for('contabilidad.importar_padron', jurisdiccion='ENTRE_RIOS') }}"
+                        method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" name="archivo" class="form-control bg-dark text-light border-secondary"
+                                accept=".txt,.zip" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary w-100">
+                            <i class="fas fa-database me-2"></i> Procesar Entre Ríos
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buscador de CUIT -->
+        <div class="col-md-12">
+            <div class="card bg-dark border-secondary shadow-lg">
+                <div class="card-header bg-secondary bg-opacity-10 border-0 py-3">
+                    <h5 class="mb-0 text-white"><i class="fas fa-search me-2"></i>Consultar Alícuota por CUIT</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <input type="text" id="consultar_cuit" class="form-control bg-dark text-light border-secondary"
+                            placeholder="Ingrese CUIT sin guiones...">
+                        <button class="btn btn-primary" onclick="consultarCuit()">
+                            <i class="fas fa-search me-1"></i> Consultar
+                        </button>
+                    </div>
+                    <div id="resultado_consulta" class="mt-4" style="display: none;">
+                        <!-- JS injected results cards go here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function consultarCuit() {
+        const cuitInput = document.getElementById('consultar_cuit');
+        const cuit = cuitInput.value.replace(/\D/g, '');
+        if (!cuit) return;
+
+        const resDiv = document.getElementById('resultado_consulta');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i></div>';
+
+        try {
+            const resp = await fetch(`/contabilidad/api/consultar-padron/${cuit}?sid=${window.SID || ''}`);
+            const data = await resp.json();
+
+            let html = '';
+
+            // 1. Mostrar Datos de AFIP (RUT)
+            if (data.afip) {
+                const a = data.afip;
+                html += `
+                    <div class="card bg-dark border-info mb-4 shadow-lg">
+                        <div class="card-header bg-info bg-opacity-10 border-0">
+                            <h6 class="mb-0 text-white"><i class="fas fa-university me-2 text-info"></i>Datos del Padrón Federal (RUT - AFIP)</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4 class="text-info mb-1">${a.razon_social}</h4>
+                                    <p class="mb-0"><span class="text-muted small">CUIT:</span> <span class="fw-bold">${a.cuit}</span></p>
+                                    <p class="mb-0"><span class="text-muted small">Condición IVA:</span> <span class="badge bg-primary">${a.condicion_iva}</span></p>
+                                </div>
+                                <div class="col-md-6 border-start border-secondary py-1">
+                                    <p class="mb-1 small text-muted"><i class="fas fa-map-marker-alt me-1"></i>Domicilio Fiscal:</p>
+                                    <p class="small text-white">${a.domicilio || 'No informado'}</p>
+                                    <p class="mb-0 small text-muted"><i class="fas fa-user-tag me-1"></i>Tipo Persona: <span class="text-white">${a.tipo_persona}</span> | Estado: <span class="text-success">${a.estado}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (data.afip_error) {
+                html += `<div class="alert alert-warning bg-dark border-warning small"><i class="fas fa-exclamation-triangle me-2"></i>No se pudo conectar con AFIP: ${data.afip_error}</div>`;
+            }
+
+            // 2. Mostrar Alícuotas de Jurisdicciones (Padrones Propios)
+            html += '<h6 class="text-muted mb-3 small uppercase fw-bold tracking-widest"><i class="fas fa-percent me-2"></i>Alícuotas en Padrones Provinciales Cargados</h6>';
+            html += '<div class="row g-3">';
+            const juris = data.jurisdicciones || {};
+            const keys = Object.keys(juris).sort();
+
+            if (keys.length === 0) {
+                html += '<div class="col-12"><div class="alert alert-info border-secondary bg-dark text-info"><i class="fas fa-info-circle me-2"></i>No se encontraron alícuotas específicas para este CUIT en los archivos importados.</div></div>';
+            } else {
+                keys.forEach(jur => {
+                    const info = juris[jur];
+                    const perc = (info.alicuota_percepcion * 100).toFixed(2);
+                    const ret = (info.alicuota_retencion * 100).toFixed(2);
+
+                    html += `
+                        <div class="col-md-3">
+                            <div class="card bg-dark border-secondary h-100 hover-elevate">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-middle border-bottom border-secondary pb-2 mb-2">
+                                        <small class="text-warning fw-bold mb-0">${jur}</small>
+                                        <span class="badge bg-secondary small">${info.grupo_riesgo || '-'}</span>
+                                    </div>
+                                    <div class="row text-center mt-2">
+                                        <div class="col-6 border-end border-secondary border-opacity-25">
+                                            <p class="mb-0 text-muted" style="font-size: 0.65rem;">PERC.</p>
+                                            <span class="${info.alicuota_percepcion > 0 ? 'text-danger' : 'text-success'} fw-bold">${perc}%</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <p class="mb-0 text-muted" style="font-size: 0.65rem;">RET.</p>
+                                            <span class="text-white fw-bold">${ret}%</span>
+                                        </div>
+                                    </div>
+                                    ${info.exencion_iibb ? `<div class="mt-2 text-center small"><span class="badge bg-success">EXENTO: ${info.exencion_iibb}</span></div>` : ''}
+                                    <div class="mt-2 text-center" style="font-size: 0.6rem; color: #666;">
+                                        Vigencia: ${info.desde} / ${info.hasta}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            html += '</div>';
+            resDiv.innerHTML = html;
+
+        } catch (e) {
+            console.error(e);
+            resDiv.innerHTML = '<div class="alert alert-danger">Error al consultar el CUIT.</div>';
+        }
+    }
+</script>
+
+<style>
+    .hover-elevate:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s;
+    }
+</style>
+
+<!-- Modal Guía AFIP -->
+<div class="modal fade" id="guiaAfipModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light border-warning">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-warning"><i class="fas fa-graduation-cap me-2"></i>Guía: Cómo conectar el
+                    Sistema a AFIP</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Tabs para navegar entre AFIP y Padrones -->
+                <ul class="nav nav-tabs bg-dark border-secondary px-3 pt-2" id="guiaTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link active text-warning border-0 bg-transparent active-border-bottom fw-bold"
+                            id="afip-tab" data-bs-toggle="tab" data-bs-target="#afip-content" type="button" role="tab">
+                            <i class="fas fa-university me-1"></i> 1. Conexión AFIP
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-info border-0 bg-transparent fw-bold" id="prov-tab"
+                            data-bs-toggle="tab" data-bs-target="#prov-content" type="button" role="tab">
+                            <i class="fas fa-map-marked-alt me-1"></i> 2. Padrones Provinciales
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content p-3" id="guiaTabsContent">
+                    <!-- CONTENIDO AFIP -->
+                    <div class="tab-pane fade show active" id="afip-content" role="tabpanel">
+                        <div class="accordion accordion-flush" id="accordionGuia">
+                            <!-- Paso 1 -->
+                            <div class="accordion-item bg-dark border-secondary">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button bg-dark text-white collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#paso1">
+                                        <span class="badge bg-warning text-dark me-2">1</span> Generar Pedido y Clave
+                                        Privada
+                                    </button>
+                                </h2>
+                                <div id="paso1" class="accordion-collapse collapse show"
+                                    data-bs-parent="#accordionGuia">
+                                    <div class="accordion-body small text-muted">
+                                        <p>Ejecute este comando en la terminal del ERP:</p>
+                                        <code
+                                            class="d-block p-2 bg-black text-success mb-2">python multiMCP/util_generar_afip.py</code>
+                                        <p>Esto creará dos archivos en la carpeta del proyecto:</p>
+                                        <ul>
+                                            <li><strong class="text-warning">privada.key</strong> (NO COMPARTIR - Llave
+                                                secreta)</li>
+                                            <li><strong class="text-info">pedido.csr</strong> (Súbalo a AFIP)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Paso 2 -->
+                            <div class="accordion-item bg-dark border-secondary">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button bg-dark text-white collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#paso2">
+                                        <span class="badge bg-warning text-dark me-2">2</span> Obtener Certificado en
+                                        Web AFIP
+                                    </button>
+                                </h2>
+                                <div id="paso2" class="accordion-collapse collapse" data-bs-parent="#accordionGuia">
+                                    <div class="accordion-body small text-muted">
+                                        <ol>
+                                            <li>Ingrese a <strong>afip.gob.ar</strong> -> <strong>Administración de
+                                                    Certificados Digitales</strong>.</li>
+                                            <li>Cree un nuevo Alias y suba el archivo <code>pedido.csr</code>.</li>
+                                            <li>Descargue el certificado <code>.crt</code>.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Paso 3 -->
+                            <div class="accordion-item bg-dark border-secondary">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button bg-dark text-white collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#paso3">
+                                        <span class="badge bg-warning text-dark me-2">3</span> Autorizar Webservices
+                                        (RUT / Factura)
+                                    </button>
+                                </h2>
+                                <div id="paso4" class="accordion-collapse collapse" data-bs-parent="#accordionGuia">
+                                    <div class="accordion-body small text-muted">
+                                        <ol>
+                                            <li>Vaya a <strong>Administrador de Relaciones</strong> -> <strong>Nueva
+                                                    Relación</strong> -> <strong>AFIP</strong> ->
+                                                <strong>Webservices</strong>.
+                                            </li>
+                                            <li>Busque: <code>Consulta de Padrón Alcance 13</code> y/o
+                                                <code>Facturación Electrónica</code>.
+                                            </li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Paso 4 -->
+                            <div class="accordion-item bg-dark border-secondary">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button bg-dark text-white collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#paso5">
+                                        <span class="badge bg-warning text-dark me-2">4</span> Carga en el ERP
+                                    </button>
+                                </h2>
+                                <div id="paso5" class="accordion-collapse collapse" data-bs-parent="#accordionGuia">
+                                    <div class="accordion-body small text-muted">
+                                        Pegue el contenido de <code>privada.key</code> y el <code>.crt</code> en la
+                                        pantalla de <strong>Configuración Fiscal</strong> de este sistema.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONTENIDO PROVINCIAS -->
+                    <div class="tab-pane fade text-light" id="prov-content" role="tabpanel">
+                        <div class="alert alert-info py-2 bg-info bg-opacity-10 border-info small">
+                            Estos padrones se procesan localmente subiendo los archivos de cada ente recaudador.
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-sm small">
+                                <thead>
+                                    <tr class="text-muted border-bottom border-secondary">
+                                        <th>Jurisdicción</th>
+                                        <th>Método / Formato</th>
+                                        <th>Datos Específicos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-bottom border-secondary border-opacity-25">
+                                        <td><span class="badge bg-primary">CABA (AGIP)</span></td>
+                                        <td>TXT (Posiciones fijas)</td>
+                                        <td>Alícuotas de Percepción y Retención personalizadas.</td>
+                                    </tr>
+                                    <tr class="border-bottom border-secondary border-opacity-25">
+                                        <td><span class="badge bg-success">Bs. As. (ARBA)</span></td>
+                                        <td>TXT en ZIP (Masivo)</td>
+                                        <td>Cálculo de alícuota sobre CUITs inscriptos en la provincia.</td>
+                                    </tr>
+                                    <tr class="border-bottom border-secondary border-opacity-25">
+                                        <td><span class="badge bg-warning text-dark">Convenio Multi.</span></td>
+                                        <td>AFIP API (RUT)</td>
+                                        <td>Detección automática de jurisdicciones donde tributa el CUIT.</td>
+                                    </tr>
+                                    <tr class="border-bottom border-secondary border-opacity-25">
+                                        <td><span class="badge bg-info text-dark">Santa Fe (API)</span></td>
+                                        <td>TXT / CSV (Delimitado)</td>
+                                        <td>Padrón de Sujetos Exentos y Alícuotas de Retención/Percepción.</td>
+                                    </tr>
+                                    <tr class="border-bottom border-secondary border-opacity-25">
+                                        <td><span class="badge bg-danger">Córdoba (DGR)</span></td>
+                                        <td>CSV (Punto y Coma)</td>
+                                        <td>Base de datos de contribuyentes locales y alícuotas según riesgo.</td>
+                                    </tr>
+                                    <tr class="border-bottom border-secondary border-opacity-25">
+                                        <td><span class="badge" style="background-color: #f39c12;">Misiones (ATM)</span>
+                                        </td>
+                                        <td>Múltiples TXT (Regímenes)</td>
+                                        <td>Incluye exclusiones temporales y alícuotas incrementales.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-secondary">Otras (Misc)</span></td>
+                                        <td>Formato Genérico</td>
+                                        <td>Soporta mapeo de columnas para Tucumán, Salta y Mendoza.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-2 bg-secondary bg-opacity-10 p-2 rounded small border border-secondary">
+                            <h6 class="text-info fs-7 fw-bold uppercase mb-1">Instructivo de Procesamiento:</h6>
+                            <p class="mb-0 text-muted">1. Descargue el padrón desde la web de rentas
+                                correspondiente.<br>2. Use el botón <strong>"Importar Padrón"</strong> en esta
+                                página.<br>3. El ERP lee el archivo línea por línea y actualiza masivamente las tablas
+                                impositivas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

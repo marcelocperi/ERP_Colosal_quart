@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    :root {
+        --purchase-primary: #6366f1;
+        --purchase-success: #10b981;
+        --purchase-warning: #f59e0b;
+        --purchase-danger: #ef4444;
+        --glass-card: rgba(30, 41, 59, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.08);
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+        animation: fadeInDown 0.6s ease-out;
+    }
+
+    .dashboard-title {
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .kpi-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .kpi-card {
+        background: var(--glass-card);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 60%);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .kpi-card:hover::before {
+        opacity: 1;
+    }
+
+    .kpi-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+        margin-bottom: 0.25rem;
+    }
+
+    .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .kpi-footer {
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .premium-panel {
+        background: var(--glass-card);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .panel-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--glass-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .panel-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .premium-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .premium-table th {
+        padding: 1rem 1.5rem;
+        background: rgba(15, 23, 42, 0.3);
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .premium-table td {
+        padding: 1rem 1.5rem;
+        font-size: 0.85rem;
+        color: #cbd5e1;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .premium-table tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+        color: white;
+    }
+
+    .badge-premium {
+        padding: 0.3rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* KPI Specific Styles */
+    .kpi-enviadas .kpi-icon-wrapper {
+        color: var(--purchase-primary);
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    .kpi-recibidas .kpi-icon-wrapper {
+        color: var(--purchase-success);
+        background: rgba(16, 185, 129, 0.1);
+    }
+
+    .kpi-alertas .kpi-icon-wrapper {
+        color: var(--purchase-warning);
+        background: rgba(245, 158, 11, 0.1);
+    }
+
+    .kpi-valor .kpi-icon-wrapper {
+        color: var(--purchase-danger);
+        background: rgba(239, 68, 68, 0.1);
+    }
+</style>
+
+<div class="dashboard-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="dashboard-title">
+            <i class="fas fa-shopping-bag"></i> Control de Compras
+        </h1>
+        <p class="text-muted small mb-0">Gestión estratégica de abastecimiento y proveedores</p>
+    </div>
+    <div class="btn-group">
+        <a href="{{ url_for('compras.proveedores') }}" class="btn btn-secondary btn-sm" style="border-radius: 10px;">
+            <i class="fas fa-truck-fast me-2"></i> Directorio Proveedores
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-container">
+    <a href="{{ url_for('compras.cotizaciones') }}" class="kpi-card kpi-enviadas">
+        <div class="kpi-icon-wrapper"><i class="fas fa-paper-plane"></i></div>
+        <div>
+            <div class="kpi-label">Solicitudes de Compra</div>
+            <div class="kpi-value">{{ kpi.enviadas }}</div>
+            <div class="kpi-footer" style="color: var(--purchase-primary);">
+                <i class="fas fa-arrow-right"></i> Ver historial activo
+            </div>
+        </div>
+    </a>
+
+    <a href="{{ url_for('compras.cotizaciones', estado='RESPONDIDA') }}" class="kpi-card kpi-recibidas">
+        <div class="kpi-icon-wrapper"><i class="fas fa-check-double"></i></div>
+        <div>
+            <div class="kpi-label">Precios Recibidos</div>
+            <div class="kpi-value">{{ kpi.recibidas }}</div>
+            <div class="kpi-footer" style="color: var(--purchase-success);">
+                <i class="fas fa-chart-line"></i> {{ kpi.efectividad }}% de respuesta global
+            </div>
+        </div>
+    </a>
+
+    <a href="{{ url_for('compras.alertas_detalle') }}" class="kpi-card kpi-alertas">
+        <div class="kpi-icon-wrapper"><i class="fas fa-triangle-exclamation"></i></div>
+        <div>
+            <div class="kpi-label">Backlog Suministro</div>
+            <div class="kpi-value">{{ kpi.items_no_provistos }}</div>
+            <div class="kpi-footer" style="color: var(--purchase-warning);">
+                <i class="fas fa-clock"></i> Pendiente de despacho
+            </div>
+        </div>
+    </a>
+
+    <div class="kpi-card kpi-valor">
+        <div class="kpi-icon-wrapper"><i class="fas fa-vault"></i></div>
+        <div>
+            <div class="kpi-label">Valor en Riesgo</div>
+            <div class="kpi-value">${{ "{:,.2f}".format(kpi.valor_no_provisto) }}</div>
+            <div class="kpi-footer" style="color: var(--purchase-danger);">
+                <i class="fas fa-shield-halved"></i> Gasto pendiente de cobertura
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="premium-panel">
+            <div class="panel-header">
+                <h2 class="panel-title"><i class="fas fa-clock-rotate-left"></i> Operaciones Recientes</h2>
+                <a href="{{ url_for('compras.cotizaciones') }}"
+                    class="btn btn-link btn-sm text-muted text-decoration-none">Ver todo</a>
+            </div>
+            <div class="table-responsive">
+                <table class="premium-table">
+                    <thead>
+                        <tr>
+                            <th>Identificador</th>
+                            <th>Proveedor</th>
+                            <th>Estado</th>
+                            <th class="text-end">Items</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in cotizaciones %}
+                        <tr onclick="window.location='{{ url_for('compras.cotizacion_detalle', id=c.id) }}';"
+                            style="cursor: pointer;">
+                            <td class="fw-bold text-white">#{{ c.id }} <span class="text-muted fw-normal ms-2">{{
+                                    c.fecha }}</span></td>
+                            <td>{{ c.razon_social }}</td>
+                            <td>
+                                {% if c.estado == 'ENVIADA' %}<span class="badge-premium"
+                                    style="background: rgba(99,102,241,0.15); color: #818cf8;">Enviada</span>
+                                {% elif 'RECIBIDA' in c.estado %}<span class="badge-premium"
+                                    style="background: rgba(16,185,129,0.15); color: #10b981;">Recibida</span>
+                                {% elif c.estado == 'CONFIRMADA' %}<span class="badge-premium"
+                                    style="background: rgba(56,189,248,0.15); color: #38bdf8;">Confirmada</span>
+                                {% else %}<span class="badge-premium"
+                                    style="background: rgba(148,163,184,0.1); color: #94a3b8;">{{ c.estado }}</span>{%
+                                endif %}
+                            </td>
+                            <td class="text-end fw-bold">{{ c.items_cnt }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">No hay actividad reciente</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="premium-panel" style="border-left: 3px solid var(--purchase-warning);">
+            <div class="panel-header" style="background: rgba(245, 158, 11, 0.03);">
+                <h2 class="panel-title" style="color: var(--purchase-warning);"><i class="fas fa-bolt"></i> Alertas
+                    Críticas</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="premium-table">
+                    <thead>
+                        <tr>
+                            <th>Artículo</th>
+                            <th class="text-end">Faltante</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in alertas %}
+                        <tr onclick="window.location='{{ url_for('compras.cotizacion_detalle', id=a.cotizacion_id) }}';"
+                            style="cursor: pointer;">
+                            <td>
+                                <div class="text-white fw-bold">{{ a.codigo }}</div>
+                                <div class="text-muted small">{{ a.articulo }}</div>
+                                <div class="text-warning x-small mt-1"><i class="fas fa-truck-arrow-right"></i> {{
+                                    a.razon_social }}</div>
+                            </td>
+                            <td class="text-end">
+                                <span class="text-danger fw-black" style="font-size: 1.1rem;">{{ a.cantidad }}</span>
+                                <div class="text-muted" style="font-size: 0.6rem;">UNIDADES</div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center py-5 text-muted">Stock bajo control</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

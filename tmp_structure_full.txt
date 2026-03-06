@@ -1,0 +1,18 @@
+--- erp_terceros ---
+id, enterprise_id, codigo, nombre, naturaleza, cuit, tipo_responsable, condicion_iibb, iibb_condicion, observaciones, telefono, email, es_cliente, es_proveedor, activo, created_at, condicion_pago_id, condicion_pago_pendiente_id, estado_aprobacion_pago, id_gerente_aprobador, fecha_aprobacion_pago, condicion_mixta_id, afip_last_check, afip_data, es_convenio_multilateral, archivo_cm05_path, es_proveedor_extranjero, pais_origen, codigo_pais_iso, identificador_fiscal, codigo_swift, moneda_operacion, web, user_id, updated_at, user_id_update
+
+--- fin_medios_pago ---
+id, enterprise_id, nombre, tipo, cuenta_contable_id, recargo_pct, activo, requiere_datos, created_at, updated_at, user_id, user_id_update
+
+--- fin_condiciones_pago ---
+id, enterprise_id, nombre, dias_vencimiento, descuento_pct, recargo_pct, activo, created_at, updated_at, user_id, user_id_update
+
+--- fin_condiciones_pago_mixtas_detalle ---
+enterprise_id, id, mixta_id, condicion_pago_id, porcentaje, descuento_pct, recargo_pct, user_id, created_at, updated_at, user_id_update
+
+--- erp_terceros_condiciones ---
+enterprise_id, tercero_id, condicion_pago_id, fecha_habilitacion, habilitado, user_id, created_at, updated_at, user_id_update
+
+--- fin_condiciones_pago_mixtas ---
+id, enterprise_id, nombre, descripcion, activo, created_at, user_id, updated_at, user_id_update
+

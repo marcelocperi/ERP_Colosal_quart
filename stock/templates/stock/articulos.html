@@ -1,0 +1,2267 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .stock-ok {
+        color: #10b981;
+    }
+
+    .stock-out {
+        color: #ef4444;
+    }
+
+    .stock-warning {
+        color: #f59e0b;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .font-bold-xl {
+        font-weight: 800;
+        font-size: 1.1rem;
+    }
+
+    .price-col {
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .cover-thumb {
+        width: 40px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: zoom-in;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .cover-thumb:hover {
+        transform: scale(4);
+        transform-origin: left center;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        position: relative;
+    }
+
+    .no-cover {
+        width: 40px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 4px;
+        color: #475569;
+        font-size: 1.2rem;
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
+    .filter-toggle {
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        color: var(--primary);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .filter-toggle:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.5);
+    }
+
+    .filter-toggle .icon {
+        transition: transform 0.2s;
+    }
+
+    .filter-toggle.active .icon {
+        transform: rotate(180deg);
+    }
+
+    #advanced-filters {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+        opacity: 0;
+    }
+
+    #advanced-filters.show {
+        max-height: 600px;
+        opacity: 1;
+    }
+
+    /* Expandable row system */
+    .expand-btn {
+        cursor: pointer;
+        padding: 5px;
+        transition: transform 0.3s;
+        color: var(--primary);
+    }
+
+    .expand-btn.active {
+        transform: rotate(90deg);
+    }
+
+    .details-row {
+        background: rgba(15, 23, 42, 0.4);
+        display: none;
+    }
+
+    .details-row.show {
+        display: table-row;
+        animation: fadeIn 0.3s forwards;
+    }
+
+    .details-container {
+        padding: 1.5rem;
+        border-left: 4px solid var(--primary);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .detail-section h4 {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 0.5rem;
+    }
+
+    .inv-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+    }
+
+    .cmd-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .btn-cmd {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: white;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: 0.2s;
+        width: 100%;
+        text-align: left;
+    }
+
+    .btn-cmd:hover {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: var(--primary);
+    }
+
+    .btn-cmd i {
+        width: 18px;
+    }
+
+    .btn-translate-info {
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        color: var(--primary);
+        font-size: 0.65rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: 0.3s;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .btn-translate-info:hover {
+        background: var(--primary);
+        color: white;
+    }
+</style>
+
+<div style="margin-bottom: 2rem;">
+    <!-- Header -->
+    <div style="margin-bottom: 1.5rem;">
+        <h1 class="page-title"><i class="fas fa-barcode"></i> Maestro de Artículos</h1>
+        <p class="text-muted">Gestión centralizada de productos y libros para el sistema ERP</p>
+    </div>
+
+    <!-- Toolbar de acciones -->
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center;">
+        <button class="btn-action" style="background: #10b981; color: white;" onclick="openAddArticuloModal()">
+            <i class="fas fa-plus-circle"></i> Agregar Artículo
+        </button>
+
+        <!-- ENRIQUECIMIENTO OCULTO TEMPORALMENTE
+        <form action="{{ url_for('stock.enrich_bulk') }}" method="POST" style="display: inline-block;"
+            data-no-spinner="true"
+            onsubmit="return confirm('¿Desea iniciar el enriquecimiento de los artículos pendientes?')">
+            <button type="submit" class="btn-action"
+                style="background: rgba(99, 102, 241, 0.1); color: var(--primary); display: flex; flex-direction: column; align-items: center; justify-content: center; height: auto; border: none;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Enriquecer Pendientes</span>
+                    <span id="pending-counter"
+                        style="font-size: 0.7rem; opacity: 0.8; margin-left: 0.2rem; display: none;"></span>
+                </div>
+                <div id="status-normal" style="font-size: 0.6rem; margin-top: 0.2rem; display: none;">Inactivo</div>
+            </button>
+        </form>
+
+        <div
+            style="display: flex; align-items: center; gap: 0.5rem; background: rgba(30, 41, 59, 0.5); padding: 0.4rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+            <label style="font-size: 0.75rem; color: #94a3b8; margin: 0; white-space: nowrap;">Estrategia:</label>
+            <select name="strategy" id="enrich-strategy" form="enrich-deep-form"
+                style="background: transparent; border: none; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; outline: none;">
+                <option value="conservative" title="Omite libros que ya tienen portada y descripción. El más rápido.">A:
+                    Conservadora</option>
+                <option value="smart" selected
+                    title="Procesa si falta CUALQUIER dato (portada, sinopsis, páginas o temas). Recomendado.">C:
+                    Inteligente</option>
+                <option value="exhaustive"
+                    title="Reconsidera absolutamente TODOS los libros del catálogo sin excepciones.">B: Exhaustiva
+                </option>
+            </select>
+            <div style="color: var(--primary); font-size: 0.8rem;"
+                title="Pase el mouse sobre las opciones para ver el detalle de cada estrategia.">
+                <i class="fas fa-info-circle"></i>
+            </div>
+        </div>
+
+        <form id="enrich-deep-form" action="{{ url_for('stock.enrich_bulk', deep=1) }}" method="POST"
+            style="display: inline-block;" data-no-spinner="true"
+            onsubmit="return confirm('¿Desea iniciar el Escaneo con la estrategia seleccionada?')">
+            <button type="submit" class="btn-action"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; flex-direction: row; align-items: center; gap: 1rem; height: auto; padding: 0.75rem 1.25rem; border: none;">
+
+                <!-- Mini Gráfico de Torta (SVG) -->
+        <div id="progress-container"
+            style="position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="40" height="40" viewBox="0 0 40 40" style="transform: rotate(-90deg);">
+                <!-- Fondo del círculo -->
+                <circle cx="20" cy="20" r="16" fill="transparent" stroke="rgba(255,255,255,0.2)" stroke-width="4" />
+                <!-- Progreso -->
+                <circle id="progress-circle" cx="20" cy="20" r="16" fill="transparent" stroke="white" stroke-width="4"
+                    stroke-dasharray="100.5" stroke-dashoffset="100.5" stroke-linecap="round"
+                    style="transition: stroke-dashoffset 0.5s ease;" />
+            </svg>
+            <span id="progress-percent"
+                style="position: absolute; font-size: 0.65rem; font-weight: bold; width: 100%; text-align: center;">0%</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-satellite-dish"></i>
+                <span style="font-weight: 600;">Escaneo Profundo</span>
+                <span id="deep-scan-counter" style="font-size: 0.75rem; opacity: 0.9; font-weight: bold;"></span>
+            </div>
+            <div id="status-deep"
+                style="font-size: 0.65rem; margin-top: 0.1rem; font-style: italic; opacity: 0.9; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                Inactivo</div>
+        </div>
+        </button>
+        </form>
+        -->
+
+
+        <!-- ENRIQUECIMIENTO REPORTES OCULTOS
+        <a href="{{ url_for('stock.enrich_last_report') }}" class="btn-action"
+            style="background: #22c55e; color: white; display: flex; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.8rem 1.2rem; border-radius: 12px; font-weight: 500; font-size: 0.9rem;"
+            title="Descargar el último reporte de enriquecimiento generado.">
+            <i class="fas fa-file-excel"></i>
+            <span>Último Reporte</span>
+        </a>
+
+        <div id="service-efficiency-chart"
+            style="background: rgba(30, 41, 59, 0.5); padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); min-width: 300px; max-width: 400px; display: none;">
+            <div
+                style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-chart-bar"></i>
+                <span>Eficiencia de Servicios</span>
+            </div>
+            <div id="service-bars" style="display: flex; flex-direction: column; gap: 0.4rem;">
+            </div>
+        </div>
+        -->
+
+        <form action="{{ url_for('stock.articulos_upload_csv') }}" method="POST" enctype="multipart/form-data"
+            style="display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px dashed rgba(255,255,255,0.2); margin-left: auto;">
+            <label for="csv-file" style="margin-bottom: 0; cursor: pointer; font-size: 0.8rem; color: #94a3b8;">
+                <i class="fas fa-file-csv"></i> <span>Subir CSV</span>
+            </label>
+            <input type="file" name="file" id="csv-file" style="display: none;" onchange="this.form.submit()">
+        </form>
+    </div>
+
+    <!-- Panel de Estadísticas Detalladas de Enriquecimiento (Visibilidad condicionada a tener ítems o estar activo) -->
+    <div id="enrichment-stats-panel"
+        style="margin-top: 1.5rem; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.25rem; display: none; backdrop-filter: blur(10px);">
+        <h5
+            style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+            <i class="fas fa-chart-pie" style="color: #818cf8;"></i> Cobertura de Enriquecimiento (Total Catálogo)
+        </h5>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem;">
+            <!-- Portadas -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span style="color: #94a3b8;"><i class="fas fa-image" style="width: 15px;"></i> Portadas</span>
+                    <span id="stat-covers-count" style="font-weight: bold; color: #cbd5e1;">0 / 0</span>
+                </div>
+                <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden;">
+                    <div id="stat-covers-bar"
+                        style="width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                    </div>
+                </div>
+                <div id="stat-covers-pct"
+                    style="text-align: right; font-size: 0.65rem; font-weight: bold; color: #f8fafc;">0%</div>
+            </div>
+
+            <!-- Sinopsis -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span style="color: #94a3b8;"><i class="fas fa-align-left" style="width: 15px;"></i> Sinopsis</span>
+                    <span id="stat-desc-count" style="font-weight: bold; color: #cbd5e1;">0 / 0</span>
+                </div>
+                <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden;">
+                    <div id="stat-desc-bar"
+                        style="width: 0%; height: 100%; background: linear-gradient(90deg, #8b5cf6, #a78bfa); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                    </div>
+                </div>
+                <div id="stat-desc-pct"
+                    style="text-align: right; font-size: 0.65rem; font-weight: bold; color: #f8fafc;">0%</div>
+            </div>
+
+            <!-- Temas -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span style="color: #94a3b8;"><i class="fas fa-tags" style="width: 15px;"></i> Temas</span>
+                    <span id="stat-themes-count" style="font-weight: bold; color: #cbd5e1;">0 / 0</span>
+                </div>
+                <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden;">
+                    <div id="stat-themes-bar"
+                        style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #34d399); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                    </div>
+                </div>
+                <div id="stat-themes-pct"
+                    style="text-align: right; font-size: 0.65rem; font-weight: bold; color: #f8fafc;">0%</div>
+            </div>
+
+            <!-- Páginas -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span style="color: #94a3b8;"><i class="fas fa-book-open" style="width: 15px;"></i> Páginas</span>
+                    <span id="stat-pages-count" style="font-weight: bold; color: #cbd5e1;">0 / 0</span>
+                </div>
+                <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden;">
+                    <div id="stat-pages-bar"
+                        style="width: 0%; height: 100%; background: linear-gradient(90deg, #f59e0b, #fbbf24); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                    </div>
+                </div>
+                <div id="stat-pages-pct"
+                    style="text-align: right; font-size: 0.65rem; font-weight: bold; color: #f8fafc;">0%</div>
+            </div>
+
+            <!-- Editorial -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span style="color: #94a3b8;"><i class="fas fa-building" style="width: 15px;"></i> Editorial</span>
+                    <span id="stat-editorials-count" style="font-weight: bold; color: #cbd5e1;">0 / 0</span>
+                </div>
+                <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden;">
+                    <div id="stat-editorials-bar"
+                        style="width: 0%; height: 100%; background: linear-gradient(90deg, #ec4899, #f472b6); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                    </div>
+                </div>
+                <div id="stat-editorials-pct"
+                    style="text-align: right; font-size: 0.65rem; font-weight: bold; color: #f8fafc;">0%</div>
+            </div>
+
+            <!-- Idioma -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span style="color: #94a3b8;"><i class="fas fa-globe" style="width: 15px;"></i> Idioma</span>
+                    <span id="stat-languages-count" style="font-weight: bold; color: #cbd5e1;">0 / 0</span>
+                </div>
+                <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden;">
+                    <div id="stat-languages-bar"
+                        style="width: 0%; height: 100%; background: linear-gradient(90deg, #06b6d4, #22d3ee); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                    </div>
+                </div>
+                <div id="stat-languages-pct"
+                    style="text-align: right; font-size: 0.65rem; font-weight: bold; color: #f8fafc;">0%</div>
+            </div>
+
+            <!-- Ebooks -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span style="color: #94a3b8;"><i class="fas fa-file-pdf" style="width: 15px;"></i> Ebooks</span>
+                    <span id="stat-ebooks-count" style="font-weight: bold; color: #cbd5e1;">0 / 0</span>
+                </div>
+                <div style="height: 8px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden;">
+                    <div id="stat-ebooks-bar"
+                        style="width: 0%; height: 100%; background: linear-gradient(90deg, #8b5cf6, #a78bfa); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);">
+                    </div>
+                </div>
+                <div id="stat-ebooks-pct"
+                    style="text-align: right; font-size: 0.65rem; font-weight: bold; color: #f8fafc;">0%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Panel de búsqueda y filtros -->
+<div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+    <form action="{{ url_for('stock.articulos') }}" method="GET" id="search-form">
+        <input type="hidden" name="sid" value="{{ sid }}">
+        <input type="hidden" id="has-active-filters"
+            value="{{ 'true' if current_filters.autor or current_filters.editorial or current_filters.genero or current_filters.lengua or current_filters.origen or current_filters.con_portada or current_filters.con_detalle or current_filters.con_ebook else 'false' }}">
+
+        <!-- Búsqueda principal -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <input type="text" name="q" placeholder="Buscar por Nombre, ISBN, Autor o Editorial..."
+                value="{{ current_filters.q }}"
+                style="flex: 1; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white; font-size: 0.95rem;">
+            <button type="submit" class="btn-action" style="padding: 0.75rem 1.5rem;">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+            <a href="{{ url_for('stock.articulos') }}" class="btn-secondary"
+                style="display: flex; align-items: center; justify-content: center; padding: 0.75rem 1rem;">
+                <i class="fas fa-times"></i>
+            </a>
+            <button type="button" class="filter-toggle" onclick="toggleFilters()">
+                <i class="fas fa-filter"></i>
+                <span>Filtros Avanzados</span>
+                <i class="fas fa-chevron-down icon"></i>
+            </button>
+        </div>
+
+        <!-- Filtros avanzados (colapsables) -->
+        <div id="advanced-filters">
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 0.5rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 500;">
+                            <i class="fas fa-user-edit"></i> Autor
+                        </label>
+                        <select name="autor"
+                            style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white; font-size: 0.875rem;">
+                            <option value="">Todos los autores</option>
+                            {% for autor in autores %}
+                            <option value="{{ autor }}" {% if current_filters.autor==autor %}selected{% endif %}>{{
+                                autor }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 500;">
+                            <i class="fas fa-building"></i> Editorial
+                        </label>
+                        <select name="editorial"
+                            style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white; font-size: 0.875rem;">
+                            <option value="">Todas las editoriales</option>
+                            {% for editorial in editoriales %}
+                            <option value="{{ editorial }}" {% if current_filters.editorial==editorial %}selected{%
+                                endif %}>{{ editorial }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 500;">
+                            <i class="fas fa-book"></i> Género
+                        </label>
+                        <select name="genero"
+                            style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white; font-size: 0.875rem;">
+                            <option value="">Todos los géneros</option>
+                            {% for genero in generos %}
+                            <option value="{{ genero }}" {% if current_filters.genero==genero %}selected{% endif %}>{{
+                                genero }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 500;">
+                            <i class="fas fa-language"></i> Lengua
+                        </label>
+                        <select name="lengua"
+                            style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white; font-size: 0.875rem;">
+                            <option value="">Todas las lenguas</option>
+                            {% for lengua in lenguas %}
+                            <option value="{{ lengua }}" {% if current_filters.lengua==lengua %}selected{% endif %}>{{
+                                lengua }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; font-weight: 500;">
+                            <i class="fas fa-globe"></i> Origen
+                        </label>
+                        <select name="origen"
+                            style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white; font-size: 0.875rem;">
+                            <option value="">Todos los orígenes</option>
+                            {% for origen in origenes %}
+                            <option value="{{ origen }}" {% if current_filters.origen==origen %}selected{% endif %}>{{
+                                origen }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label
+                            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; cursor: pointer; user-select: none; background: rgba(99,102,241,0.05); border-radius: 6px; border: 1px solid rgba(99,102,241,0.2); transition: all 0.2s;">
+                            <input type="checkbox" name="con_portada" value="1" {% if current_filters.con_portada
+                                %}checked{% endif %}
+                                style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+                            <span style="color: #e2e8f0; font-size: 0.875rem; font-weight: 500;">
+                                <i class="fas fa-image"></i> Solo con portada
+                            </span>
+                        </label>
+
+                        <label
+                            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; cursor: pointer; user-select: none; background: rgba(16,185,129,0.05); border-radius: 6px; border: 1px solid rgba(16,185,129,0.2); transition: all 0.2s;">
+                            <input type="checkbox" name="con_detalle" value="1" {% if current_filters.con_detalle
+                                %}checked{% endif %}
+                                style="width: 18px; height: 18px; cursor: pointer; accent-color: #10b981;">
+                            <span style="color: #e2e8f0; font-size: 0.875rem; font-weight: 500;">
+                                <i class="fas fa-align-left"></i> Con detalle
+                            </span>
+                        </label>
+
+                        <label
+                            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; cursor: pointer; user-select: none; background: rgba(139, 92, 246, 0.05); border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.2); transition: all 0.2s;">
+                            <input type="checkbox" name="con_ebook" value="1" {% if current_filters.con_ebook
+                                %}checked{% endif %}
+                                style="width: 18px; height: 18px; cursor: pointer; accent-color: #8b5cf6;">
+                            <span style="color: #e2e8f0; font-size: 0.875rem; font-weight: 500;">
+                                <i class="fas fa-file-pdf"></i> Con Ebook
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 40px;"></th>
+                <th style="width: 60px;">PORTADA</th>
+                <th>ARTÍCULO / DESCRIPCIÓN</th>
+                <th>ISBN / CÓDIGO</th>
+                <th>GÉNERO</th>
+                <th style="text-align: right;">PRECIO VTA</th>
+                <th style="text-align: right;">COSTO REP.</th>
+                <th style="text-align: right;">STOCK TOTAL</th>
+                <th style="text-align: right;">DISPONIBLES</th>
+                <th style="text-align: center;">ESTADO</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in articulos %}
+            <tr id="row-{{ a.id }}">
+                <td style="text-align: center;">
+                    <i class="fas fa-chevron-right expand-btn" onclick="toggleArticuloDetails('{{ a.id }}')"></i>
+                </td>
+                <td style="padding: 0.5rem;">
+                    {% if a.cover_url and a.cover_url != 'null' %}
+                    <img src="{{ a.cover_url }}" class="cover-thumb" loading="lazy" alt="Portada">
+                    {% else %}
+                    <div class="no-cover"><i class="fas fa-book-open"></i></div>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="font-weight: 700; color: #f8fafc;" title="{{ a.descripcion or '' }}">{{ a.nombre }}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ a.autor }} | {{ a.editorial or 'Sin Editorial'
+                        }}</div>
+                </td>
+                <td><code
+                        style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px;">{{ a.isbn }}</code>
+                </td>
+                <td><span class="badge" style="background: rgba(255,255,255,0.05); color: #94a3b8;">{{ a.genero
+                        }}</span></td>
+                <td class="price-col">${{ "{:,.2f}".format(a.precio_venta or 0) }}</td>
+                <td style="text-align: right; color: #fbbf24; font-weight: 600;">${{ "{:,.2f}".format(a.costo_reposicion
+                    or 0) }}</td>
+                <td
+                    class="text-right font-bold-xl {% if a.stock_total == 0 %}stock-out{% elif a.stock_total <= (a.stock_minimo or 0) %}stock-warning{% else %}stock-ok{% endif %}">
+                    {{ a.stock_total }}
+                </td>
+                <td class="text-right {% if (a.disponibles or 0) > 0 %}stock-ok{% else %}stock-out{% endif %}"
+                    style="font-weight: 700;">
+                    {{ a.disponibles or 0 }}
+                </td>
+                <td class="text-center">
+                    {% if a.activo %}
+                    <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">Activo</span>
+                    {% else %}
+                    <span class="badge" style="background: rgba(239,68,68,0.1); color: #ef4444;">Inactivo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <!-- Fila Detalle Expandible (Comandos y Opciones) -->
+            <tr id="details-{{ a.id }}" class="details-row">
+                <td colspan="9">
+                    <div class="details-container">
+                        <!-- Sección 1: Inventario y Metadatos -->
+                        <div class="detail-section">
+                            <h4><i class="fas fa-layer-group"></i> Detalles e Inventario</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.2rem;">SITUACIÓN
+                                        STOCK
+                                    </p>
+                                    <div class="inv-item">
+                                        <span>Total Físico:</span>
+                                        <span class="font-bold-xl">{{ a.stock_total }}</span>
+                                    </div>
+                                    <div class="inv-item">
+                                        <span>Prestados:</span>
+                                        <span style="color: #60a5fa;">{{ a.prestados or 0 }}</span>
+                                    </div>
+                                    <div class="inv-item" style="border-bottom: none;">
+                                        <span>Disponibles:</span>
+                                        <span class="stock-ok">{{ a.disponibles or 0 }}</span>
+                                    </div>
+                                    <div class="inv-item">
+                                        <span>Costo Reposición:</span>
+                                        <span style="color: #fbbf24; font-weight: 700;">${{
+                                            "{:,.2f}".format(a.costo_reposicion or 0) }}</span>
+                                    </div>
+                                    {% if a.fecha_costo_reposicion %}
+                                    <div class="inv-item">
+                                        <span>Actualizado el:</span>
+                                        <span style="font-size: 0.75rem; color: #94a3b8;">{{ a.fecha_costo_reposicion
+                                            }}</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="inv-item"
+                                        style="border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 0.5rem; padding-top: 0.5rem;">
+                                        <span>Método Costeo:</span>
+                                        <span class="badge"
+                                            style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">{{
+                                            a.metodo_costeo or 'CPP' }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.2rem;">PROPIEDADES
+                                        TÉCNICAS</p>
+                                    <div class="inv-item">
+                                        <span>Origen / Lengua:</span>
+                                        <span style="font-size: 0.8rem;">
+                                            <span class="badge"
+                                                style="background: rgba(99,102,241,0.1); color: var(--primary);">{{
+                                                a.origen or 'N/D' }}</span>
+                                            <span class="badge"
+                                                style="background: rgba(255,255,255,0.05); color: #94a3b8;">{{ (a.lengua
+                                                or 'und') | upper }}</span>
+                                        </span>
+                                    </div>
+                                    <div class="inv-item">
+                                        <span>Páginas:</span>
+                                        <span>{{ a.paginas or 'N/D' }}</span>
+                                    </div>
+                                    <div class="inv-item">
+                                        <span>Origen SKU:</span>
+                                        <span class="badge"
+                                            style="background: rgba(59, 130, 246, 0.1); color: #60a5fa;">
+                                            {{ a.sku_origen or 'PROPIO' }}
+                                        </span>
+                                    </div>
+                                    <div class="inv-item">
+                                        <span>Stock Mínimo:</span>
+                                        <span>{{ a.stock_minimo or 0 }}</span>
+                                    </div>
+                                    <div class="inv-item" style="border-bottom: none;">
+                                        <span>Costo Base:</span>
+                                        <span>${{ "{:,.2f}".format(a.costo or 0) }}</span>
+                                    </div>
+
+                                    {% if a.naturaleza and a.naturaleza != 'PRODUCTO' %}
+                                    <div class="inv-item">
+                                        <span>Tipo:</span>
+                                        <span class="badge"
+                                            style="background: rgba(139, 92, 246, 0.2); color: #a78bfa;">{{ a.naturaleza
+                                            }}</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if a.requiere_serie %}
+                                    <div class="inv-item">
+                                        <span>Trazabilidad:</span>
+                                        <span class="badge"
+                                            style="background: rgba(16, 185, 129, 0.2); color: #34d399;"><i
+                                                class="fas fa-barcode"></i> SERIALIZADO</span>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if a.archivo_local %}
+                                    <div
+                                        style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+                                        <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.4rem;">RECURSO
+                                            DIGITAL</p>
+                                        <a href="{{ url_for('stock.download_ebook', articulo_id=a.id) }}"
+                                            class="btn-action"
+                                            style="background: #3b82f6; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; border-radius: 6px; padding: 0.5rem;">
+                                            <i class="fas fa-file-download"></i> Descargar Ebook
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if a.temas %}
+                            <div style="margin-top: 1rem;">
+                                <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.4rem;">TEMAS / CATEGORÍAS
+                                </p>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                    {% set temas_list =
+                                    a.temas.replace('[','').replace(']','').replace('"','').split(',') %}
+                                    {% for t in temas_list[:8] %}
+                                    {% if t.strip() %}
+                                    <span
+                                        style="font-size: 0.7rem; padding: 0.2rem 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);">
+                                        {{ t.strip() }}
+                                    </span>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if a.descripcion %}
+                            <div
+                                style="margin-top: 1.2rem; padding: 0.8rem; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                                <p
+                                    style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.4rem; display: flex; justify-content: space-between; align-items: center;">
+                                    <span>SINOPSIS / NOTAS</span>
+                                    <button onclick="translateText('desc-{{ a.id }}', this)" class="btn-translate-info">
+                                        <i class="fas fa-language"></i> Traducir
+                                    </button>
+                                </p>
+                                <div id="desc-{{ a.id }}"
+                                    style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5; max-height: 100px; overflow-y: auto;">
+                                    {{ a.descripcion }}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Sección 2: Comandos y Opciones -->
+                        <div class="detail-section">
+                            <h4><i class="fas fa-terminal"></i> Comandos y Opciones</h4>
+                            <div class="cmd-grid">
+                                {% if (a.disponibles or 0) > 0 %}
+                                <button class="btn-cmd" data-id="{{ a.id }}" data-nombre="{{ a.nombre }}"
+                                    onclick="openQuickLoanModal(this.dataset.id, this.dataset.nombre)">
+                                    <i class="fas fa-handshake" style="color: var(--primary);"></i>
+                                    <span>Préstamo Rápido</span>
+                                </button>
+                                {% else %}
+                                <button class="btn-cmd"
+                                    onclick="alert('Función de reserva personalizada en desarrollo')">
+                                    <i class="fas fa-bookmark" style="color: #f59e0b;"></i>
+                                    <span>Reservar</span>
+                                </button>
+                                {% endif %}
+
+                                {% if a.requiere_serie %}
+                                <button class="btn-cmd" onclick="openSeriesModal('{{ a.id }}', '{{ a.nombre }}')">
+                                    <i class="fas fa-barcode" style="color: #34d399;"></i>
+                                    <span>Ver Series</span>
+                                </button>
+                                <button class="btn-cmd" onclick="window.location.href='/stock/seriales/{{ a.id }}'">
+                                    <i class="fas fa-plus-circle" style="color: #34d399;"></i>
+                                    <span>Gestionar Seriales</span>
+                                </button>
+                                {% endif %}
+
+                                <button class="btn-cmd" data-id="{{ a.id }}" data-nombre="{{ a.nombre }}"
+                                    data-autor="{{ a.autor }}" data-isbn="{{ a.isbn }}"
+                                    data-genero="{{ a.genero or '' }}" data-precio="{{ a.precio_venta or 0 }}"
+                                    data-editorial="{{ a.editorial or '' }}"
+                                    data-fecha="{{ a.fecha_publicacion or '' }}"
+                                    data-tipo="{{ a.tipo_articulo_id or 1 }}"
+                                    data-descripcion="{{ a.descripcion or '' }}"
+                                    data-naturaleza="{{ a.naturaleza or 'PRODUCTO' }}"
+                                    data-requiere_serie="{{ '1' if a.requiere_serie else '0' }}"
+                                    data-sku_origen="{{ a.sku_origen or 'PROPIO' }}"
+                                    data-patron_serie="{{ a.patron_serie or '' }}"
+                                    data-genera_serie="{{ '1' if a.genera_serie_automatica else '0' }}"
+                                    data-costo="{{ a.costo or 0 }}"
+                                    data-costo_reposicion="{{ a.costo_reposicion or 0 }}"
+                                    data-cant_min_pedido="{{ a.cant_min_pedido or 1 }}"
+                                    data-metodo_costeo="{{ a.metodo_costeo or 'CPP' }}"
+                                    data-config_servicio='{{ a.config_servicio_json or "{}" }}'
+                                    data-metadata='{{ a.metadata_json or "{}" }}'
+                                    onclick="fillEditArticuloModalFromBtn(this)">
+                                    <i class="fas fa-edit" style="color: #10b981;"></i>
+                                    <span>Editar Artículo</span>
+                                </button>
+
+                                {% if a.naturaleza == 'PRODUCTO' or a.naturaleza == 'LIBRO' %}
+                                <button class="btn-cmd" onclick="openBarcodesModal('{{ a.id }}', '{{ a.nombre }}')">
+                                    <i class="fas fa-barcode" style="color: #fbbf24;"></i>
+                                    <span>Alias / Códigos GTIN</span>
+                                </button>
+
+                                <button class="btn-cmd"
+                                    onclick="window.open('/stock/api/articulos/{{ a.id }}/print_label', '_blank', 'width=400,height=300')">
+                                    <i class="fas fa-print" style="color: #cbd5e1;"></i>
+                                    <span>Etiqueta (Térmica)</span>
+                                </button>
+                                {% endif %}
+
+                                <button class="btn-cmd" data-isbn="{{ a.isbn }}" data-genero="{{ a.genero or '-' }}"
+                                    data-origen="{{ a.origen or 'N/D' }}" data-lengua="{{ a.lengua or 'N/D' }}"
+                                    onclick="openInfoModal(this.dataset.isbn, this.dataset.genero, this.dataset.origen, this.dataset.lengua)">
+                                    <i class="fas fa-info-circle" style="color: #60a5fa;"></i>
+                                    <span>Info Extendida</span>
+                                </button>
+
+                                <button class="btn-cmd" onclick="window.location.href='/stock/historial/{{ a.id }}'">
+                                    <i class="fas fa-history" style="color: #a855f7;"></i>
+                                    <span>Historial Stock</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Paginación -->
+{% if total_pages > 1 %}
+<div
+    style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+    <!-- Info de resultados -->
+    <div style="color: #94a3b8; font-size: 0.875rem;">
+        Mostrando {{ ((page - 1) * per_page) + 1 }} - {{ [page * per_page, total_items] | min }} de {{ total_items }}
+        artículos
+    </div>
+
+    <!-- Controles de paginación -->
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <!-- Botón anterior -->
+        {% if page > 1 %}
+        <a href="{{ url_for('stock.articulos', page=page-1, q=current_filters.q, autor=current_filters.autor, editorial=current_filters.editorial, genero=current_filters.genero, lengua=current_filters.lengua, origen=current_filters.origen, con_portada='1' if current_filters.con_portada else None, con_detalle='1' if current_filters.con_detalle else None) }}"
+            class="btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+            <i class="fas fa-chevron-left"></i> Anterior
+        </a>
+        {% else %}
+        <span class="btn-secondary"
+            style="padding: 0.5rem 0.75rem; font-size: 0.875rem; opacity: 0.3; cursor: not-allowed;">
+            <i class="fas fa-chevron-left"></i> Anterior
+        </span>
+        {% endif %}
+
+        <!-- Números de página -->
+        <div style="display: flex; gap: 0.25rem;">
+            {% set start_page = [1, page - 2] | max %}
+            {% set end_page = [total_pages, page + 2] | min %}
+
+            {% if start_page > 1 %}
+            <a href="{{ url_for('stock.articulos', page=1, q=current_filters.q, autor=current_filters.autor, editorial=current_filters.editorial, genero=current_filters.genero, lengua=current_filters.lengua, origen=current_filters.origen, con_portada='1' if current_filters.con_portada else None, con_detalle='1' if current_filters.con_detalle else None) }}"
+                style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px; color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: all 0.2s;">
+                1
+            </a>
+            {% if start_page > 2 %}
+            <span style="padding: 0.5rem 0.5rem; color: #64748b;">...</span>
+            {% endif %}
+            {% endif %}
+
+            {% for p in range(start_page, end_page + 1) %}
+            {% if p == page %}
+            <span
+                style="padding: 0.5rem 0.75rem; background: var(--primary); border-radius: 6px; color: white; font-weight: 600; font-size: 0.875rem;">
+                {{ p }}
+            </span>
+            {% else %}
+            <a href="{{ url_for('stock.articulos', page=p, q=current_filters.q, autor=current_filters.autor, editorial=current_filters.editorial, genero=current_filters.genero, lengua=current_filters.lengua, origen=current_filters.origen, con_portada='1' if current_filters.con_portada else None, con_detalle='1' if current_filters.con_detalle else None) }}"
+                style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px; color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: all 0.2s;">
+                {{ p }}
+            </a>
+            {% endif %}
+            {% endfor %}
+
+            {% if end_page < total_pages %} {% if end_page < total_pages - 1 %} <span
+                style="padding: 0.5rem 0.5rem; color: #64748b;">...</span>
+                {% endif %}
+                <a href="{{ url_for('stock.articulos', page=total_pages, q=current_filters.q, autor=current_filters.autor, editorial=current_filters.editorial, genero=current_filters.genero, lengua=current_filters.lengua, origen=current_filters.origen, con_portada='1' if current_filters.con_portada else None, con_detalle='1' if current_filters.con_detalle else None) }}"
+                    style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px; color: #94a3b8; text-decoration: none; font-size: 0.875rem; transition: all 0.2s;">
+                    {{ total_pages }}
+                </a>
+                {% endif %}
+        </div>
+
+        <!-- Botón siguiente -->
+        {% if page < total_pages %} <a
+            href="{{ url_for('stock.articulos', page=page+1, q=current_filters.q, autor=current_filters.autor, editorial=current_filters.editorial, genero=current_filters.genero, lengua=current_filters.lengua, origen=current_filters.origen, con_portada='1' if current_filters.con_portada else None, con_detalle='1' if current_filters.con_detalle else None) }}"
+            class="btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+            Siguiente <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="btn-secondary"
+                style="padding: 0.5rem 0.75rem; font-size: 0.875rem; opacity: 0.3; cursor: not-allowed;">
+                Siguiente <i class="fas fa-chevron-right"></i>
+            </span>
+            {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal para agregar/editar artículo -->
+<div id="modal-articulo" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; z-index: 5001; border: 1px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 2rem;">
+    <h3 id="modal-title">Agregar Nuevo Artículo</h3>
+
+    <!-- Selector de Plantilla (Visible al agregar nuevo) -->
+    <div id="template-selector" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+        <button type="button" onclick="selectTemplate('LIBRO')" class="btn"
+            style="padding: 2rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: white; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; transition: all 0.2s;">
+            <i class="fas fa-book fa-2x" style="color: #60a5fa;"></i>
+            <span style="font-weight: bold;">Libro / Publicación</span>
+            <span style="font-size: 0.8rem; color: #94a3b8;">Con ISBN, Autor y Editorial</span>
+        </button>
+
+        <button type="button" onclick="selectTemplate('PRODUCTO')" class="btn"
+            style="padding: 2rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: white; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; transition: all 0.2s;">
+            <i class="fas fa-box fa-2x" style="color: #34d399;"></i>
+            <span style="font-weight: bold;">Producto / Equipo</span>
+            <span style="font-size: 0.8rem; color: #94a3b8;">Control de Stock, Modelo, Marca</span>
+        </button>
+
+        <button type="button" onclick="selectTemplate('SERVICIO')" class="btn"
+            style="padding: 2rem; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: white; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; transition: all 0.2s;">
+            <i class="fas fa-concierge-bell fa-2x" style="color: #a78bfa;"></i>
+            <span style="font-weight: bold;">Servicio</span>
+            <span style="font-size: 0.8rem; color: #94a3b8;">Intangible, Mano de Obra</span>
+        </button>
+
+        <button type="button" onclick="selectTemplate('ABONO')" class="btn"
+            style="padding: 2rem; background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: white; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; transition: all 0.2s;">
+            <i class="fas fa-calendar-check fa-2x" style="color: #fb7185;"></i>
+            <span style="font-weight: bold;">Suscripción / Abono</span>
+            <span style="font-size: 0.8rem; color: #94a3b8;">Facturación Recurrente</span>
+        </button>
+
+        <!-- Botón Cancelar -->
+        <div style="grid-column: span 2; text-align: center; margin-top: 0.5rem;">
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.05); color: #cbd5e1; width: 100%;"
+                onclick="toggleModal('modal-articulo')">
+                <i class="fas fa-times"></i> Cancelar / Cerrar
+            </button>
+        </div>
+    </div>
+
+    <form action="{{ url_for('stock.articulo_guardar') }}" method="POST" id="form-articulo" style="display:none;">
+        <div style="margin-bottom: 1rem;">
+            <button type="button" onclick="resetTemplateSelection()" class="btn"
+                style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background: rgba(255,255,255,0.05); color: #94a3b8;">
+                <i class="fas fa-arrow-left"></i> Cambiar Tipo
+            </button>
+        </div>
+        <input type="hidden" name="id" id="art-id">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label>Título / Nombre</label>
+                <input type="text" name="nombre" id="art-nombre" required>
+            </div>
+            <!-- Campos dinámicos vía Schema sustituyen a los hardcoded -->
+            <div class="form-group">
+                <label>Naturaleza</label>
+                <select name="naturaleza" id="art-naturaleza" onchange="toggleArticuloTypeFields()"
+                    style="width: 100%; padding: 0.8rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px;">
+                    <option value="PRODUCTO">Producto Físico</option>
+                    <option value="SERVICIO">Servicio / Intangible</option>
+                    <option value="ABONO">Abono Recurrente</option>
+                    <option value="COMBO">Combo / Kit</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tipo de Artículo</label>
+                <select name="tipo_articulo_id" id="art-tipo" onchange="toggleArticuloTypeFields()"
+                    style="width: 100%; padding: 0.8rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px;">
+                    {% for t in tipos %}
+                    <option value="{{ t.id }}">{{ t.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Origen del SKU / Código</label>
+                <select name="sku_origen" id="art-sku-origen"
+                    style="width: 100%; padding: 0.8rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px;">
+                    <option value="PROPIO">PROPIO (Generado por Sistema)</option>
+                    <option value="PROVEEDOR">NATIVO (Del Proveedor / GTIN)</option>
+                </select>
+            </div>
+            <!--
+            <div class="form-group" id="grp-fecha">
+                <label>Fecha Pub. / Lanzamiento</label>
+                <input type="date" name="fecha_publicacion" id="art-fecha">
+            </div>
+            -->
+
+            <!-- Panel de Costos y Precios -->
+            <div
+                style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 0.5rem;">
+                <div class="form-group">
+                    <label>Precio de Venta</label>
+                    <input type="number" step="0.01" name="precio" id="art-precio" placeholder="0.00"
+                        style="background: rgba(15,23,42,0.6);">
+                </div>
+                <div class="form-group">
+                    <label>Costo Base (Lista)</label>
+                    <input type="number" step="0.01" name="costo" id="art-costo" placeholder="0.00"
+                        style="background: rgba(15,23,42,0.6);">
+                </div>
+                <div class="form-group">
+                    <label>Costo Reposición</label>
+                    <input type="number" step="0.01" name="costo_reposicion" id="art-costo-reposicion"
+                        placeholder="0.00" style="background: rgba(15,23,42,0.6);">
+                </div>
+                <div class="form-group">
+                    <label>Punto de Pedido</label>
+                    <input type="number" name="punto_pedido" id="art-punto-pedido" min="0" value="0"
+                        style="background: rgba(15,23,42,0.6); color: #60a5fa;">
+                </div>
+                <div class="form-group">
+                    <label>Stock Mínimo</label>
+                    <input type="number" name="stock_minimo" id="art-stock-minimo" min="0" value="0"
+                        style="background: rgba(15,23,42,0.6); color: #f87171;">
+                </div>
+                <div class="form-group">
+                    <label>Cant. Mínima Pedido</label>
+                    <input type="number" name="cant_min_pedido" id="art-cant-min-pedido" min="1" value="1" required
+                        style="background: rgba(15,23,42,0.6); color: #fbbf24; font-weight: bold;">
+                </div>
+                <div class="form-group" style="grid-column: span 3;">
+                    <label>Método de Costeo</label>
+                    <select name="metodo_costeo" id="art-metodo-costeo"
+                        style="width: 100%; padding: 0.8rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px;">
+                        <option value="CPP">CPP (Costo Promedio Ponderado)</option>
+                        <option value="FIFO (PEPS)">FIFO (PEPS - Primero en Entrar, Primero en Salir)</option>
+                        <option value="LIFO (UEPS)">LIFO (UEPS - Último en Entrar, Primero en Salir)</option>
+                        <option value="NIFO">NIFO (Next In, First Out)</option>
+                        <option value="PRECIO MERCADO">Precio de Mercado</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Panel de Configuración de Servicio -->
+            <div id="service-config-panel"
+                style="display:none; grid-column: span 2; background: rgba(139, 92, 246, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3); margin: 0.5rem 0;">
+                <h5 style="margin-top: 0; font-size: 0.9rem; color: #a78bfa; margin-bottom: 1rem;"><i
+                        class="fas fa-cogs"></i> Configuración de Servicio</h5>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Recurrencia</label>
+                        <select name="service_recurrencia" id="srv-recurrencia"
+                            style="background: rgba(15,23,42,0.6); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; width: 100%;">
+                            <option value="EVENTUAL">Eventual / Pago Único</option>
+                            <option value="MENSUAL">Mensual</option>
+                            <option value="ANUAL">Anual</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Duración (Días)</label>
+                        <input type="number" name="service_duracion" id="srv-duracion" placeholder="0 = Indefinida"
+                            style="background: rgba(15,23,42,0.6);">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center;">
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" name="es_recurrente" id="srv-es-recurrente"
+                                style="width: 18px; height: 18px;">
+                            <span>Facturación Autom.</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkbox Serie -->
+            <div class="form-group"
+                style="grid-column: span 2; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="requiere_serie" id="art-requiere-serie" onchange="toggleSerieFields()"
+                        style="width: 18px; height: 18px; accent-color: var(--primary);">
+                    <span style="color: #cbd5e1; font-weight: 500;"><i class="fas fa-barcode"></i> Requiere Trazabilidad
+                        por Número de Serie</span>
+                </label>
+            </div>
+
+            <!-- Panel Serie -->
+            <div id="serie-config-panel"
+                style="display:none; grid-column: span 2; background: rgba(16, 185, 129, 0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 1rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Patrón de Serie (Opcional)</label>
+                        <input type="text" name="patron_serie" id="art-patron-serie" placeholder="Ej: SN-####-2024"
+                            style="background: rgba(15,23,42,0.6);">
+                    </div>
+                    <div class="form-group">
+                        <label>Generación Automática</label>
+                        <select name="genera_serie_automatica" id="art-genera-serie"
+                            style="background: rgba(15,23,42,0.6); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; width: 100%;">
+                            <option value="0">Manual (Escanear)</option>
+                            <option value="1">Automática (Secuencial)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Descripción / Sinopsis</label>
+                <textarea name="descripcion" id="art-descripcion" rows="4"
+                    style="width: 100%; padding: 0.8rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px;"></textarea>
+            </div>
+
+            <!-- Campos Personalizados -->
+            <div
+                style="grid-column: span 2; margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                <label style="color: #cbd5e1; font-weight: 500; margin-bottom: 0.5rem; display: block;">
+                    <i class="fas fa-list-ul"></i> Atributos Adicionales / Metadatos
+                </label>
+                <input type="hidden" name="custom_fields_json" id="custom-fields-json">
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 0.5rem;">
+                    <thead>
+                        <tr
+                            style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-size: 0.8rem;">
+                            <th style="padding: 0.5rem;">Atributo (Clave)</th>
+                            <th style="padding: 0.5rem;">Valor</th>
+                            <th style="padding: 0.5rem; width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="custom-fields-body">
+                        <!-- JS invocado aquí -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td style="padding: 0.5rem;">
+                                <input type="text" id="new-field-key" placeholder="Ej: Color, Peso..."
+                                    style="width: 100%; background: rgba(15,23,42,0.6); padding: 0.4rem; border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 4px;">
+                            </td>
+                            <td style="padding: 0.5rem;">
+                                <input type="text" id="new-field-val" placeholder="Valor"
+                                    style="width: 100%; background: rgba(15,23,42,0.6); padding: 0.4rem; border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 4px;">
+                            </td>
+                            <td style="padding: 0.5rem;">
+                                <button type="button" onclick="addCustomField()" class="btn"
+                                    style="padding: 0.4rem; background: var(--primary); color: white;">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Seguridad Industrial (GHS/SGA) - Fase 5.1 -->
+            {% if 'industrial_safety' in permissions or 'all' in permissions %}
+            <div
+                style="grid-column: span 2; margin-top: 1.5rem; border: 1px solid rgba(245, 158, 11, 0.3); padding: 1.2rem; border-radius: 12px; background: rgba(245, 158, 11, 0.05);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <input type="checkbox" id="has-safety-data" name="has_safety_data"
+                            style="width: 18px; height: 18px; cursor: pointer;"
+                            onchange="toggleSafetyPanel(this.checked)">
+                        <label for="has-safety-data"
+                            style="color: #fbbf24; font-weight: bold; cursor: pointer; font-size: 1rem;">
+                            <i class="fas fa-biohazard"></i> Seguridad Industrial y SGA (GHS)
+                        </label>
+                    </div>
+                    <span class="badge"
+                        style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">Legal
+                        Compliance</span>
+                </div>
+
+                <div id="safety-panel" style="display: none; grid-template-columns: 1fr 1fr; gap: 1.2rem;">
+                    <div style="grid-column: span 2;">
+                        <label
+                            style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.4rem;">Pictogramas
+                            de Peligro (GHS)</label>
+                        <div
+                            style="display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            {% set pictos_list = [
+                            ('GHS01', 'Explosivo'), ('GHS02', 'Inflamable'), ('GHS03', 'Comburente'),
+                            ('GHS04', 'Gas'), ('GHS05', 'Corrosivo'), ('GHS06', 'Tóxico'),
+                            ('GHS07', 'Irritante'), ('GHS08', 'Salud'), ('GHS09', 'Ambiente')
+                            ] %}
+                            {% for code, name in pictos_list %}
+                            <label
+                                style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; cursor: pointer; width: 65px; transition: all 0.2s;">
+                                <div style="position: relative;">
+                                    <img src="/static/img/ghs/{{ code }}.png"
+                                        onerror="this.src='https://placehold.co/100x100?text={{code}}'"
+                                        style="width: 48px; height: 48px; object-fit: contain; filter: grayscale(100%); opacity: 0.2; transition: all 0.3s;"
+                                        id="img-{{ code }}" alt="{{ name }}">
+                                    <input type="checkbox" name="ghs_pictos" value="{{ code }}" class="ghs-checkbox"
+                                        style="position: absolute; top:0; left:0; opacity:0; width: 100%; height: 100%; cursor: pointer;"
+                                        onchange="document.getElementById('img-{{ code }}').style.filter = this.checked ? 'grayscale(0%)' : 'grayscale(100%)'; document.getElementById('img-{{ code }}').style.opacity = this.checked ? '1' : '0.2';">
+                                </div>
+                                <span style="font-size: 0.65rem; color: #64748b; font-weight: bold;">{{ code }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="small text-muted" style="display: block; margin-bottom: 0.3rem;">Nombre Técnico /
+                            Composición</label>
+                        <input type="text" name="sec_nombre_tecnico" id="sec-nombre-tecnico" class="form-control"
+                            style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.1);"
+                            placeholder="Ej: Hipoclorito de Sodio 5%">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div>
+                            <label class="small text-muted" style="display: block; margin-bottom: 0.3rem;">Número
+                                UN</label>
+                            <input type="text" name="sec_un" id="sec-un" class="form-control"
+                                style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.1);"
+                                placeholder="UN 1791">
+                        </div>
+                        <div>
+                            <label class="small text-muted" style="display: block; margin-bottom: 0.3rem;">Clase de
+                                Riesgo</label>
+                            <input type="text" name="sec_clase" id="sec-clase" class="form-control"
+                                style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.1);"
+                                placeholder="8">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="small text-muted" style="display: block; margin-bottom: 0.3rem;">Frases H
+                            (Indicaciones de Peligro)</label>
+                        <textarea name="sec_frases_h" id="sec-frases-h" rows="2" class="form-control"
+                            style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.1);"
+                            placeholder="H290, H314..."></textarea>
+                    </div>
+                    <div>
+                        <label class="small text-muted" style="display: block; margin-bottom: 0.3rem;">Frases P
+                            (Consejos de Prudencia)</label>
+                        <textarea name="sec_frases_p" id="sec-frases-p" rows="2" class="form-control"
+                            style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.1);"
+                            placeholder="P234, P260, P280..."></textarea>
+                    </div>
+
+                    <div style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem;">
+                        <div>
+                            <label class="small text-muted" style="display: block; margin-bottom: 0.3rem;">Forma de
+                                Estibaje / Apilado</label>
+                            <input type="text" name="sec_estibaje" id="sec-estibaje" class="form-control"
+                                style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.1);"
+                                placeholder="Máximo 4 niveles, vertical">
+                        </div>
+                        <div>
+                            <label class="small text-muted"
+                                style="display: block; margin-bottom: 0.3rem;">Incompatibilidades químicas</label>
+                            <input type="text" name="sec_incompat" id="sec-incompat" class="form-control"
+                                style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.1);"
+                                placeholder="Ácidos, metales, calor">
+                        </div>
+                    </div>
+
+                    <div style="grid-column: span 2;">
+                        <label class="small text-muted" style="display: block; margin-bottom: 0.3rem;">Instrucciones
+                            Especiales de Manejo</label>
+                        <textarea name="sec_instrucciones" id="sec-instrucciones" rows="2" class="form-control"
+                            style="background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.1);"></textarea>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">Guardar Artículo</button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                onclick="toggleModal('modal-articulo')">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal para información detallada -->
+<div id="modal-info" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; z-index: 5005; border: 2px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.6); background: var(--bg-card); padding: 1.5rem;">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.8rem;">
+        <h3 style="margin: 0;"><i class="fas fa-info-circle" style="color: var(--primary);"></i> Datos del Artículo</h3>
+        <button class="btn" onclick="toggleModal('modal-info')" style="background:none;"><i
+                class="fas fa-times"></i></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+            <label style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">ISBN / CÓDIGO</label>
+            <div id="info-isbn"
+                style="font-family: monospace; font-size: 1rem; color: var(--primary); font-weight: 700;">-</div>
+        </div>
+        <div>
+            <label style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">GÉNERO</label>
+            <div id="info-genero" style="font-weight: 600;">-</div>
+        </div>
+        <div>
+            <label style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">ORIGEN</label>
+            <div id="info-origen" style="font-weight: 600;">-</div>
+        </div>
+        <div>
+            <label style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">LENGUA /
+                IDIOMA</label>
+            <div id="info-lengua" style="font-weight: 600;">-</div>
+        </div>
+    </div>
+    <div style="margin-top: 1.5rem; text-align: right;">
+        <button class="btn btn-primary" onclick="toggleModal('modal-info')" style="width: 100%;">Cerrar</button>
+    </div>
+</div>
+
+<!-- Modal para Múltiples Códigos de Barra (Fase 1.1) -->
+<div id="modal-barcodes" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto; z-index: 5003; border: 1px solid #fbbf24; box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 2rem;">
+    <h3 style="color: #fbbf24;"><i class="fas fa-barcode mr-2"></i> Alias y Códigos (GTIN/EAN)</h3>
+    <p class="text-muted small mb-4 mt-2">Permite escanear diferentes códigos de proveedores o cajas Master y asociarlos
+        automáticamente a este SKU interno.</p>
+
+    <div class="mb-3">
+        <h5 id="barcode-item-title" class="mb-0 text-white font-weight-bold">-</h5>
+    </div>
+
+    <div class="card bg-dark border-0 p-3 mb-4">
+        <form id="form-add-barcode" onsubmit="event.preventDefault(); submitNewBarcode();">
+            <input type="hidden" id="barcode-articulo-id">
+            <div class="row align-items-end">
+                <div class="col-md-5">
+                    <label class="small text-muted mb-1">Escanear Código</label>
+                    <input type="text" id="new-barcode" class="form-control" autocomplete="off" autofocus required
+                        placeholder="Escanee o digite...">
+                </div>
+                <div class="col-md-3">
+                    <label class="small text-muted mb-1">Tipo</label>
+                    <select id="new-barcode-type" class="form-control">
+                        <option value="GTIN">GTIN</option>
+                        <option value="EAN13">EAN13</option>
+                        <option value="UPC">UPC</option>
+                        <option value="ITF14">ITF-14 (Caja)</option>
+                        <option value="PROVEEDOR">Proveedor</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="small text-muted mb-1">Rinde (UoM)</label>
+                    <input type="number" id="new-barcode-factor" class="form-control" value="1.0" step="0.01"
+                        min="0.01">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-warning w-100" style="color: black; font-weight:bold;"><i
+                            class="fas fa-plus"></i></button>
+                </div>
+            </div>
+            <small class="form-text text-muted mt-2">Si escanea una caja master (ITF-14), indique en "Rinde" cuántas
+                unidades trae dentro.</small>
+        </form>
+    </div>
+
+    <table class="table table-sm table-dark table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Código (Alias)</th>
+                <th>Tipo</th>
+                <th class="text-right">Factor UoM</th>
+                <th class="text-center">Acción</th>
+            </tr>
+        </thead>
+        <tbody id="barcodes-list-body">
+            <!-- Rellenado por JS -->
+            <tr>
+                <td colspan="4" class="text-center text-muted">Cargando códigos...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="text-right mt-4">
+        <button type="button" class="btn btn-secondary" onclick="toggleModal('modal-barcodes')">Cerrar</button>
+    </div>
+</div>
+
+</div>
+
+<script>
+    function toggleFilters() {
+        const filters = document.getElementById('advanced-filters');
+        const toggle = document.querySelector('.filter-toggle');
+        filters.classList.toggle('show');
+        toggle.classList.toggle('active');
+    }
+
+    // Persistir filtros abiertos si hay búsqueda activa
+    document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('has-active-filters').value === 'true') {
+            const filters = document.getElementById('advanced-filters');
+            const toggle = document.querySelector('.filter-toggle');
+            filters.classList.add('show');
+            toggle.classList.add('active');
+        }
+    });
+
+    function openAddArticuloModal() {
+        document.getElementById('modal-title').innerText = "Nuevo Ítem: Seleccione Tipo";
+        document.getElementById('form-articulo').reset();
+        document.getElementById('art-id').value = "";
+        document.getElementById('art-cant-min-pedido').value = "1";
+
+        // Reset custom fields
+        currentCustomFields = {};
+        renderCustomFields();
+
+        // Reset Safety Panel
+        resetSafetyPanel();
+
+        // Mostrar selector, ocultar form
+        document.getElementById('template-selector').style.display = 'grid';
+        document.getElementById('form-articulo').style.display = 'none';
+
+        toggleModal('modal-articulo');
+    }
+
+    function selectTemplate(template) {
+        document.getElementById('template-selector').style.display = 'none';
+        const form = document.getElementById('form-articulo');
+        form.style.display = 'block';
+
+        const natSelect = document.getElementById('art-naturaleza');
+        const tipoSelect = document.getElementById('art-tipo');
+
+        // 1. Configurar Naturaleza
+        if (template === 'LIBRO') natSelect.value = 'LIBRO';
+        else if (template === 'PRODUCTO') natSelect.value = 'PRODUCTO';
+        else if (template === 'SERVICIO') natSelect.value = 'SERVICIO';
+        else if (template === 'ABONO') natSelect.value = 'ABONO';
+
+        // Ensure options exist for LIBRO if not present in HTML hardcode
+        if (template === 'LIBRO' && natSelect.value !== 'LIBRO') {
+            // Fallback if select doesn't have LIBRO option yet
+            const opt = document.createElement('option');
+            opt.value = 'LIBRO';
+            opt.text = 'Libro / Publicación';
+            natSelect.add(opt);
+            natSelect.value = 'LIBRO';
+        }
+
+        // 2. Filtrar Tipos según Naturaleza
+        filterTiposByNaturaleza(natSelect.value);
+
+        // 3. Pre-seleccionar el primer tipo disponible
+        if (tipoSelect.options.length > 0) {
+            tipoSelect.selectedIndex = 0;
+        }
+
+        // 4. Establecer Título del Modal
+        const titulos = {
+            'LIBRO': 'Nuevo Libro / Publicación',
+            'PRODUCTO': 'Nuevo Producto / Equipo',
+            'SERVICIO': 'Nuevo Servicio',
+            'ABONO': 'Nueva Suscripción'
+        };
+        document.getElementById('modal-title').innerText = titulos[template] || 'Nuevo Ítem';
+
+        // 5. Forzar actualización de UI
+        setTimeout(toggleArticuloTypeFields, 100);
+    }
+
+    function filterTiposByNaturaleza(naturaleza) {
+        const tipoSelect = document.getElementById('art-tipo');
+        if (!tipoSelect) return;
+
+        // Save current selection if possible
+        const currentVal = tipoSelect.value;
+
+        tipoSelect.innerHTML = '';
+
+        // TIPOS_CONFIG is available globally
+        const tipos = TIPOS_CONFIG.filter(t => {
+            // If type doesn't have naturaleza (legacy), assume PRODUCTO
+            const tNat = t.naturaleza || 'PRODUCTO';
+            return tNat === naturaleza;
+        });
+
+        // Fallback: If no types found, we might want to show at least something?
+        // But the user's goal is precise subtype selection.
+
+        tipos.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.text = t.nombre;
+            tipoSelect.add(opt);
+        });
+
+        // Restore selection if valid, else select first
+        if (currentVal && tipos.find(t => t.id == currentVal)) {
+            tipoSelect.value = currentVal;
+        } else if (tipos.length > 0) {
+            tipoSelect.value = tipos[0].id;
+        }
+    }
+
+    function resetTemplateSelection() {
+        document.getElementById('template-selector').style.display = 'grid';
+        document.getElementById('form-articulo').style.display = 'none';
+        document.getElementById('modal-title').innerText = "Nuevo Ítem: Seleccione Tipo";
+    }
+
+    function fillEditArticuloModalFromBtn(btn) {
+        const d = btn.dataset;
+
+        let config = {};
+        try {
+            if (d.config_servicio && d.config_servicio !== 'null' && d.config_servicio !== '{}') config = JSON.parse(d.config_servicio);
+        } catch (e) { }
+
+        let meta = {};
+        try {
+            if (d.metadata && d.metadata !== 'null' && d.metadata !== '{}') meta = JSON.parse(d.metadata);
+        } catch (e) { }
+
+        fillEditArticuloModal({
+            id: d.id,
+            nombre: d.nombre,
+            autor: d.autor,
+            isbn: d.isbn,
+            genero: d.genero,
+            precio: d.precio,
+            editorial: d.editorial,
+            fecha: d.fecha,
+            tipo_id: d.tipo,
+            descripcion: d.descripcion,
+            naturaleza: d.naturaleza || 'PRODUCTO',
+            requiere_serie: d.requiere_serie === 'True' || d.requiere_serie === '1',
+            patron_serie: d.patron_serie,
+            genera_serie: d.genera_serie,
+            costo: d.costo,
+            costo_reposicion: d.costo_reposicion,
+            metodo_costeo: d.metodo_costeo,
+            cant_min_pedido: d.cant_min_pedido || 1,
+            config_servicio: config,
+            metadata: meta
+        });
+
+        // --- Cargar Datos de Seguridad (AJAX) ---
+        if (d.id) {
+            fetch(`/stock/api/articulos/${d.id}/seguridad`)
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success && res.data && res.data.articulo_id) {
+                        const s = res.data;
+                        document.getElementById('has-safety-data').checked = true;
+                        toggleSafetyPanel(true);
+
+                        document.getElementById('sec-nombre-tecnico').value = s.nombre_tecnico || '';
+                        document.getElementById('sec-un').value = s.numero_un || '';
+                        document.getElementById('sec-clase').value = s.clase_riesgo || '';
+                        document.getElementById('sec-frases-h').value = s.frases_h || '';
+                        document.getElementById('sec-frases-p').value = s.frases_p || '';
+                        document.getElementById('sec-estibaje').value = s.forma_estibaje || '';
+                        document.getElementById('sec-incompat').value = s.incompatibilidades || '';
+                        document.getElementById('sec-instrucciones').value = s.instrucciones_estibaje || '';
+
+                        // Pictos
+                        const activePictos = s.pictogramas_json || [];
+                        document.querySelectorAll('.ghs-checkbox').forEach(cb => {
+                            cb.checked = activePictos.includes(cb.value);
+                            const img = document.getElementById('img-' + cb.value);
+                            if (img) {
+                                img.style.filter = cb.checked ? 'grayscale(0%)' : 'grayscale(100%)';
+                                img.style.opacity = cb.checked ? '1' : '0.2';
+                            }
+                        });
+                    } else {
+                        resetSafetyPanel();
+                    }
+                });
+        }
+    }
+
+    function toggleSafetyPanel(show) {
+        document.getElementById('safety-panel').style.display = show ? 'grid' : 'none';
+        if (!show) resetSafetyPanel();
+    }
+
+    function resetSafetyPanel() {
+        document.getElementById('has-safety-data').checked = false;
+        document.getElementById('safety-panel').style.display = 'none';
+        document.getElementById('sec-nombre-tecnico').value = '';
+        document.getElementById('sec-un').value = '';
+        document.getElementById('sec-clase').value = '';
+        document.getElementById('sec-frases-h').value = '';
+        document.getElementById('sec-frases-p').value = '';
+        document.getElementById('sec-estibaje').value = '';
+        document.getElementById('sec-incompat').value = '';
+        document.getElementById('sec-instrucciones').value = '';
+        document.querySelectorAll('.ghs-checkbox').forEach(cb => {
+            cb.checked = false;
+            const img = document.getElementById('img-' + cb.value);
+            if (img) {
+                img.style.filter = 'grayscale(100%)';
+                img.style.opacity = '0.2';
+            }
+        });
+    }
+
+    function fillEditArticuloModal(data) {
+        const id = data.id;
+
+        // Bypass selector for Edit mode
+        document.getElementById('template-selector').style.display = 'none';
+        document.getElementById('form-articulo').style.display = 'block';
+
+        document.getElementById('modal-title').innerText = id ? 'Editar Artículo: ' + data.nombre : 'Agregar Nuevo Artículo';
+        document.getElementById('art-id').value = id || '';
+        if (!id) document.getElementById('form-articulo').reset();
+        document.getElementById('art-id').value = id || ''; // Reset clears hidden ID, put it back
+
+        document.getElementById('art-nombre').value = data.nombre || '';
+        if (document.getElementById('art-precio')) document.getElementById('art-precio').value = data.precio || 0;
+        if (document.getElementById('art-costo')) document.getElementById('art-costo').value = data.costo || 0;
+        if (document.getElementById('art-costo-reposicion')) document.getElementById('art-costo-reposicion').value = data.costo_reposicion || 0;
+        if (document.getElementById('art-punto-pedido')) document.getElementById('art-punto-pedido').value = data.punto_pedido || 0;
+        if (document.getElementById('art-stock-minimo')) document.getElementById('art-stock-minimo').value = data.stock_minimo || 0;
+        if (document.getElementById('art-cant-min-pedido')) document.getElementById('art-cant-min-pedido').value = data.cant_min_pedido || 1;
+        if (document.getElementById('art-metodo-costeo')) document.getElementById('art-metodo-costeo').value = data.metodo_costeo || 'CPP';
+        document.getElementById('art-sku-origen').value = data.sku_origen || 'PROPIO';
+
+        const reqSerie = data.requiere_serie === '1';
+        const nat = data.naturaleza || 'PRODUCTO';
+        const natSelect = document.getElementById('art-naturaleza');
+
+        // Add LIBRO option if missing and needed
+        if (nat === 'LIBRO' && !Array.from(natSelect.options).some(o => o.value === 'LIBRO')) {
+            const opt = document.createElement('option');
+            opt.value = 'LIBRO';
+            opt.text = 'Libro / Publicación';
+            natSelect.add(opt);
+        }
+        natSelect.value = nat;
+
+        // Filter types based on this naturaleza
+        filterTiposByNaturaleza(nat);
+
+        document.getElementById('art-tipo').value = data.tipo_id || 1;
+
+        // Checkbox y Paneles
+        const reqSerieCheck = document.getElementById('art-requiere-serie');
+        reqSerieCheck.checked = !!data.requiere_serie;
+        document.getElementById('art-patron-serie').value = data.patron_serie || '';
+        document.getElementById('art-genera-serie').value = data.genera_serie ? '1' : '0';
+
+        // Config Servicio
+        let config = data.config_servicio || {};
+        document.getElementById('srv-recurrencia').value = config.recurrencia || 'EVENTUAL';
+        document.getElementById('srv-duracion').value = config.duracion || '';
+        document.getElementById('srv-es-recurrente').checked = !!config.es_recurrente;
+
+        // Custom Fields
+        currentCustomFields = data.metadata || {};
+        renderCustomFields();
+
+        let desc = data.descripcion || '';
+        if (desc.startsWith('{')) {
+            try {
+                const obj = JSON.parse(desc);
+                if (obj.value) desc = obj.value;
+            } catch (e) { }
+        }
+        document.getElementById('art-descripcion').value = desc;
+
+        // Triggers ui updates
+        setTimeout(() => {
+            toggleArticuloTypeFields();
+            toggleSerieFields();
+        }, 50);
+
+        if (document.getElementById('modal-articulo').style.display === 'none') {
+            toggleModal('modal-articulo');
+        }
+    }
+
+    function toggleArticuloTypeFields() {
+        const natSelect = document.getElementById('art-naturaleza');
+        const nat = natSelect ? natSelect.value : 'PRODUCTO';
+        const panel = document.getElementById('service-config-panel');
+
+        const isServ = (nat === 'SERVICIO' || nat === 'ABONO');
+
+        // 1. Mostrar/Ocultar Panel de Servicio
+        if (panel) {
+            panel.style.display = isServ ? 'grid' : 'none';
+        }
+
+        // 2. Render schema fields for this type (dinámico)
+        renderCustomFields();
+    }
+
+    // --- Custom Fields Logic ---
+    const TIPOS_CONFIG = {{ tipos_json | safe }};
+    let currentCustomFields = {};
+
+    function renderCustomFields() {
+        const tbody = document.getElementById('custom-fields-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const typeSelect = document.getElementById('art-tipo');
+        const typeId = typeSelect ? typeSelect.value : null;
+        const config = TIPOS_CONFIG.find(t => t.id == typeId);
+        const schema = config ? config.custom_fields_schema : [];
+
+        // Track rendered keys to avoid duplicates
+        const renderedKeys = new Set();
+
+        // 1. Render Schema Fields
+        if (schema && Array.isArray(schema)) {
+            schema.forEach(field => {
+                const key = field.name;
+                const label = field.label || key;
+                const type = field.type || 'text';
+                const value = currentCustomFields[key] || '';
+
+                renderedKeys.add(key);
+
+                const tr = document.createElement('tr');
+                let inputHtml = '';
+
+                if (type === 'select' || type === 'list') {
+                    const options = field.options || [];
+                    const opts = options.map(o => `<option value="${o}" ${o == value ? 'selected' : ''}>${o}</option>`).join('');
+                    inputHtml = `<select class="form-control form-control-sm" onchange="updateCustomField('${key}', this.value)" style="background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1);">
+                                    <option value="">-- Seleccionar --</option>
+                                    ${opts}
+                                 </select>`;
+                } else {
+                    // text, number, date
+                    inputHtml = `<input type="${type}" class="form-control form-control-sm" value="${value}" 
+                                    oninput="updateCustomField('${key}', this.value)" 
+                                    style="background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1);">`;
+                }
+
+                tr.innerHTML = `
+                    <td style="padding: 0.5rem; color: #cbd5e1; vertical-align: middle;">
+                        ${label} <span style="font-size: 0.7em; opacity: 0.5;">(${key})</span>
+                    </td>
+                    <td style="padding: 0.5rem;" colspan="2">
+                        ${inputHtml}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 2. Render Extra Fields (Manually added or legacy)
+        // Filter out reserved keys
+        const ignored = ['genero', 'paginas', 'fecha_pub', 'fecha_publicacion', 'descripcion', 'cover_url', 'temas', 'api_source', 'api_checked', 'subtitulo', 'publisher', 'publishedDate', 'pageCount', 'categories', 'imageLinks', 'industryIdentifiers'];
+
+        for (const [key, val] of Object.entries(currentCustomFields)) {
+            if (ignored.includes(key) || renderedKeys.has(key)) continue;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 0.5rem; color: #e2e8f0;">${key}</td>
+                <td style="padding: 0.5rem; color: #cbd5e1;">${val}</td>
+                <td style="padding: 0.5rem; text-align: center;">
+                    <button type="button" onclick="removeCustomField('${key}')" style="background: none; border: none; color: #ef4444; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+        updateHiddenCustomFields();
+    }
+
+    function updateCustomField(key, value) {
+        currentCustomFields[key] = value;
+        updateHiddenCustomFields();
+    }
+
+    function addCustomField() {
+        const kParams = document.getElementById('new-field-key');
+        const vParams = document.getElementById('new-field-val');
+        const k = kParams.value.trim();
+        const v = vParams.value.trim();
+
+        if (k) {
+            currentCustomFields[k] = v;
+            kParams.value = '';
+            vParams.value = '';
+            kParams.focus();
+            renderCustomFields();
+        }
+    }
+
+    function removeCustomField(key) {
+        delete currentCustomFields[key];
+        renderCustomFields();
+    }
+
+    function updateHiddenCustomFields() {
+        const input = document.getElementById('custom-fields-json');
+        if (input) input.value = JSON.stringify(currentCustomFields);
+    }
+
+
+    function toggleSerieFields() {
+        const chk = document.getElementById('art-requiere-serie');
+        const panel = document.getElementById('serie-config-panel');
+        if (panel && chk) {
+            panel.style.display = chk.checked ? 'grid' : 'none';
+        }
+    }
+
+    // Auto-expand filters if any filter is active
+    document.addEventListener('DOMContentLoaded', function () {
+        const hasFilters = document.getElementById('has-active-filters').value === 'true';
+        if (hasFilters) {
+            toggleFilters();
+        }
+
+        // Auto-submit on filter change with safety delay
+        const filterItems = document.querySelectorAll('#search-form select, #search-form input[type="checkbox"]');
+        filterItems.forEach(el => {
+            el.addEventListener('change', function () {
+                // Check if the form is already submitting to avoid loops
+                if (window.isSubmitting) return;
+                window.isSubmitting = true;
+
+                setTimeout(() => {
+                    document.getElementById('search-form').submit();
+                }, 100);
+            });
+        });
+    });
+
+    // Función para abrir modal de préstamo rápido
+    function openQuickLoanModal(libroId, titulo) {
+        document.getElementById('loan-libro-id').value = libroId;
+        document.getElementById('loan-book-title').innerText = titulo;
+        const date = new Date();
+        date.setDate(date.getDate() + 14);
+        document.getElementById('loan-date-default').value = date.toISOString().split('T')[0];
+        toggleModal('modal-quick-loan');
+    }
+
+    function toggleArticuloDetails(id) {
+        const detailsRow = document.getElementById('details-' + id);
+        const expandBtn = document.querySelector('#row-' + id + ' .expand-btn');
+        if (!detailsRow || !expandBtn) return;
+
+        detailsRow.classList.toggle('show');
+        expandBtn.classList.toggle('active');
+    }
+
+    function openInfoModal(isbn, genero, origen, lengua) {
+        document.getElementById('info-isbn').innerText = isbn || 'N/D';
+        document.getElementById('info-genero').innerText = genero || 'N/D';
+        document.getElementById('info-origen').innerText = origen || 'N/D';
+        document.getElementById('info-lengua').innerText = lengua || 'N/D';
+        toggleModal('modal-info');
+    }
+
+    // Live update for pending count
+    function translateText(elementId, btn) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        const originalText = el.innerText;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traduciendo...';
+
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q=${encodeURIComponent(originalText)}`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                const translated = data[0].map(x => x[0]).join('');
+                el.innerHTML = translated;
+                btn.innerHTML = '<i class="fas fa-check"></i> Traducido';
+                btn.style.color = '#10b981';
+            })
+            .catch(e => {
+                console.error('Error traduciendo:', e);
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+                btn.disabled = false;
+            });
+    }
+
+    function updateCounters() {
+        const url = '{{ url_for("stock.api_pending_count") }}';
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                // 1. Contador de Enriquecimiento Normal
+                const pendingBadge = document.getElementById('pending-counter');
+                if (pendingBadge && data.pending !== undefined) {
+                    pendingBadge.textContent = '(' + data.pending + ')';
+                    // Mostrar/Ocultar badge según cantidad
+                    pendingBadge.style.display = data.pending > 0 ? 'inline' : 'none';
+                }
+
+                // 2. Estado y Progreso de Escaneo Profundo
+                const deepCounter = document.getElementById('deep-scan-counter');
+                const deepStatus = document.getElementById('status-deep');
+                const deepBtn = document.getElementById('enrich-deep-form'); // Seleccionar el form o su botón
+
+                if (data.status) {
+                    if (deepStatus) deepStatus.textContent = data.status;
+
+                    // Efectos visuales si está activo
+                    if (data.is_active && deepBtn) {
+                        deepBtn.style.boxShadow = '0 0 15px rgba(251, 191, 36, 0.4)';
+                        if (deepStatus) deepStatus.style.color = '#fbbf24';
+                    } else if (deepBtn) {
+                        deepBtn.style.boxShadow = 'none';
+                        if (deepStatus) deepStatus.style.color = 'inherit';
+                    }
+                }
+
+                if (deepCounter && data.deep_pending !== undefined) {
+                    const progressCircle = document.getElementById('progress-circle');
+                    const progressPercent = document.getElementById('progress-percent');
+
+                    if (data.is_active) {
+                        const proc = data.processed || 0;
+                        const pend = data.deep_pending || 0;
+                        const total = proc + pend;
+
+                        if (total > 0) {
+                            deepCounter.textContent = '(' + proc + ' / ' + total + ')';
+                            const percent = Math.round((proc / total) * 100);
+                            if (progressPercent) progressPercent.textContent = percent + '%';
+                            const offset = 100.5 - (percent / 100) * 100.5;
+                            if (progressCircle) progressCircle.style.strokeDashoffset = offset;
+                        }
+                    } else {
+                        // Reset Total si no hay nada activo
+                        deepCounter.textContent = '';
+                        if (deepStatus) deepStatus.textContent = 'Inactivo';
+                        if (progressCircle) progressCircle.style.strokeDashoffset = 100.5;
+                        if (progressPercent) progressPercent.textContent = '0%';
+                        if (deepBtn) deepBtn.style.boxShadow = 'none';
+                    }
+                }
+
+                // 3. Estadísticas Detalladas de Campos
+                if (data.stats && data.stats.total > 0) {
+                    const statsPanel = document.getElementById('enrichment-stats-panel');
+                    if (statsPanel) statsPanel.style.display = 'block';
+
+                    const total = data.stats.total;
+                    const fields = {
+                        'covers': 'stat-covers',
+                        'descriptions': 'stat-desc',
+                        'themes': 'stat-themes',
+                        'pages': 'stat-pages',
+                        'editorials': 'stat-editorials',
+                        'languages': 'stat-languages',
+                        'ebooks': 'stat-ebooks'
+                    };
+
+                    for (const [key, prefix] of Object.entries(fields)) {
+                        const count = data.stats[key] || 0;
+                        const pct = Math.round((count / total) * 100);
+
+                        const countElem = document.getElementById(prefix + '-count');
+                        const pctElem = document.getElementById(prefix + '-pct');
+                        const barElem = document.getElementById(prefix + '-bar');
+
+                        if (countElem) countElem.textContent = count.toLocaleString() + ' / ' + total.toLocaleString();
+                        if (pctElem) pctElem.textContent = pct + '%';
+                        if (barElem) barElem.style.width = pct + '%';
+                    }
+                }
+                // 4. Actualizar Gráfico de Eficiencia de Servicios
+                fetch("{{ url_for('stock.api_service_efficiency') }}")
+                    .then(r => r.json())
+                    .then(sData => {
+                        const chartDiv = document.getElementById('service-efficiency-chart');
+                        const barsDiv = document.getElementById('service-bars');
+
+                        if (sData.services && sData.services.length > 0) {
+                            if (chartDiv) chartDiv.style.display = 'block';
+                            if (barsDiv) {
+                                barsDiv.innerHTML = '';
+                                // Encontrar el máximo para escalar
+                                const maxFields = Math.max(...sData.services.map(s => s.fields_provided));
+
+                                sData.services.forEach(s => {
+                                    const pct = Math.round((s.fields_provided / maxFields) * 100);
+
+                                    const row = document.createElement('div');
+                                    row.style.display = 'flex';
+                                    row.style.flexDirection = 'column';
+                                    row.style.gap = '0.2rem';
+
+                                    row.innerHTML = `
+                                            <span>${s.service_name}</span>
+                                            <span>${s.hits_count} hits | ${s.fields_provided} campos | <i class="fas fa-file-pdf" style="color: #a78bfa;"></i> ${s.ebooks_provided || 0}</span>
+                                        </div>
+                                        <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; width: 100%; overflow: hidden;">
+                                            <div style="background: var(--primary); width: ${pct}%; height: 100%; border-radius: 4px; transition: width 0.5s ease;"></div>
+                                        </div>
+                                    `;
+                                    barsDiv.appendChild(row);
+                                });
+                            }
+                        }
+                    })
+                    .catch(e => console.error("Error updating services:", e));
+            })
+            .catch(err => console.error("Error en updateCounters:", err));
+    }
+
+    // Run immediately and then interval (Reduced frequency for stability)
+    updateCounters();
+    setInterval(updateCounters, 5000); 
+</script>
+
+
+<!-- Modal: Préstamo Rápido -->
+<div id="modal-quick-loan" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; z-index: 5002; border: 2px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.6); padding: 2rem;">
+    <h3>Registrar Préstamo</h3>
+    <p id="loan-book-title" style="color: var(--primary); font-weight: 700; margin-bottom: 1.5rem;"></p>
+    <form action="{{ url_for('biblioteca.registrar_prestamo') }}" method="POST">
+        <input type="hidden" name="sid" value="{{ sid }}">
+        <input type="hidden" name="libro_id" id="loan-libro-id">
+
+        <div class="form-group">
+            <label>Socio que retira</label>
+            <select name="usuario_id" required
+                style="width: 100%; padding: 0.75rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px;">
+                <option value="">-- Seleccionar Socio --</option>
+                {% for u in usuarios %}
+                <option value="{{ u.id }}">{{ u.apellido }}, {{ u.nombre }} ({{ u.email }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label>Fecha de Devolución</label>
+            <input type="date" name="fecha_devol_esperada" id="loan-date-default" required>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Confirmar Préstamo</button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1); flex: 1;"
+                onclick="toggleModal('modal-quick-loan')">Cerrar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal: Ver Series -->
+<div id="modal-series" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; z-index: 5010; border: 2px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.6); padding: 1.5rem; border-radius: 12px; background: var(--bg-card);">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+        <h4 style="margin: 0; color: #34d399;"><i class="fas fa-barcode"></i> Series: <span id="series-title"
+                style="color: white; font-weight: normal; font-size: 0.9em;"></span></h4>
+        <button class="btn" onclick="toggleModal('modal-series')" style="background:none; color: white;"><i
+                class="fas fa-times"></i></button>
+    </div>
+    <div id="series-list-container"
+        style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 60vh; overflow-y: auto;">
+        <p style="text-align: center; color: #64748b;">Cargando...</p>
+    </div>
+    <div style="margin-top: 1.5rem; text-align: right;">
+        <button class="btn" onclick="toggleModal('modal-series')"
+            style="background: rgba(255,255,255,0.1);">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    function openSeriesModal(id, nombre) {
+        document.getElementById('series-title').innerText = nombre;
+        const container = document.getElementById('series-list-container');
+        container.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+        toggleModal('modal-series');
+
+        fetch(`/stock/api/series/${id}?sid=${window.SID || ''}`)
+            .then(r => r.json())
+            .then(data => {
+                container.innerHTML = '';
+                if (data.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;"><i class="fas fa-box-open fa-2x mb-2" style="opacity:0.5;"></i><br>No hay series registradas en stock.</div>';
+                    return;
+                }
+
+                // Header
+                const header = document.createElement('div');
+                header.style.display = 'grid';
+                header.style.gridTemplateColumns = '2fr 1fr';
+                header.style.padding = '0.5rem';
+                header.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                header.style.fontWeight = 'bold';
+                header.style.fontSize = '0.75rem';
+                header.style.color = '#94a3b8';
+                header.innerHTML = '<span>NÚMERO DE SERIE</span><span style="text-align: right;">ESTADO</span>';
+                container.appendChild(header);
+
+                data.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'inv-item';
+                    item.style.display = 'grid';
+                    item.style.gridTemplateColumns = '2fr 1fr';
+                    item.style.alignItems = 'center';
+                    item.style.padding = '0.75rem 0.5rem';
+                    item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+
+                    // Color badge based on status
+                    let color = '#94a3b8';
+                    let bg = 'rgba(148, 163, 184, 0.1)';
+                    if (s.estado === 'EN_STOCK') { color = '#34d399'; bg = 'rgba(52, 211, 153, 0.1)'; }
+                    if (s.estado === 'VENDIDO') { color = '#ef4444'; bg = 'rgba(239, 68, 68, 0.1)'; }
+                    if (s.estado === 'RESERVADO') { color = '#f59e0b'; bg = 'rgba(245, 158, 11, 0.1)'; }
+
+                    item.innerHTML = `
+                    <span style="font-family: monospace; font-size: 1rem; font-weight: bold; color: white;">${s.numero_serie}</span>
+                    <span class="badge" style="background: ${bg}; color: ${color}; text-align: center; justify-self: end;">${s.estado}</span>
+                `;
+                    container.appendChild(item);
+                });
+            })
+            .catch(e => {
+                console.error(e);
+                container.innerHTML = '<p style="text-align: center; color: #ef4444;">Error cargando series.</p>';
+            });
+    }
+
+    // --- LOGICA MULTI-BARCODES (GTIN/EAN) FASE 1.1 ---
+    function openBarcodesModal(id, title) {
+        document.getElementById('barcode-item-title').innerText = title;
+        document.getElementById('barcode-articulo-id').value = id;
+        document.getElementById('form-add-barcode').reset();
+        loadBarcodes(id);
+        toggleModal('modal-barcodes');
+    }
+
+    function loadBarcodes(id) {
+        const tbody = document.getElementById('barcodes-list-body');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>';
+
+        fetch(`/stock/api/articulos/${id}/barcodes`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) throw new Error(data.message);
+
+                tbody.innerHTML = '';
+                if (data.barcodes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Aún no hay códigos adicionales registrados.</td></tr>';
+                    return;
+                }
+
+                data.barcodes.forEach(b => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="font-weight-bold align-middle">${b.codigo}</td>
+                            <td class="align-middle"><span class="badge badge-info">${b.tipo_codigo}</span></td>
+                            <td class="align-middle text-right">x ${b.factor_conversion}</td>
+                            <td class="text-center align-middle">
+                                <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteBarcode(${b.id}, ${id})"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(err => {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error: ${err.message}</td></tr>`;
+            });
+    }
+
+    function submitNewBarcode() {
+        const articulo_id = document.getElementById('barcode-articulo-id').value;
+        const payload = {
+            codigo: document.getElementById('new-barcode').value.trim(),
+            tipo_codigo: document.getElementById('new-barcode-type').value,
+            factor_conversion: document.getElementById('new-barcode-factor').value
+        };
+
+        if (!payload.codigo) return;
+
+        fetch(`/stock/api/articulos/${articulo_id}/barcodes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('form-add-barcode').reset();
+                    document.getElementById('new-barcode').focus();
+                    loadBarcodes(articulo_id);
+                } else {
+                    alert("Error al agregar código: " + (data.message || "Código Duplicado?"));
+                }
+            })
+            .catch(console.error);
+    }
+
+    function deleteBarcode(codigoId, articuloId) {
+        if (!confirm("¿Quitar este código?")) return;
+
+        fetch(`/stock/api/articulos/barcodes/${codigoId}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) loadBarcodes(articuloId);
+                else alert("Error borrando código.");
+            })
+            .catch(console.error);
+    }
+</script>
+
+{% endblock %}

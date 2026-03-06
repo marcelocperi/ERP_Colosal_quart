@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4"
+    style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: #f8fafc;">
+    <!-- Encabezado con Estética Premium -->
+    <div class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeIn">
+        <div>
+            <h2 class="display-6 fw-bold mb-1" style="color: #60a5fa; text-shadow: 0 0 20px rgba(96, 165, 250, 0.3);">
+                <i class="fas fa-certificate me-3"></i>Certificación de Auditoría SoD
+            </h2>
+            <p class="text-muted lead">Validación técnica de trazabilidad y cumplimiento CISA/SOX por módulo.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge rounded-pill px-4 py-2"
+                style="background: rgba(96, 165, 250, 0.1); border: 1px solid #60a5fa; color: #60a5fa;">
+                Versión 2.0 (Audit-Safe)
+            </span>
+        </div>
+    </div>
+
+    <!-- Resumen de Módulos (Cards Dinámicas) -->
+    <div class="row g-4 mb-5">
+        {% for module in compliance_data %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card h-100 border-0 shadow-lg"
+                style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div class="p-3 rounded-3" style="background: rgba(96, 165, 250, 0.1);">
+                            <i class="fas fa-cube fa-2x" style="color: #60a5fa;"></i>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="fw-bold mb-0 text-uppercase">{{ module.module }}</h4>
+                            <span
+                                class="badge {% if module.status == 'CERTIFIED' %}bg-success{% elif module.status == 'WARNING' %}bg-warning{% else %}bg-danger{% endif %} mt-2">
+                                {{ module.status }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small text-muted">Cumplimiento de Esquema</span>
+                            <span class="small fw-bold">{{ module.score|round|int }}%</span>
+                        </div>
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05);">
+                            <div class="progress-bar {% if module.status == 'CERTIFIED' %}bg-success{% elif module.status == 'WARNING' %}bg-warning{% else %}bg-danger{% endif %}"
+                                role="progressbar" style="width: {{ module.score }}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button class="btn btn-sm w-100 py-2"
+                            style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1);"
+                            data-bs-toggle="modal" data-bs-target="#modal-{{ module.module }}">
+                            Ver Informe Detallado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalle del Módulo -->
+        <div class="modal fade" id="modal-{{ module.module }}" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0" style="background: #1e293b; color: #f8fafc;">
+                    <div class="modal-header border-bottom border-secondary">
+                        <h5 class="modal-title fw-bold">Certificación Técnica: Módulo {{ module.module|upper }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row">
+                            <!-- Columna Tablas -->
+                            <div class="col-md-6 border-end border-secondary">
+                                <h6 class="text-uppercase fw-bold mb-3" style="color: #60a5fa;">
+                                    <i class="fas fa-table me-2"></i>Esquemas de Base de Datos
+                                </h6>
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Tabla</th>
+                                                <th>Campos</th>
+                                                <th>Audit-Ready</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for table in module.tables %}
+                                            <tr>
+                                                <td class="small">{{ table.name }}</td>
+                                                <td>
+                                                    {% for f, ok in table.fields.items() %}
+                                                    <span
+                                                        class="badge {% if ok %}bg-success{% else %}bg-danger{% endif %}"
+                                                        style="font-size: 0.6rem;">
+                                                        {{ f }}
+                                                    </span>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    {% if table.compliant %}
+                                                    <i class="fas fa-check-circle text-success"></i>
+                                                    {% else %}
+                                                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- Columna Código -->
+                            <div class="col-md-6">
+                                <h6 class="text-uppercase fw-bold mb-3" style="color: #60a5fa;">
+                                    <i class="fas fa-code me-2"></i>Validación de Soporte en Código
+                                </h6>
+                                <div class="list-group list-group-flush bg-transparent">
+                                    {% for code in module.code_compliance %}
+                                    <div class="list-group-item bg-transparent border-secondary p-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="small fw-bold">{{ code.table }}</span>
+                                            <div>
+                                                <span
+                                                    class="badge {% if code.insert_audit %}bg-success{% else %}bg-secondary{% endif %} me-1"
+                                                    title="Soporte en INSERT">
+                                                    INS
+                                                </span>
+                                                <span
+                                                    class="badge {% if code.update_audit %}bg-success{% else %}bg-secondary{% endif %}"
+                                                    title="Soporte en UPDATE">
+                                                    UPD
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p class="mb-0 x-small text-muted mt-1" style="font-size: 0.7rem;">
+                                            Files: {{ code.files|join(', ') }}
+                                        </p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top border-secondary">
+                        <p class="small text-muted me-auto">
+                            <i class="fas fa-info-circle me-1"></i> Este módulo requiere {{ module.tables|length }}
+                            tablas bajo seguimiento.
+                        </p>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Sección de Metodología de Auditoría -->
+    <div class="card border-0 rounded-4"
+        style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05);">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-4">Metodología de Certificación (CISA Standards)</h5>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-primary rounded-circle p-2 me-3"
+                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            1</div>
+                        <h6 class="mb-0">Scanning Entitativo</h6>
+                    </div>
+                    <p class="small text-muted">Verificación reflectiva de esquemas contra el estándar de 4 campos de
+                        trazabilidad básica.</p>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-primary rounded-circle p-2 me-3"
+                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            2</div>
+                        <h6 class="mb-0">Análisis Estático</h6>
+                    </div>
+                    <p class="small text-muted">Regex-engine para detectar si las sentencias DML (INSERT/UPDATE)
+                        capturan activamente al usuario.</p>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-primary rounded-circle p-2 me-3"
+                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            3</div>
+                        <h6 class="mb-0">Mapeo de Rutas</h6>
+                    </div>
+                    <p class="small text-muted">Identificación de archivos físicos `routes.py` y `services` que dan
+                        soporte al objeto de auditoría.</p>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-primary rounded-circle p-2 me-3"
+                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            4</div>
+                        <h6 class="mb-0">Validación AFIP</h6>
+                    </div>
+                    <p class="small text-muted">Asegura que los libros de IVA y Exportaciones pueden reconstruirse con
+                        la data trazada.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+        border-color: rgba(96, 165, 250, 0.3) !important;
+    }
+
+    .badge {
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .list-group-item:hover {
+        background: rgba(255, 255, 255, 0.02) !important;
+    }
+</style>
+{% endblock %}

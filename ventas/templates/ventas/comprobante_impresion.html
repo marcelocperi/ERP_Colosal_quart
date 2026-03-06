@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ vals.get('tipo_comprobante_nombre') }} {{ vals.get('letra') }} {{ vals.get('punto_venta') }}-{{
+        vals.get('numero') }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8.5pt;
+            color: #000;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .invoice-page {
+            position: relative;
+            width: 595pt;
+            height: 842pt;
+            overflow: hidden;
+            page-break-after: always;
+            background: #fff;
+        }
+
+        .field {
+            position: absolute;
+            white-space: nowrap;
+            z-index: 20;
+        }
+
+        .field.center {
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .field.right {
+            transform: translateX(-100%);
+            text-align: right;
+        }
+
+        .rect {
+            position: absolute;
+            border: 0.6pt solid #000;
+            box-sizing: border-box;
+            z-index: 5;
+        }
+
+        .shaded {
+            background-color: #f0f0f0 !important;
+            border: none !important;
+        }
+
+        .line-v {
+            position: absolute;
+            border-left: 0.6pt solid #000;
+            width: 0;
+            z-index: 10;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+
+        .no-print {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            background: #333;
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- QZ Tray JS (para impresión directa sin cuadro de diálogo) -->
+    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js"></script>
+
+    <div class="no-print">
+        <span id="print-status"
+            style="color: #34d399; margin-right: 15px; font-size: 0.9rem; font-weight: bold;"></span>
+        <button id="btn-print-manual" onclick="window.print()"
+            style="padding: 8px 20px; cursor: pointer; font-weight: bold;">🖨️
+            Imprimir (Manual)</button>
+        <button onclick="window.close()" style="padding: 8px 20px; cursor: pointer;">Cerrar</button>
+    </div>
+
+    <script>
+        const PRINTER = {{ printer | tojson | safe if printer else 'null' }};
+
+        async function silentPrint() {
+            if (!PRINTER || !PRINTER.tipo_conexion || PRINTER.tipo_conexion === 'BROWSER_DIALOG') {
+                console.log("Modo Diálogo del Navegador activado (Por defecto).");
+                return;
+            }
+
+            // --- QZ Tray Security Config (Bypass Trust Alert) ---
+            qz.security.setCertificatePromise(function (resolve, reject) {
+                fetch("/api/qz/cert").then(r => r.text()).then(resolve).catch(reject);
+            });
+            qz.security.setSignatureAlgorithm("SHA512");
+            qz.security.setSignaturePromise(function (toSign) {
+                return function (resolve, reject) {
+                    fetch("/api/qz/sign?request=" + encodeURIComponent(toSign))
+                        .then(r => r.text()).then(resolve).catch(reject);
+                };
+            });
+            // ----------------------------------------------------
+
+            const statusEl = document.getElementById('print-status');
+            const toolbar = document.querySelector('.no-print');
+
+            if (toolbar) {
+                toolbar.style.display = 'none'; // Ocultar barra al iniciar para que QZ no la imprima
+            }
+
+            // Still update status internally if we want to show it again on error
+            statusEl.textContent = "⏳ Conectando con impresora: " + PRINTER.nombre + "...";
+
+            try {
+                if (!qz.websocket.isActive()) {
+                    await qz.websocket.connect();
+                }
+
+                let printerOpts = {
+                    size: { width: 210, height: 297 },
+                    units: 'mm',
+                    orientation: 'portrait'
+                };
+
+                let config;
+                if (PRINTER.tipo_conexion === 'QZ_TRAY_USB') {
+                    config = qz.configs.create(PRINTER.nombre_sistema_qz, {
+                        size: { width: 210, height: 297 },
+                        units: 'mm',
+                        orientation: 'portrait'
+                    });
+                } else if (PRINTER.tipo_conexion === 'QZ_TRAY_NET' || PRINTER.tipo_conexion === 'IP_RED') {
+                    config = qz.configs.create({ host: PRINTER.ip_red, port: PRINTER.puerto_red }, {
+                        size: { width: 210, height: 297 },
+                        units: 'mm',
+                        orientation: 'portrait'
+                    });
+                }
+
+                // Clonar el DOM para no alterar lo que el usuario ve
+                let htmlCopy = document.documentElement.cloneNode(true);
+
+                // Remover explícitamente cualquier elemento 'no-print' de la copia en memoria
+                let noPrintElements = htmlCopy.querySelectorAll('.no-print');
+                noPrintElements.forEach(el => el.parentNode.removeChild(el));
+
+                // FORZAR por CSS ocultamiento en el renderizador virtual de QZ Tray
+                let style = htmlCopy.ownerDocument.createElement('style');
+                style.innerHTML = '.no-print { display: none !important; opacity: 0 !important; height: 0 !important; overflow: hidden !important; }';
+                htmlCopy.querySelector('head').appendChild(style);
+
+                // Imprimir el contenido LIMPIO de la página (Pixel mode)
+                const data = [{
+                    type: 'pixel',
+                    format: 'html',
+                    flavor: 'plain',
+                    data: htmlCopy.innerHTML, // Enviamos el HTML sin el div de la barra
+                    options: {
+                        pageWidth: 210,  // mm
+                        pageHeight: 297, // mm
+                        units: 'mm'
+                    }
+                }];
+
+                await qz.print(config, data);
+                statusEl.textContent = "✅ Enviado a " + (PRINTER.nombre_sistema_qz || PRINTER.ip_red);
+
+                // Cerrar automáticamente si tuvo éxito (opcional, pero mejora la experiencia de "puerto directo")
+                setTimeout(() => window.close(), 2000);
+
+            } catch (err) {
+                console.error("QZ Tray Error:", err);
+                statusEl.style.color = "#ef4444";
+                statusEl.textContent = "❌ Error QZ: " + err.message;
+                document.getElementById('btn-print-manual').style.border = "2px solid #ef4444";
+                if (toolbar) {
+                    toolbar.style.display = 'flex'; // Volver a mostrar si hay error
+                }
+            } finally {
+                if (qz.websocket.isActive()) {
+                    // await qz.websocket.disconnect(); // Desconectar si se prefiere, aunque QZ mantendrá la sesión
+                }
+            }
+        }
+
+        // Ejecutar al cargar
+        window.onload = () => {
+            if (PRINTER && PRINTER.tipo_conexion !== 'BROWSER_DIALOG') {
+                silentPrint();
+            } else {
+                // Si es modo navegador, podemos disparar el window.print() automático si se prefiere
+                // window.print();
+            }
+        };
+    </script>
+
+    {% set ejemplares = ['ORIGINAL', 'DUPLICADO', 'TRIPLICADO'] %}
+    {% for ejemplar in ejemplares %}
+    <div class="invoice-page">
+        <!-- MARCA DE AGUA PARA REIMPRESIÓN (COPIA FIEL) -->
+        {% if es_copia %}
+        <div
+            style="position: absolute; top: 40%; left: 10%; width: 80%; transform: rotate(-45deg); text-align: center; color: rgba(200,200,200,0.5); font-size: 70pt; font-weight: bold; z-index: 0; pointer-events: none; white-space: nowrap;">
+            ES COPIA FIEL
+        </div>
+        {% endif %}
+
+        <!-- ESTRUCTURA PRINCIPAL -->
+        <div class="rect" style="left: 15pt; top: 23pt; width: 566pt; height: 146pt; z-index: 1;"></div>
+
+        <!-- Recuadro LETRA (Único recuadro central) -->
+        <div class="rect" style="left: 275pt; top: 23pt; width: 47pt; height: 41pt; background: #fff; z-index: 10;">
+        </div>
+        <div class="line-v" style="left: 298.5pt; top: 64pt; height: 105pt;"></div> <!-- Divisor vertical medio -->
+
+        <!-- SECCIONES -->
+        <div class="rect" style="left: 15pt; top: 170pt; width: 566pt; height: 22pt;"></div> <!-- Período -->
+        <div class="rect" style="left: 15pt; top: 194pt; width: 566pt; height: 62pt;"></div> <!-- Cliente -->
+
+        <!-- Referencia Comercial (Grisada) -->
+        <div class="rect shaded" style="left: 15pt; top: 257pt; width: 566pt; height: 18pt;"></div>
+        <div class="rect" style="left: 15pt; top: 257pt; width: 566pt; height: 18pt;"></div>
+
+        <!-- TABLA DE ITEMS -->
+        <div class="rect" style="left: 15pt; top: 275pt; width: 566pt; height: 232pt;"></div>
+
+        <!-- Cabecera de Items Grisada -->
+        <div class="rect shaded" style="left: 15pt; top: 275pt; width: 566pt; height: 18pt;"></div>
+        {% set headers = [
+        {'l': 15, 'w': 40, 't': 'Código'},
+        {'l': 55, 'w': 141, 't': 'Producto / Servicio'},
+        {'l': 196, 'w': 65, 't': 'Cantidad'},
+        {'l': 261, 'w': 43, 't': 'U. Medida'},
+        {'l': 304, 'w': 80, 't': 'Precio Unit.'},
+        {'l': 384, 'w': 32, 't': '% Bonif'},
+        {'l': 416, 'w': 73, 't': 'Imp. Bonif.'},
+        {'l': 489, 'w': 92, 't': 'Subtotal'}
+        ] %}
+        {% for h in headers %}
+        <div class="field"
+            style="left: {{ h.l }}pt; top: 279pt; width: {{ h.w }}pt; text-align: center; font-weight: bold; font-size: 7.5pt;">
+            {{ h.t }}</div>
+        {% endfor %}
+
+        <!-- TOTALES Y TRIBUTOS -->
+        <div class="rect" style="left: 15pt; top: 610pt; width: 566pt; height: 101pt;"></div>
+        <!-- Ajusté la posición de los totales para dejar espacio al detalle -->
+
+        <!-- RENDER DE LOGO -->
+        {% if vals.get('logo_path') %}
+        <div class="field" style="left: 25pt; top: 35pt;">
+            <img src="{{ vals.logo_path }}" style="height: 55pt; max-width: 250pt;">
+        </div>
+        {% endif %}
+
+        <!-- RENDER DE CAMPOS (LAYOUT) -->
+        {% for name, config in layout.items() %}
+        {% if config.section in ['header', 'period', 'client', 'footer', 'totals'] %}
+
+        {% if name == 'qr_code' and vals.get('qr_code') %}
+        <div class="field" style="left: {{ config.x }}pt; top: {{ config.y }}pt;">
+            <img src="data:image/png;base64,{{ vals.get('qr_code') }}" style="width: 75pt; height: 75pt;">
+        </div>
+        {% elif name == 'barcode' and vals.get('barcode') %}
+        <div class="field center" style="left: {{ config.x }}pt; top: {{ config.y }}pt;">
+            <img src="data:image/png;base64,{{ vals.get('barcode') }}" style="width: 250pt; height: 35pt;">
+        </div>
+        {% elif name == 'referencia_comercial' %}
+        <div class="field" style="left: 20pt; top: 261pt; font-size: 8pt; font-weight: bold;">
+            {{ vals.get('label_referencia', 'Referencia:') }} {{ vals.get('referencia_comercial', '') }}
+        </div>
+        {% if vals.get('comprobante_asociado') %}
+        <div class="field" style="left: 300pt; top: 261pt; font-size: 8pt; font-weight: bold; color: #333;">
+            {{ vals.get('comprobante_asociado') }}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="field {{ config.alignment }}"
+            style="left: {{ config.x }}pt; top: {{ config.y }}pt; font-size: {{ config.font_size }}pt; {% if config.font_style == 'bold' %}font-weight: bold;{% endif %}">
+            {% if name == 'ejemplar_tag' %}
+            {{ ejemplar }}
+            {% else %}
+            {{ vals.get(name, '') }}
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+
+        <!-- ITEMS DETALLE -->
+        {% set ns = namespace(y_offset=0) %}
+        {% for d in detalles %}
+        {% set row_y = 296 + (ns.y_offset * 14) %}
+
+        {# Partir descripción en líneas de max 45 caracteres, cortando por palabra #}
+        {% set desc_full = d.descripcion or '' %}
+        {% set desc_lines = [] %}
+        {% if desc_full|length <= 45 %} {% set desc_lines=[desc_full] %} {% else %} {% set remaining=desc_full %} {% set
+            temp_lines=[] %} {% for i in range(10) %} {% if remaining|length> 0 %}
+            {% if remaining|length <= 45 %} {% if temp_lines.append(remaining) %}{% endif %} {% set remaining='' %} {%
+                else %} {% set cut_pos=remaining[:45].rfind(' ') %}
+                        {% if cut_pos <= 0 %}{% set cut_pos = 45 %}{% endif %}
+                        {% if temp_lines.append(remaining[:cut_pos]|trim) %}{% endif %}
+                        {% set remaining = remaining[cut_pos:]|trim %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            {% set desc_lines = temp_lines %}
+        {% endif %}
+
+        {# Primera línea: descripción + todos los datos numéricos #}
+        <div class="field" style="left: 15pt; top: {{ row_y }}pt; font-size: 7.5pt; width: 40pt; text-align: center;">
+            {{ d.articulo_id or loop.index }}
+        </div>
+        <div class="field" style="left: 57pt; top: {{ row_y }}pt; font-size: 7.5pt; width: 138pt; overflow: hidden; white-space: nowrap;">
+            {{ desc_lines[0] if desc_lines else '' }}
+        </div>
+        <div class="field" style="left: 196pt; top: {{ row_y }}pt; font-size: 7.5pt; width: 65pt; text-align: right; padding-right: 5pt;">
+            {{ "{:,.2f}".format(d.cantidad)|replace(' ,', 'X' )|replace('.', ',' )|replace('X', '.' ) }} </div>
+                <div class="field"
+                    style="left: 261pt; top: {{ row_y }}pt; font-size: 7pt; width: 43pt; text-align: center;">
+                    unidades
+                </div>
+                <div class="field"
+                    style="left: 304pt; top: {{ row_y }}pt; font-size: 7.5pt; width: 80pt; text-align: right; padding-right: 5pt;">
+                    {{ "{:,.2f}".format(d.precio_unitario)|replace(',', 'X')|replace('.', ',')|replace('X', '.') }}
+                </div>
+                <div class="field"
+                    style="left: 384pt; top: {{ row_y }}pt; font-size: 7.5pt; width: 32pt; text-align: center;">
+                    0.00
+                </div>
+                <div class="field"
+                    style="left: 416pt; top: {{ row_y }}pt; font-size: 7.5pt; width: 73pt; text-align: right; padding-right: 5pt;">
+                    0.00
+                </div>
+                <div class="field"
+                    style="left: 489pt; top: {{ row_y }}pt; font-size: 7.5pt; width: 92pt; text-align: right; padding-right: 5pt; font-weight: bold;">
+                    {{ "{:,.2f}".format(d.subtotal_total)|replace(',', 'X')|replace('.', ',')|replace('X', '.') }}
+                </div>
+                {% set ns.y_offset = ns.y_offset + 1 %}
+
+                {# Líneas de continuación: solo descripción, columnas numéricas vacías #}
+                {% for extra_line in desc_lines[1:] %}
+                {% set cont_y = 296 + (ns.y_offset * 14) %}
+                <div class="field"
+                    style="left: 57pt; top: {{ cont_y }}pt; font-size: 7.5pt; width: 138pt; overflow: hidden;">{{
+                    extra_line }}</div>
+                {% set ns.y_offset = ns.y_offset + 1 %}
+                {% endfor %}
+
+                {% endfor %}
+
+                <!-- OTROS TRIBUTOS (PERCEPCIONES) - DESGLOSE LEGAL -->
+                {% if impuestos %}
+                <div class="rect shaded" style="left: 15pt; top: 510pt; width: 566pt; height: 15pt;"></div>
+                <div class="field" style="left: 20pt; top: 512pt; font-weight: bold; font-size: 7.5pt;">Otros Tributos
+                </div>
+
+                <div class="rect" style="left: 15pt; top: 525pt; width: 566pt; height: 50pt;"></div>
+                <div class="field" style="left: 20pt; top: 528pt; font-weight: bold; font-size: 7pt; width: 150pt;">
+                    Descripción
+                </div>
+                <div class="field"
+                    style="left: 180pt; top: 528pt; font-weight: bold; font-size: 7pt; width: 100pt; text-align: right;">
+                    Detalle
+                    / Jurisdicción</div>
+                <div class="field"
+                    style="left: 300pt; top: 528pt; font-weight: bold; font-size: 7pt; width: 80pt; text-align: right;">
+                    Base
+                    Imponible</div>
+                <div class="field"
+                    style="left: 390pt; top: 528pt; font-weight: bold; font-size: 7pt; width: 50pt; text-align: right;">
+                    Alícuota
+                </div>
+                <div class="field"
+                    style="left: 480pt; top: 528pt; font-weight: bold; font-size: 7pt; width: 100pt; text-align: right;">
+                    Importe
+                </div>
+
+                {% for imp in impuestos %}
+                {% set imp_y = 540 + (loop.index0 * 12) %}
+                <div class="field" style="left: 20pt; top: {{ imp_y }}pt; font-size: 7.5pt;">Percepción de Ingresos
+                    Brutos</div>
+                <div class="field"
+                    style="left: 180pt; top: {{ imp_y }}pt; font-size: 7.5pt; text-align: right; width: 100pt;">
+                    {{ imp.jurisdiccion }}</div>
+                <div class="field"
+                    style="left: 300pt; top: {{ imp_y }}pt; font-size: 7.5pt; text-align: right; width: 80pt;">$
+                    {{ "%.2f" | format(imp.base_imponible) | replace('.', ',') }}</div>
+                <div class="field"
+                    style="left: 390pt; top: {{ imp_y }}pt; font-size: 7.5pt; text-align: right; width: 50pt;">{{
+                    "%.2f" | format(imp.alicuota) | replace('.', ',') }} %</div>
+                <div class="field"
+                    style="left: 480pt; top: {{ imp_y }}pt; font-size: 7.5pt; text-align: right; width: 100pt;">$
+                    {{ "%.2f" | format(imp.importe) | replace('.', ',') }}</div>
+                {% endfor %}
+                {% endif %}
+
+    </div>
+    {% endfor %}
+
+</body>
+
+</html>

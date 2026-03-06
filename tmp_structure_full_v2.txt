@@ -1,0 +1,9 @@
+--- erp_terceros_cm05 ---
+id, enterprise_id, tercero_id, jurisdiccion_code, periodo_anio, coeficiente, fecha_presentacion, created_at, updated_at, user_insert, date_insert, user_update, date_update, user_id, user_id_update
+
+--- fin_recibos_medios ---
+id, recibo_id, medio_pago_id, cuenta_contable_snapshot_id, banco_id, nro_cheque, fecha_cobro, importe, es_echeck, debin_id, user_id, created_at, updated_at, user_id_update
+
+--- fin_ordenes_pago_medios ---
+enterprise_id, id, orden_pago_id, medio_pago_id, cuenta_contable_snapshot_id, importe, referencia, es_echeck, debin_id, banco_id, nro_cheque, fecha_pago, user_id, created_at, updated_at, user_id_update
+

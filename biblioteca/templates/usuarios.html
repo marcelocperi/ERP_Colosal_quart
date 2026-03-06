@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1>Gestión de Usuarios</h1>
+    {% if 'patrons_manage' in permissions %}
+    <button class="btn btn-primary" onclick="openAddUserModal()">
+        <i class="fas fa-user-plus"></i> <span>Nuevo Usuario</span>
+    </button>
+    {% endif %}
+</div>
+
+<!-- Modal para agregar/editar usuario -->
+<div id="modal-usuario" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 800px; z-index: 5001; border: 1px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <h3 id="user-modal-title">Registrar Nuevo Usuario</h3>
+    <form id="form-usuario" action="/usuarios/agregar" method="POST" style="margin-top: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" name="nombre" id="user-nombre" required>
+            </div>
+            <div class="form-group">
+                <label>Apellido</label>
+                <input type="text" name="apellido" id="user-apellido" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" id="user-email" required>
+            </div>
+            <div class="form-group">
+                <label>Teléfono</label>
+                <input type="text" name="telefono" id="user-telefono">
+            </div>
+        </div>
+        <div id="user-modal-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" id="user-submit-btn">Registrar</button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                onclick="toggleModal('modal-usuario')">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<div class="table-container card">
+    <table>
+        <thead>
+            <tr>
+                <th class="text-end">ID</th>
+                <th>Nombre Completo</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in usuarios %}
+            <tr>
+                <td class="text-end">{{ u.id }}</td>
+                <td style="font-weight: 600;">{{ u.nombre }} {{ u.apellido }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.telefono }}</td>
+                <td>
+                    {% if 'patrons_manage' in permissions %}
+                    <button class="btn" style="padding: 0.5rem; background: rgba(255,255,255,0.05);"
+                        data-id="{{ u.id }}" data-nombre="{{ u.nombre | e }}" data-apellido="{{ u.apellido | e }}"
+                        data-email="{{ u.email | e }}" data-telefono="{{ (u.telefono or '') | e }}"
+                        onclick="fillUserEditModalFromButton(this)">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function toggleModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.style.display = (modal.style.display === 'none' || modal.style.display === '') ? 'block' : 'none';
+        }
+    }
+
+    function openAddUserModal() {
+        document.getElementById('user-modal-title').innerText = 'Registrar Nuevo Usuario';
+        document.getElementById('form-usuario').action = '/usuarios/agregar';
+        document.getElementById('user-submit-btn').innerText = 'Registrar';
+
+        document.getElementById('user-nombre').value = '';
+        document.getElementById('user-apellido').value = '';
+        document.getElementById('user-email').value = '';
+        document.getElementById('user-telefono').value = '';
+
+        toggleModal('modal-usuario');
+    }
+
+    function fillUserEditModalFromButton(btn) {
+        const id = btn.getAttribute('data-id');
+        const nombre = btn.getAttribute('data-nombre');
+        const apellido = btn.getAttribute('data-apellido');
+        const email = btn.getAttribute('data-email');
+        const telefono = btn.getAttribute('data-telefono');
+
+        document.getElementById('user-modal-title').innerText = 'Editar Usuario';
+        document.getElementById('form-usuario').action = '/usuarios/modificar/' + id;
+        document.getElementById('user-submit-btn').innerText = 'Guardar Cambios';
+
+        document.getElementById('user-nombre').value = nombre;
+        document.getElementById('user-apellido').value = apellido;
+        document.getElementById('user-email').value = email;
+        document.getElementById('user-telefono').value = telefono;
+
+        toggleModal('modal-usuario');
+    }
+</script>
+{% endblock %}

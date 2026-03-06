@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('core.manual_index') }}">Documentación</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Manual de Usuario</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 d-none d-md-block">
+            <div class="sticky-top pt-4" style="top: 20px;">
+                <nav id="navbar-user" class="nav flex-column border-start ps-3">
+                    <a class="nav-link text-muted" href="#acceso">Acceso y Seguridad</a>
+                    <a class="nav-link text-muted" href="#catalogo">Catálogo de Libros</a>
+                    <a class="nav-link text-muted" href="#prestamos">Gestión de Préstamos</a>
+                    <a class="nav-link text-muted" href="#reservas">Reservas</a>
+                    <a class="nav-link text-muted" href="#stock">Inventario y Stock</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="col-md-9">
+            <h1 class="mb-4">Manual de Usuario</h1>
+
+            <section id="acceso" class="mb-5">
+                <h2 class="text-success border-bottom pb-2">1. Acceso y Seguridad</h2>
+                <p>Para ingresar al sistema, utilice sus credenciales asignadas. El sistema cuenta con roles
+                    diferenciados (Administrador, Bibliotecario, Usuario).</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> <strong>Importante:</strong> Si olvida su contraseña, utilice la
+                    opción "Recuperar Contraseña". Recibirá un código temporal en su correo electrónico.
+                </div>
+            </section>
+
+            <section id="catalogo" class="mb-5">
+                <h2 class="text-success border-bottom pb-2">2. Catálogo de Libros</h2>
+                <p>La pantalla <strong>Libros</strong> permite administrar el acervo bibliográfico.</p>
+                <ul>
+                    <li><strong>Búsqueda:</strong> Utilice la lupa en la barra superior o el botón "Opciones de
+                        Búsqueda" para filtrar por Título, Autor, ISBN o Género.</li>
+                    <li><strong>Nuevo Libro:</strong> Haga clic en "Agregar Libro" para registrar un nuevo título. Se
+                        validará automáticamente que el ISBN no esté duplicado.</li>
+                    <li><strong>Edición:</strong> Seleccione un libro de la grilla para modificar sus datos o ver su
+                        historial.</li>
+                </ul>
+            </section>
+
+            <section id="prestamos" class="mb-5">
+                <h2 class="text-success border-bottom pb-2">3. Gestión de Préstamos</h2>
+                <p>El núcleo operativo de la biblioteca.</p>
+
+                <h4 class="mt-3">Realizar un Préstamo</h4>
+                <ol>
+                    <li>Navegue a la sección <strong>Préstamos</strong>.</li>
+                    <li>Haga clic en <strong>"Nuevo Préstamo"</strong>.</li>
+                    <li>Seleccione el Usuario y el Libro. El sistema validará automáticamente:
+                        <ul>
+                            <li>Que el usuario no tenga deuda pendiente.</li>
+                            <li>Que exista stock disponible.</li>
+                            <li>Que el libro no tenga reservas activas de otros usuarios.</li>
+                        </ul>
+                    </li>
+                    <li>Confirme la operación. El usuario recibirá un <strong>email de notificación</strong>.</li>
+                </ol>
+
+                <h4 class="mt-3">Devolución</h4>
+                <p>Desde la lista de préstamos activos, localice el préstamo y haga clic en <strong>Devolver</strong>.
+                    Si el libro tiene reservas pendientes, el sistema le alertará y notificará automáticamente al
+                    siguiente usuario en la cola.</p>
+            </section>
+
+            <section id="reservas" class="mb-5">
+                <h2 class="text-success border-bottom pb-2">4. Gestión de Reservas</h2>
+                <p>Cuando no hay ejemplares disponibles, se puede registrar una reserva.</p>
+                <ul>
+                    <li><strong>Registro:</strong> Si intenta prestar un libro sin stock, el sistema le ofrecerá la
+                        opción de <strong>Reservar</strong>.</li>
+                    <li><strong>Notificación:</strong> Al registrarse, el usuario recibe un correo confirmando su
+                        posición.</li>
+                    <li><strong>Disponibilidad:</strong> Cuando se devuelva un ejemplar, el sistema detectará la reserva
+                        y enviará un correo de "Libro Disponible" con validez de 48 horas.</li>
+                </ul>
+            </section>
+
+            <section id="stock" class="mb-5">
+                <h2 class="text-success border-bottom pb-2">5. Inventario y Stock</h2>
+                <p>Control detallado de ejemplares físicos.</p>
+                <p>La pantalla de <strong>Inventario</strong> muestra una vista consolidada de:</p>
+                <ul>
+                    <li>Stock Total (Ejemplares físicos registrados).</li>
+                    <li>Stock Disponible (En estantería).</li>
+                    <li>Prestados (Fuera de la biblioteca).</li>
+                    <li>Reservados (Comprometidos).</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

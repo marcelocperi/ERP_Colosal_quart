@@ -1,0 +1,62 @@
+# Colosal ERP - Cross-platform Requirements
+# Esta configuración detecta automáticamente si estás en Windows o Linux
+# e instala el servidor de producción adecuado (Waitress o Gunicorn).
+
+# ── Core Framework ─────────────────────────────────────────────────────
+flask>=3.0.0
+flask-login>=0.6.3
+werkzeug>=3.0.0
+python-dotenv>=1.0.0
+itsdangerous>=2.0.0
+jinja2>=3.1.0
+click>=8.0.0
+
+# ── Database ───────────────────────────────────────────────────────────
+SQLAlchemy>=2.0.0
+PyMySQL>=1.1.0
+mariadb>=1.1.0
+
+# ── HTTP / APIs ────────────────────────────────────────────────────────
+requests>=2.32.0
+httpx>=0.28.0
+urllib3>=2.0.0
+certifi>=2024.0.0
+
+# ── AFIP & SOAP ────────────────────────────────────────────────────────
+zeep>=4.3.0
+cryptography>=44.0.0
+lxml>=5.3.0
+pyOpenSSL>=24.0.0
+
+# ── Firma Digital (pyHanko — firma de PDFs) ───────────────────────────
+pyHanko>=0.26.0
+pyhanko-certvalidator>=0.26.0
+
+# ── Scraping & Datos ──────────────────────────────────────────────────
+beautifulsoup4>=4.13.0
+html5lib>=1.1
+openpyxl>=3.1.0
+PyYAML>=6.0.0
+
+# ── PDF & Imágenes ─────────────────────────────────────────────────────
+xhtml2pdf>=0.2.0
+Pillow>=10.0.0
+reportlab>=4.0.0
+PyPDF2>=3.0.0
+pdfplumber>=0.11.0
+pdfminer.six>=20221105
+PyMuPDF>=1.24.0
+svglib>=1.5.0
+
+# ── Fechas & Zonas Horarias ───────────────────────────────────────────
+pytz>=2024.0
+tzdata>=2024.0
+tzlocal>=5.0
+
+# ── Windows Production Server ─────────────────────────────────────────
+waitress==3.0.2; sys_platform == 'win32'
+pypiwin32==223; sys_platform == 'win32'
+pywin32==311; sys_platform == 'win32'
+
+# ── Linux Production Server ───────────────────────────────────────────
+gunicorn==23.0.0; sys_platform != 'win32'

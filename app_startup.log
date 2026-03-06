@@ -1,0 +1,614 @@
+2026-03-03 09:50:44,239 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 09:50:44,248 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 10:25:12,860 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 20892). Limpiando...
+2026-03-03 10:25:13,082 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 20892 desalojado exitosamente.
+2026-03-03 10:25:13,182 - services.georef_service - INFO - Tablas sys_provincias, sys_departamentos, sys_municipios y sys_localidades verificadas/creadas.
+2026-03-03 10:25:13,194 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-03 10:25:13,233 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 10:25:34,582 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 10:26:37,919 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 10:30:14,517 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 10:30:24,918 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 14:50:12,669 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 14:50:12,677 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 14:50:14,086 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 14:50:21,591 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 15:54:05,175 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 15:54:05,182 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 15:54:05,370 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 15:54:21,131 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:08:01,416 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:08:06,251 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:17:24,120 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 16:17:24,128 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 16:17:29,492 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:17:31,625 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:17:37,313 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:40:10,186 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 16:40:10,191 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 16:54:10,579 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 16:54:10,584 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 16:54:14,018 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:54:16,498 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:54:21,808 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 17:52:34,701 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 17:52:34,707 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 17:52:38,657 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 17:52:47,883 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:16:32,234 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:16:34,651 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:17:01,418 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:17:25,726 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 18:17:25,730 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 18:37:49,699 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:37:55,259 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:45:12,800 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 19:45:12,806 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 19:45:40,403 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:45:47,521 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:51:04,945 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:51:12,827 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:57:29,610 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 19:57:29,617 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 19:57:33,996 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:57:35,787 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:57:40,847 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 20:06:32,567 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 20:06:37,663 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 20:06:43,212 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 20:21:41,898 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 22:20:52,383 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 22:20:52,390 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 22:21:01,455 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 22:21:11,718 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:53:03,693 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 23:53:03,700 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 23:53:14,821 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:53:20,422 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:53:55,034 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 20212). Limpiando...
+2026-03-03 23:53:55,451 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 20212 desalojado exitosamente.
+2026-03-03 23:53:55,764 - services.georef_service - INFO - Tablas sys_provincias, sys_departamentos, sys_municipios y sys_localidades verificadas/creadas.
+2026-03-03 23:53:55,767 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-03 23:53:55,794 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 23:54:48,597 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:55:38,068 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:55:54,052 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 23:55:54,058 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 23:55:55,134 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:55:58,754 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:57:30,667 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 23:57:30,674 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 23:57:31,715 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-03 23:57:33,486 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:57:36,598 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:57:42,608 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:57:48,762 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 00:00:13,444 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 00:00:13,448 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 00:00:14,495 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 00:00:16,088 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 00:00:23,584 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 08:06:26,364 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 08:06:26,380 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 08:06:26,672 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 08:06:27,327 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 08:06:32,726 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 08:21:27,115 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 18064). Limpiando...
+2026-03-04 08:21:27,320 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 18064 desalojado exitosamente.
+2026-03-04 08:21:27,385 - services.georef_service - INFO - Tablas sys_provincias, sys_departamentos, sys_municipios y sys_localidades verificadas/creadas.
+2026-03-04 08:21:27,388 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-04 08:21:27,564 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 08:21:27,700 - __main__ - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 08:33:23,322 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 08:33:23,331 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 08:33:24,374 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 09:41:52,034 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 09:41:54,288 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 09:42:00,535 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 10:27:34,938 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 10:27:34,962 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 10:27:34,976 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 10:27:42,842 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 10:27:51,854 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 10:54:02,137 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 10:54:10,805 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 13:08:27,436 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 13:08:27,440 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 13:08:28,476 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 13:08:42,495 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 13:08:48,702 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:38:32,008 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:38:42,599 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:38:43,411 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:38:53,614 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:41:51,605 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:41:55,117 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:41:55,725 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:41:55,793 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:41:58,578 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:42:01,812 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:42:05,322 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:42:05,926 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:42:06,046 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:42:49,255 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:43:19,978 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 15:43:19,988 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 15:43:20,291 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:43:20,964 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 15:43:23,841 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:43:29,627 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:43:36,586 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:44:06,377 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:44:13,429 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:00:51,091 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:01:49,791 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:07:22,807 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:07:33,143 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:07:33,797 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:07:41,207 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:07:44,025 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:07:51,440 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:07:52,081 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:08:02,305 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:10:18,327 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:10:24,367 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:10:31,829 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:35:12,980 - app - ERROR - Falla de conexion directa en DB logger: 'Connection' object has no attribute '_ConnectionPool__last_used'
+2026-03-04 16:42:27,065 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 16:42:27,071 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 16:42:28,154 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 16:42:45,387 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:42:55,637 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:53:48,952 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:53:59,170 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:53:59,889 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:54:10,102 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:54:37,165 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:54:47,383 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:54:48,045 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:54:58,244 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:56:15,276 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 17:56:15,280 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 17:56:16,311 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 17:56:24,877 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 17:56:29,806 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 17:56:38,844 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 17:56:48,432 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:56:50,539 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:56:58,715 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:56:59,569 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:57:00,755 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:57:09,804 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:57:20,741 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:57:20,959 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 200 OK"
+2026-03-04 17:57:22,076 - httpx - INFO - HTTP Request: GET https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL "HTTP/1.1 200 OK"
+2026-03-04 17:57:22,298 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-04 17:57:22,559 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-04 18:05:11,546 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:13,868 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:21,765 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:05:22,466 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:24,094 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:05:32,672 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:05:34,656 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:41,860 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:44,891 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:05:52,082 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:21:18,517 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 18:54:40,481 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 18:54:45,611 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:14:26,778 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 19:14:26,789 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 19:14:26,916 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:14:27,743 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 19:14:32,195 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:14:47,144 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:14:57,313 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:14:57,698 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:14:58,591 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:15:07,556 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:15:08,809 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:21:45,837 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 19:21:45,843 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 19:21:46,936 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 19:21:49,441 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:21:51,926 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:22:02,216 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:22:10,356 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:22:20,622 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:22:21,418 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:22:31,685 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:23:02,045 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:23:11,103 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:23:12,257 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:23:21,390 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:25:47,666 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:25:57,880 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:25:58,730 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:26:08,968 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:27:12,580 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:27:22,786 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:27:23,666 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:27:33,885 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:01:06,899 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 20:01:06,905 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 20:01:07,089 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:01:07,890 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 20:01:12,199 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:06:01,925 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 20:06:01,929 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 20:06:02,980 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 20:06:07,312 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:06:15,533 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:09:35,511 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:09:45,803 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:09:46,486 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:09:56,702 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:19,196 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:22,915 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:23,012 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:29,410 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:30,326 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:33,141 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:33,197 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:40,547 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:41,207 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:47,894 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 20:19:47,899 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 20:19:48,940 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 20:19:53,106 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:20:01,070 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:20:08,727 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:20:18,975 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:20:19,642 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:20:29,857 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:26:15,723 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:26:25,959 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:26:26,645 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:26:36,838 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:34:31,095 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:34:31,498 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:34:31,649 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:34:41,268 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:34:41,313 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:34:41,713 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:34:41,881 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:34:51,487 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:46:54,651 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:46:54,753 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:46:58,754 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:47:02,820 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:47:03,420 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:47:04,863 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:04,959 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:08,974 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:13,035 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:13,630 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:47,830 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 22:47:47,840 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 22:47:48,819 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 22:47:49,431 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:47:59,837 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:48:00,696 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:48:10,908 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:48:29,544 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:48:33,254 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:48:39,800 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:48:40,730 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:48:43,458 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:48:50,948 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:02:41,761 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:02:51,975 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:02:52,677 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:03:02,886 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:10,555 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:13,148 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:13,441 - waitress.queue - WARNING - Task queue depth is 1
+2026-03-04 23:06:13,964 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:14,299 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:14,491 - waitress.queue - WARNING - Task queue depth is 1
+2026-03-04 23:06:14,494 - waitress.queue - WARNING - Task queue depth is 2
+2026-03-04 23:06:14,708 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:15,502 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:20,772 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:23,437 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:24,159 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:24,504 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:24,916 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:25,784 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:26,306 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:28,094 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:28,253 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:38,654 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 23:06:38,659 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 23:06:39,727 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 23:06:44,804 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:46,525 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:46,804 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:46,883 - waitress.queue - WARNING - Task queue depth is 1
+2026-03-04 23:06:47,600 - waitress.queue - WARNING - Task queue depth is 1
+2026-03-04 23:06:47,607 - waitress.queue - WARNING - Task queue depth is 2
+2026-03-04 23:06:47,607 - waitress.queue - WARNING - Task queue depth is 3
+2026-03-04 23:06:47,823 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:47,941 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:48,452 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:48,621 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:55,057 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:56,768 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:57,022 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:58,039 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:58,140 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:58,721 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:58,839 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:59,574 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:07:09,786 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:10:10,463 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:10:20,670 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:10:25,094 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 23:10:25,100 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 23:10:26,173 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 23:10:31,808 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:10:38,209 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:10:45,280 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:12:43,543 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 23:12:43,548 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 23:12:44,588 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-04 23:12:47,754 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:12:47,757 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:12:52,913 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:12:58,095 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:12:58,101 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:13:03,156 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:13:03,971 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:13:14,211 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:13:14,545 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:13:14,927 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:13:17,162 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:13:22,168 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:13:25,148 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:13:25,947 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:13:36,155 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:36:27,507 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 01:36:36,946 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:36:44,063 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:36:47,155 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:36:54,279 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:41,051 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:47,352 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:47,538 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:47,995 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:51,270 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:55,531 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:57,567 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:57,745 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:58,222 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:59,035 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:05,751 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:09,263 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:10,070 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:15,573 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:20,278 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:25,794 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:31,510 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:41,764 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:42,639 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:52,845 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:40:44,651 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:40:44,871 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 200 OK"
+2026-03-05 01:40:45,996 - httpx - INFO - HTTP Request: GET https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL "HTTP/1.1 200 OK"
+2026-03-05 01:40:46,309 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-05 01:40:47,150 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-05 01:40:49,431 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:40:59,645 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 02:56:13,070 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:13,676 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:21,810 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:25,568 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:30,919 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:37,092 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:41,204 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:57:36,404 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:57:42,049 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:57:58,861 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:58:12,730 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:58:19,124 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:59:05,299 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:59:12,770 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:00:44,356 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:02:34,751 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:02:39,902 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:03:42,391 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:03:48,908 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:04:09,676 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:04:43,534 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:16:12,143 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:16:12,151 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:16:13,185 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:16:13,207 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:16:18,570 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:33:28,127 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:33:28,136 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:33:29,113 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:37:41,618 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:37:41,623 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:37:42,690 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:37:49,982 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:37:56,124 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:40:38,948 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:40:38,952 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:40:40,014 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:40:41,501 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:40:46,639 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:59:29,871 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:59:29,876 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:59:30,942 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:59:41,079 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:59:47,126 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:59:54,378 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 03:59:58,499 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 04:00:04,945 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 04:00:08,764 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:05:05,286 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:05:15,594 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:05:16,436 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:05:26,761 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:05:42,590 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:05:52,837 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:05:55,806 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:06:06,068 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:06:06,925 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:06:17,186 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:07:31,853 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:07:32,102 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 200 OK"
+2026-03-05 05:07:33,289 - httpx - INFO - HTTP Request: GET https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL "HTTP/1.1 200 OK"
+2026-03-05 05:07:33,547 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-05 05:07:34,232 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-05 05:07:35,599 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:07:45,843 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 11:40:45,078 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 11:40:55,419 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 11:40:55,494 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 11:40:56,193 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 11:41:05,715 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 11:41:06,420 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 15:18:48,905 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 15:18:54,014 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 15:20:19,523 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 15:20:29,870 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 15:30:25,941 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Provincia'
+2026-03-05 15:30:25,983 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:30:31,198 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:30:31,207 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:30:32,798 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:30:32,820 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:30:55,068 - core.routes - INFO - GEOREF: Buscando calle 'None' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:30:59,856 - core.routes - INFO - GEOREF: Buscando calle 'BONI' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:30:59,883 - services.georef_service - INFO - GeorefService.get_calles: Iniciando búsqueda de 'BONI' (Loc: Caballito, Mun: None, Prov: Ciudad Autónoma de Buenos Aires)
+2026-03-05 15:31:00,322 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:31:00,337 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:31:00,369 - core.routes - INFO - GEOREF: Buscando calle 'BONIF' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:31:00,371 - services.georef_service - INFO - GeorefService.get_calles: Iniciando búsqueda de 'BONIF' (Loc: Caballito, Mun: None, Prov: Ciudad Autónoma de Buenos Aires)
+2026-03-05 15:31:00,917 - httpx - INFO - HTTP Request: GET https://apis.datos.gob.ar/georef/api/v2.0/calles?nombre=BONI&provincia=Ciudad+Aut%C3%B3noma+de+Buenos+Aires&localidad=Caballito&max=50 "HTTP/1.1 200 OK"
+2026-03-05 15:31:00,923 - services.georef_service - INFO - GeorefService: 1 calles halladas en Localidad: Caballito
+2026-03-05 15:31:00,933 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 15:31:01,235 - httpx - INFO - HTTP Request: GET https://apis.datos.gob.ar/georef/api/v2.0/calles?nombre=BONIF&provincia=Ciudad+Aut%C3%B3noma+de+Buenos+Aires&localidad=Caballito&max=50 "HTTP/1.1 200 OK"
+2026-03-05 15:31:01,238 - services.georef_service - INFO - GeorefService: 1 calles halladas en Localidad: Caballito
+2026-03-05 15:31:01,241 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 15:31:13,736 - core.routes - INFO - GEOREF: Buscando calle 'JOSE' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:31:13,739 - services.georef_service - INFO - GeorefService.get_calles: Iniciando búsqueda de 'JOSE' (Loc: Caballito, Mun: None, Prov: Ciudad Autónoma de Buenos Aires)
+2026-03-05 15:31:14,766 - httpx - INFO - HTTP Request: GET https://apis.datos.gob.ar/georef/api/v2.0/calles?nombre=JOSE&provincia=Ciudad+Aut%C3%B3noma+de+Buenos+Aires&localidad=Caballito&max=50 "HTTP/1.1 200 OK"
+2026-03-05 15:31:14,771 - services.georef_service - INFO - GeorefService: 5 calles halladas en Localidad: Caballito
+2026-03-05 15:31:14,779 - core.routes - INFO - GEOREF: Encontradas 5 calles
+2026-03-05 15:31:16,871 - core.routes - INFO - GEOREF: Buscando calle 'JOSE BONIFACIO' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:31:16,873 - services.georef_service - INFO - GeorefService.get_calles: Iniciando búsqueda de 'JOSE BONIFACIO' (Loc: Caballito, Mun: None, Prov: Ciudad Autónoma de Buenos Aires)
+2026-03-05 15:31:17,717 - httpx - INFO - HTTP Request: GET https://apis.datos.gob.ar/georef/api/v2.0/calles?nombre=JOSE+BONIFACIO&provincia=Ciudad+Aut%C3%B3noma+de+Buenos+Aires&localidad=Caballito&max=50 "HTTP/1.1 200 OK"
+2026-03-05 15:31:17,725 - services.georef_service - INFO - GeorefService: 1 calles halladas en Localidad: Caballito
+2026-03-05 15:31:17,734 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 15:31:34,844 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:31:34,870 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:31:44,481 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:31:44,503 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:32:01,460 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:32:01,478 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:32:06,345 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Córdoba'
+2026-03-05 15:32:06,366 - core.routes - INFO - GEOREF: Encontrados 260 municipios
+2026-03-05 15:32:08,546 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:32:08,557 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:32:09,119 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:32:09,135 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:32:31,064 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:32:31,086 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:50:20,637 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 15:50:20,650 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 15:50:21,078 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 15:50:21,606 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 15:50:36,410 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:11:38,392 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 16:11:38,400 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 16:11:39,503 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 16:12:14,402 - core.routes - INFO - GEOREF: Buscando calle 'car' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:12:14,405 - services.georef_service - ERROR - Local search error (calles): Illegal mix of collations (utf8mb4_unicode_ci,IMPLICIT) and (utf8mb4_uca1400_ai_ci,IMPLICIT) for operation '='
+2026-03-05 16:12:14,405 - core.routes - INFO - GEOREF: Encontradas 0 calles
+2026-03-05 16:34:38,945 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 16:34:38,964 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 16:34:40,228 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 16:34:40,242 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:35:25,590 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:35:30,931 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:35:57,120 - core.routes - INFO - GEOREF: Buscando calle 'cara' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:35:57,229 - core.routes - INFO - GEOREF: Encontradas 5 calles
+2026-03-05 16:35:59,875 - core.routes - INFO - GEOREF: Buscando calle 'AV CARABOBO' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:35:59,964 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 16:46:20,622 - core.routes - INFO - GEOREF: Buscando calle 'AV CA' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:46:20,703 - core.routes - INFO - GEOREF: Encontradas 2 calles
+2026-03-05 16:46:23,654 - core.routes - INFO - GEOREF: Buscando calle 'AV CARABOBO' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:46:23,734 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 16:46:39,659 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 16:46:39,665 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 16:46:40,706 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 16:46:44,757 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:46:50,034 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:47:06,487 - core.routes - INFO - GEOREF: Buscando calle 'acc' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:47:06,569 - core.routes - INFO - GEOREF: Encontradas 0 calles
+2026-03-05 16:47:08,629 - core.routes - INFO - GEOREF: Buscando calle 'CARA' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:47:08,710 - core.routes - INFO - GEOREF: Encontradas 5 calles
+2026-03-05 16:47:11,407 - core.routes - INFO - GEOREF: Buscando calle 'AV CARABOBO' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:47:11,492 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 17:29:24,585 - core.routes - INFO - GEOREF: Buscando calle 'None' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Caballito
+2026-03-05 17:29:29,502 - core.routes - INFO - GEOREF: Buscando calle 'BON' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Caballito
+2026-03-05 17:29:29,587 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 17:29:31,136 - core.routes - INFO - GEOREF: Buscando calle 'JOSE BONIFACIO' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Caballito
+2026-03-05 17:29:31,196 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 19:51:37,934 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:33:52,259 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 20:33:52,276 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 20:33:53,433 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:38:57,970 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 20:38:57,975 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 20:38:59,259 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:39:10,452 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:39:15,883 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:41:39,469 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 20:41:39,474 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 20:41:40,538 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:42:00,700 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 20:42:00,705 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 20:42:01,842 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:42:05,390 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:42:10,426 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:55:57,964 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:56:10,083 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 21:55:26,299 - app - INFO - ✅ Email de alerta enviado exitosamente (Error #693)
+2026-03-06 00:33:03,891 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-06 00:33:03,902 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-06 00:33:04,092 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:33:04,876 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 00:33:10,809 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:33:16,200 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:35:39,583 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:35:46,607 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:36:17,332 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-06 00:36:17,336 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-06 00:36:18,329 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 00:38:23,440 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-06 00:38:23,445 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-06 00:38:23,681 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:38:24,438 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 00:38:32,320 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:41:03,487 - app - WARNING - CSRF Failure on /utilitarios/crons/run/1. Form Token: None..., Session Token: 41839...
+2026-03-06 00:48:23,436 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:48:36,128 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-06 00:48:36,133 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-06 00:48:37,184 - app - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 00:49:09,552 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:49:15,145 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 09:50:55,563 - app - INFO - ✅ Email de alerta enviado exitosamente (Error #694)
+2026-03-06 09:57:49,883 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:00:19,694 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:02:18,980 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:02:24,145 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:04:32,852 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:04:44,217 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:04:49,098 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:04:55,921 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:09:33,790 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1

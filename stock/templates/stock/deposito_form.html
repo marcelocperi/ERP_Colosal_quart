@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container" style="margin-bottom: 2rem;">
+    <h1 class="page-title"><i class="fas fa-warehouse"></i> {{ 'Editar' if deposito else 'Nuevo' }} Depósito</h1>
+    <p class="text-muted">Configure la ubicación y parámetros de su centro de almacenamiento</p>
+</div>
+
+<div class="card" style="max-width: 800px; padding: 2.5rem; margin: 0 auto; border-radius: 20px;">
+    <form
+        action="{{ url_for('stock.deposito_editar', id=deposito.id) if deposito else url_for('stock.deposito_nuevo') }}"
+        method="POST">
+        <input type="hidden" name="sid" value="{{ sid }}">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <label class="form-label-premium">NOMBRE DEL DEPÓSITO</label>
+                <input type="text" name="nombre" value="{{ deposito.nombre if deposito else '' }}" required
+                    placeholder="Ej: Depósito Central, Sucursal Norte..." class="input-premium">
+            </div>
+            <div class="col-md-6 mb-4">
+                <label class="form-label-premium">TIPO DE DEPÓSITO</label>
+                <select name="tipo" id="tipo_deposito" class="input-premium" onchange="toggleTercero(this.value)">
+                    <option value="INTERNO" {{ 'selected' if deposito and deposito.tipo=='INTERNO' else '' }}>INTERNO
+                        (Propio)</option>
+                    <option value="SATELITE" {{ 'selected' if deposito and deposito.tipo=='SATELITE' else '' }}>SATÉLITE
+                        (Sucursal Externa)</option>
+                    <option value="CONSIGNACION_PROPIA" {{ 'selected' if deposito and
+                        deposito.tipo=='CONSIGNACION_PROPIA' else '' }}>CONSIGNACIÓN PROPIA (Nuestra en terceros)
+                    </option>
+                    <option value="CONSIGNACION_TERCERO" {{ 'selected' if deposito and
+                        deposito.tipo=='CONSIGNACION_TERCERO' else '' }}>CONSIGNACIÓN TERCEROS (De terceros en nuestra
+                        mano)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row" id="row_tercero"
+            style="{{ 'display:none' if not deposito or deposito.tipo=='INTERNO' else '' }}">
+            <div class="col-md-12 mb-4">
+                <label class="form-label-premium">TERCERO RELACIONADO (Cliente/Proveedor/Consignatario)</label>
+                <select name="tercero_id" class="input-premium">
+                    <option value="">Seleccione un tercero...</option>
+                    {% for t in terceros %}
+                    <option value="{{ t.id }}" {{ 'selected' if deposito and deposito.tercero_id==t.id else '' }}>{{
+                        t.nombre }} ({{ t.cuit }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4" style="display: flex; align-items: flex-end; padding-bottom: 0.5rem;">
+                <div class="form-check custom-check">
+                    <input type="checkbox" name="es_principal" id="es_principal" value="1" {{ 'checked' if deposito and
+                        deposito.es_principal else '' }} class="form-check-input">
+                    <label for="es_principal" class="form-check-label text-white">¿Es Principal?</label>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="text-primary small fw-bold uppercase mb-3 mt-2 border-bottom pb-2">
+            <i class="fas fa-map-marker-alt me-2"></i>Ubicación Geográfica
+        </h6>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label-premium">Provincia</label>
+                <select name="provincia" id="dep_provincia" class="input-premium"
+                    onchange="onProvinciaChange(this.value)" required>
+                    <option value="">Seleccione Provincia...</option>
+                    {% for p in provincias %}
+                    <option value="{{ p.nombre }}" {{ 'selected' if deposito and deposito.provincia==p.nombre else ''
+                        }}>{{ p.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label class="form-label-premium">Localidad (Ciudad/Barrio)</label>
+                <input type="text" name="localidad" id="dep_localidad"
+                    value="{{ deposito.localidad if deposito else '' }}" class="input-premium" list="list_localidades"
+                    required onchange="onLocalidadChange(this.value)" onfocus="ensureDataOnFocus('localidad')">
+                <datalist id="list_localidades"></datalist>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label-premium">Calle (Arteria/Ruta)</label>
+                <input type="text" name="calle" id="dep_calle" value="{{ deposito.calle if deposito else '' }}"
+                    class="input-premium" list="list_calles" required oninput="debouncedSearchCalles(this.value)">
+                <datalist id="list_calles"></datalist>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label-premium">Número (Altura)</label>
+                <input type="text" name="numero" value="{{ deposito.numero if deposito else '' }}" class="input-premium"
+                    required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label-premium">Código Postal (C.P.)</label>
+                <input type="text" name="cod_postal" id="dep_cp" value="{{ deposito.cod_postal if deposito else '' }}"
+                    class="input-premium" list="list_cp">
+                <datalist id="list_cp"></datalist>
+            </div>
+            {% if deposito %}
+            <div class="col-md-4 mb-3" style="display: flex; align-items: flex-end; padding-bottom: 0.5rem;">
+                <div class="form-check custom-check">
+                    <input type="checkbox" name="activo" id="activo" value="1" {{ 'checked' if deposito.activo else ''
+                        }} class="form-check-input">
+                    <label for="activo" class="form-check-label text-white">Estado Activo</label>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 3rem;">
+            <button type="submit" class="btn-action" style="flex: 2;">
+                <i class="fas fa-save me-2"></i> {{ 'Actualizar' if deposito else 'Guardar' }} Centro
+            </button>
+            <a href="{{ url_for('stock.depositos_lista') }}" class="btn-secondary" style="flex: 1; text-align: center;">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-label-premium {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #94a3b8;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .input-premium {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 23, 42, 0.6);
+        color: white;
+        transition: all 0.3s;
+    }
+
+    .input-premium:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(15, 23, 42, 0.9);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+</style>
+
+<script>
+    // Variables globales para persistencia en la vista
+    let _localidadesCache = [];
+    let _searchTimeout = null;
+
+    // Obtener SID de forma segura (Priorizar window.SID de base.html)
+    const getSID = () => window.SID || '{{ sid }}' || '';
+
+    function onProvinciaChange(provincia) {
+        if (!provincia) return;
+        document.getElementById('dep_localidad').value = '';
+        document.getElementById('dep_calle').value = '';
+        cargarLocalidades(provincia);
+    }
+
+    async function cargarLocalidades(provincia) {
+        if (!provincia) return;
+        console.log(`Buscando localidades para ${provincia}`);
+        const datalist = document.getElementById('list_localidades');
+
+        try {
+            let baseUrl = `{{ url_for('core.api_get_localidades') }}`;
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            let url = `${baseUrl}${separator}provincia=${encodeURIComponent(provincia)}`;
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            _localidadesCache = data;
+            datalist.innerHTML = '';
+            data.forEach(loc => {
+                const opt = document.createElement('option');
+                opt.value = loc.nombre;
+                datalist.appendChild(opt);
+            });
+        } catch (e) {
+            console.error("Error cargando localidades:", e);
+        }
+    }
+
+
+    async function onLocalidadChange(localidadNombre) {
+        if (!localidadNombre) return;
+        document.getElementById('dep_calle').value = '';
+        document.getElementById('dep_cp').value = '';
+
+        const loc = _localidadesCache.find(l => l.nombre.toLowerCase() === localidadNombre.toLowerCase());
+        if (loc) {
+            const prov = document.getElementById('dep_provincia').value;
+            if (prov) {
+                cargarCodigosPostales(prov, loc.nombre);
+                cargarCalles(loc.nombre);
+            }
+        }
+    }
+
+    async function cargarCodigosPostales(provincia, localidad) {
+        const datalist = document.getElementById('list_cp');
+        const cpInput = document.getElementById('dep_cp');
+        if (!datalist) return;
+
+        try {
+            let baseUrl = `{{ url_for('core.api_get_cp') }}`;
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            let url = `${baseUrl}${separator}provincia=${encodeURIComponent(provincia)}&localidad=${encodeURIComponent(localidad)}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            datalist.innerHTML = '';
+            if (data && data.length > 0) {
+                data.forEach(cp => {
+                    const opt = document.createElement('option');
+                    opt.value = cp;
+                    datalist.appendChild(opt);
+                });
+                if (data.length === 1 && (!cpInput.value || cpInput.value.length < 2)) {
+                    cpInput.value = data[0];
+                }
+            }
+        } catch (e) { console.error("Error cargando CP:", e); }
+    }
+
+
+    function debouncedSearchCalles(val) {
+        clearTimeout(_searchTimeout);
+        if (val.length < 3) return;
+
+        _searchTimeout = setTimeout(() => {
+            const localidad = document.getElementById('dep_localidad').value;
+            cargarCalles(localidad, val);
+        }, 500);
+    }
+
+    async function cargarCalles(localidad, partialName = '') {
+        const provincia = document.getElementById('dep_provincia').value;
+        const datalist = document.getElementById('list_calles');
+
+        try {
+            const sid = getSID();
+            let baseUrl = `{{ url_for('core.api_get_calles') }}`;
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            let url = `${baseUrl}${separator}localidad=${encodeURIComponent(localidad)}`;
+            if (provincia) url += `&provincia=${encodeURIComponent(provincia)}`;
+            if (partialName) url += `&nombre=${encodeURIComponent(partialName)}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+            datalist.innerHTML = '';
+            data.forEach(calle => {
+                const opt = document.createElement('option');
+                opt.value = calle.nombre;
+                datalist.appendChild(opt);
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    // Asegurar carga de datos al hacer foco si el datalist está vacío
+    function ensureDataOnFocus(type) {
+        const prov = document.getElementById('dep_provincia').value;
+        if (!prov) return;
+
+        if (type === 'localidad' && document.getElementById('list_localidades').children.length === 0) {
+            cargarLocalidades(prov);
+        }
+    }
+
+    function toggleTercero(tipo) {
+        const row = document.getElementById('row_tercero');
+        if (tipo === 'INTERNO') {
+            row.style.display = 'none';
+        } else {
+            row.style.display = '';
+        }
+    }
+
+    // Inicialización al cargar la página (para modo edición)
+    window.addEventListener('DOMContentLoaded', () => {
+        const prov = document.getElementById('dep_provincia').value;
+        if (prov) {
+            cargarLocalidades(prov);
+        }
+
+        // Trigger toggle for initial state
+        const tipo = document.getElementById('tipo_deposito').value;
+        toggleTercero(tipo);
+    });
+</script>
+{% endblock %}

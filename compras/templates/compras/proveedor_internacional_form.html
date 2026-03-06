@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: 1.5rem; max-width: 700px; margin: 0 auto; color: #e2e8f0; font-family: 'Inter', sans-serif;">
+
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('compras.proveedores') }}"
+            style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">
+            <i class="fas fa-arrow-left me-1"></i> Volver a Proveedores
+        </a>
+        <h1 style="font-size: 1.5rem; font-weight: 700; color: #f1f5f9; margin: 0.75rem 0 0.25rem;">
+            <i class="fas fa-globe" style="color: #38bdf8; margin-right: 0.5rem;"></i>
+            Nuevo Proveedor Internacional
+        </h1>
+        <p style="color: #64748b; font-size: 0.85rem; margin: 0;">
+            Sin CUIT argentino. Se registra con identificador fiscal del país de origen.
+        </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('compras.nuevo_proveedor_internacional') }}">
+        <div
+            style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+            <h6
+                style="color: #38bdf8; margin: 0 0 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                <i class="fas fa-building me-2"></i>Datos del Proveedor
+            </h6>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div style="grid-column: span 2;">
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">
+                        Razón Social / Nombre *
+                    </label>
+                    <input type="text" name="nombre" required placeholder="Ej: Shanghai Global Trading Co. Ltd."
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+                </div>
+
+                <div>
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">País
+                        *</label>
+                    <select name="pais_origen" id="pais_select" onchange="updateISO()" required
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+                        {% for code, nombre in paises %}
+                        <option value="{{ nombre }}" data-iso="{{ code }}">{{ nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">ISO
+                        País</label>
+                    <input type="text" name="codigo_pais_iso" id="iso_field" maxlength="3" placeholder="CN"
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: #38bdf8; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em;">
+                </div>
+
+                <div>
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">
+                        Identificador Fiscal (Tax ID / VAT)
+                    </label>
+                    <input type="text" name="identificador_fiscal" placeholder="Ej: 91234567890"
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+                </div>
+
+                <div>
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">Moneda
+                        de Operación</label>
+                    <select name="moneda_operacion"
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+                        {% for code, label in monedas %}
+                        <option value="{{ code }}" {% if code=='USD' %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">SWIFT
+                        / BIC</label>
+                    <input type="text" name="codigo_swift" placeholder="Ej: CHASUSXX" maxlength="11"
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem; text-transform: uppercase;">
+                </div>
+
+                <div>
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">Código
+                        Interno</label>
+                    <input type="text" name="codigo" placeholder="PROV-EXT-001"
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h6
+                style="color: #a78bfa; margin: 0 0 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                <i class="fas fa-address-book me-2"></i>Contacto
+            </h6>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">Email</label>
+                    <input type="email" name="email" placeholder="info@proveedor.com"
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">Teléfono</label>
+                    <input type="text" name="telefono" placeholder="+86 21 5555 1234"
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+                </div>
+                <div style="grid-column: span 2;">
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">Sitio
+                        Web</label>
+                    <input type="url" name="web" placeholder="https://www.proveedor.com"
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem;">
+                </div>
+                <div style="grid-column: span 2;">
+                    <label
+                        style="display: block; font-size: 0.78rem; color: #94a3b8; margin-bottom: 0.3rem; text-transform: uppercase;">Observaciones</label>
+                    <textarea name="observaciones" rows="3"
+                        placeholder="Condiciones comerciales, plazos de pago, certificaciones..."
+                        style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: white; border-radius: 6px; padding: 0.55rem 0.75rem; font-size: 0.9rem; resize: vertical;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <a href="{{ url_for('compras.proveedores') }}" class="btn"
+                style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 0.6rem 1.25rem; border-radius: 6px; text-decoration: none;">
+                Cancelar
+            </a>
+            <button type="submit" class="btn"
+                style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; padding: 0.6rem 1.5rem; border-radius: 6px; font-weight: 600;">
+                <i class="fas fa-save me-2"></i>Registrar Proveedor Internacional
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Auto-rellena el campo ISO al cambiar el país
+    const paisesMapa = {
+        {% for code, nombre in paises %} "{{ nombre }}": "{{ code }}"{% if not loop.last %}, {% endif %} {% endfor %}
+    };
+    function updateISO() {
+        const sel = document.getElementById('pais_select');
+        const val = sel.options[sel.selectedIndex].value;
+        const iso = paisesMapa[val] || '';
+        document.getElementById('iso_field').value = iso === 'OTHER' ? '' : iso;
+    }
+    updateISO();
+</script>
+{% endblock %}

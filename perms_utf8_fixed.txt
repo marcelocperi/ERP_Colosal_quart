@@ -1,0 +1,148 @@
+﻿Consultando permisos actuales en la BD...
+
+======================================================================
+PERMISOS REGISTRADOS EN SYS_PERMISSIONS (enterprise_id=0)
+======================================================================
+
+AUDITORIA (7 permisos)
+----------------------------------------------------------------------
+  - auditar_inventario                       | Auditar Inventario
+  - view_balance                             | View Balance
+  - view_error_log                           | Consulta de Errores del Sistema ÔÇô Vista dual: Perfil Negocio (lenguaje amigable + datos intervinientes) y Perfil Experto (CLOB del traceback completo).
+  - view_mitigation_history                  | Historial de Mitigaciones Activas ÔÇô Visualizaci├│n del log de acciones de respuesta autom├ítica tomadas por el sistema.
+  - view_reportes                            | View Reportes
+  - view_risk_dashboard                      | Dashboard de Riesgos FMECA ÔÇô Heatmap RPN, Failure Modes y Trend de errores por m├│dulo.
+  - view_trazabilidad                        | View Trazabilidad
+
+BIBLIOTECA (1 permisos)
+----------------------------------------------------------------------
+  - view_prestamos                           | View Prestamos
+
+COBRANZAS (4 permisos)
+----------------------------------------------------------------------
+  - admin_medios_pago                        | Admin Medios Pago
+  - create_recibo                            | Create Recibo
+  - view_cobranzas                           | View Cobranzas
+  - view_estados_cuenta                      | View Estados Cuenta
+
+COMPRA (5 permisos)
+----------------------------------------------------------------------
+  - create_orden_compra                      | Create Orden Compra
+  - facturar_compras                         | Facturar Compras
+  - receive_stock                            | Receive Stock
+  - view_compras                             | View Compras
+  - view_proveedores                         | View Proveedores
+
+CONFIGURACION (4 permisos)
+----------------------------------------------------------------------
+  - admin_comprobantes                       | Admin Comprobantes
+  - admin_empresa                            | Admin Empresa
+  - admin_plan_cuentas                       | Admin Plan Cuentas
+  - admin_tipos_articulo                     | Admin Tipos Articulo
+
+CONTABILIDAD (2 permisos)
+----------------------------------------------------------------------
+  - admin_contabilidad                       | Admin Contabilidad
+  - view_contabilidad                        | View Contabilidad
+
+Clientes (2 permisos)
+----------------------------------------------------------------------
+  - patrons_manage                           | Gestionar Clientes (Add/Edit)
+  - patrons_view                             | Ver Clientes de Biblioteca
+
+Compras (4 permisos)
+----------------------------------------------------------------------
+  - compras.dashboard                        | Acceso al tablero de compras
+  - compras.gestionar_oc                     | Crear y gestionar ├│rdenes de compra
+  - compras.proveedores                      | Gesti├│n de maestros de proveedores
+  - compras.ver_reportes                     | Ver reportes de compras y alertas
+
+Dashboard (1 permisos)
+----------------------------------------------------------------------
+  - dashboard_view                           | Acceso al Panel de Control
+
+ERP (4 permisos)
+----------------------------------------------------------------------
+  - erp_compras_view                         | Acceso al M├│dulo de Compras
+  - erp_contabilidad_view                    | Acceso al M├│dulo de Contabilidad
+  - erp_fondos_view                          | Acceso al M├│dulo de Fondos
+  - erp_ventas_view                          | Acceso al M├│dulo de Ventas
+
+Fondos (4 permisos)
+----------------------------------------------------------------------
+  - fondos.autorizar_pagos                   | Autorizaci├│n de desembolsos (Tesorer├¡a)
+  - fondos.dashboard                         | Acceso al m├│dulo de fondos
+  - fondos.gestionar_cajas                   | Gesti├│n de cuentas y medios de pago
+  - fondos.reportes                          | Reportes financieros y calendario de pagos
+
+Inventario (3 permisos)
+----------------------------------------------------------------------
+  - stock_adjust                             | Ejecutar Ajustes de Stock
+  - stock_manage_motives                     | Crear Motivos de Stock
+  - stock_view                               | Ver Panel de Inventario
+
+Libros (4 permisos)
+----------------------------------------------------------------------
+  - books_add                                | Agregar Libros
+  - books_edit                               | Editar Informaci├│n de Libros
+  - books_import                             | Importar Libros Masivo/API
+  - books_view                               | Ver Cat├ílogo
+
+PAGO (4 permisos)
+----------------------------------------------------------------------
+  - admin_cuentas                            | Admin Cuentas
+  - conciliar_banco                          | Conciliar Banco
+  - create_pago                              | Create Pago
+  - view_pagos                               | View Pagos
+
+Pr├®stamos (2 permisos)
+----------------------------------------------------------------------
+  - loans_manage                             | Registrar/Devolver Pr├®stamos
+  - loans_view                               | Ver Panel de Pr├®stamos
+
+SISTEMA (2 permisos)
+----------------------------------------------------------------------
+  - manage_mitigation_rules                  | Gesti├│n de Reglas de Mitigaci├│n Activa ÔÇô Alta, baja y modificaci├│n de reglas FMECA que disparan alertas o bloqueos autom├íticos.
+  - sysadmin                                 | Gesti├│n Global de Empresas (Solo SuperAdmin)
+
+STOCK (5 permisos)
+----------------------------------------------------------------------
+  - admin_depositos                          | Admin Depositos
+  - admin_logistica                          | Admin Logistica
+  - create_transferencia                     | Create Transferencia
+  - view_articulos                           | View Articulos
+  - view_movimientos                         | View Movimientos
+
+Sin Categoria (10 permisos)
+----------------------------------------------------------------------
+  - admin.roles                              | Permiso Auto: admin.roles
+  - admin.users                              | Permiso Auto: admin.users
+  - books.add                                | Permiso Auto: books.add
+  - books.import                             | Permiso Auto: books.import
+  - compras.aprobar_solicitud                | Permiso Auto: compras.aprobar_solicitud
+  - compras.gestion_proveedores              | Permiso Auto: compras.gestion_proveedores
+  - loans.manage                             | Permiso Auto: loans.manage
+  - reports.view                             | Permiso Auto: reports.view
+  - stock.edit                               | Permiso Auto: stock.edit
+  - stock.view                               | Permiso Auto: stock.view
+
+Sistema (2 permisos)
+----------------------------------------------------------------------
+  - admin_roles                              | Administrar Roles y Permisos
+  - admin_users                              | Administrar Usuarios del Sistema
+
+UTILITARIOS (1 permisos)
+----------------------------------------------------------------------
+  - all                                      | All
+
+VENTA (5 permisos)
+----------------------------------------------------------------------
+  - create_presupuesto                       | Create Presupuesto
+  - create_remito                            | Create Remito
+  - facturar_ventas                          | Facturar Ventas
+  - view_clientes                            | View Clientes
+  - view_pedidos                             | View Pedidos
+
+======================================================================
+TOTAL: 76 permisos en la base de datos
+======================================================================

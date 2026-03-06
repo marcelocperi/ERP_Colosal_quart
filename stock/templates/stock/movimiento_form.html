@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="header-container" style="margin-bottom: 2rem;">
+        <h1 class="page-title"><i class="fas fa-exchange-alt"></i> Gestión de Movimientos ERP</h1>
+        <p class="text-muted">Registro de ingresos, egresos y traslados de mercadería</p>
+    </div>
+
+    <div class="card" style="padding: 2rem;">
+        <form action="{{ url_for('stock.movimiento_crear') }}" method="POST">
+            <input type="hidden" name="sid" value="{{ sid }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label>TIPO DE OPERACIÓN</label>
+                    <select name="motivo_id" id="motivo_id" onchange="updateMovementFields()" required>
+                        <option value="">Seleccione el motivo...</option>
+                        {% for m in motivos %}
+                        <option value="{{ m.id }}" data-tipo="{{ m.tipo }}">{{ m.nombre }} ({{ m.tipo }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>CANTIDAD</label>
+                    <input type="number" name="cantidad" value="1" min="1" step="1" required
+                        style="font-size: 1.2rem; font-weight: bold;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label>ARTÍCULO / PRODUCTO</label>
+                <select name="articulo_id" class="select2" required>
+                    <option value="">Buscar artículo...</option>
+                    {% for a in articulos %}
+                    <option value="{{ a.id }}">{{ a.titulo }} (Ref: {{ a.isbn }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div id="origen_group" class="form-group" style="display: none;">
+                    <label>DEPÓSITO ORIGEN (Egreso de)</label>
+                    <select name="dep_origen">
+                        <option value="">Seleccione origen...</option>
+                        {% for d in depositos %}
+                        <option value="{{ d.id }}">{{ d.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="destino_group" class="form-group" style="display: none;">
+                    <label>DEPÓSITO DESTINO (Ingreso a)</label>
+                    <select name="dep_destino" id="dep_destino">
+                        <option value="">Seleccione destino...</option>
+                        {% for d in depositos %}
+                        <option value="{{ d.id }}">{{ d.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div id="tercero_group" class="form-group" style="margin-bottom: 1.5rem; display: none;">
+                <label id="tercero_label">CLIENTE / PROVEEDOR</label>
+                <select name="tercero_id" class="select2">
+                    <option value="">Seleccione tercero...</option>
+                    {% for t in terceros %}
+                    <option value="{{ t.id }}" data-es-cliente="{{ t.es_cliente }}"
+                        data-es-proveedor="{{ t.es_proveedor }}">
+                        {{ t.nombre }} ({{ 'Cliente' if t.es_cliente else 'Prov.' }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label>OBSERVACIONES / REFERENCIA</label>
+                <textarea name="observaciones" rows="3"
+                    placeholder="Ej: Según Orden de Compra #123, Ajuste por rotura, etc."></textarea>
+            </div>
+
+            <!-- SoD: Control de Seguridad Industrial (Exclusivo para Supervisores/Seguridad) -->
+            {% if 'safety_bypass' in permissions or 'all' in permissions %}
+            <div
+                style="margin-bottom: 2rem; padding: 1rem; border: 1px dashed rgba(239, 68, 68, 0.4); border-radius: 8px; background: rgba(239, 68, 68, 0.05); display: flex; align-items: center; gap: 1rem;">
+                <div style="color: #ef4444; font-size: 1.5rem;">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" name="safety_bypass" id="safety_bypass"
+                            style="width: 18px; height: 18px; cursor: pointer;">
+                        <label for="safety_bypass"
+                            style="color: #ef4444; font-weight: bold; margin: 0; cursor: pointer;">
+                            AVISO: Omitir bloqueo por Incompatibilidad Química (SoD Bypass)
+                        </label>
+                    </div>
+                    <p style="font-size: 0.75rem; color: #94a3b8; margin: 0.3rem 0 0 1.5rem;">
+                        Use esta opción únicamente si la segregación física en el depósito permite el almacenamiento
+                        seguro de sustancias incompatibles. Esta acción quedará registrada en el log de auditoría.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div style="display: flex; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+                <button type="submit" class="btn-action" style="flex: 1; padding: 1rem; background: var(--primary);">
+                    <i class="fas fa-check-circle"></i> Confirmar Movimiento
+                </button>
+                <a href="{{ url_for('stock.dashboard') }}" class="btn-secondary" style="padding: 1rem 1.5rem;">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateMovementFields() {
+        const selector = document.getElementById('motivo_id');
+        const selectedOption = selector.options[selector.selectedIndex];
+        if (!selectedOption || !selectedOption.value) return;
+
+        const tipo = selectedOption.getAttribute('data-tipo');
+        const nombreMotivo = selectedOption.text.toLowerCase();
+
+        const origenGroup = document.getElementById('origen_group');
+        const destinoGroup = document.getElementById('destino_group');
+        const terceroGroup = document.getElementById('tercero_group');
+        const terceroLabel = document.getElementById('tercero_label');
+
+        // Reset displays
+        origenGroup.style.display = 'none';
+        destinoGroup.style.display = 'none';
+        terceroGroup.style.display = 'none';
+
+        if (tipo === 'SALIDA') {
+            origenGroup.style.display = 'block';
+            if (nombreMotivo.includes('venta') || nombreMotivo.includes('factur')) {
+                terceroGroup.style.display = 'block';
+                terceroLabel.innerText = 'CLIENTE';
+            }
+        } else if (tipo === 'ENTRADA') {
+            destinoGroup.style.display = 'block';
+            if (nombreMotivo.includes('compra') || nombreMotivo.includes('recep')) {
+                terceroGroup.style.display = 'block';
+                terceroLabel.innerText = 'PROVEEDOR';
+            }
+        } else if (tipo === 'TRANSFERENCIA' || tipo === 'AJUSTE') {
+            origenGroup.style.display = 'block';
+            destinoGroup.style.display = 'block';
+        }
+    }
+
+    // Initial call
+    document.addEventListener('DOMContentLoaded', updateMovementFields);
+</script>
+{% endblock %}

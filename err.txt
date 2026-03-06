@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\decorators.py", line 68, in wrapped_view
+    return view(**kwargs)
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\decorators.py", line 120, in wrapped_view
+    return view(**kwargs)
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\compras\routes.py", line 59, in reposicion_dashboard
+    cursor.execute(sql, (ent_id,))
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\venv\Lib\site-packages\mariadb\cursors.py", line 351, in execute
+    self._readresponse()
+    ~~~~~~~~~~~~~~~~~~^^
+mariadb.ProgrammingError: Unknown column 'multi_mcp_db.a.enterprise_id' in 'WHERE'

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Nuevo Cliente</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="codigo" class="form-label">Código de Cliente</label>
+                            <input type="text" class="form-control" id="codigo" name="codigo" placeholder="Ej: CLI-001">
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label for="nombre" class="form-label">Razón Social / Nombre Completo</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="cuit" class="form-label">CUIT / DNI</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="cuit" name="cuit" placeholder="Sin guiones"
+                                    required>
+                                <button class="btn btn-outline-primary" type="button" id="btn_consultar_afip"
+                                    title="Consultar en AFIP">
+                                    <i class="fas fa-search"></i> AFIP
+                                </button>
+                            </div>
+                            <div id="afip_status" style="font-size: 0.75rem; margin-top: 4px;"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tipo_responsable" class="form-label">Condición Fiscal</label>
+                            <select class="form-select" id="tipo_responsable" name="tipo_responsable">
+                                <option value="Consumidor Final">Consumidor Final</option>
+                                <option value="Responsable Inscripto">Responsable Inscripto</option>
+                                <option value="Monotributo">Monotributo</option>
+                                <option value="Exento">Exento</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico Principal</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="observaciones" class="form-label">Observaciones / Notas Externas</label>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3"
+                            placeholder="Ej: Horarios de atención, notas de facturación, etc."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('ventas.clientes') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Registrar Cliente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cuitInput = document.getElementById('cuit');
+        const btnAfip = document.getElementById('btn_consultar_afip');
+        const statusAfip = document.getElementById('afip_status');
+
+        function validarCUIT(cuit) {
+            if (!cuit) return false;
+            cuit = cuit.replace(/\D/g, '');
+            if (cuit.length !== 11) return false;
+
+            const factors = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+            let sum = 0;
+            for (let i = 0; i < 10; i++) {
+                sum += parseInt(cuit[i]) * factors[i];
+            }
+
+            let control = 11 - (sum % 11);
+            if (control === 11) control = 0;
+            if (control === 10) control = 9; // Caso especial para digitos de control que darian 10
+
+            return control === parseInt(cuit[10]);
+        }
+
+
+        if (btnAfip) {
+            btnAfip.addEventListener('click', function () {
+                const cuit = cuitInput.value.replace(/\D/g, '');
+                if (!validarCUIT(cuit)) {
+                    statusAfip.innerHTML = '<span class="text-danger">CUIT matemáticamente inválido</span>';
+                    return;
+                }
+
+                btnAfip.disabled = true;
+                btnAfip.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                statusAfip.innerHTML = '<span class="text-muted">Consultando AFIP...</span>';
+
+                fetch(`/api/ventas/afip/consultar/${cuit}?sid=${window.SID || ''}`)
+                    .then(res => res.json())
+                    .then(res => {
+                        btnAfip.disabled = false;
+                        btnAfip.innerHTML = '<i class="fas fa-search"></i> AFIP';
+
+                        if (res.success) {
+                            document.getElementById('nombre').value = res.data.razon_social;
+                            document.getElementById('tipo_responsable').value = res.data.condicion_iva;
+                            statusAfip.innerHTML = '<span class="text-success"><i class="fas fa-check"></i> Datos recuperados</span>';
+
+                            // Efecto visual
+                            document.getElementById('nombre').style.backgroundColor = 'rgba(74, 222, 128, 0.1)';
+                            setTimeout(() => document.getElementById('nombre').style.backgroundColor = '', 2000);
+                        } else {
+                            statusAfip.innerHTML = `<span class="text-warning">${res.error}</span>`;
+                        }
+                    })
+                    .catch(err => {
+                        btnAfip.disabled = false;
+                        btnAfip.innerHTML = '<i class="fas fa-search"></i> AFIP';
+                        statusAfip.innerHTML = '<span class="text-danger">Error de conexión</span>';
+                    });
+            });
+        }
+
+        if (cuitInput) {
+            cuitInput.addEventListener('input', function () {
+                if (!this.value) {
+                    this.classList.remove('is-invalid', 'is-valid');
+                    return;
+                }
+                if (validarCUIT(this.value)) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                    this.setCustomValidity('');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                    this.setCustomValidity('CUIT Inválido');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

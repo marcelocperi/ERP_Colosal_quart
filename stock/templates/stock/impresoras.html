@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-print"></i> Impresoras de Etiquetas</h1>
+        <p class="text-muted">Configuración de perfiles térmicos — Soporta Zebra, TSC, Brother (USB, Red TCP/IP o QZ
+            Tray)</p>
+    </div>
+    <button onclick="openPrinterModal()" class="btn-action"><i class="fas fa-plus"></i> Nueva Impresora</button>
+</div>
+
+<!-- Guía de conexión -->
+<div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+    <div
+        style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); border-radius: 10px; padding: 1rem;">
+        <p style="margin:0 0 0.3rem; font-weight:700; color:#60a5fa;"><i class="fas fa-window-maximize"></i> Modo A —
+            Diálogo Navegador</p>
+        <p style="font-size:0.8rem; color:#94a3b8; margin:0;">El navegador abre la ventana nativa de impresión.
+            Compatible con <b>USB, Red y Bluetooth</b>. El usuario elige la impresora la primera vez y puede fijarla
+            como default en el sistema.</p>
+    </div>
+    <div
+        style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); border-radius: 10px; padding: 1rem;">
+        <p style="margin:0 0 0.3rem; font-weight:700; color:#fbbf24;"><i class="fas fa-network-wired"></i> Modo B — IP
+            de Red (ZPL directo)</p>
+        <p style="font-size:0.8rem; color:#94a3b8; margin:0;">El servidor envía ZPL crudo por socket TCP al puerto 9100
+            de la impresora. Requiere <b>Ethernet / WiFi en la impresora</b>. Sin popups, impresión automática desde el
+            servidor.</p>
+    </div>
+    <div
+        style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.25); border-radius: 10px; padding: 1rem;">
+        <p style="margin:0 0 0.3rem; font-weight:700; color:#a78bfa;"><i class="fas fa-plug"></i> Modo C — QZ Tray (USB
+            / Red)</p>
+        <p style="font-size:0.8rem; color:#94a3b8; margin:0;">Agente local instalado en la PC de depósito. Habla con
+            <b>impresoras USB o de red</b> sin diálogos. Ideal para operativas de alto volumen. Requiere instalar <a
+                href="https://qz.io" target="_blank" style="color:#a78bfa;">QZ Tray</a> en cada terminal.</p>
+    </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>NOMBRE</th>
+                <th>MARCA / MODELO</th>
+                <th style="text-align:center;">MEDIDAS</th>
+                <th style="text-align:center;">MODO</th>
+                <th>DETALLE CONEXIÓN</th>
+                <th style="text-align:center;">ESTADO</th>
+                <th style="text-align:right;">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in impresoras %}
+            <tr>
+                <td>
+                    <div style="font-weight:700;">{{ p.nombre }}</div>
+                    {% if p.es_predeterminada %}
+                    <span class="badge" style="background:rgba(16,185,129,0.1); color:#10b981; font-size:0.7rem;">⭐
+                        PREDETERMINADA</span>
+                    {% endif %}
+                </td>
+                <td><span style="color:#fbbf24;">{{ p.marca }}</span> <small class="text-muted">{{ p.modelo or ''
+                        }}</small></td>
+                <td style="text-align:center;">
+                    <span class="badge bg-secondary">{{ p.ancho_mm }}×{{ p.alto_mm }} mm</span>
+                </td>
+                <td style="text-align:center;">
+                    {% if p.tipo_conexion == 'IP_RED' %}
+                    <span class="badge" style="background:rgba(245,158,11,0.15); color:#fbbf24;">🌐 Red TCP</span>
+                    {% elif p.tipo_conexion == 'QZ_TRAY_USB' %}
+                    <span class="badge" style="background:rgba(139,92,246,0.15); color:#a78bfa;">🔌 QZ USB</span>
+                    {% elif p.tipo_conexion == 'QZ_TRAY_NET' %}
+                    <span class="badge" style="background:rgba(139,92,246,0.15); color:#a78bfa;">🔌 QZ Red</span>
+                    {% else %}
+                    <span class="badge" style="background:rgba(59,130,246,0.15); color:#60a5fa;">🖥️ Navegador</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:0.8rem; color:#94a3b8;">
+                    {% if p.ip_red %}{{ p.ip_red }}:{{ p.puerto_red or 9100 }}{% endif %}
+                    {% if p.nombre_sistema_qz %}<code style="font-size:0.75rem;">{{ p.nombre_sistema_qz }}</code>{%
+                    endif %}
+                    {% if not p.ip_red and not p.nombre_sistema_qz %}<span style="opacity:0.4;">—</span>{% endif %}
+                </td>
+                <td style="text-align:center;">
+                    {% if p.activo %}
+                    <span class="badge" style="background:rgba(16,185,129,0.1); color:#10b981;">ACTIVA</span>
+                    {% else %}
+                    <span class="badge" style="background:rgba(255,255,255,0.05); color:#64748b;">INACTIVA</span>
+                    {% endif %}
+                </td>
+                <td style="text-align:right; display:flex; gap:0.5rem; justify-content:end;">
+                    <button class="btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.8rem;"
+                        onclick="editPrinter('{{ p.id }}','{{ p.nombre }}','{{ p.marca }}','{{ p.modelo or '' }}','{{ p.ancho_mm }}','{{ p.alto_mm }}','{{ p.tipo_conexion or 'BROWSER_DIALOG' }}','{{ p.ip_red or '' }}','{{ p.puerto_red or 9100 }}','{{ p.nombre_sistema_qz or '' }}','{{ p.es_predeterminada }}','{{ p.activo }}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <form action="{{ url_for('stock.impresora_eliminar', id=p.id) }}" method="POST"
+                        style="display:inline;" onsubmit="return confirm('¿Eliminar este perfil?');">
+                        <button type="submit" class="btn-secondary"
+                            style="padding:0.4rem 0.8rem; font-size:0.8rem; color:#ef4444;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align:center; padding:4rem;">No hay impresoras configuradas. Agrega la
+                    primera con el botón de arriba.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Configurar Impresora -->
+<div id="modal-printer" class="card modal-animate"
+    style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:560px; z-index:5001; border:1px solid var(--primary); box-shadow:0 20px 50px rgba(0,0,0,0.5); padding:2rem; max-height:90vh; overflow-y:auto;">
+
+    <h3 id="modal-printer-title">Añadir Impresora Térmica</h3>
+
+    <form action="{{ url_for('stock.impresora_guardar') }}" method="POST">
+        <input type="hidden" name="id" id="print-id">
+
+        <div class="form-group">
+            <label>Nombre / Ubicación</label>
+            <input type="text" name="nombre" id="print-nombre" required
+                placeholder="Ej: Recepción 1, Bodega Central...">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+                <label>Marca</label>
+                <select name="marca" id="print-marca"
+                    style="width:100%; padding:0.8rem; background:rgba(15,23,42,0.8); color:white; border-radius:8px;">
+                    <option value="Zebra">Zebra</option>
+                    <option value="TSC">TSC</option>
+                    <option value="Brother">Brother</option>
+                    <option value="Epson">Epson</option>
+                    <option value="Xprinter">Xprinter</option>
+                    <option value="Otra">Otra / Genérica</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Modelo (Opcional)</label>
+                <input type="text" name="modelo" id="print-modelo" placeholder="Ej: ZD421, TTP-244, QL-1110...">
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+                <label>Ancho (mm)</label>
+                <input type="number" step="0.1" name="ancho_mm" id="print-ancho" required value="100">
+                <small class="text-muted">50mm=2" | 80mm=3" | 100mm=4"</small>
+            </div>
+            <div class="form-group">
+                <label>Alto (mm)</label>
+                <input type="number" step="0.1" name="alto_mm" id="print-alto" required value="50">
+                <small class="text-muted">25mm=1" | 50mm=2"</small>
+            </div>
+        </div>
+
+        <!-- Modo de Conexión -->
+        <div class="form-group" style="margin-top:1rem;">
+            <label>Modo de Conexión</label>
+            <select name="tipo_conexion" id="print-tipo"
+                style="width:100%; padding:0.8rem; background:rgba(15,23,42,0.8); color:white; border-radius:8px;"
+                onchange="toggleConnectionFields()">
+                <option value="BROWSER_DIALOG">🖥️ Diálogo del Navegador (USB, Red, Bluetooth)</option>
+                <option value="IP_RED">🌐 IP de Red — ZPL directo TCP (Ethernet/WiFi)</option>
+                <option value="QZ_TRAY_USB">🔌 QZ Tray — USB (por nombre en Windows)</option>
+                <option value="QZ_TRAY_NET">🔌 QZ Tray — Red (IP + Puerto)</option>
+            </select>
+        </div>
+
+        <!-- Panel: IP Red -->
+        <div id="panel-ip"
+            style="display:none; background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:1rem; margin-top:0.5rem;">
+            <p style="font-size:0.8rem; color:#fbbf24; margin:0 0 0.75rem;"><i class="fas fa-info-circle"></i> El
+                servidor enviará ZPL nativo por socket TCP. La impresora debe tener IP fija en la LAN.</p>
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:1rem;">
+                <div class="form-group">
+                    <label>IP de la Impresora</label>
+                    <input type="text" name="ip_red" id="print-ip" placeholder="192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label>Puerto</label>
+                    <input type="number" name="puerto_red" id="print-puerto" value="9100">
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel: QZ Tray USB -->
+        <div id="panel-qz-usb"
+            style="display:none; background:rgba(139,92,246,0.06); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:1rem; margin-top:0.5rem;">
+            <p style="font-size:0.8rem; color:#a78bfa; margin:0 0 0.75rem;"><i class="fas fa-plug"></i> Ingrese el
+                nombre exacto de la impresora como aparece en Dispositivos e Impresoras de Windows.</p>
+            <div class="form-group">
+                <label>Nombre en Windows (QZ Tray)</label>
+                <input type="text" name="nombre_sistema_qz" id="print-qz-name" placeholder="Ej: ZPL Zebra ZD421 (USB)">
+            </div>
+        </div>
+
+        <!-- Panel: QZ Tray Red -->
+        <div id="panel-qz-net"
+            style="display:none; background:rgba(139,92,246,0.06); border:1px solid rgba(139,92,246,0.2); border-radius:8px; padding:1rem; margin-top:0.5rem;">
+            <p style="font-size:0.8rem; color:#a78bfa; margin:0 0 0.75rem;"><i class="fas fa-network-wired"></i> QZ Tray
+                enviará ZPL nativo desde la PC del depósito a la impresora por red.</p>
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:1rem;">
+                <div class="form-group">
+                    <label>IP de la Impresora</label>
+                    <input type="text" name="ip_red_qz" id="print-ip-qz" placeholder="192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label>Puerto</label>
+                    <input type="number" name="puerto_red_qz" id="print-puerto-qz" value="9100">
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel: Navegador info -->
+        <div id="panel-browser"
+            style="display:block; background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:0.75rem; margin-top:0.5rem;">
+            <p style="font-size:0.8rem; color:#60a5fa; margin:0;"><i class="fas fa-check-circle"></i> Funciona con
+                cualquier impresora conectada por USB, red o Bluetooth. El usuario elige la impresora en el diálogo la
+                primera vez y puede fijarla como predeterminada en el sistema operativo.</p>
+        </div>
+
+        <div
+            style="margin-top:1rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:1rem; display:flex; gap:2rem;">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" name="es_predeterminada" id="print-predeterminada" value="1"
+                    style="width:18px; height:18px;">
+                <span>⭐ Impresora Predeterminada</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" name="activo" id="print-activo" value="1" checked
+                    style="width:18px; height:18px;">
+                <span>Equipo Activo</span>
+            </label>
+        </div>
+
+        <div style="margin-top:1.5rem; display:flex; gap:1rem;">
+            <button type="submit" class="btn btn-primary" style="flex:1;">Guardar Perfil</button>
+            <button type="button" class="btn btn-secondary" style="flex:1;"
+                onclick="toggleModal('modal-printer')">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleConnectionFields() {
+        const tipo = document.getElementById('print-tipo').value;
+        document.getElementById('panel-ip').style.display = (tipo === 'IP_RED') ? 'block' : 'none';
+        document.getElementById('panel-qz-usb').style.display = (tipo === 'QZ_TRAY_USB') ? 'block' : 'none';
+        document.getElementById('panel-qz-net').style.display = (tipo === 'QZ_TRAY_NET') ? 'block' : 'none';
+        document.getElementById('panel-browser').style.display = (tipo === 'BROWSER_DIALOG') ? 'block' : 'none';
+    }
+
+    function openPrinterModal() {
+        document.getElementById('modal-printer-title').innerText = "Nueva Impresora Térmica";
+        ['print-id', 'print-nombre', 'print-modelo', 'print-ip', 'print-qz-name', 'print-ip-qz'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('print-marca').value = 'Zebra';
+        document.getElementById('print-tipo').value = 'BROWSER_DIALOG';
+        document.getElementById('print-ancho').value = '100';
+        document.getElementById('print-alto').value = '50';
+        document.getElementById('print-puerto').value = '9100';
+        document.getElementById('print-puerto-qz').value = '9100';
+        document.getElementById('print-predeterminada').checked = false;
+        document.getElementById('print-activo').checked = true;
+        toggleConnectionFields();
+        toggleModal('modal-printer');
+    }
+
+    function editPrinter(id, nombre, marca, modelo, ancho, alto, tipo, ip, puerto, qzName, pred, act) {
+        document.getElementById('modal-printer-title').innerText = "Editar Impresora";
+        document.getElementById('print-id').value = id;
+        document.getElementById('print-nombre').value = nombre;
+        document.getElementById('print-marca').value = marca;
+        document.getElementById('print-modelo').value = modelo;
+        document.getElementById('print-ancho').value = ancho;
+        document.getElementById('print-alto').value = alto;
+        document.getElementById('print-tipo').value = tipo || 'BROWSER_DIALOG';
+        document.getElementById('print-ip').value = ip;
+        document.getElementById('print-puerto').value = puerto || 9100;
+        document.getElementById('print-ip-qz').value = ip;
+        document.getElementById('print-puerto-qz').value = puerto || 9100;
+        document.getElementById('print-qz-name').value = qzName;
+        document.getElementById('print-predeterminada').checked = (pred === 'True' || pred === '1');
+        document.getElementById('print-activo').checked = (act === 'True' || act === '1');
+        toggleConnectionFields();
+        toggleModal('modal-printer');
+    }
+</script>
+{% endblock %}

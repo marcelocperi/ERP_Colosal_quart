@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-5 text-center bg-primary text-white rounded">
+                <h1 class="display-4 fw-bold"><i class="fas fa-book-reader me-3"></i>Centro de Documentación</h1>
+                <p class="lead">Recursos, guías y especificaciones técnicas de la Plataforma Bibliotecaria.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Manual de Usuario -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success text-white rounded-circle p-3 me-3">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                            <h3 class="card-title mb-0">Manual de Usuario</h3>
+                        </div>
+                        <p class="card-text text-muted">Guía paso a paso para bibliotecarios y administradores. Aprenda
+                            a gestionar préstamos, reservas, inventario y usuarios.</p>
+                        <ul class="list-unstyled mt-3 mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Gestión de Préstamos y
+                                Devoluciones</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Reservas y Notificaciones
+                            </li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Catálogo e Inventario</li>
+                        </ul>
+                        <a href="{{ url_for('core.manual_usuario') }}"
+                            class="btn btn-outline-success w-100 stretched-link">Ver Manual de Usuario</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ventas MSAC v4.0 (Técnico) -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body p-4 text-white bg-dark rounded-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success text-white rounded-circle p-3 me-3">
+                                <i class="fas fa-hand-holding-usd fa-2x"></i>
+                            </div>
+                            <h3 class="card-title mb-0">Ventas MSAC v4.0 (Técnico)</h3>
+                        </div>
+                        <p class="card-text opacity-75">Especificaciones de facturación AFIP, IIBB y Cuenta Corriente.
+                        </p>
+                        <ul class="list-unstyled mt-3 mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Lógica Fiscal AFIP</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Percepciones Dinámicas</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Cta. Cte. & Cobranzas</li>
+                        </ul>
+                        <a href="{{ url_for('core.manual_ventas_v4') }}" class="btn btn-success w-100 stretched-link">Ir
+                            a Referencia Técnica v4</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compras MSAC v4.0 (Técnico) -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body p-4 text-white bg-dark rounded-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary text-white rounded-circle p-3 me-3">
+                                <i class="fas fa-microchip fa-2x"></i>
+                            </div>
+                            <h3 class="card-title mb-0">Compras MSAC v4.0 (Técnico)</h3>
+                        </div>
+                        <p class="card-text opacity-75">Especificaciones industriales críticas para auditores y
+                            desarrolladores senior.</p>
+                        <ul class="list-unstyled mt-3 mb-4">
+                            <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> BOM Recursivo y Costeo</li>
+                            <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Gestión de Consignación</li>
+                            <li class="mb-2"><i class="fas fa-check text-primary me-2"></i> Consultor Standalone & AI
+                            </li>
+                        </ul>
+                        <a href="{{ url_for('core.manual_compras_v4') }}"
+                            class="btn btn-primary w-100 stretched-link">Ir a Referencia Técnica v4</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documentación Técnica General -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-info text-white rounded-circle p-3 me-3">
+                                <i class="fas fa-cogs fa-2x"></i>
+                            </div>
+                            <h3 class="card-title mb-0">Arquitectura General</h3>
+                        </div>
+                        <p class="card-text text-muted">Información detallada para especialistas TI. Arquitectura y
+                            modelo global.</p>
+                        <a href="{{ url_for('core.manual_tecnico') }}"
+                            class="btn btn-outline-info w-100 stretched-link">Ver Documentación Técnica</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}

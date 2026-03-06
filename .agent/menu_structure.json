@@ -1,0 +1,648 @@
+{
+    "version": "1.2",
+    "description": "Estructura jerárquica del menú de navegación basada en operaciones de negocio",
+    "menu_tree": {
+        "BIBLIOTECA": {
+            "icon": "fas fa-book-open",
+            "color": "primary",
+            "description": "Gestión de acervo bibliográfico y préstamos",
+            "modules": [
+                {
+                    "name": "Dashboard",
+                    "route": "ventas.dashboard",
+                    "icon": "fas fa-tachometer-alt",
+                    "permission": "dashboard_view"
+                },
+                {
+                    "name": "Libros y Digitales",
+                    "route": "stock.articulos",
+                    "icon": "fas fa-book",
+                    "permission": "view_articulos"
+                },
+                {
+                    "name": "Lectores (Usuarios)",
+                    "route": "biblioteca.usuarios",
+                    "icon": "fas fa-users",
+                    "permission": "patrons_view"
+                },
+                {
+                    "name": "Préstamos y Devoluciones",
+                    "route": "biblioteca.prestamos",
+                    "icon": "fas fa-handshake",
+                    "permission": "view_prestamos"
+                }
+            ]
+        },
+        "PRODUCCION": {
+            "icon": "fas fa-industry",
+            "color": "warning",
+            "description": "Gestión de producción, ingeniería y costos industriales",
+            "modules": [
+                {
+                    "name": "Proyectos de I+D",
+                    "route": "produccion.proyectos",
+                    "icon": "fas fa-flask",
+                    "permission": "produccion.admin"
+                },
+                {
+                    "name": "Plantillas Overhead",
+                    "route": "produccion.overhead_templates",
+                    "icon": "fas fa-layer-group",
+                    "permission": "produccion.admin"
+                },
+                {
+                    "name": "Bandeja Global de Costos",
+                    "route": "produccion.bandeja_costos",
+                    "icon": "fas fa-clipboard-check",
+                    "permission": "cost_accounting"
+                },
+                {
+                    "name": "Repositorio Técnico/Legal",
+                    "route": "produccion.documentos",
+                    "icon": "fas fa-folder-open",
+                    "permission": "produccion.view"
+                }
+            ]
+        },
+        "CONTABILIDAD": {
+            "icon": "fas fa-calculator",
+            "color": "secondary",
+            "description": "Gestión contable e impositiva",
+            "modules": [
+                {
+                    "name": "Dashboard Contable",
+                    "route": "ventas.dashboard",
+                    "icon": "fas fa-chart-pie",
+                    "permission": "view_contabilidad"
+                },
+                {
+                    "name": "Plan de Cuentas",
+                    "route": "contabilidad.plan_cuentas",
+                    "icon": "fas fa-list-ol",
+                    "permission": "view_contabilidad"
+                },
+                {
+                    "name": "Padrones IIBB / AFIP",
+                    "route": "contabilidad.padrones_iibb",
+                    "icon": "fas fa-id-card",
+                    "permission": "admin_contabilidad"
+                },
+                {
+                    "name": "Libro IVA Ventas",
+                    "route": "contabilidad.libro_iva_ventas",
+                    "icon": "fas fa-file-export",
+                    "permission": "view_contabilidad"
+                },
+                {
+                    "name": "Libro IVA Compras",
+                    "route": "contabilidad.libro_iva_compras",
+                    "icon": "fas fa-file-import",
+                    "permission": "view_contabilidad"
+                },
+                {
+                    "name": "Libro Diario",
+                    "route": "contabilidad.libro_diario",
+                    "icon": "fas fa-book-open",
+                    "permission": "view_contabilidad"
+                },
+                {
+                    "name": "Centralización Contable",
+                    "route": "contabilidad.centralizacion",
+                    "icon": "fas fa-sync-alt",
+                    "permission": "admin_contabilidad"
+                },
+                {
+                    "name": "Configuración Fiscal",
+                    "route": "contabilidad.config_fiscal",
+                    "icon": "fas fa-cogs",
+                    "permission": "admin_contabilidad"
+                },
+                {
+                    "name": "Exportar AFIP / CITI",
+                    "route": "contabilidad.exportar_afip",
+                    "icon": "fas fa-file-export",
+                    "permission": "view_contabilidad"
+                },
+                {
+                    "name": "Reporte Retenciones IIBB",
+                    "route": "contabilidad.reporte_iibb",
+                    "icon": "fas fa-file-signature",
+                    "permission": "view_contabilidad"
+                },
+                {
+                    "name": "Exportar SICORE",
+                    "route": "contabilidad.exportar_sicore",
+                    "icon": "fas fa-file-invoice-dollar",
+                    "permission": "view_contabilidad"
+                },
+                {
+                    "name": "Cargas y Sueldos",
+                    "route": "contabilidad.sueldos_dashboard",
+                    "icon": "fas fa-user-tie",
+                    "permission": "admin_contabilidad"
+                }
+            ]
+        },
+        "COMPRA": {
+            "icon": "fas fa-shopping-cart",
+            "color": "primary",
+            "description": "Gestión de adquisiciones y proveedores",
+            "modules": [
+                {
+                    "name": "Dashboard",
+                    "route": "ventas.dashboard",
+                    "icon": "fas fa-tachometer-alt",
+                    "permission": "view_compras"
+                },
+                {
+                    "name": "Tablero de Reposición",
+                    "route": "compras.reposicion_dashboard",
+                    "icon": "fas fa-battery-half",
+                    "permission": "compras.gestionar_reposicion"
+                },
+                {
+                    "name": "Notas de Pedido (NP)",
+                    "route": "compras.solicitudes_lista",
+                    "icon": "fas fa-file-invoice",
+                    "permission": "compras.gestionar_reposicion"
+                },
+                {
+                    "name": "Proveedores",
+                    "route": "compras.proveedores",
+                    "icon": "fas fa-industry",
+                    "permission": "view_proveedores"
+                },
+                {
+                    "name": "Cotizaciones",
+                    "route": "compras.cotizaciones",
+                    "icon": "fas fa-file-invoice-dollar",
+                    "permission": "compras.ver_reportes"
+                },
+                {
+                    "name": "Campañas RFQ (Sourcing)",
+                    "route": "compras.rfq_campanas",
+                    "icon": "fas fa-bullhorn",
+                    "permission": "compras.solicitar_cotizacion"
+                },
+                {
+                    "name": "Fazón & Consignación",
+                    "route": "compras.fazon_dashboard",
+                    "icon": "fas fa-pallet",
+                    "permission": "view_compras"
+                },
+                {
+                    "name": "Aprobaciones de Compra",
+                    "route": "fondos.aprobaciones",
+                    "icon": "fas fa-check-circle",
+                    "permission": "view_compras"
+                },
+                {
+                    "name": "Nueva Orden de Compra",
+                    "route": "compras.orden_nueva",
+                    "icon": "fas fa-plus-circle",
+                    "permission": "create_orden_compra"
+                },
+                {
+                    "name": "Órdenes de Compra",
+                    "route": "compras.ordenes",
+                    "icon": "fas fa-file-invoice",
+                    "permission": "create_orden_compra"
+                },
+                {
+                    "name": "Facturar Compras",
+                    "route": "compras.facturar",
+                    "icon": "fas fa-receipt",
+                    "permission": "facturar_compras"
+                },
+                {
+                    "name": "Listado Comprobantes",
+                    "route": "compras.comprobantes",
+                    "icon": "fas fa-list",
+                    "permission": "view_proveedores"
+                },
+                {
+                    "name": "Registro AFIP",
+                    "route": "compras.registro_afip",
+                    "icon": "fas fa-file-alt",
+                    "permission": "view_compras"
+                },
+                {
+                    "name": "Matriz de Aprobación",
+                    "route": "compras.admin_workflows",
+                    "icon": "fas fa-project-diagram",
+                    "permission": "admin_compras"
+                },
+                {
+                    "name": "Recepción a Ciegas",
+                    "route": "compras.recepcion_ciega_list",
+                    "icon": "fas fa-dolly",
+                    "permission": "view_compras"
+                }
+            ]
+        },
+        "VENTA": {
+            "icon": "fas fa-cash-register",
+            "color": "success",
+            "description": "Gestión de ventas y facturación electrónica",
+            "modules": [
+                {
+                    "name": "Clientes",
+                    "route": "ventas.clientes",
+                    "icon": "fas fa-users",
+                    "permission": "view_clientes"
+                },
+                {
+                    "name": "Facturación Electrónica",
+                    "route": "ventas.facturar",
+                    "icon": "fas fa-file-invoice",
+                    "permission": "facturar_ventas"
+                },
+                {
+                    "name": "Listado Comprobantes",
+                    "route": "ventas.comprobantes",
+                    "icon": "fas fa-list",
+                    "permission": "view_clientes"
+                },
+                {
+                    "name": "Cuenta Corriente",
+                    "route": "ventas.cuenta_corriente_global",
+                    "icon": "fas fa-file-invoice-dollar",
+                    "permission": "view_clientes"
+                }
+            ]
+        },
+        "PRECIOS": {
+            "icon": "fas fa-tags",
+            "color": "success",
+            "description": "Estrategias de precios y márgenes por naturaleza",
+            "modules": [
+                {
+                    "name": "Gestión de Precios",
+                    "route": "ventas.dashboard",
+                    "icon": "fas fa-percentage",
+                    "permission": "view_precios"
+                }
+            ]
+        },
+        "FONDOS": {
+            "icon": "fas fa-money-bill-wave",
+            "color": "danger",
+            "description": "Tesorería - Pagos y Entidades Bancarias",
+            "modules": [
+                {
+                    "name": "KPI Desembolsos",
+                    "route": "fondos.kpi_desembolsos",
+                    "icon": "fas fa-chart-line",
+                    "permission": "view_pagos"
+                },
+                {
+                    "name": "Aprobaciones (PO)",
+                    "route": "compras.aprobaciones",
+                    "icon": "fas fa-check-double",
+                    "permission": "view_pagos"
+                },
+                {
+                    "name": "Órdenes de Pago",
+                    "route": "compras.ordenes_pago",
+                    "icon": "fas fa-money-check-alt",
+                    "permission": "create_pago"
+                },
+                {
+                    "name": "Realizar Pagos",
+                    "route": "compras.pagar",
+                    "icon": "fas fa-hand-holding-usd",
+                    "permission": "view_pagos"
+                },
+                {
+                    "name": "Cuentas y Cajas",
+                    "route": "fondos.cajas",
+                    "icon": "fas fa-university",
+                    "permission": "admin_cuentas"
+                },
+                {
+                    "name": "Bancos y Billeteras",
+                    "route": "fondos.bancos",
+                    "icon": "fas fa-landmark",
+                    "permission": "admin_cuentas"
+                }
+            ]
+        },
+        "COBRANZAS": {
+            "icon": "fas fa-hand-holding-usd",
+            "color": "info",
+            "description": "Tesorería - Cobranzas y recibos",
+            "modules": [
+                {
+                    "name": "Medios de Pago / Cobro",
+                    "route": "fondos.medios_pago",
+                    "icon": "fas fa-credit-card",
+                    "permission": "admin_medios_pago"
+                },
+                {
+                    "name": "Dashboard Finanzas",
+                    "route": "ventas.dashboard",
+                    "icon": "fas fa-coins",
+                    "permission": "view_cobranzas"
+                },
+                {
+                    "name": "Gestión de Cobros",
+                    "route": "stock.dashboard",
+                    "icon": "fas fa-receipt",
+                    "permission": "view_cobranzas"
+                },
+                {
+                    "name": "Parámetros de Cobro",
+                    "route": "fondos.configuracion_global",
+                    "icon": "fas fa-cogs",
+                    "permission": "admin_medios_pago"
+                },
+                {
+                    "name": "Condiciones de Pago",
+                    "route": "fondos.condiciones_pago",
+                    "icon": "fas fa-calendar-alt",
+                    "permission": "admin_medios_pago"
+                },
+                {
+                    "name": "Grupos de Condiciones",
+                    "route": "fondos.condiciones_mixtas",
+                    "icon": "fas fa-layer-group",
+                    "permission": "admin_medios_pago"
+                }
+            ]
+        },
+        "STOCK": {
+            "icon": "fas fa-boxes",
+            "color": "warning",
+            "description": "Gestión de inventarios y logística",
+            "modules": [
+                {
+                    "name": "Dashboard Inventario",
+                    "route": "ventas.dashboard",
+                    "icon": "fas fa-tachometer-alt",
+                    "permission": "view_articulos"
+                },
+                {
+                    "name": "Importación Masiva",
+                    "route": "stock.articulos_importar",
+                    "icon": "fas fa-file-import",
+                    "permission": "books_import"
+                },
+                {
+                    "name": "Movimientos Stock",
+                    "route": "stock.movimientos_historial",
+                    "icon": "fas fa-exchange-alt",
+                    "permission": "view_movimientos"
+                },
+                {
+                    "name": "Transferencias",
+                    "route": "stock.transferencias_lista",
+                    "icon": "fas fa-truck-moving",
+                    "permission": "create_transferencia"
+                },
+                {
+                    "name": "Depósitos",
+                    "route": "stock.depositos_lista",
+                    "icon": "fas fa-warehouse",
+                    "permission": "admin_depositos"
+                },
+                {
+                    "name": "Empresas Logísticas",
+                    "route": "stock.logisticas_lista",
+                    "icon": "fas fa-truck",
+                    "permission": "admin_logistica"
+                },
+                {
+                    "name": "Recepción Devoluciones",
+                    "route": "ventas.logistica_devoluciones",
+                    "icon": "fas fa-undo-alt",
+                    "permission": "view_movimientos"
+                },
+                {
+                    "name": "Impresoras Térmicas",
+                    "route": "stock.impresoras_lista",
+                    "icon": "fas fa-print",
+                    "permission": "system_settings"
+                },
+                {
+                    "name": "Gestión de Balanzas",
+                    "route": "stock.balanzas_lista",
+                    "icon": "fas fa-balance-scale",
+                    "permission": "system_settings"
+                }
+            ]
+        },
+        "CONFIGURACION": {
+            "icon": "fas fa-cog",
+            "color": "secondary",
+            "description": "Configuración técnica y maestros del sistema",
+            "modules": [
+                {
+                    "name": "Mi Empresa (Fiscal)",
+                    "route": "core.admin_empresa_fiscal",
+                    "icon": "fas fa-building",
+                    "permission": "admin_empresa"
+                },
+                {
+                    "name": "Usuarios y Seguridad",
+                    "route": "core.admin_users",
+                    "icon": "fas fa-users-gear",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "Roles y Permisos",
+                    "route": "core.admin_roles",
+                    "icon": "fas fa-user-shield",
+                    "permission": "admin_roles"
+                },
+                {
+                    "name": "Puestos y Áreas",
+                    "route": "core.admin_puestos",
+                    "icon": "fas fa-briefcase",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "Administración de Áreas",
+                    "route": "core.admin_areas",
+                    "icon": "fas fa-layer-group",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "Servicios Externos",
+                    "route": "core.admin_services",
+                    "icon": "fas fa-plug",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "Proyectos / Requerimientos",
+                    "route": "core.admin_proyectos",
+                    "icon": "fas fa-tasks",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "Tipos de Artículos",
+                    "route": "stock.tipos_articulo",
+                    "icon": "fas fa-tags",
+                    "permission": "admin_tipos_articulo"
+                },
+                {
+                    "name": "Impuestos y Reglas",
+                    "route": "fondos.impuestos",
+                    "icon": "fas fa-percent",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "Numeración de Comprobantes",
+                    "route": "core.admin_numeracion",
+                    "icon": "fas fa-list-ol",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "Tipos de Comprobante",
+                    "route": "core.admin_tipos_comprobante",
+                    "icon": "fas fa-file-signature",
+                    "permission": "admin_users"
+                }
+            ]
+        },
+        "AUDITORIA": {
+            "icon": "fas fa-chart-line",
+            "color": "dark",
+            "description": "Reportes, auditorías y trazabilidad",
+            "modules": [
+                {
+                    "name": "Inventarios Físicos",
+                    "route": "stock.inventarios_lista",
+                    "icon": "fas fa-clipboard-check",
+                    "permission": "auditar_inventario"
+                },
+                {
+                    "name": "Logs de Seguridad",
+                    "route": "core.security_logs",
+                    "icon": "fas fa-shield-alt",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "⚡ Dashboard de Riesgos FMECA",
+                    "route": "core.admin_risk_dashboard",
+                    "icon": "fas fa-shield-virus",
+                    "permission": "view_risk_dashboard"
+                },
+                {
+                    "name": "🔍 Consulta de Errores",
+                    "route": "core.error_log",
+                    "icon": "fas fa-bug",
+                    "permission": "view_error_log"
+                },
+                {
+                    "name": "Historial de Permisos",
+                    "route": "core.audit_permissions",
+                    "icon": "fas fa-history",
+                    "permission": "view_permission_audit"
+                },
+                {
+                    "name": "Integridad Transaccional",
+                    "route": "core.audit_integrity",
+                    "icon": "fas fa-search-dollar",
+                    "permission": "view_permission_audit"
+                },
+                {
+                    "name": "Certificación Técnica",
+                    "route": "core.audit_certification",
+                    "icon": "fas fa-certificate",
+                    "permission": "view_permission_audit"
+                },
+                {
+                    "name": "🤖 CORE AUDITOR (Técnico)",
+                    "route": "ai_chat.ai_chat_page",
+                    "icon": "fas fa-shield-virus",
+                    "permission": "view_permission_audit"
+                },
+                {
+                    "name": "✨ Asistente Colosal (Usuario)",
+                    "route": "ai_chat.ai_user_assistant",
+                    "icon": "fas fa-magic",
+                    "permission": "all"
+                },
+                {
+                    "name": "Procesos Activos",
+                    "route": "core.admin_threads",
+                    "icon": "fas fa-tasks",
+                    "permission": "admin_users"
+                }
+            ]
+        },
+        "UTILITARIOS": {
+            "icon": "fas fa-tools",
+            "color": "info",
+            "description": "Herramientas de automatización y mantenimiento",
+            "modules": [
+                {
+                    "name": "Dashboard de Sistemas",
+                    "route": "core.admin_dashboard",
+                    "icon": "fas fa-tachometer-alt",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "Gestor de Crons",
+                    "route": "utilitarios.gestor_crons",
+                    "icon": "fas fa-clock",
+                    "permission": "all"
+                },
+                {
+                    "name": "Índice de Manuales",
+                    "route": "core.manual_index",
+                    "icon": "fas fa-book",
+                    "permission": "all"
+                },
+                {
+                    "name": "Manual de Usuario",
+                    "route": "core.manual_usuario",
+                    "icon": "fas fa-book-reader",
+                    "permission": "all"
+                },
+                {
+                    "name": "Manual Técnico",
+                    "route": "core.manual_tecnico",
+                    "icon": "fas fa-code",
+                    "permission": "admin_users"
+                },
+                {
+                    "name": "🛒 Guía de Compras (Paso a Paso)",
+                    "route": "core.manual_compras_pasos",
+                    "icon": "fas fa-shoe-prints",
+                    "permission": "all"
+                }
+            ]
+        },
+        "SISTEMA": {
+            "icon": "fas fa-crown",
+            "color": "danger",
+            "description": "Super Administración SaaS",
+            "modules": [
+                {
+                    "name": "Empresas",
+                    "route": "enterprise.list_enterprises",
+                    "icon": "fas fa-building",
+                    "permission": "sysadmin"
+                },
+                {
+                    "name": "Maestro SaaS Owner",
+                    "route": "enterprise.saas_owner_master",
+                    "icon": "fas fa-crown",
+                    "permission": "sysadmin"
+                },
+                {
+                    "name": "Matriz SoD",
+                    "route": "enterprise.sod_matrix",
+                    "icon": "fas fa-sitemap",
+                    "permission": "sysadmin"
+                }
+            ]
+        }
+    },
+    "notes": [
+        "Cada módulo debe verificar el permiso antes de mostrar la opción en el menú",
+        "Los colores son indicativos para mejorar la UX visual",
+        "Las rutas deben coincidir con los blueprints registrados en Flask"
+    ]
+}

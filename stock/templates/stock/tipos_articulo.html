@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-tags"></i> Tipos de Artículo</h1>
+        <p class="text-muted">Defina las categorías maestras de sus artículos (Libros, Mercadería, etc.)</p>
+    </div>
+    <button class="btn btn-primary" onclick="openTipoModal()">
+        <i class="fas fa-plus"></i> Nuevo Tipo
+    </button>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="min-width: 15%">NOMBRE</th>
+                <th style="min-width: 25%">DESCRIPCIÓN</th>
+                <th style="text-align: center; min-width: 20%">CONECTOR DE DATOS</th>
+                <th style="text-align: center; min-width: 10%">ESTADO</th>
+                <th style="text-align: right;">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tipos %}
+            <tr>
+                <td>
+                    <div style="font-weight: 700;">{{ t.nombre }}</div>
+                    {% if t.enterprise_id == 0 %}
+                    <span class="badge"
+                        style="background: rgba(99,102,241,0.1); color: var(--primary); font-size: 0.7rem;">SISTEMA</span>
+                    {% endif %}
+                </td>
+                <td>{{ t.descripcion or '-' }}</td>
+                <td style="text-align: center;">
+                    {% if t.modo_captura == 'NATIVE' %}
+                    <span class="badge" style="background: rgba(255,255,255,0.05); color: #94a3b8;"><i
+                            class="fas fa-database"></i> NATIVO</span>
+                    {% elif t.modo_captura == 'API' %}
+                    <span class="badge" style="background: rgba(99,102,241,0.1); color: var(--primary);"><i
+                            class="fas fa-plug"></i> API: {{ t.servicio_activo }}</span>
+                    {% if t.url_objetivo %}
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;"> <i class="fas fa-link"></i> {{
+                        t.url_objetivo }}</div>
+                    {% endif %}
+                    {% elif t.modo_captura == 'SCRAPING' %}
+                    <span class="badge" style="background: rgba(245,158,11,0.1); color: #f59e0b;"><i
+                            class="fas fa-spider"></i> SCRAPING: {{ t.servicio_activo }}</span>
+                    {% if t.url_objetivo %}
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;"> <i class="fas fa-globe"></i> {{
+                        t.url_objetivo }}</div>
+                    {% endif %}
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    {% if t.activo %}
+                    <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">ACTIVO</span>
+                    {% else %}
+                    <span class="badge" style="background: rgba(255,255,255,0.05); color: #64748b;">INACTIVO</span>
+                    {% endif %}
+                </td>
+                </td>
+                <td style="text-align: right;">
+                    <button class="btn btn-sm" data-id="{{ t.id }}" data-nombre="{{ t.nombre }}"
+                        data-descripcion="{{ t.descripcion or '' }}" data-servicio="{{ t.servicio_activo_id }}"
+                        data-schema='{{ t.custom_fields_schema or "" }}'
+                        data-naturaleza="{{ t.naturaleza or 'PRODUCTO' }}" onclick="editTipoFromBtn(this)"
+                        style="background: rgba(255,255,255,0.05);">
+                        <i class="fas fa-cog"></i> Configurar
+                    </button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 4rem;">No hay tipos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para Tipo de Artículo -->
+<div id="modal-tipo" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; z-index: 5001; border: 1px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 2rem;">
+
+    <h3 id="modal-tipo-title" style="margin-bottom: 1.5rem;">Nuevo Tipo de Artículo</h3>
+
+    <form id="form-tipo" action="{{ url_for('stock.tipos_articulo_guardar') }}" method="POST">
+        <input type="hidden" name="id" id="tipo-id">
+
+        <div class="form-group"
+            style="background: rgba(15,23,42,0.5); padding: 1rem; border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1); margin-bottom: 1rem;">
+            <label style="color: var(--primary);">Clase / Naturaleza</label>
+            <select name="naturaleza" id="tipo-naturaleza" class="form-control" required
+                style="background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.1); margin-top: 0.5rem;">
+                <option value="PRODUCTO">Producto / Equipo (Físico, control de stock)</option>
+                <option value="SERVICIO">Servicio / Mano de Obra (Intangible)</option>
+                <option value="LIBRO">Libro / Publicación (Con ISBN, Autor)</option>
+                <option value="ABONO">Suscripción / Abono (Recurrente)</option>
+            </select>
+            <small class="text-muted" style="display:block; margin-top: 0.5rem;">
+                Define el comportamiento base del artículo (campos obligatorios, lógica de stock, etc).
+            </small>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label>Nombre del Tipo</label>
+                <input type="text" name="nombre" id="tipo-nombre" required
+                    placeholder="Ej: Monitor, Disco SSD, Asesoría..."
+                    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.5rem; width: 100%; border-radius: 4px;">
+            </div>
+            <!-- SERVICIO DE DATOS OCULTO
+            <div class="form-group">
+                <label>Servicio de Datos</label>
+                <select name="servicio_id" id="tipo-servicio" class="form-control"
+                    style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                    <option value="native">Nativo (Sin conexión)</option>
+                    {% for svc in servicios %}
+                    <option value="{{ svc.id }}">{{ svc.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            -->
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label>Descripción</label>
+            <textarea name="descripcion" id="tipo-descripcion" rows="2"
+                style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 4px; padding: 0.5rem;"></textarea>
+        </div>
+
+        <div class="form-group"
+            style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+            <label style="font-size: 1.1em; color: var(--primary);"><i class="fas fa-list-ul"></i> Atributos
+                Personalizados</label>
+            <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1rem;">
+                Defina los campos extra que tendrán los artículos de este tipo.
+            </p>
+
+            <!-- Hidden JSON Storage -->
+            <textarea name="custom_fields_schema" id="tipo-schema" rows="3" style="display:none;"></textarea>
+
+            <!-- Schema Builder UI -->
+            <div
+                style="background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.05); color: #94a3b8; text-align: left;">
+                            <th style="padding: 0.5rem; width: 30%;">Etiqueta (Label)</th>
+                            <th style="padding: 0.5rem; width: 25%;">Tipo Dato</th>
+                            <th style="padding: 0.5rem; width: 35%;">Fuente / Opciones</th>
+                            <th style="padding: 0.5rem; width: 10%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="schema-builder-body">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: rgba(16, 185, 129, 0.05); border-top: 1px solid rgba(255,255,255,0.1);">
+                            <td style="padding: 0.5rem;">
+                                <input type="text" id="new-field-label" placeholder="Ej: Color, Voltaje"
+                                    oninput="autoGenKey()"
+                                    style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.3rem; border-radius: 4px;">
+                                <input type="text" id="new-field-name" placeholder="key_automática"
+                                    style="width: 100%; background: transparent; border: none; color: #64748b; font-size: 0.75rem; margin-top: 2px;"
+                                    readonly>
+                            </td>
+                            <td style="padding: 0.5rem;">
+                                <select id="new-field-type" onchange="toggleSourceInput()"
+                                    style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.3rem; border-radius: 4px;">
+                                    <option value="text">Texto Libre</option>
+                                    <option value="number">Numérico</option>
+                                    <option value="date">Fecha</option>
+                                    <option value="boolean">Si/No (Checkbox)</option>
+                                    <option value="select">Lista de Opciones</option>
+                                </select>
+                            </td>
+                            <td style="padding: 0.5rem;">
+                                <input type="text" id="new-field-source" placeholder="Opcional: Fuente de validación"
+                                    style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.3rem; border-radius: 4px;">
+                                <small id="source-hint" style="display:none; color: #94a3b8; font-size: 0.7rem;">Separe
+                                    opciones con coma (ej: Rojo,Verde,Azul)</small>
+                            </td>
+                            <td style="padding: 0.5rem; text-align: center;">
+                                <button type="button" onclick="addSchemaField()" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div id="schema-error" style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; display: none;"></div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.05); color: #cbd5e1;"
+                onclick="toggleModal('modal-tipo')">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Tipo</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let currentSchema = [];
+
+    function renderSchemaBuilder() {
+        const tbody = document.getElementById('schema-builder-body');
+        tbody.innerHTML = '';
+
+        currentSchema.forEach((field, index) => {
+            const tr = document.createElement('tr');
+            tr.style.borderTop = '1px solid rgba(255,255,255,0.05)';
+
+            // Source formatting for input value
+            let sourceVal = field.source || '';
+            if (field.type === 'select' && field.options) {
+                sourceVal = field.options.join(', ');
+            }
+
+            // Escape util
+            const esc = (str) => (str || '').toString().replace(/"/g, '&quot;');
+
+            tr.innerHTML = `
+                <td style="padding: 0.5rem; color: #e2e8f0;">
+                    <input type="text" value="${esc(field.label)}" oninput="updateSchemaField(${index}, 'label', this.value)"
+                        onkeypress="if(event.key==='Enter') event.preventDefault()"
+                        style="width: 100%; background: transparent; border: none; border-bottom: 1px dashed rgba(255,255,255,0.2); color: white; padding: 2px;">
+                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">${field.name}</div>
+                </td>
+                <td style="padding: 0.5rem; color: #cbd5e1;">
+                    <select onchange="updateSchemaField(${index}, 'type', this.value)"
+                        style="width: 100%; background: transparent; border: none; color: #cbd5e1; padding: 2px;">
+                        <option value="text" ${field.type === 'text' ? 'selected' : ''}>Texto Libre</option>
+                        <option value="number" ${field.type === 'number' ? 'selected' : ''}>Numérico</option>
+                        <option value="date" ${field.type === 'date' ? 'selected' : ''}>Fecha</option>
+                        <option value="boolean" ${field.type === 'boolean' ? 'selected' : ''}>Si/No</option>
+                        <option value="select" ${field.type === 'select' ? 'selected' : ''}>Lista</option>
+                    </select>
+                </td>
+                <td style="padding: 0.5rem; color: #94a3b8; font-size: 0.85rem;">
+                    <input type="text" value="${esc(sourceVal)}" oninput="updateSchemaField(${index}, 'source', this.value)"
+                         onkeypress="if(event.key==='Enter') event.preventDefault()"
+                         placeholder="${field.type === 'select' ? 'Opciones (sep. coma o ;)' : 'Fuente validación'}"
+                        style="width: 100%; background: transparent; border: none; border-bottom: 1px dashed rgba(255,255,255,0.2); color: #94a3b8; padding: 2px;">
+                </td>
+                <td style="padding: 0.5rem; text-align: center;">
+                    <button type="button" onclick="removeSchemaField(${index})" 
+                        style="background: transparent; border: none; color: #ef4444; cursor: pointer;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update Hidden JSON
+        document.getElementById('tipo-schema').value = JSON.stringify(currentSchema);
+    }
+
+    function updateSchemaField(index, key, value) {
+        if (key === 'source') {
+            const type = currentSchema[index].type;
+            if (type === 'select') {
+                currentSchema[index].options = value.split(/[,;]+/).map(s => s.trim()).filter(s => s);
+                delete currentSchema[index].source;
+            } else {
+                currentSchema[index].source = value;
+                delete currentSchema[index].options;
+            }
+        } else if (key === 'type') {
+            currentSchema[index].type = value;
+            // Robustness: Manage options/source initialization contextually
+            if (value === 'select') {
+                if (!currentSchema[index].options) {
+                    // Try to migrate from source if it was text before
+                    const source = currentSchema[index].source || '';
+                    if (source) {
+                        currentSchema[index].options = source.split(/[,;]+/).map(s => s.trim()).filter(s => s);
+                    } else {
+                        currentSchema[index].options = [];
+                    }
+                }
+                delete currentSchema[index].source;
+            }
+            renderSchemaBuilder();
+        } else {
+            currentSchema[index][key] = value;
+        }
+        document.getElementById('tipo-schema').value = JSON.stringify(currentSchema);
+    }
+
+    function addSchemaField() {
+        const labelInput = document.getElementById('new-field-label');
+        const nameInput = document.getElementById('new-field-name');
+        const typeInput = document.getElementById('new-field-type');
+        const sourceInput = document.getElementById('new-field-source');
+        const errorDiv = document.getElementById('schema-error');
+
+        const label = labelInput.value.trim();
+        const name = nameInput.value.trim();
+        const type = typeInput.value;
+        const source = sourceInput.value.trim();
+
+        errorDiv.style.display = 'none';
+
+        if (!label) return false; // Quietly fail if empty label (for auto-submit logic)
+
+        if (!name) {
+            errorDiv.innerText = "La clave del campo es obligatoria.";
+            errorDiv.style.display = 'block';
+            return false;
+        }
+
+        // Check for duplicates
+        if (currentSchema.some(f => f.name === name)) {
+            errorDiv.innerText = "Ya existe un campo con este identificador.";
+            errorDiv.style.display = 'block';
+            return false;
+        }
+
+        const newField = { name, label, type };
+
+        if (type === 'select') {
+            if (source) {
+                newField.options = source.split(/[,;]+/).map(s => s.trim()).filter(s => s);
+            } else {
+                newField.options = [];
+            }
+        } else {
+            if (source) newField.source = source;
+        }
+
+        currentSchema.push(newField);
+        renderSchemaBuilder();
+
+        // Clear Inputs
+        labelInput.value = '';
+        nameInput.value = '';
+        sourceInput.value = '';
+        toggleSourceInput();
+        return true;
+    }
+
+    // Capture form submit to include pending field
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('form-tipo');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                // Try to add the field if the user typed something in label but didn't click "+"
+                const pendingLabel = document.getElementById('new-field-label').value.trim();
+                if (pendingLabel) {
+                    const success = addSchemaField();
+                    if (!success) {
+                        e.preventDefault(); // Stop submit if there was a validation error (like duplicate name)
+                        return;
+                    }
+                }
+                // Final sync before POST
+                document.getElementById('tipo-schema').value = JSON.stringify(currentSchema);
+            });
+        }
+
+        const inputs = ['new-field-label', 'new-field-source'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSchemaField();
+                        document.getElementById('new-field-label').focus();
+                    }
+                });
+            }
+        });
+    });
+
+    function removeSchemaField(index) {
+        currentSchema.splice(index, 1);
+        renderSchemaBuilder();
+    }
+
+    function autoGenKey() {
+        const label = document.getElementById('new-field-label').value;
+        const nameInput = document.getElementById('new-field-name');
+
+        // Simple slugify: lowercase, remove accents, replace spaces with underscore, remove non-alphanum
+        const slug = label.toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, '_')
+            .replace(/[^a-z0-9_]/g, '');
+
+        nameInput.value = slug;
+    }
+
+    function toggleSourceInput() {
+        const type = document.getElementById('new-field-type').value;
+        const sourceInput = document.getElementById('new-field-source');
+        const hint = document.getElementById('source-hint');
+
+        if (type === 'select') {
+            sourceInput.placeholder = "Opciones (separadas por coma)";
+            hint.style.display = 'block';
+        } else {
+            sourceInput.placeholder = "Opcional: Fuente de validación";
+            hint.style.display = 'none';
+        }
+    }
+
+    function openTipoModal() {
+        document.getElementById('modal-tipo-title').innerText = "Nuevo Tipo de Artículo";
+        document.getElementById('tipo-id').value = "";
+        document.getElementById('tipo-naturaleza').value = "PRODUCTO";
+        document.getElementById('tipo-nombre').value = "";
+        document.getElementById('tipo-descripcion').value = "";
+        const svcEl = document.getElementById('tipo-servicio');
+        if (svcEl) svcEl.value = "native";
+
+        currentSchema = [];
+        renderSchemaBuilder();
+
+        toggleModal('modal-tipo');
+    }
+
+    function editTipoFromBtn(btn) {
+        const id = btn.getAttribute('data-id');
+        const nombre = btn.getAttribute('data-nombre');
+        const descripcion = btn.getAttribute('data-descripcion');
+        const servicio_id = btn.getAttribute('data-servicio');
+        const schemaStr = btn.getAttribute('data-schema');
+        const naturaleza = btn.getAttribute('data-naturaleza');
+
+        document.getElementById('modal-tipo-title').innerText = "Editar Configuración";
+        document.getElementById('tipo-id').value = id;
+        document.getElementById('tipo-naturaleza').value = naturaleza || 'PRODUCTO';
+        document.getElementById('tipo-nombre').value = nombre;
+        document.getElementById('tipo-descripcion').value = descripcion;
+        const svcEl = document.getElementById('tipo-servicio');
+        if (svcEl) svcEl.value = servicio_id;
+
+        // Load Schema
+        try {
+            currentSchema = schemaStr ? JSON.parse(schemaStr) : [];
+            // Ensure array
+            if (!Array.isArray(currentSchema)) currentSchema = [];
+        } catch (e) {
+            console.error("Invalid Schema JSON", e);
+            currentSchema = [];
+        }
+        renderSchemaBuilder();
+
+        toggleModal('modal-tipo');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,476 @@
+Manual General del Sistema MultiMCP
+Versión 2.0 - Documentación Integral
+
+Este manual describe la operatividad completa del sistema, abarcando infraestructura, gestión multi-empresa y módulos operativos. Diseñado para usuarios clave y auditores.
+
+1. Infraestructura y Arquitectura
+El sistema opera bajo un modelo Multi-Tenant (Múltiples empresas en una sola instalación), garantizando el aislamiento de datos y la seguridad.
+
+
+2. Gestión de Empresas
+Módulo administrativo para la creación y configuración de nuevos entornos de trabajo.
+
+
+3. Gestión de Stock e Inventario
+Control total de los bienes de cambio, desde su definición hasta su movimiento físico.
+
+
+4. Módulo de Compras
+Ciclo completo de aprovisionamiento con controles de segregación de funciones.
+
+
+5. Módulo de Ventas
+Gestión comercial desde la cotización hasta la facturación.
+
+
+6. Tesorería y Fondos
+Administración centralizada del flujo de dinero (Cash Flow).
+
+
+Anexo: Matriz de Control Interno (Auditoría)
+Matriz de riesgos operativos y controles mitigantes implementados en el sistema.
+Riesgo
+Control de Sistema
+Mitigación
+Acceso no autorizado
+Autenticación Multi-Tenant por Sesión
+Aislamiento lógico de empresas
+Compras Ficticias
+Segregación Solicitante vs Aprobador
+Roles SoD estrictos
+Pagos Fraudulentos
+Validación 3-Way Match
+Requiere OC y Recepción previas
+Fuga de Stock
+Trazabilidad de Movimientos
+Registro inmutable de quien despacha
+
+
+
+¡Esa advertencia confirma el problema! Si ves el mensaje de "WARNING: This is a development server", es porque se está ejecutando app.run() (el modo de prueba) en lugar de Waitress (el modo profesional).
+Esto sucede por dos posibles razones:
+Tienes una terminal abierta corriendo python app.py manualmente (esto bloquea el puerto).
+El servicio de Windows todavía tiene "basura" de la instalación anterior.
+🛠️ Sigamos este plan de "Limpieza Total" para que no falle más:
+Por favor, ejecuta estos pasos en orden:
+1. Cerrar todo lo que esté abierto
+Cierra todas las terminales negras (CMD o PowerShell) donde estés corriendo la aplicación. Necesitamos el puerto 5005 libre.
+2. Matar procesos de Python ocultos (Como Administrador)
+Abre PowerShell como Administrador y ejecuta este comando para asegurar que no haya nada corriendo "por detrás":
+powershell
+Stop-Process -Name "python" -Force -ErrorAction SilentlyContinue
+3. Borrar la "memoria" de Python
+Limpia los archivos temporales de Python para que lea el código nuevo:
+powershell
+cd "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP"
+Remove-Item -Recurse -Force "__pycache__"
+4. Reinstalar el Servicio (El paso definitivo)
+Ahora sí, registra el servicio con el nombre correcto y el puerto 5005:
+powershell
+# Borramos el rastro del error GetTickCount
+python colosal_service_installer.py remove
+# Instalamos de nuevo (ahora sí usará Waitress y Datetime)
+python colosal_service_installer.py install
+# Iniciamos
+python colosal_service_installer.py start
+💡 ¿Qué deberías ver ahora?
+En la terminal: Ya no debería dar el error de GetTickCount.
+En la Página: Al entrar a http://localhost:5005, ya no debería aparecer la advertencia de "Development Server" en ningún log, porque ahora estará usando el motor estable.
+¿Me avisas si con este "borrón y cuenta nueva" ya logramos que aparezca en ejecución en services.msc?
+sigue: FATAL: Error al lanzar el subproceso: module 'win32event' has no attribute 'GetTickCount' ver tambien : C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\logs\service_stdout.log
+Ran background command
+…\multiMCP > Get-Content -Path "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\colosal_service_installer.py"
+
+import win32serviceutil
+import win32service
+import win32event
+import servicemanager
+import socket
+import sys
+import os
+import subprocess                                                                r(e)}\n")'utf-8') as err: \
+                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")   
+        # Esperar hasta que se reciba seÃ±al de stop al lanzar el subproceso: {str
+        win32event.WaitForSingleObject(self.hWaitStop, win32event.INFINITE)       
+        except Exception as e:\Documents\GitHub\bibliotecaweb\multiMCP"
+if __name__ == '__main__':ath.join(PROJECT_DIR, "logs/service_stderr.log"), "a", e
+    if len(sys.argv) > 1:ess = subprocess.Popen([PYTHON_EXE, SCRIPT_PATH],        
+        win32serviceutil.HandleCommandLine(ColosalService)IR,
+    else:                                    stdout=out,
+        # Si se corre sin argumentos, se asume que se estÃ¡ iniciando por el SCM  
+        servicemanager.Initialize()          creationflags=subprocess.CREATE_NO_WI
+        servicemanager.PrepareToHostSingle(ColosalService) ERP (Waitress)"        
+        servicemanager.StartServiceCtrlDispatcher()
+    def __init__(self, args):
+Exit code 0
+Checked command status
+Edited
++90-76
+Analyzed
+Algo está muy mal en cómo Windows está interpretando el ejecutable de Python, y los logs revelan el misterio: el servicio está intentando usar pythonservice.exe (un gestor interno) en lugar del python.exe real que corre tu código. Por eso el error de GetTickCount parece "no irse nunca", porque ni siquiera está llegando a ejecutar mi código corregido.
+🛠️ La Solución Definitiva (Borrón y Cuenta Nueva)
+He reescrito el instalador para forzar rutas absolutas y evitar que Windows se confunda. Por favor, sigue estos pasos exactos en tu terminal de Administrador:
+1. Limpieza de procesos rebeldes
+Windows tiene procesos de Python "fantasma" que están bloqueando todo. Vamos a matarlos:
+powershell
+Stop-Process -Name "python" -Force -ErrorAction SilentlyContinue
+Stop-Process -Name "pythonservice" -Force -ErrorAction SilentlyContinue
+2. Reinstalación "Limpia" del Servicio
+Copia y pega este bloque:
+powershell
+cd "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP"
+# Borrar el servicio actual (Importante)
+python colosal_service_installer.py remove
+# Registrar el servicio con la configuración nueva y robusta
+python colosal_service_installer.py install
+# Configurar el usuario (A veces el sistema necesita permisos de red)
+# Esto hará que el servicio use tu sesión actual si es necesario
+python colosal_service_installer.py --startup auto start
+🔍 ¿Cómo verificar que funcionó?
+Abre services.msc y busca Colosal ERP (Servicio). Asegúrate de que diga "En ejecución".
+Entra a http://localhost:5005.
+DATO CLAVE: Si el servicio dice "En ejecución" pero la página no carga, mira el archivo 
+
+service_stdout.log. Si ves líneas que dicen Python: ...python.exe (terminando en python.exe, NO en pythonservice.exe), entonces vamos por buen camino.
+¿Puedes intentar esta reinstalación y decirme qué ves en el 
+
+service_stdout.log?
+Generating...
+Model
+
+Para que la migración asincrónica de Georef sea completa y el sistema mantenga una arquitectura coherente, los lugares clave que faltan migrar son:
+1. Endpoints Auxiliares en 
+
+core/routes.py
+Actualmente, solo convertimos /api/georef/calles. Para mantener la consistencia y evitar bloqueos si el sistema necesita escalar, deberíamos migrar los siguientes:
+/api/georef/localidades
+/api/georef/municipios
+/api/georef/municipio_info
+Razón: Aunque hoy consultan la base de datos local (que es rápida), migrarlos a async def garantiza que cualquier lógica futura de fallback a la API externa sea segura.
+2. Métodos de Sincronización en 
+
+GeorefService
+Los métodos que descargan los datos maestros (
+
+load_provincias, 
+
+load_municipios, 
+
+load_localidades) siguen usando requests.get (sincrónico). Si decidimos agregar un botón de "Actualizar Geografía" en el Panel de Administración, estos métodos congelarían el servidor durante varios segundos debido al volumen de datos.
+3. Otros Módulos con Selectores Geográficos
+Debemos verificar que las llamadas asincrónicas funcionen correctamente en las siguientes pantallas que ya utilizan estos selects dinámicos:
+Compras: Ficha de Proveedores (
+
+perfil_proveedor.html).
+Stock: Alta de Depósitos / Sucursales (
+
+deposito_form.html).
+Logística: Scripts y rutas de normalización de direcciones para entregas.
+4. AFIP: El pendiente crítico
+Fuera de Georef, en el servicio de AFIP realizamos la migración de la consulta de Padrón, pero aún falta migrar el método 
+
+solicitar_cae. Este es el corazón de la facturación electrónica; migrarlo permitirá que el servidor no se bloquee mientras AFIP procesa y autoriza facturas legales.
+¿Te gustaría que comencemos con la migración de 
+
+solicitar_cae de AFIP para completar el motor de facturación asincrónico?
+si
+Edited
++72-66
+2 results
+Analyzed
+Analyzed
+Analyzed
+0 results
+Analyzed
+Analyzed
+Analyzed
+Analyzed
+Analyzed
+Analyzed
+0 results
+32 results
+Analyzed
+Analyzed
+Analyzed
+Analyzed
+c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP
+0 results
+3 results
+Analyzed
+Analyzed
+Ran background command
+…\multiMCP > grep -r "def atomic_transaction" .
+grep : El término 'grep' no se reconoce como nombre de un cmdlet, función, 
+archivo de script o programa ejecutable. Compruebe si escribió correctamente el   
+
+
+
+
+
+
+
+
+inténtelo de nuevo.ó una ruta de acceso, compruebe que dicha ruta es correcta e   
+En línea: 1 Carácter: 1
++ grep -r "def atomic_transaction" .
++ ~~~~
+    + CategoryInfo          : ObjectNotFound: (grep:String) [], CommandNotFoundE  
+   xception
+    + FullyQualifiedErrorId : CommandNotFoundException
+Exit code 1
+Checked command status
+0 results
+Analyzed
+c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core
+0 results
+Analyzed
+c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\utils
+Analyzed
+Ran background command
+…\multiMCP > Select-String -Path ".\*.py" -Pattern "def atomic_transaction" -Recursive
+Select-String : No se encuentra ningún parámetro que coincida con el nombre del 
+parámetro 'Recursive'.
+En línea: 1 Carácter: 64
++ ... ct-String -Path ".\*.py" -Pattern "def atomic_transaction" -Recursive       
+
+
+
+
+
+
+    + CategoryInfo          : InvalidArgument: (:) [Select-String], ParameterBin  
+   dingException
+    + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Comman  
+   ds.SelectStringCommand
+Exit code 1
+Checked command status
+0 results
+Analyzed
+2 results
+Analyzed
+0 results
+0 results
+Analyzed
+Ran background command
+…\multiMCP > type database.py
+import os
+import sys
+from contextlib import contextmanager
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()                                                                    *")one)))@{DB_CONFIG['host']}/{DB_CONFIG['database']}"_CONFIG['database']}"        
+        print(f"Error Database ({DB_TYPE}): {safe_error}")
+        raise en.commit()conn.cursor(pymysql.cursors.DictCursor if dictionary else
+    finally:xception as e:.environ.get("DB_POOL_NAME", "web_app_pool")_CONFIG['pas
+        # En pool, close() devuelve la conexiÃ³n al pool", 5))True, pool_recycle=3
+        if conn: conn.close()n logs
+        safe_error = str(e)adb.ConnectionPool(t=False, autoflush=False, bind=get_e
+def init_db():CONFIG.get("password") and DB_CONFIG["password"] in safe_error:     
+    """VerificaciÃ³n inicial de la conexiÃ³n."""ONFIG["password"], "***REDACTED***
+    try: = None **DB_CONFIG SECURITY: DB_PASSWORD no puede estar vacÃa. Configura
+        if DB_TYPE == 'sqlite':y pool nativo para pymysql, usar conexiones directa
+            conn = sqlite3.connect(DB_PATH)ool_name}' initialized (size={pool_size
+            conn.close()e3.connect(DB_PATH, check_same_thread=False)
+            return Truery: conn.row_factory = sqlite3.Row
+        else:ursor = conn.cursor()
+            config = {k: v for k, v in DB_CONFIG.items() if k != 'init_command'}  
+            if mariadb:()
+                conn = mariadb.connect(**DB_CONFIG)
+            elif pymysql:exiÃ³n
+                conn = pymysql.connect(**config)
+            else:ol:adb = None
+                return Falseget_connection()
+            conn.close() conn.cursor(dictionary=dictionary)ontrado: {e}")
+            return True
+    except Exception as e: a pymysql manual
+        print(f"âš ï¸ Error al conectar a la base de datos: {e}") != 'init_command
+        return False
+Exit code 0
+Checked command status
+Analyzed
+0 results
+0 results
+12 results
+Ran background command
+…\multiMCP > grep -r "atomic_transaction" . | grep -v "import" | grep -v "@"
+grep : El término 'grep' no se reconoce como nombre de un cmdlet, función, 
+archivo de script o programa ejecutable. Compruebe si escribió correctamente el   
+
+
+
+
+
+
+
+
+inténtelo de nuevo.ó una ruta de acceso, compruebe que dicha ruta es correcta e   
+En línea: 1 Carácter: 1
++ grep -r "atomic_transaction" . | grep -v "import" | grep -v "@"
++ ~~~~
+    + CategoryInfo          : ObjectNotFound: (grep:String) [], CommandNotFoundE  
+   xception
+    + FullyQualifiedErrorId : CommandNotFoundException
+Exit code 1
+Checked command status
+Analyzed
+Analyzed
+0 results
+0 results
+2 results
+Analyzed
+0 results
+Ran background command
+…\multiMCP > Select-String -Path "database.py" -Pattern "atomic_transaction"
+Exit code 0
+Checked command status
+Analyzed
+Analyzed
+Analyzed
+0 results
+Analyzed
+3 results
+12 results
+Ran background command
+…\multiMCP > Select-String -Path ".\**\*.py" -Pattern "atomic_transaction" | Where-Object { $_.Line -notmatch "import" -and $_.Line -notmatch "@" }
+Exit code 0
+Checked command status
+43 results
+Analyzed
+0 results
+Analyzed
+Ran background command
+…\multiMCP > Select-String -Path "database.py" -Pattern "atomic_transaction"
+Exit code 0
+Checked command status
+Ran background command
+…\multiMCP > dir /s database.py
+dir : No se encuentra la ruta de acceso 'C:\s' porque no existe.
+En línea: 1 Carácter: 1
++ dir /s database.py
++ ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\s:String) [Get-ChildItem], Ite  
+   mNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChil  
+   dItemCommand
+Exit code 1
+Ran background command
+…\multiMCP > ls database.py -Recurse
+
+
+    Directorio: C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         23/2/2026     19:23           6322 database.py
+Exit code 0
+Checked command status
+Ran background command
+…\multiMCP > Select-String -Path ".\**\*.py" -Pattern "atomic_transaction"
+
+compras\routes.py:3:from database import get_db_cursor, atomic_transaction
+compras\routes.py:318:@atomic_transaction('compras')
+compras\routes.py:543:@atomic_transaction('compras')
+compras\routes.py:640:@atomic_transaction('compras')
+compras\routes.py:967:@atomic_transaction('compras', severity=9,
+impact_category='Financial')
+contabilidad\routes.py:4:from database import get_db_cursor, atomic_transaction   
+contabilidad\routes.py:254:@atomic_transaction('contabilidad', severity=7,        
+impact_category='Compliance')
+core\enterprise_admin.py:37:@atomic_transaction('enterprise', severity=9,,        
+impact_category='Compliance')
+core\enterprise_admin.py:272:@atomic_transaction('enterprise', severity=7,        
+impact_category='Operational')
+core\routes.py:3:from database import get_db_cursor, atomic_transactiony=9, 
+core\routes.py:23:@atomic_transaction('core', severity=8,
+impact_category='Security')from database import get_db_cursor, atomic_transaction 
+core\routes.py:141:@atomic_transaction('core', severity=8,
+impact_category='Security')
+core\routes.py:189:@atomic_transaction('core', severity=8,
+impact_category='Security')
+fondos\routes.py:3:from database import get_db_cursor, atomic_transaction
+fondos\routes.py:22:@atomic_transaction('fondos', severity=6,
+impact_category='Technical')
+fondos\routes.py:121:@atomic_transaction('fondos', severity=9,
+impact_category='Financial')
+fondos\routes.py:171:@atomic_transaction('fondos', severity=5,
+impact_category='Operational')
+fondos\routes.py:222:@atomic_transaction('fondos', severity=5, 
+impact_category='Operational')
+stock\routes.py:3:from database import get_db_cursor, atomic_transaction
+stock\routes.py:92:@atomic_transaction('stock', severity=7,
+impact_category='Operational')
+stock\routes.py:535:@atomic_transaction('stock', severity=5,
+impact_category='Technical')
+stock\routes.py:1354:@atomic_transaction('stock', severity=8,
+impact_category='Financial')
+stock\routes.py:1411:@atomic_transaction('stock', severity=8, 
+impact_category='Financial')
+stock\routes.py:1557:@atomic_transaction('stock', severity=9,
+impact_category='Integrity')
+ventas\routes.py:3:from database import get_db_cursor, atomic_transaction
+ventas\routes.py:54:@atomic_transaction('ventas')
+ventas\routes.py:880:@atomic_transaction('ventas', severity=8,
+impact_category='Financial')
+ventas\routes.py:1445:@atomic_transaction('ventas', severity=8,
+impact_category='Financial')
+Exit code 0
+Checked command status
+0 results
+4 results
+677 results
+Ran background command
+…\multiMCP > Select-String -Path ".\**\*.py" -Pattern "def atomic_transaction"
+Exit code 0
+Checked command status
+Ran background command
+…\multiMCP > Select-String -Path ".\**\*.py" -Pattern "atomic_transaction ="
+Exit code 0
+Checked command status
+51 results
+Ran background command
+…\multiMCP > Get-Content database.py | ForEach-Object { $i++; "$i: $_" }
+En línea: 1 Carácter: 51
++ Get-Content database.py | ForEach-Object { $i++; "$i: $_" }
++                                                   ~~~
+La referencia de variable no es válida. El carácter ':' no va seguido de un       
+
+
+
+
+
+
+carácter de nombre de variable válido. Considere la posibilidad de usar ${} para  
+delimitar el nombre.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordExce  
+   ption
+    + FullyQualifiedErrorId : InvalidVariableReferenceWithDrive
+Exit code 0
+Checked command status
+0 results
+Ran background command
+…\multiMCP > Select-String -Path ".\**\*.py" -Pattern "wraps"
+
+core\decorators.py:2:from functools import wraps
+core\decorators.py:64:    @wraps(view)
+core\decorators.py:110:        @wraps(view)
+Exit code 0
+Checked command status
+0 results
+Analyzed
+c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP
+0 results
+0 results
+Analyzed
+Analyzed
+c:\Users\marce\Documents\GitHub\bibliotecaweb
+2 results
+85 results
+Analyzed
+0 results
+0 results
+6 results
+Analyzed

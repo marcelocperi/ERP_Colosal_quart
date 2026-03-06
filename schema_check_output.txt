@@ -1,0 +1,72 @@
+﻿
+========================================================================
+  python_progs_vs_db_schema.py  v2  |  Deep Research: C├│digo vs DB
+  2026-03-02 17:47:58
+========================================================================
+
+­ƒôÑ Cargando schema de la base de datos (batch)...
+Ô£à Connection Pool 'web_app_pool' initialized (size=5)
+   Ô£à 163 tablas, 2048 columnas cargadas.
+­ƒöì Escaneando c├│digo fuente...
+   ­ƒôé 266 archivos (73 productivos, 193 otros)
+   Ô£à 144 tablas ├║nicas, 1544 refs (tabla,col) ├║nicas.
+
+­ƒöä Cruzando referencias...
+
+========================================================================
+  RESUMEN  |  python_progs_vs_db_schema v2
+========================================================================
+  DB: 163 tablas | C├│digo: 144 tablas referenciadas
+  ÔØî Tablas faltantes en DB  : 0
+  ÔØî Columnas faltantes en DB: 512  (ÔÜí en m├│dulos productivos: 461)
+  Ô£à Tablas OK:   144  |  Columnas OK: 1032
+========================================================================
+
+­ƒƒá COLUMNAS EN C├ôDIGO QUE NO EXISTEN EN SU TABLA DB:
+   ÔÜí = en m├│dulo productivo
+
+   ÔÜí cmp_articulos_costos_indirectos.activo                 services\industrial_costing_service.py:L99; services\industrial_costing_service.py:L178
+   ÔÜí cmp_articulos_costos_indirectos.dictionary             services\industrial_costing_service.py:L86; services\industrial_costing_service.py:L149
+   ÔÜí cmp_articulos_costos_indirectos.rows                   services\industrial_costing_service.py:L86; services\industrial_costing_service.py:L86
+   ÔÜí cmp_articulos_costos_indirectos.total_overhead         services\industrial_costing_service.py:L86
+   ÔÜí cmp_articulos_costos_indirectos.user_id_update         services\industrial_costing_service.py:L149
+   ÔÜí cmp_consignaciones          .articulo               services\consignment_service.py:L76; services\consignment_service.py:L76
+   ÔÜí cmp_consignaciones          .cons_id                services\consignment_service.py:L76; services\consignment_service.py:L76
+   ÔÜí cmp_consignaciones          .pendiente              services\consignment_service.py:L76; services\consignment_service.py:L76
+   ÔÜí cmp_consignaciones          .tercero                services\consignment_service.py:L76; services\consignment_service.py:L76
+   ÔÜí cmp_consignaciones          .valor_unitario         services\consignment_service.py:L76; services\consignment_service.py:L76
+   ÔÜí cmp_cotizaciones            .cot                    services\purchase_order_mailer.py:L30
+   ÔÜí cmp_cotizaciones            .empresa_nombre         services\quotation_mailer.py:L208; services\quotation_mailer.py:L208
+   ÔÜí cmp_cotizaciones            .items                  services\purchase_order_mailer.py:L30
+   ÔÜí cmp_cotizaciones            .po_hash                services\purchase_order_mailer.py:L30
+   ÔÜí cmp_cotizaciones            .razon_social           services\quotation_mailer.py:L208; services\quotation_mailer.py:L208
+   ÔÜí cmp_detalles_orden          .articulo_codigo        compras\routes.py:L1004; compras\routes.py:L1004
+   ÔÜí cmp_detalles_orden          .articulo_nombre        compras\routes.py:L1004; compras\routes.py:L1004
+   ÔÜí cmp_detalles_orden          .cant_facturada         services\receiving_service.py:L130
+   ÔÜí cmp_detalles_orden          .cantidad               compras\routes.py:L1004; compras\routes.py:L1004
+   ÔÜí cmp_detalles_orden          .cargos                 services\importacion_service.py:L122; services\importacion_service.py:L122
+   ÔÜí cmp_detalles_orden          .detalle_id             services\receiving_service.py:L25; services\receiving_service.py:L25
+   ÔÜí cmp_detalles_orden          .dictionary             services\importacion_service.py:L122
+   ÔÜí cmp_detalles_orden          .items                  compras\routes.py:L1226; services\importacion_service.py:L122
+   ÔÜí cmp_detalles_orden          .linea                  services\receiving_service.py:L130
+   ÔÜí cmp_detalles_orden          .linea_po               services\receiving_service.py:L60
+   ÔÜí cmp_detalles_orden          .pendiente_aparente     services\receiving_service.py:L25; services\receiving_service.py:L25
+   ÔÜí cmp_detalles_orden          .precio_usd             services\importacion_service.py:L128; services\importacion_service.py:L128
+   ÔÜí cmp_detalles_orden          .tipo_cambio_usd        services\importacion_service.py:L75; services\importacion_service.py:L75
+   ÔÜí cmp_detalles_orden          .total_ya_recibido      services\receiving_service.py:L60
+   ÔÜí cmp_detalles_solicitud      .items                  compras\routes.py:L188
+   ÔÜí cmp_items_consignacion      .dictionary             services\consignment_service.py:L28
+   ÔÜí cmp_items_consignacion      .disponible             services\consignment_service.py:L28
+   ÔÜí cmp_items_consignacion      .res                    services\consignment_service.py:L28
+   ÔÜí cmp_items_consignacion      .sql                    services\consignment_service.py:L28
+   ÔÜí cmp_items_consignacion      .tercero_id             services\consignment_service.py:L28
+   ÔÜí cmp_items_consignacion      .tipo                   services\consignment_service.py:L28
+   ÔÜí cmp_items_consignacion      .total_dev              services\consignment_service.py:L28
+   ÔÜí cmp_items_cotizacion        .articulo_nombre        services\importacion_service.py:L141; services\importacion_service.py:L141
+   ÔÜí cmp_items_cotizacion        .codigo_interno         compras\routes.py:L1644; compras\routes.py:L1644
+   ÔÜí cmp_items_cotizacion        .nombre_articulo        compras\routes.py:L1644; compras\routes.py:L1644
+   ... y 472 m├ís ÔåÆ ver schema_check_report.json
+
+­ƒÆ¥ Reporte completo: schema_check_report.json
+========================================================================
+

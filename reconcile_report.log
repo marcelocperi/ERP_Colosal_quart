@@ -1,0 +1,262 @@
+🔍 Iniciando Reconciliación Global (v3 - Python Generation)...
+------------------------------------------------------------
+
+============================================================
+📊 INFORME DE INTEGRIDAD
+============================================================
+  [ERROR] Ruta 'biblioteca.refresh_dolar' requiere 'usuarios.html' pero el archivo no existe.
+  [ERROR] Ruta 'biblioteca.usuarios' requiere 'usuarios.html' pero el archivo no existe.
+  [ERROR] Ruta 'biblioteca.modificar_usuario' requiere 'prestamos.html' pero el archivo no existe.
+  [ERROR] Ruta 'biblioteca.prestamos' requiere 'prestamos.html' pero el archivo no existe.
+  [WARN] Ruta 'compras.importaciones_dashboard' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.nuevo_proveedor_internacional' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.importacion_agregar_documento' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.importacion_orden_detalle' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.importacion_agregar_cargo' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.importacion_eliminar_cargo' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.importacion_guardar_despacho' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.importacion_ingresar_stock' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.importaciones_dashboard_avanzado' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.importacion_agregar_pago' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.reposicion_dashboard' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.solicitudes_lista' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.dashboard' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.cotizacion_detalle' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.alertas_detalle' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.nuevo_proveedor' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.editar_proveedor' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.perfil_proveedor' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.toggle_convenio' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.agregar_cm05' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.upload_cm05' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.agregar_direccion' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.agregar_contacto' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.agregar_fiscal' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.eliminar_detalle' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.generar_po' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.agregar_item_po' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.aprobar_po_detalle' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.post_aprobacion_po' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.ver_retencion' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.ordenes_compra_alias' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.reenviar_cotizacion' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.reenviar_po' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.get_workflow_rule_details' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.save_workflow_config' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'compras.recepcion_ciega_procesar' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'contabilidad.dashboard' requiere 'contabilidad/dashboard.html' pero el archivo no existe.
+  [WARN] Ruta 'contabilidad.dashboard' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'contabilidad.config_fiscal' requiere 'contabilidad/config_fiscal.html' pero el archivo no existe.
+  [ERROR] Ruta 'contabilidad.padrones_iibb' requiere 'contabilidad/padrones.html' pero el archivo no existe.
+  [WARN] Ruta 'contabilidad.importar_padron' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'contabilidad.reporte_iibb' requiere 'contabilidad/reporte_iibb.html' pero el archivo no existe.
+  [ERROR] Ruta 'contabilidad.plan_cuentas' requiere 'contabilidad/plan_cuentas.html' pero el archivo no existe.
+  [ERROR] Ruta 'contabilidad.libro_diario' requiere 'contabilidad/libro_diario.html' pero el archivo no existe.
+  [ERROR] Ruta 'contabilidad.ver_asiento' requiere 'contabilidad/ver_asiento.html' pero el archivo no existe.
+  [WARN] Ruta 'contabilidad.ver_asiento' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'contabilidad.sueldos_dashboard' requiere 'contabilidad/sueldos.html' pero el archivo no existe.
+  [WARN] Ruta 'contabilidad.liquidar_sueldos' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'contabilidad.centralizar_sueldos' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'enterprise.list_enterprises' requiere 'sysadmin_enterprises.html' pero el archivo no existe.
+  [ERROR] Ruta 'enterprise.create_enterprise_public' requiere 'create_enterprise.html' pero el archivo no existe.
+  [WARN] Ruta 'enterprise.create_enterprise_public' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'enterprise.toggle_enterprise_status' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'enterprise.update_enterprise' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'enterprise.get_migration_metadata' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'enterprise.migrate_data' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'enterprise.get_enterprise_fiscal' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'enterprise.save_enterprise_fiscal' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'enterprise.delete_enterprise_fiscal' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'enterprise.get_logo_history' requiere 'saas_owner_master.html' pero el archivo no existe.
+  [WARN] Ruta 'enterprise.get_logo_history' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'enterprise.get_logo_raw' requiere 'saas_owner_master.html' pero el archivo no existe.
+  [WARN] Ruta 'enterprise.get_logo_raw' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'enterprise.saas_owner_master' requiere 'saas_owner_master.html' pero el archivo no existe.
+  [WARN] Ruta 'enterprise.saas_owner_save' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.login' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.logout' requiere 'enforce_change_password.html' pero el archivo no existe.
+  [WARN] Ruta 'core.logout' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.enforce_password_change' requiere 'enforce_change_password.html' pero el archivo no existe.
+  [WARN] Ruta 'core.enforce_password_change' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.change_password' requiere 'reset_password.html' pero el archivo no existe.
+  [WARN] Ruta 'core.change_password' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.reset_password_public' requiere 'reset_password.html' pero el archivo no existe.
+  [WARN] Ruta 'core.reset_password_public' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.request_temp_password' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.reset_with_token' requiere 'reset_token.html' pero el archivo no existe.
+  [WARN] Ruta 'core.reset_with_token' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.reset_confirm' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.create_role' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.admin_roles_init_sod' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.update_role_permissions' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.revoke_role_permission' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.delete_role' requiere 'admin_users.html' pero el archivo no existe.
+  [WARN] Ruta 'core.delete_role' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.admin_users' requiere 'admin_users.html' pero el archivo no existe.
+  [WARN] Ruta 'core.reset_user_attempts' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.admin_reset_password' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.create_system_user' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.update_user' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.admin_puestos' requiere 'admin_puestos.html' pero el archivo no existe.
+  [WARN] Ruta 'core.create_puesto' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.update_puesto' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.delete_puesto' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.audit_permissions' requiere 'admin_audit_permissions.html' pero el archivo no existe.
+  [ERROR] Ruta 'core.audit_certification' requiere 'admin_audit_certification.html' pero el archivo no existe.
+  [WARN] Ruta 'core.ai_auditor' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.manual_compras_v4' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.manual_ventas_v4' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.api_get_municipios' requiere 'empresa_fiscal.html' pero el archivo no existe.
+  [ERROR] Ruta 'core.api_get_municipio_info' requiere 'empresa_fiscal.html' pero el archivo no existe.
+  [ERROR] Ruta 'core.api_get_calles' requiere 'empresa_fiscal.html' pero el archivo no existe.
+  [ERROR] Ruta 'core.admin_empresa_fiscal' requiere 'empresa_fiscal.html' pero el archivo no existe.
+  [WARN] Ruta 'core.admin_empresa_fiscal_save' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.admin_numeracion' requiere 'admin_numeracion.html' pero el archivo no existe.
+  [WARN] Ruta 'core.admin_numeracion_save' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.admin_numeracion_delete' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.admin_numeracion_clone' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.admin_tipos_comprobante' requiere 'admin_tipos_comprobante.html' pero el archivo no existe.
+  [WARN] Ruta 'core.admin_tipos_comprobante_save' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.control_service' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.admin_georef_sync' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.admin_rotation_control' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.admin_service_config' requiere 'admin_service_config.html' pero el archivo no existe.
+  [WARN] Ruta 'core.admin_service_config' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.admin_service_create' requiere 'admin_service_create.html' pero el archivo no existe.
+  [WARN] Ruta 'core.admin_service_create' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'core.admin_dashboard' requiere 'admin_dashboard.html' pero el archivo no existe.
+  [WARN] Ruta 'core.cancel_thread' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.error_log_detail' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.error_log_update_incident' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'core.error_log_quick_action' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'fondos.dashboard' requiere 'fondos/dashboard.html' pero el archivo no existe.
+  [WARN] Ruta 'fondos.dashboard' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'fondos.cajas' requiere 'fondos/cajas.html' pero el archivo no existe.
+  [ERROR] Ruta 'fondos.aprobaciones' requiere 'fondos/aprobaciones_po.html' pero el archivo no existe.
+  [ERROR] Ruta 'fondos.aprobar_po_detalle' requiere 'fondos/aprobar_po_detalle.html' pero el archivo no existe.
+  [WARN] Ruta 'fondos.aprobar_po_detalle' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'fondos.post_aprobacion_po' requiere 'fondos/kpi_desembolsos.html' pero el archivo no existe.
+  [WARN] Ruta 'fondos.post_aprobacion_po' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'fondos.kpi_desembolsos' requiere 'fondos/kpi_desembolsos.html' pero el archivo no existe.
+  [ERROR] Ruta 'fondos.condiciones_pago' requiere 'fondos/condiciones_pago.html' pero el archivo no existe.
+  [ERROR] Ruta 'fondos.configuracion_global' requiere 'fondos/configuracion_global.html' pero el archivo no existe.
+  [WARN] Ruta 'fondos.bancos_sincronizar_bcra' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'fondos.bancos_sincronizar_billeteras' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'pricing.dashboard' requiere 'pricing/dashboard.html' pero el archivo no existe.
+  [WARN] Ruta 'pricing.dashboard' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'pricing.lista_detalle' requiere 'pricing/lista_detalle.html' pero el archivo no existe.
+  [WARN] Ruta 'pricing.lista_detalle' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'pricing.regla_guardar' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'pricing.lista_recalcular' requiere 'pricing/lista_pendientes.html' pero el archivo no existe.
+  [WARN] Ruta 'pricing.lista_recalcular' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'pricing.lista_pendientes' requiere 'pricing/lista_pendientes.html' pero el archivo no existe.
+  [WARN] Ruta 'pricing.lista_pendientes' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'pricing.propuesta_accion' requiere 'pricing/pendientes_globales.html' pero el archivo no existe.
+  [WARN] Ruta 'pricing.propuesta_accion' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'pricing.todas_las_pendientes' requiere 'pricing/pendientes_globales.html' pero el archivo no existe.
+  [ERROR] Ruta 'ai_chat.ai_chat_page' requiere 'ai_chat.html' pero el archivo no existe.
+  [WARN] Ruta 'ai_chat.ai_health' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ai_chat.ai_chat' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ai_chat.ai_rate' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ai_chat.ai_stats' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.movimiento_crear' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.movimientos_historial' requiere 'stock/movimientos_historial.html' pero el archivo no existe.
+  [ERROR] Ruta 'stock.movimiento_detalle' requiere 'stock/movimiento_detalle.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.movimiento_detalle' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.articulo_historial' requiere 'stock/articulo_historial.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.articulo_historial' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.articulo_guardar' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.articulos_importar' requiere 'stock/importar_articulos.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.articulos_upload_csv' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.enrich_bulk' requiere 'stock/depositos.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.enrich_bulk' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.depositos_lista' requiere 'stock/depositos.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.enrich_last_report' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.deposito_nuevo' requiere 'stock/deposito_form.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.deposito_nuevo' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.deposito_editar' requiere 'stock/deposito_form.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.deposito_editar' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.tipos_articulo' requiere 'stock/tipos_articulo.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.tipos_articulo_guardar' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.download_ebook' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.api_get_series' requiere 'stock/transferencias.html' pero el archivo no existe.
+  [ERROR] Ruta 'stock.transferencias_lista' requiere 'stock/transferencias.html' pero el archivo no existe.
+  [ERROR] Ruta 'stock.transferencia_nueva' requiere 'stock/transferencia_form.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.transferencia_nueva' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.api_despachar_transferencia' requiere 'stock/inventario.html' pero el archivo no existe.
+  [ERROR] Ruta 'stock.inventarios_lista' requiere 'stock/inventario.html' pero el archivo no existe.
+  [ERROR] Ruta 'stock.inventario_toma' requiere 'stock/inventario_toma.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.inventario_toma' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.api_inventario_cerrar' requiere 'stock/logisticas.html' pero el archivo no existe.
+  [ERROR] Ruta 'stock.logisticas_lista' requiere 'stock/logisticas.html' pero el archivo no existe.
+  [ERROR] Ruta 'stock.logistica_nueva' requiere 'stock/logistica_form.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.logistica_nueva' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.logistica_editar' requiere 'stock/logistica_form.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.logistica_editar' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.print_label' requiere 'stock/print_label.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.print_label' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.print_zpl_network' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.api_get_default_printer' requiere 'stock/impresoras.html' pero el archivo no existe.
+  [ERROR] Ruta 'stock.impresoras_lista' requiere 'stock/impresoras.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.impresora_guardar' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.impresora_eliminar' requiere 'stock/balanzas.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.impresora_eliminar' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'stock.balanzas_lista' requiere 'stock/balanzas.html' pero el archivo no existe.
+  [WARN] Ruta 'stock.balanza_guardar' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.balanza_eliminar' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.sku_dual_lookup' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_validar_devolucion' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_procesar_devolucion' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_procesar_venta' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_registrar_hecho' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_vincular_caja' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_desvincular_caja' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_pedigree' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.seriales_articulo' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_scan' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_import' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_autogenerar' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'stock.serial_eliminar' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'utilitarios.gestor_crons' requiere 'utilitarios/crons.html' pero el archivo no existe.
+  [WARN] Ruta 'utilitarios.get_cron_logs' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'utilitarios.save_cron' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'utilitarios.delete_cron' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.dashboard' requiere 'ventas/dashboard.html' pero el archivo no existe.
+  [ERROR] Ruta 'ventas.consultar_afip' requiere 'ventas/cliente_form.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.consultar_afip' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.get_allowed_docs' requiere 'ventas/cliente_form.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.get_allowed_docs' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.nuevo_cliente' requiere 'ventas/cliente_form.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.nuevo_cliente' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.editar_cliente' requiere 'ventas/clientes.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.editar_cliente' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.clientes' requiere 'ventas/clientes.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.perfil_cliente' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.toggle_convenio' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.agregar_cm05' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.upload_cm05' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.agregar_direccion' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.agregar_contacto' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.agregar_fiscal' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.eliminar_detalle' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.solicitar_condicion_pago' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.aprobar_condicion_pago' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.habilitar_condiciones_pago' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.get_cliente_condiciones' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.buscar_articulos' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.nota_credito' existe en Python pero NO es accesible desde el menú.
+  [WARN] Ruta 'ventas.procesar_factura' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.comprobantes' requiere 'ventas/comprobantes.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.ver_comprobante' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.ver_remito' requiere 'ventas/comprobante_impresion.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.ver_remito' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.logistica_devoluciones' requiere 'ventas/logistica_devoluciones.html' pero el archivo no existe.
+  [ERROR] Ruta 'ventas.logistica_ver_devolucion' requiere 'ventas/logistica_recepcion.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.logistica_ver_devolucion' existe en Python pero NO es accesible desde el menú.
+  [ERROR] Ruta 'ventas.reenviar_comprobante' requiere 'ventas/comprobante_impresion.html' pero el archivo no existe.
+  [WARN] Ruta 'ventas.reenviar_comprobante' existe en Python pero NO es accesible desde el menú.
+
+============================================================
+🛠 ACCIONES REALIZADAS
+============================================================
+  Ninguna acción necesaria.

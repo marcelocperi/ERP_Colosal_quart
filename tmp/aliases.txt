@@ -1,0 +1,155 @@
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\biblioteca\routes.py:828: FROM movimientos_pendientes mp
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\biblioteca\routes.py:829: JOIN stk_articulos l ON mp.libro_id = l.id AND l.enterprise_id = mp.enterprise_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\fazon_routes.py:26: FROM stk_depositos d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\fazon_routes.py:27: LEFT JOIN erp_terceros t ON d.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\fazon_routes.py:39: FROM stk_liquidaciones_consignacion l
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\fazon_routes.py:40: JOIN erp_terceros t ON l.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\fazon_routes.py:41: JOIN stk_depositos d ON l.deposito_id = d.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\importaciones_routes.py:38: FROM cmp_ordenes_compra o
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\importaciones_routes.py:39: JOIN erp_terceros p ON o.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\importaciones_routes.py:51: FROM imp_documentos d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\importaciones_routes.py:52: LEFT JOIN erp_terceros p ON d.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\importaciones_routes.py:253: FROM imp_documentos d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\importaciones_routes.py:254: LEFT JOIN erp_terceros p ON d.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\industrial_routes.py:124: FROM sys_documentos_adjuntos d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\industrial_routes.py:139: FROM prd_proyectos_desarrollo p
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\industrial_routes.py:140: LEFT JOIN stk_articulos a ON p.articulo_objetivo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\rfq_routes.py:22: FROM cmp_rfq_campanas c
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\rfq_routes.py:23: LEFT JOIN stk_articulos a ON c.articulo_objetivo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:982: FROM cmp_ordenes_compra o
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:983: JOIN erp_terceros p ON o.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:999: FROM cmp_ordenes_compra o
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1000: JOIN erp_terceros p ON o.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1100: FROM cmp_ordenes_compra o
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1101: JOIN erp_terceros p ON o.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1114: FROM cmp_detalles_orden d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1115: JOIN stk_articulos a ON d.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1258: FROM erp_terceros t
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1259: LEFT JOIN erp_direcciones d ON t.id = d.tercero_id AND d.es_fiscal = 1
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1280: FROM erp_terceros t
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1281: LEFT JOIN erp_direcciones d ON t.id = d.tercero_id AND d.es_fiscal = 1
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1326: FROM cmp_ordenes_compra o
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1327: JOIN erp_terceros p ON o.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1337: FROM cmp_detalles_orden d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1338: JOIN stk_articulos a ON d.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1532: FROM erp_comprobantes c
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1533: JOIN sys_tipos_comprobante tc ON c.tipo_comprobante = tc.codigo
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1623: FROM fin_ordenes_pago_comprobantes fopc
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1624: JOIN erp_comprobantes c ON fopc.comprobante_id = c.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1625: JOIN sys_tipos_comprobante tc ON c.tipo_comprobante = tc.codigo
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1640: FROM fin_retenciones_emitidas r
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1641: JOIN erp_terceros t ON r.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1642: LEFT JOIN erp_direcciones d ON t.id = d.tercero_id AND d.es_fiscal = 1
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1679: FROM fin_ordenes_pago o
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1680: JOIN erp_terceros t ON o.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1688: FROM fin_retenciones_emitidas r
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1689: JOIN erp_terceros t ON r.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1690: LEFT JOIN fin_ordenes_pago op ON r.comprobante_pago_id = op.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1705: FROM fin_retenciones_emitidas r
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1706: JOIN erp_terceros t ON r.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1707: LEFT JOIN erp_direcciones d ON t.id = d.tercero_id AND d.es_fiscal = 1
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1737: FROM cmp_cotizaciones c
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1738: JOIN erp_terceros p ON c.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1739: JOIN sys_enterprises e ON c.enterprise_id = e.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1755: FROM cmp_items_cotizacion i
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1756: JOIN stk_articulos a ON i.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1791: FROM cmp_ordenes_compra o
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1792: JOIN erp_terceros p ON o.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1793: JOIN sys_enterprises e ON o.enterprise_id = e.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1809: FROM cmp_detalles_orden i
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1810: JOIN stk_articulos a ON i.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1887: FROM sys_workflow_rules r
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1959: FROM cmp_ordenes_compra o
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\compras\routes.py:1960: JOIN erp_terceros p ON o.proveedor_id = p.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\contabilidad\routes.py:579: FROM erp_comprobantes_detalle d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\contabilidad\routes.py:580: JOIN erp_comprobantes c ON d.comprobante_id = c.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\contabilidad\routes.py:944: FROM erp_movimientos_fondos m
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\contabilidad\routes.py:945: JOIN erp_cuentas_fondos cf ON m.cuenta_fondo_id = cf.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\core\routes.py:1154: LEFT JOIN sys_users sys_users_actor ON sys_security_logs.actor_user_id = sys_users_actor.id AND sys_users_actor.enterprise_id = sys_security_logs.enterprise_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\core\routes.py:1155: LEFT JOIN sys_users sys_users_target ON sys_security_logs.target_user_id = sys_users_target.id AND sys_users_target.enterprise_id = sys_security_logs.enterprise_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\core\routes.py:2036: # Get Time Filters from Query Args
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\core\routes.py:2497: LEFT JOIN sys_users sys_users_creator ON sys_transaction_logs.user_id = sys_users_creator.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\core\routes.py:2498: LEFT JOIN sys_users sys_users_assignee ON sys_transaction_logs.assigned_to = sys_users_assignee.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\services\ai_chat_routes.py:217: FROM sys_ai_feedback f
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\services\ai_chat_routes.py:218: LEFT JOIN sys_users u ON f.user_id = u.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:252: LEFT JOIN stk_depositos do ON stk_movimientos.deposito_origen_id = do.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:253: LEFT JOIN stk_depositos dd ON stk_movimientos.deposito_destino_id = dd.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:283: LEFT JOIN stk_depositos do ON stk_movimientos.deposito_origen_id = do.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:284: LEFT JOIN stk_depositos dd ON stk_movimientos.deposito_destino_id = dd.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:335: LEFT JOIN stk_depositos do ON stk_movimientos.deposito_origen_id = do.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:336: LEFT JOIN stk_depositos dd ON stk_movimientos.deposito_destino_id = dd.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1036: FROM stk_tipos_articulo t
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1045: FROM stk_tipos_articulo_servicios tas
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1046: JOIN sys_external_services s ON tas.servicio_id = s.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1108: (SELECT COUNT(*) FROM erp_comprobantes_detalle d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1109: JOIN stk_articulos a ON d.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1111: (SELECT COUNT(*) FROM stk_movimientos_detalle d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1112: JOIN stk_articulos a ON d.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1114: (SELECT COUNT(*) FROM stk_items_transferencia d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1115: JOIN stk_articulos a ON d.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1117: (SELECT COUNT(*) FROM stk_devoluciones_solicitudes_det d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1118: JOIN stk_articulos a ON d.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1276: FROM stk_articulos l
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1277: LEFT JOIN StockCounts s ON l.id = s.articulo_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1278: LEFT JOIN LoanCounts loan ON l.id = loan.libro_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1279: LEFT JOIN PendingCounts pend ON l.id = pend.libro_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1280: LEFT JOIN EnCaminoCounts camino ON l.id = camino.libro_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1341: FROM prestamos p
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1342: JOIN usuarios u ON p.usuario_id = u.id AND u.enterprise_id = p.enterprise_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1358: cursor.execute("SELECT IFNULL(SUM(a.cantidad), 0) FROM stk_movimientos_detalle a JOIN stk_movimientos m ON a.movimiento_id = m.id WHERE m.enterprise_id = %s", (g.user['enterprise_id'],))
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1358: cursor.execute("SELECT IFNULL(SUM(a.cantidad), 0) FROM stk_movimientos_detalle a JOIN stk_movimientos m ON a.movimiento_id = m.id WHERE m.enterprise_id = %s", (g.user['enterprise_id'],))
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1444: # Recuperar series con info básica. Podríamos hacer JOIN con ubicaciones si existiera tabla de ubicaciones definida.
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1468: FROM stk_transferencias t
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1469: JOIN stk_depositos do ON t.origen_id = do.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1470: JOIN stk_depositos dd ON t.destino_id = dd.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1592: (SELECT COUNT(*) FROM stk_items_inventario ii WHERE ii.inventario_id = i.id) as total_items,
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1593: (SELECT COUNT(*) FROM stk_items_inventario ii WHERE ii.inventario_id = i.id AND ii.stock_fisico > 0) as items_contados
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1594: FROM stk_inventarios i
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1595: JOIN stk_depositos d ON i.deposito_id = d.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1632: FROM stk_existencias e
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1633: JOIN stk_articulos a ON e.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1663: FROM stk_inventarios i
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1664: JOIN stk_depositos d ON i.deposito_id = d.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1671: FROM stk_items_inventario ii
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:1672: JOIN stk_articulos a ON ii.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:2190: FROM stk_numeros_serie s
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:2191: JOIN stk_articulos a ON s.articulo_id = a.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:2501: FROM stk_series_trazabilidad t
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:2502: JOIN sys_users u ON t.user_id = u.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:2503: LEFT JOIN erp_comprobantes c ON t.comprobante_id = c.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:2504: LEFT JOIN erp_terceros ter ON t.tercero_id = ter.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\stock\routes.py:2505: LEFT JOIN stk_depositos dep ON t.deposito_id = dep.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:90: LEFT JOIN erp_comprobantes AS asoc ON asoc.id = erp_comprobantes.comprobante_asociado_id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:385: LEFT JOIN fin_condiciones_pago AS cp_actual ON erp_terceros.condicion_pago_id = cp_actual.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:386: LEFT JOIN fin_condiciones_pago AS cp_pendiente ON erp_terceros.condicion_pago_pendiente_id = cp_pendiente.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:688: cursor.execute("SELECT COALESCE(SUM(importe), 0) as saldo_recibos FROM fin_recibos_detalles rd JOIN fin_recibos r ON rd.recibo_id = r.id WHERE r.tercero_id = %s AND r.enterprise_id = %s", (id, g.user['enterprise_id']))
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:688: cursor.execute("SELECT COALESCE(SUM(importe), 0) as saldo_recibos FROM fin_recibos_detalles rd JOIN fin_recibos r ON rd.recibo_id = r.id WHERE r.tercero_id = %s AND r.enterprise_id = %s", (id, g.user['enterprise_id']))
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:923: FROM fin_condiciones_pago_mixtas_detalle d
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:924: JOIN fin_condiciones_pago cp ON d.condicion_pago_id = cp.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1094: FROM erp_comprobantes c
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1095: JOIN erp_terceros t ON c.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1096: LEFT JOIN fin_condiciones_pago cp ON c.condicion_pago_id = cp.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1138: FROM stk_movimientos m
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1147: FROM fin_factura_cobros mc
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1148: JOIN fin_medios_pago mp ON mc.medio_pago_id = mp.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1254: FROM sys_enterprises_fiscal sef
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1444: FROM erp_comprobantes c
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1445: LEFT JOIN erp_terceros t ON c.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1446: LEFT JOIN sys_tipos_comprobante tc ON c.tipo_comprobante = tc.codigo
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1447: LEFT JOIN erp_direcciones d ON c.direccion_entrega_id = d.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1448: LEFT JOIN erp_contactos con ON c.receptor_contacto_id = con.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1449: LEFT JOIN erp_comprobantes casoc ON c.comprobante_asociado_id = casoc.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1500: (SELECT COUNT(*) FROM stk_devoluciones_solicitudes s
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1502: (SELECT COUNT(*) FROM erp_comprobantes nc
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1505: FROM erp_comprobantes c
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1506: JOIN erp_terceros t ON c.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1507: JOIN sys_tipos_comprobante tc ON c.tipo_comprobante = tc.codigo
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1520: # 1. Cabecera + Cliente + Tipo (Usamos LEFT JOIN para diagnosticar)
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1528: FROM erp_comprobantes c
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1529: LEFT JOIN erp_terceros t ON c.tercero_id = t.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1530: LEFT JOIN sys_tipos_comprobante tc ON c.tipo_comprobante = tc.codigo
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1531: LEFT JOIN erp_direcciones d ON c.direccion_entrega_id = d.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1532: LEFT JOIN erp_contactos con ON c.receptor_contacto_id = con.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:1533: LEFT JOIN erp_comprobantes casoc ON c.comprobante_asociado_id = casoc.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:2125: LEFT JOIN erp_comprobantes AS asoc ON erp_comprobantes.comprobante_asociado_id = asoc.id
+c:/Users/marce/Documents/GitHub/bibliotecaweb/multiMCP\ventas\routes.py:2136: # Detalles (Usar LEFT JOIN para no excluir lineas sin articulo_id como servicios)

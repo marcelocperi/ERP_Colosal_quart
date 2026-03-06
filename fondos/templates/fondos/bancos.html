@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 
+    CRITICAL UI REPAIR - MODAL SCROLLING & HIGH CONTRAST
+    Fixed the "modal not scrolling" issue by using a dedicated wrapper 
+    and ensuring the background scroll is disabled via CSS and JS.
+-->
+
+<style>
+    /* 1. RESET Y FONDO GLOBAL */
+    #bancos-interface-root {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        min-height: 100vh;
+        padding: 2rem;
+        position: relative;
+    }
+
+    /* 2. HEADER */
+    .header-panel {
+        background: #1e293b;
+        border: 2px solid #3b82f6;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .header-panel h1 {
+        color: #fff !important;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    /* 3. TABLA VIBRANTE */
+    .table-wrapper {
+        background: #000;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .table-vivid {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table-vivid th {
+        background: #1e293b;
+        color: #3b82f6;
+        text-align: left;
+        padding: 1.2rem;
+        font-weight: 900;
+        border-bottom: 2px solid #334155;
+    }
+
+    .table-vivid td {
+        padding: 1.2rem;
+        border-bottom: 1px solid #1e293b;
+        color: #fff !important;
+    }
+
+    .table-vivid tr:hover td {
+        background: #0f172a;
+    }
+
+    /* 4. MODAL SYSTEM - FIXED SCROLLING */
+    #modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 9000;
+        overflow-y: auto;
+        /* ALLOW OVERLAY TO SCROLL */
+        padding: 2.5vh 0;
+        /* Spacing for mobile */
+    }
+
+    .modal-container {
+        background: #0f172a;
+        color: #fff;
+        width: 95%;
+        max-width: 700px;
+        margin: 0 auto;
+        /* CENTER HORIZONTALLY */
+        border: 2px solid #3b82f6;
+        border-radius: 12px;
+        box-shadow: 0 0 50px rgba(59, 130, 246, 0.3);
+        position: relative;
+        /* REQUIRED */
+    }
+
+    .modal-header-fixed {
+        background: #1e293b;
+        padding: 1.5rem 2rem;
+        border-bottom: 2px solid #3b82f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .modal-body-form {
+        padding: 2rem;
+    }
+
+    .modal-footer-fixed {
+        background: #1e293b;
+        padding: 1.2rem 2rem;
+        border-top: 1px solid #334155;
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* UI Components */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        color: #94a3b8;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        background: #000;
+        border: 1px solid #334155;
+        color: #fff;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 1rem;
+    }
+
+    .form-group input:focus {
+        border-color: #3b82f6;
+        outline: none;
+    }
+
+    .badge-vivid {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-weight: 800;
+    }
+
+    .bg-green {
+        background: #22c55e;
+        color: #000;
+    }
+
+    .bg-red {
+        background: #ef4444;
+        color: #fff;
+    }
+
+    /* Helper for locking background scroll */
+    .no-scroll {
+        overflow: hidden !important;
+    }
+</style>
+
+<div id="bancos-interface-root">
+    <!-- Header Area -->
+    <div class="header-panel">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1>Bancos & Billeteras</h1>
+                <p style="color: #94a3b8; margin: 0;">Gestión de entidades financieras para pagos y conciliación.</p>
+            </div>
+            <div class="col-md-6 text-right">
+                <input type="text" id="filtroTabla" oninput="doFiltrar(this.value)" placeholder="Filtrar por nombre..."
+                    style="background:#000; color:#fff; border:1px solid #3b82f6; padding:10px 20px; border-radius:30px; width:250px; margin-right:15px;">
+
+                <button class="btn btn-primary" onclick="launchModal(); resetForm();"
+                    style="padding:10px 25px; font-weight:900;">
+                    <i class="fas fa-plus mr-2"></i> NUEVA ENTIDAD
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-wrapper">
+        <table class="table-vivid" id="masterTable">
+            <thead>
+                <tr>
+                    <th style="width: 45%;">ENTIDAD</th>
+                    <th class="text-center">TIPO</th>
+                    <th class="text-center">CUIT</th>
+                    <th class="text-center">ESTADO</th>
+                    <th class="text-center" style="width: 130px;">ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bancos %}
+                <tr class="bank-row-data">
+                    <td>
+                        <div style="font-weight: 800; font-size: 1.15rem; color: #fff;">{{ b.nombre }}</div>
+                        <div style="color: #3b82f6; font-size: 0.85rem; font-weight: 700;">
+                            {% if b.numero_cuenta %}{{ b.numero_cuenta }}{% else %}Sin número cuenta{% endif %}
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span
+                            style="font-weight: 900; color: {{ '#06b6d4' if b.tipo_entidad == 'CVU' else '#3b82f6' }};">
+                            {{ b.tipo_entidad }}
+                        </span>
+                    </td>
+                    <td class="text-center" style="font-family: monospace; color: #facc15;">{{ b.cuit or '-' }}</td>
+                    <td class="text-center">
+                        {% if b.activo %}
+                        <span class="badge-vivid bg-green">ACTIVO</span>
+                        {% else %}
+                        <span class="badge-vivid bg-red">BLOQUEADO</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-light" onclick="editBank('{{ b.id }}')"
+                            style="font-weight: 800;">EDITAR</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ===================================================================
+     MODAL OVERLAY (THE SCROLLABLE FIX)
+=================================================================== -->
+<div id="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header-fixed">
+            <h2 id="modalLabel" style="color:#fff; margin:0;">NUEVA ENTIDAD</h2>
+            <button onclick="closeModal()"
+                style="background:none; border:none; color:#fff; font-size:2.5rem; cursor:pointer;">&times;</button>
+        </div>
+
+        <form action="{{ url_for('fondos.bancos') }}" method="POST" id="mainForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="action" id="actionType" value="create">
+            <input type="hidden" name="id" id="targetId">
+
+            <div class="modal-body-form">
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="form-group">
+                            <label>NOMBRE COMERCIAL / BANCO *</label>
+                            <input type="text" name="nombre" id="in_nombre" required>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label>CUIT / TAX ID</label>
+                            <input type="text" name="cuit" id="in_cuit">
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-2">
+                        <label style="color:#94a3b8; font-weight:700; margin-bottom:10px; display:block;">TIPO DE
+                            INSTRUMENTO</label>
+                        <div
+                            style="background:#000; border:1px solid #334155; padding:20px; border-radius:8px; display:flex; gap:40px; margin-bottom:20px;">
+                            <label style="cursor:pointer; display:flex; align-items:center;">
+                                <input type="radio" name="tipo_entidad" value="CBU" id="r_cbu" checked
+                                    style="width:20px; height:20px; margin-right:10px;">
+                                <span style="font-weight:800; font-size:1.1rem;">BANCO (CBU)</span>
+                            </label>
+                            <label style="cursor:pointer; display:flex; align-items:center;">
+                                <input type="radio" name="tipo_entidad" value="CVU" id="r_cvu"
+                                    style="width:20px; height:20px; margin-right:10px;">
+                                <span style="font-weight:800; font-size:1.1rem;">BILLETERA (CVU)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label>NÚMERO DE IDENTIFICACIÓN (22 DÍGITOS)</label>
+                            <input type="text" name="numero_cuenta" id="in_numero" maxlength="22"
+                                style="font-family:monospace; font-size:1.3rem; color:#3b82f6; letter-spacing:2px; padding:15px; border-width:2px;">
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>CATEGORÍA</label>
+                            <select name="tipo" id="in_tipo">
+                                <option value="Banco Comercial">Banco Comercial</option>
+                                <option value="Banco Público">Banco Público</option>
+                                <option value="Cooperativa">Cooperativa</option>
+                                <option value="Billetera Digital">Billetera Digital (PSP)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>SITIO WEB OFICIAL</label>
+                            <input type="url" name="web" id="in_web" placeholder="https://...">
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4" id="statusBox" style="display:none;">
+                        <div
+                            style="padding:1.5rem; border:2px solid #facc15; border-radius:8px; background:rgba(250,204,21,0.05); display:flex; align-items:center; gap:20px;">
+                            <input type="checkbox" name="activo" id="in_activo" checked
+                                style="width:30px; height:30px;">
+                            <div>
+                                <label for="in_activo"
+                                    style="margin:0; font-size:1.2rem; color:#fff; cursor:pointer;">ESTADO
+                                    ACTIVO</label>
+                                <p style="margin:0; color:#94a3b8; font-size:0.85rem;">Si se bloquea, no se podrá
+                                    utilizar en nuevas operaciones.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-fixed">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()"
+                    style="padding:10px 25px; font-weight:700;">DESCARTAR</button>
+                <button type="submit" class="btn btn-primary"
+                    style="padding:10px 40px; font-weight:900; background:#3b82f6;">GUARDAR ENTIDAD</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const RAW_DATA = {{ bancos | tojson | safe }};
+
+    function launchModal() {
+        document.getElementById('modal-overlay').style.display = 'block';
+        document.body.classList.add('no-scroll'); // LOCK BACKGROUND
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+        document.body.classList.remove('no-scroll'); // UNLOCK BACKGROUND
+    }
+
+    function resetForm() {
+        document.getElementById('mainForm').reset();
+        document.getElementById('modalLabel').innerText = 'NUEVA ENTIDAD';
+        document.getElementById('actionType').value = 'create';
+        document.getElementById('targetId').value = '';
+        document.getElementById('statusBox').style.display = 'none';
+        document.getElementById('r_cbu').checked = true;
+    }
+
+    function editBank(id) {
+        const item = RAW_DATA.find(x => x.id == id);
+        if (!item) return;
+
+        resetForm();
+        document.getElementById('modalLabel').innerText = 'EDITAR: ' + item.nombre;
+        document.getElementById('actionType').value = 'edit';
+        document.getElementById('targetId').value = item.id;
+        document.getElementById('in_nombre').value = item.nombre || '';
+        document.getElementById('in_cuit').value = item.cuit || '';
+        document.getElementById('in_numero').value = item.numero_cuenta || '';
+        document.getElementById('in_web').value = item.web || '';
+        document.getElementById('in_tipo').value = item.tipo || 'Banco Comercial';
+        document.getElementById('in_activo').checked = (item.activo == 1);
+        document.getElementById('statusBox').style.display = 'block';
+
+        if (item.tipo_entidad === 'CVU') document.getElementById('r_cvu').checked = true;
+        else document.getElementById('r_cbu').checked = true;
+
+        launchModal();
+    }
+
+    function doFiltrar(q) {
+        q = q.toLowerCase();
+        document.querySelectorAll('.bank-row-data').forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+        });
+    }
+
+    // Close on overlay click
+    document.getElementById('modal-overlay').onclick = function (e) {
+        if (e.target === this) closeModal();
+    };
+</script>
+
+{% endblock %}

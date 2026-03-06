@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-boxes"></i> Gestión de Stock Profesional</h1>
+        <p class="text-muted">Inventario consolidado por Depósito</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('ventas.stock_movimiento_crear') }}" class="btn-action"
+            style="background: #3b82f6;">
+            <i class="fas fa-plus"></i> Nuevo Movimiento
+        </a>
+        <a href="{{ url_for('ventas.dashboard') }}" class="btn-secondary">
+            Volver
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
+    <form action="{{ url_for('ventas.stock_dashboard') }}" method="GET" style="display: flex; gap: 1rem;">
+        <input type="hidden" name="sid" value="{{ sid }}">
+        <input type="text" name="q" placeholder="Buscar por título o ISBN..." value="{{ request.args.get('q', '') }}"
+            style="flex: 1; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white;">
+
+        <select name="deposito_id"
+            style="padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white;">
+            <option value="">Todos los Depósitos</option>
+            {% for d in depositos %}
+            <option value="{{ d.id }}" {% if request.args.get('deposito_id')==d.id|string %}selected{% endif %}>{{
+                d.nombre }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn-action">Filtrar</button>
+    </form>
+</div>
+
+<!-- Tabla de Existencias -->
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Libro</th>
+                <th>ISBN</th>
+                <th>Depósito</th>
+                <th>Cantidad</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in stock_items %}
+            <tr>
+                <td><strong>{{ item.titulo }}</strong><br><small class="text-muted">{{ item.autor }}</small></td>
+                <td>{{ item.isbn }}</td>
+                <td><span class="badge" style="background: #6366f1;">{{ item.deposito }}</span></td>
+                <td
+                    style="font-size: 1.1rem; font-weight: bold; {{ 'color: #ef4444;' if item.cantidad <= 0 else 'color: #10b981;' }}">
+                    {{ item.cantidad }}
+                </td>
+                <td>
+                    {% if item.cantidad > 5 %}
+                    <span class="badge" style="background: #10b981;">Stock OK</span>
+                    {% elif item.cantidad > 0 %}
+                    <span class="badge" style="background: #f59e0b;">Bajo</span>
+                    {% else %}
+                    <span class="badge" style="background: #ef4444;">Sin Stock</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem;">No hay existencias registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

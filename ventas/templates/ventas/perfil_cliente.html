@@ -1,0 +1,1665 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('ventas.clientes') }}">Clientes</a></li>
+                <li class="breadcrumb-item active">Ficha Cliente</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 text-gray-800 mb-0">{{ cliente.nombre }}</h1>
+                <small class="text-muted">Código: <strong>{{ cliente.codigo or '-' }}</strong></small>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" onclick="toggleModal('modalCliente')">
+                <i class="fas fa-edit"></i> Editar Datos Básicos
+            </button>
+        </div>
+    </div>
+    <div class="col-auto">
+        <span class="badge bg-primary fs-6">{{ cliente.tipo_responsable }}</span>
+    </div>
+</div>
+
+<!-- ESTILOS HORIZONTALES PARA TABS -->
+<style>
+    .horizontal-tabs {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        margin-bottom: 0px;
+        border-bottom: 1px solid #dee2e6;
+        width: 100%;
+        scrollbar-width: thin;
+        /* Firefox */
+    }
+
+    .horizontal-tabs::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .horizontal-tabs::-webkit-scrollbar-thumb {
+        background-color: #4e73df;
+        border-radius: 10px;
+    }
+
+    .horizontal-tabs .nav-item {
+        flex: 0 0 auto;
+    }
+
+    .horizontal-tabs .nav-link {
+        display: block;
+        color: #5a5c69;
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+        /* Reduced padding */
+        font-size: 0.85rem;
+        /* Slightly smaller font */
+        border-radius: 0;
+        border: none;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        background: none;
+    }
+
+    .horizontal-tabs .nav-link:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+        color: #4e73df;
+    }
+
+    .horizontal-tabs .nav-link.active {
+        color: #4e73df !important;
+        border-bottom: 3px solid #4e73df;
+        background-color: transparent !important;
+    }
+
+    /* Paneles de tabs */
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+</style>
+<script>
+    function switchTab(tabId) {
+        // Desactivar todos los links
+        document.querySelectorAll('#clienteTab .nav-link').forEach(function (link) {
+            link.classList.remove('active');
+        });
+        // Ocultar TODOS los paneles con inline style (no puede ser sobreescrito por CSS externo)
+        document.querySelectorAll('#clienteTabContent > [data-tab-panel]').forEach(function (pane) {
+            pane.style.display = 'none';
+        });
+        // Activar el link seleccionado
+        var activeLink = document.getElementById(tabId + '-tab');
+        if (activeLink) activeLink.classList.add('active');
+        // Mostrar el panel seleccionado
+        var activePane = document.getElementById(tabId);
+        if (activePane) activePane.style.display = 'block';
+    }
+</script>
+
+<div class="row w-100 mx-0">
+    <div class="col-12 px-0">
+        <div class="card shadow-lg mb-4 border-0">
+            <div class="card-header bg-white p-0 border-bottom-0">
+                <ul class="nav nav-tabs horizontal-tabs" id="clienteTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="ficha-tab" onclick="switchTab('ficha')" role="tab"><i
+                                class="fas fa-id-card me-2"></i>Ficha Cliente</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="sedes-tab" onclick="switchTab('sedes')" role="tab"><i
+                                class="fas fa-map-marker-alt me-2"></i>Sedes/Depósitos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="contactos-tab" onclick="switchTab('contactos')" role="tab"><i
+                                class="fas fa-users me-2"></i>Contactos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="fiscal-tab" onclick="switchTab('fiscal')" role="tab"><i
+                                class="fas fa-file-invoice-dollar me-2"></i>Impuestos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="cm05-tab" onclick="switchTab('cm05')" role="tab"
+                            title="Convenio Multilateral"><i class="fas fa-globe-americas me-2"></i>CM05 / Conv.
+                            Multi.</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="pago-tab" onclick="switchTab('pago')" role="tab"><i
+                                class="fas fa-handshake me-2"></i>Medios de Pago</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="ctacte-tab" onclick="switchTab('ctacte')" role="tab"><i
+                                class="fas fa-money-check-alt me-2"></i>Cta. Cte.</a>
+                </ul>
+            </div>
+
+            <div class="card-body bg-light p-3 p-md-4 rounded-bottom">
+                <div class="tab-content" id="clienteTabContent">
+                    <!-- FICHA DE CLIENTE -->
+                    <div data-tab-panel id="ficha" role="tabpanel" style="display:block;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card shadow-sm mb-4 border-left-primary h-100">
+                                    <div class="card-header py-3 bg-white border-bottom-0">
+                                        <h6 class="m-0 font-weight-bold text-primary"><i
+                                                class="fas fa-info-circle me-2"></i>Datos Básicos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>CUIT/DNI:</strong> {{ cliente.cuit }}</p>
+                                        <p><strong>Email Principal:</strong> {{ cliente.email or 'N/D' }}</p>
+                                        <p><strong>Teléfono Principal:</strong> {{ cliente.telefono or 'N/D' }}</p>
+                                        <hr>
+                                        <p class="mb-0"><strong>Observaciones:</strong><br>
+                                            <span class="text-muted small">{{ cliente.observaciones or 'Sin
+                                                observaciones' }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card shadow-sm mb-4 border-left-info h-100">
+                                    <div
+                                        class="card-header py-3 bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+                                        <h6 class="m-0 font-weight-bold text-info"><i
+                                                class="fas fa-file-contract me-2"></i>Finanzas</h6>
+                                        <button class="btn btn-sm btn-circle btn-outline-info"
+                                            onclick="toggleModal('modalCondicionPago')" title="Solicitar Cambio">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="small text-muted mb-1 fw-bold">Condición de Pago
+                                                (Simple)</label>
+                                            <div class="p-2 rounded bg-light border d-flex align-items-center">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                <span class="fw-bold">{{ pago_info.condicion_nombre or 'SIN ASIGNAR'
+                                                    }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="small text-muted mb-1 fw-bold">Estructura Mixta
+                                                (Maestra)</label>
+                                            {% if pago_info.condicion_mixta_id %}
+                                            <div
+                                                class="p-2 rounded bg-info text-white border d-flex align-items-center">
+                                                <i class="fas fa-layer-group me-2"></i>
+                                                <span class="fw-bold">{{ pago_info.mixta_nombre }}</span>
+                                            </div>
+                                            {% else %}
+                                            <div class="p-2 rounded bg-light border text-muted small italic">
+                                                Sin estructura mixta asignada
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if pago_info.estado_aprobacion_pago == 'PENDIENTE' %}
+                                        <div class="alert alert-warning p-2 mb-2">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <small><i class="fas fa-clock me-1"></i> <strong>Pendiente de
+                                                        Aprobación</strong></small>
+                                                <span class="badge bg-warning text-dark">PENDIENTE</span>
+                                            </div>
+                                            <div class="mt-1 small">
+                                                Solicitado: <span class="fw-bold">{{
+                                                    pago_info.condicion_pendiente_nombre }}</span>
+                                            </div>
+
+                                            {% if 'gerente_ventas' in g.permissions or 'admin' in g.permissions or 'all'
+                                            in g.permissions %}
+                                            <div class="mt-2 d-grid gap-2">
+                                                <form
+                                                    action="{{ url_for('ventas.aprobar_condicion_pago', id=cliente.id) }}"
+                                                    method="POST">
+                                                    <div class="btn-group w-100">
+                                                        <button type="submit" name="action" value="approve"
+                                                            class="btn btn-sm btn-success">Aprobar</button>
+                                                        <button type="submit" name="action" value="reject"
+                                                            class="btn btn-sm btn-danger">Rechazar</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% elif pago_info.estado_aprobacion_pago == 'RECHAZADO' %}
+                                        <div class="alert alert-danger p-2 mb-0 small">
+                                            <i class="fas fa-times-circle me-1"></i> El último cambio fue
+                                            <strong>RECHAZADO</strong>.
+                                        </div>
+                                        {% endif %}
+
+                                        {% if pago_info.aprobador_nombre %}
+                                        <div class="mt-3 extra-small text-muted">
+                                            <i class="fas fa-user-shield me-1"></i> Aprobado por: {{
+                                            pago_info.aprobador_nombre }}<br>
+                                            <i class="fas fa-calendar-alt me-1"></i> Fecha: {{
+                                            pago_info.fecha_aprobacion_pago }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Cuenta Corriente Habilitada (AHORA A LA DERECHA) -->
+                                <div class="card shadow-sm border-left-success mt-4">
+                                    <div
+                                        class="card-header py-2 bg-white d-flex justify-content-between align-items-center">
+                                        <h6 class="m-0 font-weight-bold text-success">
+                                            <i class="fas fa-credit-card me-2"></i>Estado de Cuenta Corriente
+                                        </h6>
+                                        <button class="btn btn-sm btn-outline-success"
+                                            onclick="toggleModal('modalCtaCte')" title="Gestionar Cuenta Corriente">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                    <div class="card-body py-3">
+                                        {% if cliente.habilita_cta_cte %}
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-success fs-6 px-3 py-2"><i
+                                                    class="fas fa-check-circle me-1"></i>HABILITADA</span>
+                                            <div class="text-end">
+                                                <div class="small text-muted text-uppercase fw-bold">Monto autorizado
+                                                </div>
+                                                <div class="fw-bold text-success fs-5">${{
+                                                    "%.2f"|format(cliente.monto_cta_cte or 0) }}</div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <div class="d-flex justify-content-between align-items-center text-muted">
+                                            <span class="badge bg-secondary px-3 py-2"><i
+                                                    class="fas fa-times-circle me-1"></i>NO HABILITADA</span>
+                                            <small>Crédito no activado.</small>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if cliente.estado_cta_cte_aprobacion == 'PENDIENTE' %}
+                                        <div
+                                            class="alert alert-warning p-2 mt-3 mb-0 small border-0 shadow-sm animate__animated animate__pulse animate__infinite">
+                                            <div class="d-flex justify-content-between">
+                                                <strong><i class="fas fa-clock me-1"></i> Pendiente Tesorería</strong>
+                                                <span class="badge bg-warning text-dark">PENDIENTE</span>
+                                            </div>
+                                            {% if 'tesoreria' in g.permissions or 'admin' in g.permissions or 'all' in
+                                            g.permissions %}
+                                            <form action="{{ url_for('ventas.aprobar_cta_cte', id=cliente.id) }}"
+                                                method="POST" class="mt-2">
+                                                <div class="btn-group w-100">
+                                                    <button type="submit" name="action" value="approve"
+                                                        class="btn btn-sm btn-success shadow-sm">Aprobar</button>
+                                                    <button type="submit" name="action" value="reject"
+                                                        class="btn btn-sm btn-danger shadow-sm">Rechazar</button>
+                                                </div>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!-- FIN FICHA -->
+
+                    <!-- SEDES / DIRECCIONES -->
+                    <div data-tab-panel id="sedes" role="tabpanel" style="display:none;">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="font-weight-bold">Direcciones Registradas</h6>
+                            <button class="btn btn-sm btn-primary" onclick="nuevaDireccion()">
+                                <i class="fas fa-plus"></i> Agregar Sede
+                            </button>
+                        </div>
+                        <div class="w-100 overflow-visible">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Etiqueta</th>
+                                        <th>Dirección (Calle y Altura)</th>
+                                        <th>Localidad (Ciudad)</th>
+                                        <th>Tipo</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for d in direcciones %}
+                                    <tr id="dir-{{ d.id }}">
+                                        <td><strong>{{ d.etiqueta }}</strong></td>
+                                        <td>{{ d.calle }} {{ d.numero }} {{ d.piso if d.piso else '' }} {{ d.depto if
+                                            d.depto else '' }}</td>
+                                        <td>{{ d.localidad }} ({{ d.provincia }})</td>
+                                        <td>
+                                            {% if d.es_fiscal %}<span class="badge bg-warning text-dark">Fiscal</span>{%
+                                            endif %}
+                                            {% if d.es_entrega %}<span class="badge bg-info text-dark">Entrega</span>{%
+                                            endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm text-primary" data-item='{{ d|tojson|safe }}'
+                                                    onclick='editarDireccion(this)' title="Editar"><i
+                                                        class="fas fa-edit"></i></button>
+                                                <a href="{{ url_for('ventas.eliminar_detalle', tabla='erp_direcciones', item_id=d.id, cliente_id=cliente.id) }}"
+                                                    class="btn btn-sm text-danger" title="Eliminar"><i
+                                                        class="fas fa-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">No hay direcciones
+                                            registradas.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- CONTACTOS -->
+                    <div data-tab-panel id="contactos" role="tabpanel" style="display:none;">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="font-weight-bold">Personas de Contacto</h6>
+                            <button class="btn btn-sm btn-primary" onclick="nuevoContacto()">
+                                <i class="fas fa-plus"></i> Agregar Contacto
+                            </button>
+                        </div>
+                        <div class="w-100 overflow-visible">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Área / Función</th>
+                                        <th>Teléfono</th>
+
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in contactos %}
+                                    <tr>
+                                        <td><strong>{{ c.nombre }}</strong></td>
+                                        <td><span class="badge bg-light text-dark border">{{ c.tipo_contacto
+                                                }}</span>
+                                            {% if c.direccion_nombre %}
+                                            <span class="badge bg-secondary"><i
+                                                    class="fas fa-map-marker-alt me-1"></i>{{
+                                                c.direccion_nombre
+                                                }}</span>
+                                            {% endif %}
+                                            {% if c.es_receptor %}
+                                            <span class="badge bg-info text-dark"><i
+                                                    class="fas fa-truck-loading me-1"></i>Receptor</span>
+                                            {% endif %}
+                                            <br><small>{{ c.puesto_nombre if c.puesto_nombre else c.puesto
+                                                }}</small>
+                                        </td>
+                                        <td>{{ c.telefono }}</td>
+
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm text-primary" data-item='{{ c|tojson|safe }}'
+                                                    onclick='editarContacto(this)' title="Editar"><i
+                                                        class="fas fa-edit"></i></button>
+                                                <a href="{{ url_for('ventas.eliminar_detalle', tabla='erp_contactos', item_id=c.id, cliente_id=cliente.id) }}"
+                                                    class="btn btn-sm text-danger"><i class="fas fa-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">No hay contactos
+                                            registrados.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- FISCAL -->
+                    <div data-tab-panel id="fiscal" role="tabpanel" style="display:none;">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="font-weight-bold">Configuración de Impuestos</h6>
+                            <button class="btn btn-sm btn-primary" onclick="nuevoFiscal()">
+                                <i class="fas fa-plus"></i> Agregar Impuesto
+                            </button>
+                        </div>
+                        <div class="w-100 overflow-visible">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Impuesto</th>
+                                        <th>Jurisdicción</th>
+                                        <th>Condición</th>
+                                        <th>Nro. Inscripción</th>
+                                        <th>Alícuota</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for f in fiscales %}
+                                    <tr>
+                                        <td><strong>{{ f.impuesto }}</strong></td>
+                                        <td>{{ f.jurisdiccion }}</td>
+                                        <td>{{ f.condicion }}</td>
+                                        <td>{{ f.numero_inscripcion }}</td>
+                                        <td>{{ f.alicuota }}%</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm text-primary" data-item='{{ f|tojson|safe }}'
+                                                    onclick='editarFiscal(this)' title="Editar"><i
+                                                        class="fas fa-edit"></i></button>
+                                                <a href="{{ url_for('ventas.eliminar_detalle', tabla='erp_datos_fiscales', item_id=f.id, cliente_id=cliente.id) }}"
+                                                    class="btn btn-sm text-danger"><i class="fas fa-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">Sin datos impositivos
+                                            registrados.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- CM05 / CONVENIO MULTILATERAL -->
+                    <div data-tab-panel id="cm05" role="tabpanel" style="display:none;">
+                        <div class="p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h6 class="font-weight-bold mb-1">Liquidación Convenio Multilateral (Sustento
+                                        Territorial)</h6>
+                                    <p class="text-muted small mb-0">Gestión de coeficientes de CM05 para cálculo base
+                                        en Impuestos.</p>
+                                </div>
+                                <div>
+                                    <form action="{{ url_for('ventas.toggle_convenio', id=cliente.id) }}" method="POST"
+                                        class="d-inline">
+                                        <div class="form-check form-switch form-switch-lg d-inline-block">
+                                            <input class="form-check-input" type="checkbox" id="flexSwitchConvenio"
+                                                name="es_convenio" onchange="this.form.submit()" {% if
+                                                cliente.es_convenio_multilateral %}checked{% endif %}>
+                                            <label class="form-check-label fw-bold mx-2" for="flexSwitchConvenio">Es
+                                                Convenio Multilateral</label>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            {% if cliente.es_convenio_multilateral %}
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="card shadow-sm border-left-info h-100">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold text-info"><i class="fas fa-file-pdf me-2"></i> Subir
+                                                Archivo CM05</h6>
+                                            <p class="small text-muted mb-3">Adjunte el último formulario CM05 anual
+                                                para dejar respaldo fiscal ante auditorías.</p>
+                                            <form action="{{ url_for('ventas.upload_cm05', id=cliente.id) }}"
+                                                method="POST" enctype="multipart/form-data">
+                                                <div class="input-group mb-2">
+                                                    <input type="file" class="form-control form-control-sm"
+                                                        name="archivo_cm05" accept=".pdf">
+                                                    <button class="btn btn-sm btn-outline-info"
+                                                        type="submit">Subir</button>
+                                                </div>
+                                            </form>
+                                            {% if cliente.archivo_cm05_path %}
+                                            <div class="mt-2 text-success small">
+                                                <i class="fas fa-check-circle me-1"></i> Archivo actual subido.
+                                                <a href="{{ url_for('static', filename=cliente.archivo_cm05_path) }}"
+                                                    target="_blank" class="text-info ms-2">Ver PDF adjunto</a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div
+                                            class="card-header bg-white d-flex justify-content-between py-2 align-items-center border-bottom-0">
+                                            <h6 class="fw-bold m-0"><i class="fas fa-percentage me-2 text-warning"></i>
+                                                Coeficientes Asignados</h6>
+                                            <div>
+                                                <button class="btn btn-sm btn-outline-primary"
+                                                    onclick="document.getElementById('formCm05Nuevo').reset(); document.getElementById('modalCoeficienteLabel').innerText='Nuevo Coeficiente'; bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCoeficiente')).show();">
+                                                    Agregar Coeficiente
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <table class="table table-sm table-hover mb-0">
+                                                <thead class="bg-light text-muted">
+                                                    <tr>
+                                                        <th>Provincia / Jurisdicción</th>
+                                                        <th>Año</th>
+                                                        <th>Coeficiente</th>
+                                                        <th class="text-end">Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for coef in coeficientes_cm %}
+                                                    <tr>
+                                                        <td class="align-middle fw-bold">{{ coef.jurisdiccion_code
+                                                            }} -
+                                                            {{ coef.provincia_nombre }}</td>
+                                                        <td class="align-middle">{{ coef.periodo_anio }}</td>
+                                                        <td class="align-middle text-primary fw-bold">{{
+                                                            "%.4f"|format(coef.coeficiente) }}</td>
+                                                        <td class="text-end">
+                                                            <a href="{{ url_for('ventas.eliminar_detalle', tabla='erp_terceros_cm05', item_id=coef.id, cliente_id=cliente.id) }}"
+                                                                class="btn btn-sm text-danger"><i
+                                                                    class="fas fa-trash"></i></a>
+                                                        </td>
+                                                    </tr>
+                                                    {% else %}
+                                                    <tr>
+                                                        <td colspan="4" class="text-center py-4 text-muted">
+                                                            Aún no asignaste los coeficientes del CM05 para
+                                                            cobrarle/pagarle correctamente.<br>
+                                                            <small>Usa el botón de Añadir Jurisdicción.</small>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-secondary p-4 text-center border-0 bg-light">
+                                <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                                <h6>El cliente actualmente NO opera bajo Convenio Multilateral.</h6>
+                                <p class="small text-muted mb-0">Si desea agregar su matriz de impuestos
+                                    provinciales,
+                                    marque el interruptor superior.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Habilitaciones de Pago -->
+                    <div data-tab-panel id="pago" role="tabpanel" style="display:none;">
+                        <div class="p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Condiciones de Pago Habilitadas</h6>
+                                <span class="badge bg-info">Código de Cliente: {{ cliente.codigo }}</span>
+                            </div>
+                            <p class="text-muted small">Seleccione las condiciones comerciales habilitadas para este
+                                cliente. El facturador solo mostrará estas opciones.
+                                <strong>Nota:</strong> Si el cliente tiene una <i>Condición Mixta Maestra</i>
+                                asignada,
+                                ésta
+                                se sumará a las seleccionadas aquí.
+                            </p>
+
+                            <form action="{{ url_for('ventas.habilitar_condiciones_pago', id=cliente.id) }}"
+                                method="POST">
+                                <!-- BLOQUE 1: INCLUIDAS EN MAESTRA -->
+                                <div class="mb-4">
+                                    <h6 class="text-info fw-bold mb-3"><i class="fas fa-star me-2"></i>Incluidas en
+                                        Condición Maestra (Simple o Mixta)</h6>
+                                    <div class="w-100 overflow-visible">
+                                        <table class="table table-bordered table-sm table-hover mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Condición</th>
+                                                    <th>Detalles</th>
+                                                    <th style="width: 150px;" class="text-center">Habilitada?</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% set found_master = false %}
+                                                {% for cond in condiciones %}
+                                                {% if cond.id in incluidas_en_maestra %}
+                                                {% set found_master = true %}
+                                                <tr>
+                                                    <td class="fw-bold">{{ cond.nombre }}</td>
+                                                    <td class="small text-muted">Vto: {{ cond.dias_vencimiento }}
+                                                        días |
+                                                        Desc: {{ cond.descuento_pct }}%</td>
+                                                    <td class="text-center">
+                                                        <select name="habilitado_{{ cond.id }}"
+                                                            class="form-select form-select-sm">
+                                                            <option value="1" {% if cond.id not in habilitadas or
+                                                                habilitadas[cond.id].habilitado==1 %}selected{% endif
+                                                                %}>Si
+                                                            </option>
+                                                            <option value="0" {% if cond.id in habilitadas and
+                                                                habilitadas[cond.id].habilitado==0 %}selected{% endif
+                                                                %}>No
+                                                            </option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                                {% endfor %}
+                                                {% if not found_master %}
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted small italic">No
+                                                        hay
+                                                        una
+                                                        condición maestra definida o no contiene tramos simples.
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- BLOQUE 2: OTRAS CONDICIONES -->
+                                <div class="mb-4">
+                                    <h6 class="text-muted fw-bold mb-3"><i class="fas fa-plus-circle me-2"></i>Otras
+                                        Condiciones de Pago (Admitir Extras)</h6>
+                                    <div class="w-100 overflow-visible">
+                                        <table class="table table-bordered table-sm table-hover mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Condición</th>
+                                                    <th>Detalles</th>
+                                                    <th style="width: 150px;" class="text-center">Admitir?</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for cond in condiciones %}
+                                                {% if cond.id not in incluidas_en_maestra %}
+                                                <tr>
+                                                    <td class="fw-bold">{{ cond.nombre }}</td>
+                                                    <td class="small text-muted">Vto: {{ cond.dias_vencimiento }}
+                                                        días |
+                                                        Desc: {{ cond.descuento_pct }}%</td>
+                                                    <td class="text-center">
+                                                        <select name="habilitado_{{ cond.id }}"
+                                                            class="form-select form-select-sm">
+                                                            <option value="1" {% if cond.id in habilitadas and
+                                                                habilitadas[cond.id].habilitado==1 %}selected{% endif
+                                                                %}>Si
+                                                            </option>
+                                                            <option value="0" {% if cond.id not in habilitadas or
+                                                                habilitadas[cond.id].habilitado==0 %}selected{% endif
+                                                                %}>No
+                                                            </option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {% if 'gerente_ventas' in g.permissions or 'admin' in g.permissions or 'all' in
+                                g.permissions %}
+                                <div class="mt-3 text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Actualizar Parámetros Comerciales
+                                    </button>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-light border small">
+                                    <i class="fas fa-info-circle me-1 text-info"></i> Solo los gerentes de ventas o
+                                    administradores pueden modificar estas habilitaciones.
+                                </div>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- CUENTA CORRIENTE TAB -->
+                    <div data-tab-panel id="ctacte" role="tabpanel" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h6 class="font-weight-bold mb-0">Historial de Movimientos de Cuenta Corriente</h6>
+                            {% if cuenta_corriente %}
+                            <div class="bg-light border rounded py-2 px-3 d-flex align-items-center shadow-sm">
+                                <span class="text-muted small me-2 text-uppercase fw-bold">Saldo Actual:</span>
+                                <strong
+                                    class="fs-5 {% if cuenta_corriente[-1].saldo > 0.005 %}text-danger{% elif cuenta_corriente[-1].saldo < -0.005 %}text-success{% else %}text-muted{% endif %}">
+                                    ${{ "%.2f"|format(cuenta_corriente[-1].saldo) }}
+                                </strong>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if not cuenta_corriente %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-invoice-dollar fa-4x mb-3 text-light"></i>
+                            <p class="text-muted">No se registran movimientos en la cuenta corriente de este
+                                cliente.
+                            </p>
+                        </div>
+                        {% else %}
+                        <div class="table-responsive w-100" style="overflow-x: auto; max-width: 100vw;">
+                            <table class="table table-sm table-hover align-middle mb-0" id="tablaCtaCte"
+                                style="min-width: 850px; width: 100%; table-layout: fixed;">
+                                <thead class="table-dark">
+                                    <tr class="small text-uppercase">
+                                        <th class="ps-3" style="width: 90px;">Fecha</th>
+                                        <th style="width: 90px;">Tipo</th>
+                                        <th style="width: 25%;">Documento / Referencia</th>
+                                        <th style="width: 110px;">Recibo</th>
+                                        <th class="text-end" style="width: 100px;">Debe</th>
+                                        <th class="text-end" style="width: 100px;">Haber</th>
+                                        <th class="text-end" style="width: 110px;">Saldo</th>
+                                        <th class="text-center pe-3" style="width: 70px;">Acc.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mov in cuenta_corriente %}
+                                    <tr class="small">
+                                        <td class="ps-3 text-nowrap">{{ mov.fecha.strftime('%d/%m/%Y') if mov.fecha else
+                                            '-' }}</td>
+                                        <td>
+                                            {% if mov.tipo_doc == 'REC' %}<span
+                                                class="badge bg-success text-white">RECIBO</span>
+                                            {% elif mov.tipo_doc in ['003','008','013'] %}<span
+                                                class="badge bg-info text-white">N.CRÉD</span>
+                                            {% elif mov.tipo_doc in ['005','010','015'] %}<span
+                                                class="badge bg-warning text-dark">N.DÉB</span>
+                                            {% else %}<span class="badge bg-primary text-white">FACTURA</span>{%
+                                            endif %}
+                                        </td>
+                                        <td class="text-truncate" style="max-width: 200px;">
+                                            {% if mov.nro_documento and mov.comprobante_id %}
+                                            <a href="{{ url_for('ventas.ver_comprobante', id=mov.comprobante_id) }}"
+                                                class="text-decoration-none fw-bold text-dark" target="_blank">
+                                                <i class="fas fa-external-link-alt me-1 x-small opacity-50"></i>{{
+                                                mov.nro_documento }}
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted">{{ mov.nro_documento or '-' }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-muted text-nowrap">{{ mov.nro_recibo or '-' }}</td>
+                                        <td class="text-end text-nowrap">{% if mov.debe > 0 %}${{
+                                            "%.2f"|format(mov.debe) }}{% else %}-{% endif %}</td>
+                                        <td class="text-end text-nowrap">{% if mov.haber > 0 %}${{
+                                            "%.2f"|format(mov.haber) }}{% else %}-{% endif %}</td>
+                                        <td
+                                            class="text-end fw-bold text-nowrap {% if mov.saldo > 0.005 %}text-danger{% elif mov.saldo < -0.005 %}text-success{% endif %}">
+                                            ${{ "%.2f"|format(mov.saldo) }}
+                                        </td>
+                                        <td class="text-center pe-3">
+                                            {% if mov.asiento_id %}
+                                            <a href="{{ url_for('contabilidad.ver_asiento', id=mov.asiento_id) }}"
+                                                class="btn btn-sm btn-light border p-1"
+                                                title="Ver Asiento Contable #{{ mov.asiento_id }}" target="_blank">
+                                                <i class="fas fa-book text-muted"></i>
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted small">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 p-3 bg-light rounded border-start border-primary border-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                                <span class="small text-muted">Los saldos se calculan de manera acumulada por fecha.
+                                    El saldo final refleja la deuda total o crédito del cliente a la fecha de
+                                    hoy.</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR DATOS BÁSICOS -->
+    <div id="modalCliente" class="modal-premium modal-animate" style="display:none;">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('ventas.editar_cliente', id=cliente.id) }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i> Editar Datos Básicos</h5>
+                    <button type="button" class="btn-close btn-close-white"
+                        onclick="toggleModal('modalCliente')"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="fas fa-barcode me-1"></i> Código</label>
+                            <input type="text" name="codigo" class="form-control" value="{{ cliente.codigo or '' }}">
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label"><i class="fas fa-building me-1"></i> Razón Social /
+                                Nombre</label>
+                            <input type="text" name="nombre" class="form-control" value="{{ cliente.nombre }}" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="fas fa-id-card me-1"></i> CUIT / DNI</label>
+                            <input type="text" name="cuit" class="form-control" value="{{ cliente.cuit }}" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-envelope me-1"></i> Email Principal</label>
+                            <input type="email" name="email" class="form-control" value="{{ cliente.email }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-phone me-1"></i> Teléfono Principal</label>
+                            <input type="text" name="telefono" class="form-control" value="{{ cliente.telefono }}">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label"><i class="fas fa-file-invoice-dollar me-1"></i> Responsabilidad
+                            Fiscal</label>
+                        <select name="tipo_responsable" class="form-select">
+                            <option {% if cliente.tipo_responsable=='Resp. Inscripto' %}selected{% endif %}>Resp.
+                                Inscripto
+                            </option>
+                            <option {% if cliente.tipo_responsable=='Monotributo' %}selected{% endif %}>Monotributo
+                            </option>
+                            <option {% if cliente.tipo_responsable=='Consumidor Final' %}selected{% endif %}>
+                                Consumidor
+                                Final</option>
+                            <option {% if cliente.tipo_responsable=='Exento' %}selected{% endif %}>Exento</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-handshake me-1"></i> Condición de Pago
+                            (Simple)</label>
+                        <select name="condicion_pago_id" class="form-select">
+                            <option value="">-- Sin asignar --</option>
+                            {% for c in condiciones %}
+                            <option value="{{ c.id }}" {% if c.id==cliente.condicion_pago_id %}selected{% endif %}>
+                                {{ c.nombre }} ({{ c.dias_vencimiento }} días)
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Condición base del cliente. Puede ser sobreescrita por la
+                            estructura
+                            mixta.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-layer-group me-1"></i> Condición Mixta
+                            Maestra</label>
+                        <select name="condicion_mixta_id" class="form-select">
+                            <option value="">-- Ninguna (Valen las del cuerpo) --</option>
+                            {% for m in mixtas %}
+                            <option value="{{ m.id }}" {% if m.id==cliente.condicion_mixta_id %}selected{% endif %}>
+                                {{ m.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted italic small">Si se selecciona, esta estructura se suma a las
+                            individuales habilitadas.</small>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label"><i class="fas fa-comment-alt me-1"></i> Observaciones
+                            Internas</label>
+                        <textarea name="observaciones" class="form-control"
+                            rows="3">{{ cliente.observaciones }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Guardar
+                        Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Cuenta Corriente -->
+    <div id="modalCtaCte" class="modal-premium modal-animate" style="display:none;">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('ventas.solicitar_cta_cte', id=cliente.id) }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-credit-card me-2"></i>Cuenta Corriente</h5>
+                    <button type="button" class="btn-close btn-close-white"
+                        onclick="toggleModal('modalCtaCte')"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small mb-3">
+                        <i class="fas fa-info-circle me-1"></i>
+                        La habilitación o modificación de cuenta corriente requiere <strong>aprobación de
+                            Tesorería</strong>.
+                        El cambio quedará <em>pendiente</em> hasta ser aprobado.
+                    </div>
+                    <div class="mb-3 d-flex align-items-center gap-3">
+                        <div class="form-check form-switch fs-5">
+                            <input class="form-check-input" type="checkbox" name="habilita_cta_cte"
+                                id="chk_habilita_cta_cte" value="1" {% if cliente.habilita_cta_cte %}checked{% endif %}
+                                onchange="toggleMontoCta(this.checked)">
+                            <label class="form-check-label fw-bold" for="chk_habilita_cta_cte">
+                                Habilitar Cuenta Corriente
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="div_monto_cta">
+                        <label class="form-label fw-bold"><i class="fas fa-dollar-sign me-1"></i>Monto Máximo
+                            Autorizado</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="monto_cta_cte" id="inp_monto_cta" class="form-control"
+                                step="0.01" min="0" placeholder="0.00"
+                                value="{{ '%.2f'|format(cliente.monto_cta_cte or 0) }}">
+                        </div>
+                        <small class="text-muted">Límite de crédito en pesos. Dejar en 0 para límite ilimitado.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-comment me-1"></i>Motivo / Observación</label>
+                        <textarea name="motivo" class="form-control" rows="2"
+                            placeholder="Indicar motivo del cambio..."></textarea>
+                    </div>
+                    {% if cta_cte_track %}
+                    <div class="mt-3">
+                        <label class="small text-muted fw-bold text-uppercase"><i
+                                class="fas fa-history me-1"></i>Historial
+                            de cambios</label>
+                        <div class="table-responsive" style="max-height: 160px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered small mb-0">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        <th>Monto</th>
+                                        <th>Usuario</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for t in cta_cte_track %}
+                                    <tr>
+                                        <td class="text-nowrap">{{ t.fecha_vigencia.strftime('%d/%m/%Y %H:%M') }}</td>
+                                        <td>{% if t.habilita_cta_cte %}<span class="badge bg-success">ON</span>{% else
+                                            %}<span class="badge bg-secondary">OFF</span>{% endif %}</td>
+                                        <td>${{ "%.2f"|format(t.monto_cta_cte or 0) }}</td>
+                                        <td>{{ t.user_nombre or t.user_id }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="toggleModal('modalCtaCte')">Cancelar</button>
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fas fa-paper-plane me-1"></i>Enviar para aprobación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODALES PARA DETALLES -->
+
+    <!-- Modal Dirección -->
+    <div id="modalDireccion" class="modal-premium modal-animate" style="display:none;">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content" action="{{ url_for('ventas.agregar_direccion', id=cliente.id) }}" method="POST"
+                id="formDireccion">
+                <input type="hidden" name="item_id" id="dir_item_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titleDireccion"><i class="fas fa-map-marked-alt me-2"></i> Gestión
+                        de
+                        Sede /
+                        Dirección</h5>
+                    <button type="button" class="btn-close btn-close-white"
+                        onclick="toggleModal('modalDireccion')"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label class="form-label"><i class="fas fa-tag me-1"></i> Etiqueta Identificadora</label>
+                        <input type="text" name="etiqueta" id="dir_etiqueta" class="form-control"
+                            placeholder="Ej: Casa Central, Depósito Norte..." required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label"><i class="fas fa-map me-1"></i> Provincia</label>
+                            <select name="provincia" id="dir_provincia" class="form-select" required
+                                onchange="onProvinciaChange(this.value)">
+                                <option value="">Seleccionar...</option>
+                                {% for p in provincias %}
+                                <option value="{{ p.nombre }}">{{ p.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-city me-1"></i> Localidad
+                                (Ciudad/Barrio)</label>
+                            <input type="text" name="localidad" id="dir_localidad" class="form-control"
+                                list="list_localidades" required onchange="onLocalidadChange(this.value)"
+                                onfocus="ensureDataOnFocus('localidad')">
+                            <datalist id="list_localidades"></datalist>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-road me-1"></i> Calle (Arteria/Ruta)</label>
+                            <input type="text" name="calle" id="dir_calle" class="form-control" list="list_calles"
+                                required oninput="debouncedSearchCalles(this.value)">
+                            <datalist id="list_calles"></datalist>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="fas fa-sort-numeric-up me-1"></i> Número
+                                (Altura)</label>
+                            <input type="text" name="numero" id="dir_numero" class="form-control" required>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Piso</label>
+                            <input type="text" name="piso" id="dir_piso" class="form-control">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Depto / Of</label>
+                            <input type="text" name="depto" id="dir_depto" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="fas fa-mail-bulk me-1"></i> Código Postal
+                                (C.P.)</label>
+                            <input type="text" name="cod_postal" id="dir_cp" class="form-control" list="list_cp"
+                                required>
+                            <datalist id="list_cp"></datalist>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 p-3 rounded-4" style="background: rgba(255,255,255,0.03);">
+                        <div class="d-flex gap-4">
+                            <div class="form-check custom-check">
+                                <input class="form-check-input" type="checkbox" name="es_fiscal" id="dir_chkFiscal"
+                                    value="1">
+                                <label class="form-check-label text-white">Domicilio Fiscal</label>
+                            </div>
+                            <div class="form-check custom-check">
+                                <input class="form-check-input" type="checkbox" name="es_entrega" id="dir_chkEntrega"
+                                    value="1">
+                                <label class="form-check-label text-white">Punto de Entrega / Retiro</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4"
+                        onclick="toggleModal('modalDireccion')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Guardar
+                        Dirección</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Contacto -->
+    <div id="modalContacto" class="modal-premium modal-animate" style="display:none;">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('ventas.agregar_contacto', id=cliente.id) }}" method="POST"
+                id="formContacto">
+                <input type="hidden" name="item_id" id="con_item_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titleContacto"><i class="fas fa-user-tie me-2"></i> Persona de
+                        Contacto
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                        onclick="toggleModal('modalContacto')"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label"><i class="fas fa-user me-1"></i> Nombre Completo</label>
+                            <input type="text" name="nombre" id="con_nombre" class="form-control"
+                                placeholder="Ej: Juan Pérez" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-list me-1"></i> Área</label>
+                            <select name="tipo_contacto" id="con_tipo" class="form-select"
+                                onchange="onAreaChange(this.value)">
+                                <option value="">Seleccione Área...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-briefcase me-1"></i> Función</label>
+                            <select name="puesto" id="con_puesto" class="form-select" required>
+                                <option value="">Seleccione Función...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-mobile-alt me-1"></i> Teléfono /
+                                Celular</label>
+                            <input type="text" name="telefono" id="con_telefono" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-at me-1"></i> Email</label>
+                            <input type="email" name="email" id="con_email" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label"><i class="fas fa-map-pin me-1"></i> Vincular a Sede /
+                                Dirección</label>
+                            <select name="direccion_id" id="con_direccion_id" class="form-select">
+                                <option value="">Cualquier Sede / Global</option>
+                                {% for d in direcciones %}
+                                <option value="{{ d.id }}">{{ d.etiqueta }} ({{ d.calle }} {{ d.numero }})</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Si elige una sede, este contacto solo aparecerá al facturar
+                                para
+                                ese
+                                destino.</small>
+                        </div>
+                    </div>
+                    <div class="mt-2 p-3 rounded-4" style="background: rgba(255,255,255,0.03);">
+                        <div class="form-check custom-check">
+                            <input class="form-check-input" type="checkbox" name="es_receptor" id="con_es_receptor"
+                                value="1">
+                            <label class="form-check-label text-white"><i class="fas fa-truck-loading me-1"></i> Es
+                                Receptor
+                                de Mercadería</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4"
+                        onclick="toggleModal('modalContacto')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Guardar
+                        Contacto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Fiscal -->
+    <div id="modalFiscal" class="modal-premium modal-animate" style="display:none;">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('ventas.agregar_fiscal', id=cliente.id) }}" method="POST"
+                id="formFiscal">
+                <input type="hidden" name="item_id" id="fis_item_id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titleFiscal">Agregar Inscripción Fiscal</h5>
+                    <button type="button" class="btn-close" onclick="toggleModal('modalFiscal')"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Impuesto</label>
+                        <select name="impuesto" id="fis_impuesto" class="form-select">
+                            {% for imp in impuestos_lista %}
+                            <option value="{{ imp.nombre }}">{{ imp.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jurisdicción</label>
+                        <select name="jurisdiccion" id="fis_jurisdiccion" class="form-select" required>
+                            <option value="NACIONAL">NACIONAL</option>
+                            {% for p in provincias %}
+                            <option value="{{ p.nombre }}">{{ p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3"><label class="form-label">Condición</label><input type="text" name="condicion"
+                            id="fis_condicion" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label">Nro. Inscripción</label><input type="text"
+                            name="numero_inscripcion" id="fis_inscripcion" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label">Alícuota (%)</label><input type="number" step="0.01"
+                            name="alicuota" id="fis_alicuota" class="form-control"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="toggleModal('modalFiscal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Datos Fiscales</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Solicitar Condición de Pago -->
+    <div id="modalCondicionPago" class="modal-premium modal-animate" style="display:none;">
+        <div class="modal-dialog">
+            <form class="modal-content" action="{{ url_for('ventas.solicitar_condicion_pago', id=cliente.id) }}"
+                method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-invoice-dollar me-2"></i> Solicitar Cambio de Pago
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                        onclick="toggleModal('modalCondicionPago')"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        <i class="fas fa-info-circle me-1"></i> El sistema requiere que un <strong>Gerente de
+                            Ventas</strong> apruebe cualquier cambio en las condiciones de pago del cliente.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Condiciones Disponibles (Aprobadas)</label>
+                        <div class="list-group">
+                            {% for c in condiciones %}
+                            <label
+                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <input class="form-check-input me-2" type="radio" name="condicion_id"
+                                        value="{{ c.id }}" {% if c.id==pago_info.condicion_pago_id %}checked{% endif %}>
+                                    <strong>{{ c.nombre }}</strong>
+                                    <div class="small text-muted ms-4">
+                                        {{ c.dias_vencimiento }} días vencimiento | {{ c.descuento_pct }}% dto.
+                                    </div>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary w-100">Enviar Solicitud de Cambio</button>
+                </div>
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus me-2"></i> Nuevo Coeficiente Provincial</h5>
+                    <button type="button" class="btn-close btn-close-white"
+                        onclick="toggleModal('modalCoeficiente')"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">Ingrese el coeficiente (hasta 4 decimales) declarado en el
+                        Formulario CM05.</p>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold"><i class="fas fa-map me-1"></i> Jurisdicción /
+                                Provincia</label>
+                            <select name="jurisdiccion_code" class="form-select" required>
+                                <option value="">Seleccione...</option>
+                                <option value="901">901 - CABA</option>
+                                <option value="902">902 - Buenos Aires</option>
+                                <option value="903">903 - Catamarca</option>
+                                <option value="904">904 - Córdoba</option>
+                                <option value="905">905 - Corrientes</option>
+                                <option value="906">906 - Chaco</option>
+                                <option value="907">907 - Chubut</option>
+                                <option value="908">908 - Entre Ríos</option>
+                                <option value="909">909 - Formosa</option>
+                                <option value="910">910 - Jujuy</option>
+                                <option value="911">911 - La Pampa</option>
+                                <option value="912">912 - La Rioja</option>
+                                <option value="913">913 - Mendoza</option>
+                                <option value="914">914 - Misiones</option>
+                                <option value="915">915 - Neuquén</option>
+                                <option value="916">916 - Río Negro</option>
+                                <option value="917">917 - Salta</option>
+                                <option value="918">918 - San Juan</option>
+                                <option value="919">919 - San Luis</option>
+                                <option value="920">920 - Santa Cruz</option>
+                                <option value="921">921 - Santa Fe</option>
+                                <option value="922">922 - S. del Estero</option>
+                                <option value="923">923 - Tierra del Fuego</option>
+                                <option value="924">924 - Tucumán</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-calendar-alt me-1"></i> Año Declarado</label>
+                            <input type="number" name="periodo_anio" class="form-control" value="2024" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-percentage me-1"></i> Coeficiente</label>
+                            <input type="number" step="0.0001" min="0" max="1" name="coeficiente" class="form-control"
+                                placeholder="Ej: 0.5000" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary px-4"><i class="fas fa-check me-2"></i> Guardar
+                        Jurisdicción</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            if (modal.classList.contains('modal')) {
+                // Bootstrap 5 Modal
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+                if (modal.style.display === 'block' || modal.classList.contains('show')) {
+                    bsModal.hide();
+                } else {
+                    bsModal.show();
+                }
+            } else {
+                // Custom Premium Modal
+                if (modal.style.display === 'none' || !modal.style.display) {
+                    modal.style.display = 'block';
+                    setTimeout(() => modal.classList.add('show'), 10);
+                } else {
+                    modal.classList.remove('show');
+                    setTimeout(() => modal.style.display = 'none', 300);
+                }
+            }
+        }
+
+        function nuevaDireccion() {
+            document.getElementById('formDireccion').reset();
+            document.getElementById('dir_item_id').value = '';
+            document.getElementById('titleDireccion').innerText = 'Agregar Sede / Dirección';
+            toggleModal('modalDireccion');
+        }
+
+        async function editarDireccion(btn) {
+            const data = JSON.parse(btn.getAttribute('data-item'));
+            document.getElementById('formDireccion').reset();
+            document.getElementById('dir_item_id').value = data.id;
+            document.getElementById('dir_etiqueta').value = data.etiqueta;
+
+            // Sincronización jerárquica: Cargamos datos de la provincia en paralelo para ganar velocidad
+            document.getElementById('dir_provincia').value = data.provincia;
+            await cargarLocalidades(data.provincia);
+            document.getElementById('dir_localidad').value = data.localidad;
+
+            document.getElementById('dir_calle').value = data.calle;
+            document.getElementById('dir_numero').value = data.numero;
+            document.getElementById('dir_piso').value = data.piso || '';
+            document.getElementById('dir_depto').value = data.depto || '';
+            document.getElementById('dir_cp').value = data.cod_postal;
+            document.getElementById('dir_chkFiscal').checked = data.es_fiscal == 1;
+            document.getElementById('dir_chkEntrega').checked = data.es_entrega == 1;
+
+            // Eliminamos la carga automática de calles aqu\u00ed; 
+            // solo se cargar\u00e1n si el usuario interact\u00fae con el campo para mayor fluidez.
+
+            document.getElementById('titleDireccion').innerText = 'Editar Sede / Dirección';
+            toggleModal('modalDireccion');
+        }
+
+        function nuevoContacto() {
+            document.getElementById('formContacto').reset();
+            document.getElementById('con_item_id').value = '';
+            document.getElementById('titleContacto').innerText = 'Agregar Persona de Contacto';
+            toggleModal('modalContacto');
+        }
+
+        function editarContacto(btn) {
+            const data = JSON.parse(btn.getAttribute('data-item'));
+            document.getElementById('con_item_id').value = data.id;
+            document.getElementById('con_nombre').value = data.nombre;
+
+            // Primero cargar áreas, luego seleccionar la correcta y cargar funciones
+            cargarAreas().then(() => {
+                const selectArea = document.getElementById('con_tipo');
+                selectArea.value = data.tipo_contacto || '';
+                // Disparar carga de funciones para esa área
+                onAreaChange(data.tipo_contacto).then(() => {
+                    document.getElementById('con_puesto').value = data.puesto_nombre || data.puesto || '';
+                });
+            });
+
+            document.getElementById('con_telefono').value = data.telefono;
+            document.getElementById('con_email').value = data.email || '';
+            document.getElementById('con_es_receptor').checked = data.es_receptor == 1;
+            document.getElementById('con_direccion_id').value = data.direccion_id || '';
+            document.getElementById('titleContacto').innerText = 'Editar Persona de Contacto';
+            toggleModal('modalContacto');
+        }
+
+        function nuevoFiscal() {
+            document.getElementById('formFiscal').reset();
+            document.getElementById('fis_item_id').value = '';
+            document.getElementById('titleFiscal').innerText = 'Agregar Inscripción Fiscal';
+            toggleModal('modalFiscal');
+        }
+
+        function editarFiscal(btn) {
+            const data = JSON.parse(btn.getAttribute('data-item'));
+            document.getElementById('fis_item_id').value = data.id;
+            document.getElementById('fis_impuesto').value = data.impuesto;
+            document.getElementById('fis_jurisdiccion').value = data.jurisdiccion;
+            document.getElementById('fis_condicion').value = data.condicion;
+            document.getElementById('fis_inscripcion').value = data.numero_inscripcion;
+            document.getElementById('fis_alicuota').value = data.alicuota;
+            document.getElementById('titleFiscal').innerText = 'Editar Inscripción Fiscal';
+            toggleModal('modalFiscal');
+        }
+
+        // --- GEOREF Cascading Selects (Premium Flow) ---
+        // --- GEOREF Cascading Selects (Premium Flow) ---
+        let _localidadesCache = [];
+        const getSID = () => window.SID || '';
+
+        function onProvinciaChange(provincia) {
+            document.getElementById('dir_localidad').value = '';
+            document.getElementById('dir_calle').value = '';
+            if (!provincia) {
+                document.getElementById('list_localidades').innerHTML = '';
+                return;
+            }
+            cargarLocalidades(provincia);
+        }
+
+        async function cargarLocalidades(provincia) {
+            if (!provincia) return;
+            console.log(`Buscando localidades para ${provincia}`);
+            const datalist = document.getElementById('list_localidades');
+
+            try {
+                let baseUrl = `{{ url_for('core.api_get_localidades') }}`;
+                const separator = baseUrl.includes('?') ? '&' : '?';
+                let url = `${baseUrl}${separator}provincia=${encodeURIComponent(provincia)}`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                _localidadesCache = data;
+                datalist.innerHTML = '';
+                data.forEach(loc => {
+                    const opt = document.createElement('option');
+                    opt.value = loc.nombre;
+                    datalist.appendChild(opt);
+                });
+                console.log(`Cargadas ${data.length} localidades`);
+            } catch (e) { console.error("Error cargando localidades:", e); }
+        }
+
+
+        function ensureDataOnFocus(type) {
+            const prov = document.getElementById('dir_provincia').value;
+            if (!prov) return;
+
+            if (type === 'localidad' && document.getElementById('list_localidades').children.length === 0) {
+                cargarLocalidades(prov);
+            }
+        }
+
+        async function onLocalidadChange(localidadNombre) {
+            if (!localidadNombre) return;
+            const loc = _localidadesCache.find(l => l.nombre.trim().toLowerCase() === localidadNombre.trim().toLowerCase());
+            if (loc) {
+                document.getElementById('dir_localidad').value = loc.nombre;
+                document.getElementById('dir_calle').value = '';
+                const prov = document.getElementById('dir_provincia').value;
+                if (prov) {
+                    cargarCodigosPostales(prov, loc.nombre);
+                    cargarCalles(loc.nombre);
+                }
+            }
+        }
+
+        async function cargarCodigosPostales(provincia, localidad) {
+            const datalist = document.getElementById('list_cp');
+            const cpInput = document.getElementById('dir_cp');
+            if (!datalist) return;
+
+            try {
+                let baseUrl = `{{ url_for('core.api_get_cp') }}`;
+                const separator = baseUrl.includes('?') ? '&' : '?';
+                let url = `${baseUrl}${separator}provincia=${encodeURIComponent(provincia)}&localidad=${encodeURIComponent(localidad)}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                datalist.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(cp => {
+                        const opt = document.createElement('option');
+                        opt.value = cp;
+                        datalist.appendChild(opt);
+                    });
+                    // Auto-completar si solo hay uno y el campo estaba vacío o tenía el default
+                    if (data.length === 1 && (!cpInput.value || cpInput.value.length < 2)) {
+                        cpInput.value = data[0];
+                    }
+                }
+            } catch (e) { console.error("Error cargando CP:", e); }
+        }
+
+        let _searchTimeout = null;
+        function debouncedSearchCalles(val) {
+            clearTimeout(_searchTimeout);
+            if (val.length < 3) return;
+            const localidad = document.getElementById('dir_localidad').value;
+            if (!localidad) return;
+            _searchTimeout = setTimeout(() => {
+                cargarCalles(localidad, val);
+            }, 400);
+        }
+
+        async function cargarCalles(localidad, partialName = '') {
+            if (!localidad && !partialName) return;
+            const provincia = document.getElementById('dir_provincia').value;
+            const datalist = document.getElementById('list_calles');
+
+            try {
+                let baseUrl = `{{ url_for('core.api_get_calles') }}`;
+                const separator = baseUrl.includes('?') ? '&' : '?';
+                let url = `${baseUrl}${separator}localidad=${encodeURIComponent(localidad)}`;
+                if (provincia) url += `&provincia=${encodeURIComponent(provincia)}`;
+                if (partialName) url += `&nombre=${encodeURIComponent(partialName)}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+                datalist.innerHTML = '';
+                data.forEach(calle => {
+                    const opt = document.createElement('option');
+                    opt.value = calle.nombre;
+                    datalist.appendChild(opt);
+                });
+            } catch (e) { console.error("Error cargando calles:", e); }
+        }
+        async function cargarAreas() {
+            try {
+                const response = await fetch(`{{ url_for('core.api_get_areas') }}`);
+                const areas = await response.json();
+                const select = document.getElementById('con_tipo');
+                if (select) {
+                    // Preservar valor actual
+                    const currentVal = select.value;
+                    select.innerHTML = '<option value="">Seleccione Área...</option>';
+                    areas.forEach(a => {
+                        const opt = document.createElement('option');
+                        opt.value = a.nombre; // Usar el nombre como valor
+                        opt.textContent = a.nombre;
+                        select.appendChild(opt);
+                    });
+                    if (currentVal) select.value = currentVal;
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function onAreaChange(area) {
+            if (!area) return;
+            const selectPuesto = document.getElementById('con_puesto');
+            if (selectPuesto) selectPuesto.innerHTML = '<option value="">Cargando...</option>';
+
+            try {
+                const response = await fetch(`{{ url_for('core.api_get_puestos') }}&area=${encodeURIComponent(area)}`);
+                const puestos = await response.json();
+                if (selectPuesto) {
+                    selectPuesto.innerHTML = '<option value="">Seleccione Función...</option>';
+                    puestos.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.nombre;
+                        opt.textContent = p.nombre;
+                        selectPuesto.appendChild(opt);
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarAreas();
+
+            // Control de exclusión mutua Condiciones de Pago (Simple vs Mixta)
+            const selectSimple = document.querySelector('select[name="condicion_pago_id"]');
+            const selectMixta = document.querySelector('select[name="condicion_mixta_id"]');
+
+            if (selectSimple && selectMixta) {
+                selectSimple.addEventListener('change', function () {
+                    if (this.value) {
+                        selectMixta.value = "";
+                    }
+                });
+                selectMixta.addEventListener('change', function () {
+                    if (this.value) {
+                        selectSimple.value = "";
+                    }
+                });
+            }
+
+            // Validar CUIT en modal de edición
+            const cuitInput = document.querySelector('input[name="cuit"]');
+            if (cuitInput) {
+                cuitInput.addEventListener('input', function () {
+                    if (!this.value) {
+                        this.classList.remove('is-invalid', 'is-valid');
+                        return;
+                    }
+                    if (validarCUIT(this.value)) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                        this.setCustomValidity('');
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                        this.setCustomValidity('CUIT Inválido');
+                    }
+                });
+            }
+        });
+
+        function toggleMontoCta(checked) {
+            const div = document.getElementById('div_monto_cta');
+            if (div) div.style.display = checked ? 'block' : 'none';
+        }
+
+        // Init: ocultar monto si el check está deshabilitado al abrir modal
+        document.addEventListener('DOMContentLoaded', function () {
+            const chk = document.getElementById('chk_habilita_cta_cte');
+            if (chk) toggleMontoCta(chk.checked);
+        });
+    </script>
+    {% endblock %}

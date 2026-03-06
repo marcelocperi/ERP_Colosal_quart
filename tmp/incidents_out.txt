@@ -1,0 +1,57 @@
+=== ID 658 ===
+Error: Sesión expirada o inválida. Recargue la página.
+  request_path: /ventas/facturar
+  referrer: http://127.0.0.1/ventas/facturar?sid=f2641265
+  reason: Sesión expirada o inválida. Recargue la página.
+
+=== ID 657 ===
+Error: 'coroutine' object has no attribute 'get'
+  request_path: /contabilidad/api/consultar-padron/30-45215777-9
+  referrer: http://127.0.0.1/ventas/facturar?sid=6545f0e7
+  traceback: Traceback (most recent call last):
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\decorators.py", line 6
+  exception_type: AttributeError
+
+=== ID 656 ===
+Error: 'coroutine' object has no attribute 'get'
+  request_path: /contabilidad/api/consultar-padron/30-45215777-9
+  referrer: http://127.0.0.1/ventas/facturar?sid=6545f0e7
+  traceback: Traceback (most recent call last):
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\decorators.py", line 6
+  exception_type: AttributeError
+
+=== ID 655 ===
+Error: Unknown column 'ac.codigo' in 'SELECT'
+  request_path: /api/ventas/articulos/buscar
+  referrer: http://127.0.0.1/ventas/facturar?sid=6545f0e7
+  traceback: Traceback (most recent call last):
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\decorators.py", line 6
+  exception_type: ProgrammingError
+
+=== ID 651 ===
+Error: 'coroutine' object has no attribute 'get'
+  request_path: /contabilidad/api/consultar-padron/30-45215777-9
+  referrer: http://127.0.0.1/ventas/facturar?sid=6545f0e7
+  traceback: Traceback (most recent call last):
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\decorators.py", line 6
+  exception_type: AttributeError

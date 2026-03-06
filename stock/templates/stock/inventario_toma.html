@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title"><i class="fas fa-barcode me-2 text-warning"></i>Toma de Inventario #{{ inv.id }}</h1>
+        <p class="text-muted">Depósito: <b>{{ inv.deposito_nombre }}</b> | Tipo: <b>{{ inv.tipo }}</b></p>
+    </div>
+    <div class="text-end">
+        <button class="btn btn-success px-4" onclick="cerrarInventario()">
+            <i class="fas fa-save me-2"></i> Cerrar y Ajustar Stock
+        </button>
+    </div>
+</div>
+
+<div class="card bg-dark border-secondary shadow-sm">
+    <div class="card-header bg-secondary bg-opacity-10 py-3">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-muted"><i
+                            class="fas fa-search"></i></span>
+                    <input type="text" id="scanInput" class="form-control bg-dark text-white border-secondary"
+                        placeholder="Escanee código de barras o busque artículo..." autofocus>
+                </div>
+            </div>
+            <div class="col-md-6 text-end text-muted small">
+                PROGRESO: <span class="text-white fw-bold">{{ inv.progreso or 0 }}%</span> |
+                DIFERENCIAS: <span class="text-danger fw-bold" id="total_diffs">0</span>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-dark table-hover mb-0" id="tableToma">
+            <thead>
+                <tr>
+                    <th class="ps-4">ARTICULO</th>
+                    <th class="text-center">SISTEMA</th>
+                    <th class="text-center" style="width: 200px;">FÍSICO (CONTEO)</th>
+                    <th class="text-center">DIFERENCIA</th>
+                    <th class="text-center">ESTADO</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr data-id="{{ item.id }}"
+                    class="{{ 'bg-danger bg-opacity-10' if item.stock_fisico != item.stock_sistema else '' }}">
+                    <td class="ps-4">
+                        <div class="fw-bold">{{ item.articulo_nombre }}</div>
+                        <small class="text-muted">{{ item.codigo }}</small>
+                    </td>
+                    <td class="text-center">{{ item.stock_sistema }}</td>
+                    <td class="text-center">
+                        <div class="input-group input-group-sm mx-auto" style="max-width: 140px;">
+                            <button class="btn btn-outline-secondary" onclick="updateQty({{ item.id }}, -1)">-</button>
+                            <input type="number" step="0.01"
+                                class="form-control bg-dark text-white border-secondary text-center qty-input"
+                                value="{{ item.stock_fisico }}" onchange="saveItem({{ item.id }}, this.value)">
+                            <button class="btn btn-outline-secondary" onclick="updateQty({{ item.id }}, 1)">+</button>
+                        </div>
+                    </td>
+                    <td
+                        class="text-center fw-bold {{ 'text-danger' if item.stock_fisico != item.stock_sistema else 'text-success' }}">
+                        {{ item.stock_fisico - item.stock_sistema }}
+                    </td>
+                    <td class="text-center">
+                        {% if item.stock_fisico != item.stock_sistema %}
+                        <i class="fas fa-exclamation-circle text-danger" title="Diferencia detectada"></i>
+                        {% else %}
+                        <i class="fas fa-check-circle text-success" title="Coincide"></i>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function saveItem(itemId, value) {
+        try {
+            const resp = await fetch(`/stock/api/inventario/item/${itemId}/update?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fisico: value })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                // Actualizar fila visualmente o recargar (recargar es más seguro para diferencias)
+                location.reload();
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function updateQty(itemId, delta) {
+        const row = document.querySelector(`tr[data-id="${itemId}"]`);
+        const input = row.querySelector('.qty-input');
+        input.value = (parseFloat(input.value) + delta).toFixed(2);
+        saveItem(itemId, input.value);
+    }
+
+    async function cerrarInventario() {
+        if (!confirm("¿Está seguro de cerrar este inventario? El stock del sistema se ajustará automáticamente a los valores físicos contados.")) return;
+
+        try {
+            const resp = await fetch(`/stock/api/inventario/{{ inv.id }}/cerrar?sid=${window.SID || ''}`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.success) {
+                alert("Inventario cerrado y stock ajustado.");
+                location.href = "{{ url_for('stock.inventarios_lista') }}";
+            }
+        } catch (e) { alert("Error al cerrar."); }
+    }
+</script>
+{% endblock %}

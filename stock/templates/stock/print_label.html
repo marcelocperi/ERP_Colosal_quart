@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Etiqueta — {{ articulo.nombre }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+
+    <!-- QZ Tray JS (solo se activa si el modo lo requiere) -->
+    <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.min.js" defer></script>
+
+    <style>
+        /* Dimensiones dinámicas desde perfil de impresora — sin editar CSS a mano */
+        @page {
+            size: {
+                    {
+                    data.printer.ancho_mm
+                }
+            }
+
+            mm {
+                    {
+                    data.printer.alto_mm
+                }
+            }
+
+            mm;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 4mm;
+
+            width: calc({
+                    {
+                    data.printer.ancho_mm
+                }
+            }
+
+            mm - 8mm);
+
+        height: calc({
+                {
+                data.printer.alto_mm
+            }
+        }
+
+        mm - 8mm);
+        background: white;
+        color: black;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-sizing: border-box;
+        position: relative;
+        }
+
+        .enterprise-name {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            width: 100%;
+            text-align: left;
+            border-bottom: 1px solid black;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
+        }
+
+        .item-name {
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            max-height: 28px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-height: 1.1;
+        }
+
+        .barcode-container {
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .meta-info {
+            font-size: 9px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2px;
+        }
+
+        .safety-row {
+            display: flex;
+            width: 100%;
+            gap: 5px;
+            margin-top: 5px;
+            border-top: 1px dotted #ccc;
+            padding-top: 3px;
+        }
+
+        .pictograms-box {
+            display: flex;
+            gap: 2px;
+        }
+
+        .pictograms-box img {
+            width: 18mm;
+            height: 18mm;
+            object-fit: contain;
+        }
+
+        .un-box {
+            border: 2px solid black;
+            padding: 2px 4px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            height: fit-content;
+        }
+
+        .technical-name {
+            font-size: 8px;
+            font-style: italic;
+            width: 100%;
+            text-align: left;
+            margin-top: 2px;
+        }
+
+        @media print {
+            #ui-controls {
+                display: none !important;
+            }
+        }
+
+        /* UI Controls (visibles solo en pantalla) */
+        #ui-controls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            z-index: 999;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #ui-controls h4 {
+            margin: 0;
+            color: white;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .mode-badge {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .btn-print-action {
+            padding: 0.5rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .print-area {
+            margin-top: 60px;
+        }
+
+        #status-msg {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            flex: 1;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Barra de control (no se imprime) -->
+    <div id="ui-controls">
+        <h4>🖨️ {{ articulo.nombre[:40] }}</h4>
+
+        {% set modo = data.printer.tipo_conexion or 'BROWSER_DIALOG' %}
+        {% if modo == 'IP_RED' %}
+        <span class="mode-badge" style="background:rgba(245,158,11,0.2); color:#fbbf24;">🌐 Red TCP — {{
+            data.printer.ip_red }}:{{ data.printer.puerto_red or 9100 }}</span>
+        <button class="btn-print-action" style="background:#f59e0b; color:black;" onclick="printViaNetwork()">Enviar a
+            Impresora de Red</button>
+        {% elif modo == 'QZ_TRAY_USB' %}
+        <span class="mode-badge" style="background:rgba(139,92,246,0.2); color:#a78bfa;">🔌 QZ Tray USB — {{
+            data.printer.nombre_sistema_qz or '(no configurado)' }}</span>
+        <button class="btn-print-action" style="background:#8b5cf6; color:white;" onclick="printViaQZ()">Imprimir vía QZ
+            Tray</button>
+        {% elif modo == 'QZ_TRAY_NET' %}
+        <span class="mode-badge" style="background:rgba(139,92,246,0.2); color:#a78bfa;">🔌 QZ Tray Red — {{
+            data.printer.ip_red }}:{{ data.printer.puerto_red or 9100 }}</span>
+        <button class="btn-print-action" style="background:#8b5cf6; color:white;" onclick="printViaQZ()">Imprimir vía QZ
+            Tray</button>
+        {% else %}
+        <span class="mode-badge" style="background:rgba(59,130,246,0.2); color:#60a5fa;">🖥️ Diálogo del
+            Navegador</span>
+        <button class="btn-print-action" style="background:#2563eb; color:white;" onclick="window.print()">🖨️
+            Imprimir</button>
+        {% endif %}
+
+        <span id="status-msg">{{ data.printer.nombre }} | {{ data.printer.ancho_mm }}×{{ data.printer.alto_mm }}
+            mm</span>
+        <button class="btn-print-action" style="background:#ef4444; color:white;" onclick="window.close()">✖
+            Cerrar</button>
+    </div>
+
+    <!-- Área de etiqueta (lo que se imprime) -->
+    <div class="print-area">
+        <div class="enterprise-name">Colosal ERP · {{ g.user.enterprise_name }}</div>
+        <div class="item-name">{{ articulo.nombre }}</div>
+
+        <!-- Datos de Seguridad (Si existen) -->
+        {% if data.seguridad %}
+        <div class="technical-name">{{ data.seguridad.nombre_tecnico or '' }}</div>
+        <div class="safety-row">
+            <div class="pictograms-box">
+                {% for picto in data.seguridad.pictogramas_json %}
+                <img src="/static/img/ghs/{{ picto }}.png"
+                    onerror="this.src='https://placehold.co/100x100?text={{picto}}'" alt="{{ picto }}">
+                {% endfor %}
+            </div>
+            {% if data.seguridad.numero_un %}
+            <div class="un-box">UN {{ data.seguridad.numero_un }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="barcode-container"><svg id="barcode"></svg></div>
+        <div class="meta-info">
+            <span>{{ data.fecha_hoy }}</span>
+            <span>Ref: {{ articulo.id }}</span>
+        </div>
+    </div>
+
+    <script>
+        // ─── Config global ───────────────────────────────────────────────────────
+        const ARTICULO_ID = {{ articulo.id }};
+        const BARCODE_VAL = "{{ articulo.isbn or ('SKUINT' ~ '%06d'|format(articulo.id)) }}";
+        const MODO = "{{ data.printer.tipo_conexion or 'BROWSER_DIALOG' }}";
+        const QZ_PRINTER_NAME = "{{ data.printer.nombre_sistema_qz or '' }}";
+        const PRINTER_IP = "{{ data.printer.ip_red or '' }}";
+        const PRINTER_PORT = parseInt("{{ data.printer.puerto_red or 9100 }}");
+        const LABEL_W = parseFloat("{{ data.printer.ancho_mm }}");
+        const LABEL_H = parseFloat("{{ data.printer.alto_mm }}");
+
+        // ─── Render barcode en pantalla ──────────────────────────────────────────
+        document.addEventListener("DOMContentLoaded", () => {
+            JsBarcode("#barcode", BARCODE_VAL, {
+                format: "CODE128", lineColor: "#000",
+                width: 2.5, height: 40, displayValue: true,
+                fontSize: 13, fontOptions: "bold", margin: 0
+            });
+
+            // Auto-acción según modo
+            setTimeout(() => {
+                if (MODO === 'BROWSER_DIALOG') window.print();
+                else if (MODO === 'IP_RED') printViaNetwork();
+                else if (MODO.startsWith('QZ_TRAY')) printViaQZ();
+            }, 600);
+        });
+
+        // ─── MODO B: IP de Red (ZPL via servidor) ────────────────────────────────
+        function printViaNetwork() {
+            setStatus("⏳ Enviando ZPL a la impresora de red...");
+            fetch(`/stock/api/articulos/${ARTICULO_ID}/print_zpl`, { method: 'POST' })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) setStatus("✅ " + d.message);
+                    else setStatus("❌ Error: " + d.message, true);
+                })
+                .catch(e => setStatus("❌ Error de red: " + e.message, true));
+        }
+
+        // ─── MODO C: QZ Tray (USB o Red) ─────────────────────────────────────────
+        function buildZPL() {
+            const pw = Math.round(LABEL_W * 8);
+            const ll = Math.round(LABEL_H * 8);
+            const nombre = {{ articulo.nombre | tojson
+        }};
+        return `^XA\n^MMT\n^PW${pw}\n^LL${ll}\n^LS0\n^FT20,30^A0N,20,20^FH\\^FD${nombre.substring(0, 40)}^FS\n^FT20,60^BY2,3,50^BCN,,Y,N^FD${BARCODE_VAL}^FS\n^FT20,${ll - 10}^A0N,12,12^FDColosal ERP | {{ data.fecha_hoy }}^FS\n^XZ`;
+        }
+
+        async function printViaQZ() {
+            if (typeof qz === 'undefined') {
+                setStatus("❌ QZ Tray no está instalado en esta PC. Descárgalo en qz.io", true);
+                return;
+            }
+            try {
+                setStatus("⏳ Conectando con QZ Tray...");
+                await qz.websocket.connect();
+                setStatus("✅ QZ Tray conectado. Enviando etiqueta...");
+
+                let config;
+                if (MODO === 'QZ_TRAY_USB') {
+                    if (!QZ_PRINTER_NAME) { setStatus("❌ Nombre de impresora QZ no configurado.", true); return; }
+                    config = qz.configs.create(QZ_PRINTER_NAME);
+                } else {
+                    // QZ_TRAY_NET: usar socket a IP directa
+                    config = qz.configs.create({ host: PRINTER_IP, port: PRINTER_PORT });
+                }
+
+                const data = [{ type: 'raw', format: 'plain', data: buildZPL() }];
+                await qz.print(config, data);
+                setStatus("✅ Etiqueta enviada correctamente vía QZ Tray.");
+                await qz.websocket.disconnect();
+            } catch (err) {
+                setStatus("❌ QZ Tray Error: " + err.message, true);
+                console.error(err);
+            }
+        }
+
+        function setStatus(msg, isError = false) {
+            const el = document.getElementById('status-msg');
+            el.textContent = msg;
+            el.style.color = isError ? '#ef4444' : '#34d399';
+        }
+    </script>
+</body>
+
+</html>

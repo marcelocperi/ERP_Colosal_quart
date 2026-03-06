@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Empresa | Colosal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-main);
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .title {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 8px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .flash-msg {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1 class="title">Nueva Empresa</h1>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="flash-msg">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="input-group">
+                    <label>ID Corto (sin espacios)</label>
+                    <input type="text" name="id" required placeholder="valencia">
+                </div>
+                <div class="input-group">
+                    <label>Nombre de la Empresa</label>
+                    <input type="text" name="nombre" required placeholder="Biblioteca Valencia">
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Datos del Administrador
+                Inicial</p>
+
+            <div class="input-group">
+                <label>Usuario</label>
+                <input type="text" name="admin_user" required placeholder="admin">
+            </div>
+            <div class="input-group">
+                <label>Contraseña</label>
+                <input type="password" name="admin_pass" required placeholder="••••••••">
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1.5rem 0;">
+            <div
+                style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; padding: 1.2rem; margin-bottom: 1.2rem;">
+                <p
+                    style="color: #818cf8; font-size: 0.85rem; font-weight: bold; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px;">
+                    <i class="fas fa-shield-alt"></i> Configuración AFIP (Interoperabilidad)
+                </p>
+                <div class="input-group">
+                    <label>CUIT del Certificado</label>
+                    <input type="text" name="afip_cuit" placeholder="20123456789">
+                    <small style="color: var(--text-muted); font-size: 0.7rem;">Debe coincidir con el titular del
+                        certificado .crt</small>
+                </div>
+                <div class="input-group">
+                    <label>Certificado (.crt)</label>
+                    <textarea name="afip_crt" rows="3" class="form-control"
+                        style="width: 100%; background: rgba(0,0,0,0.2); color: #818cf8; font-family: monospace; font-size: 0.7rem; border-radius: 4px; padding: 10px;"
+                        placeholder="-----BEGIN CERTIFICATE----- ..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Clave Privada (.key)</label>
+                    <textarea name="afip_key" rows="3" class="form-control"
+                        style="width: 100%; background: rgba(0,0,0,0.2); color: #f87171; font-family: monospace; font-size: 0.7rem; border-radius: 4px; padding: 10px;"
+                        placeholder="-----BEGIN PRIVATE KEY----- ..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Entorno AFIP</label>
+                    <select name="afip_entorno"
+                        style="width: 100%; padding: 0.8rem; background: #1e293b; color: white; border: 1px solid #334155; border-radius: 8px;">
+                        <option value="testing">Homologación (Testing)</option>
+                        <option value="production">Producción</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group"
+                style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem;">
+                <label style="display: flex; align-items: start; gap: 0.8rem; cursor: pointer; margin-bottom: 0;">
+                    <input type="checkbox" name="enable_sod" value="1" checked required
+                        style="width: 1.2rem; height: 1.2rem; margin-top: 0.1rem; accent-color: var(--primary);">
+                    <div>
+                        <span style="font-weight: 600; color: white;">Habilitar Modelo de Segregación de Funciones
+                            (SoD)</span>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem; margin-bottom: 0;">
+                            Se crearán automáticamente roles estandarizados (Comprador, Tesorero, Contador, etc.) para
+                            cumplir con normas de auditoría.
+                        </p>
+                    </div>
+                </label>
+            </div>
+
+            <div class="input-group">
+                <label>Logo de la Empresa <span style="color: var(--text-muted); font-weight: normal;">(opcional - JPG,
+                        PNG, max 2MB)</span></label>
+                <input type="file" name="logo" accept="image/jpeg,image/png,image/jpg"
+                    style="padding: 0.5rem; cursor: pointer; border: 1px dashed rgba(255,255,255,0.2);">
+                <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.5rem;">
+                    El logo se usará en emails y presentaciones del sistema
+                </small>
+            </div>
+
+            <button type="submit" class="btn">Crear Empresa</button>
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="{{ url_for('core.login') }}"
+                    style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
+                    Volver al login
+                </a>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

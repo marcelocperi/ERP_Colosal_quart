@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Ejecutivo de Importaciones{% endblock %}
+
+{% block content %}
+<div style="padding: 2rem; background: #0f172a; min-height: 100vh; color: #f1f5f9; font-family: 'Outfit', sans-serif;">
+
+    <!-- ── CABECERA ─────────────────────────────────────────────────────────── -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+        <div>
+            <h1
+                style="margin: 0; font-size: 2.2rem; font-weight: 800; background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Control de Operaciones Internacionales
+            </h1>
+
+            <p style="color: #64748b; margin-top: 0.5rem; font-size: 1rem;">Visión estratégica de importaciones y
+                logística global</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="location.reload()" class="btn"
+                style="background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0.75rem 1.25rem;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <a href="{{ url_for('compras.importaciones_dashboard') }}" class="btn"
+                style="background: linear-gradient(135deg, #38bdf8, #1d4ed8); color: white; border: none; border-radius: 12px; padding: 0.75rem 1.5rem; font-weight: 600; text-decoration: none;">
+                <i class="fas fa-plus me-2"></i>Nueva Importación
+            </a>
+        </div>
+    </div>
+
+    <!-- ── CARDS PRINCIPALES (KPIs) ─────────────────────────────────────────── -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2.5rem;">
+
+        <!-- En Tránsito -->
+        <div
+            style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 1.5rem; backdrop-filter: blur(10px);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <div
+                    style="width: 48px; height: 48px; border-radius: 14px; background: rgba(56,189,248,0.1); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                    <i class="fas fa-ship fa-lg"></i>
+                </div>
+                <div style="color: #34d399; font-size: 0.8rem; font-weight: 600;">ALTA ACTIVIDAD</div>
+            </div>
+            <div style="font-size: 2rem; font-weight: 800; color: #f1f5f9;">{{ stats.resumen.embarcadas }}</div>
+            <div style="color: #64748b; font-size: 0.9rem; margin-top: 0.2rem;">Embarques en Tránsito</div>
+            <div style="margin-top: 1.2rem; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;">
+                <div style="width: 65%; height: 100%; background: #38bdf8; border-radius: 2px;"></div>
+            </div>
+        </div>
+
+        <!-- Volumen en Ruta -->
+        <div
+            style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 1.5rem; backdrop-filter: blur(10px);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <div
+                    style="width: 48px; height: 48px; border-radius: 14px; background: rgba(167,139,250,0.1); display: flex; align-items: center; justify-content: center; color: #a78bfa;">
+                    <i class="fas fa-boxes fa-lg"></i>
+                </div>
+            </div>
+            <div style="font-size: 2rem; font-weight: 800; color: #f1f5f9;">{{ stats.logistica.bultos_en_transito }}
+            </div>
+            <div style="color: #64748b; font-size: 0.9rem; margin-top: 0.2rem;">Bultos Totales en Ruta</div>
+            <div style="color: #a78bfa; font-size: 0.75rem; margin-top: 0.5rem; font-weight: 600;">PESO EST: {{
+                stats.logistica.peso_en_transito_kg | round(1) }} KG</div>
+        </div>
+
+        <!-- Inversión FOB -->
+        <div
+            style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 1.5rem; backdrop-filter: blur(10px);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <div
+                    style="width: 48px; height: 48px; border-radius: 14px; background: rgba(251,191,36,0.1); display: flex; align-items: center; justify-content: center; color: #fbbf24;">
+                    <i class="fas fa-dollar-sign fa-lg"></i>
+                </div>
+            </div>
+            <div style="font-size: 2rem; font-weight: 800; color: #f1f5f9;">U$S {{ stats.financiero.total_pagado_usd |
+                round(0) | do_human_format }}</div>
+            <div style="color: #64748b; font-size: 0.9rem; margin-top: 0.2rem;">Pagos Ejecutados (USD)</div>
+        </div>
+
+        <!-- Próximos Arribos -->
+        <div
+            style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 1.5rem; backdrop-filter: blur(10px);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <div
+                    style="width: 48px; height: 48px; border-radius: 14px; background: rgba(248,113,113,0.1); display: flex; align-items: center; justify-content: center; color: #f87171;">
+                    <i class="fas fa-calendar-check fa-lg"></i>
+                </div>
+            </div>
+            <div style="font-size: 2rem; font-weight: 800; color: #f1f5f9;">{{ stats.logistica.proximos_arribos_15d }}
+            </div>
+            <div style="color: #64748b; font-size: 0.9rem; margin-top: 0.2rem;">Arribos en próximos 15 días</div>
+        </div>
+
+    </div>
+
+
+    <!-- ── ALERTAS CRÍTICAS (AIS DELAYS) ────────────────────────────────────── -->
+    {% if stats.alertas and stats.alertas.demoras_ais > 0 %}
+    <div
+        style="margin-bottom: 2.5rem; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 20px; padding: 1.5rem; backdrop-filter: blur(10px);">
+        <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem;">
+            <div
+                style="width: 48px; height: 48px; border-radius: 14px; background: #ef4444; display: flex; align-items: center; justify-content: center; color: white; animation: pulse-red 2s infinite; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);">
+                <i class="fas fa-exclamation-triangle fa-lg"></i>
+            </div>
+            <div>
+                <h5 style="margin: 0; color: #f87171; font-weight: 700; font-size: 1.1rem;">Discrepancias Satelitales
+                    Detectadas</h5>
+                <p style="margin: 0; font-size: 0.9rem; color: #94a3b8;">El ETA AIS reportado por VesselFinder difiere
+                    del plan de logística original</p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+            {% for alerta in stats.alertas.detalles %}
+            <div style="background: rgba(0,0,0,0.3); border-radius: 16px; padding: 1.25rem; border: 1px solid rgba(239,68,68,0.1); border-left: 4px solid #ef4444; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s; cursor: pointer;"
+                onclick="location.href='{{ url_for('compras.importacion_orden_detalle', orden_id=alerta.orden_id) }}'">
+                <div>
+                    <div style="font-weight: 700; color: #f1f5f9; font-size: 1rem;">OC {{ alerta.comprobante }}</div>
+                    <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">
+                        <i class="fas fa-ship me-1"></i> {{ alerta.buque }}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: #f87171; font-weight: 800; font-size: 1rem;">+{{ alerta.dias_desvio }} DÍAS</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.2rem;">EST. AIS: {{ alerta.eta_ais }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <style>
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+    </style>
+    {% endif %}
+
+    <!-- ── SECCIÓN CENTRAL ─────────────────────────────────────────────────── -->
+    <div style="display: grid; grid-template-columns: 1fr 400px; gap: 1.5rem;">
+
+        <!-- Tabla de Órdenes Recientes -->
+        <div
+            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #f1f5f9; font-weight: 700;">Seguimiento de Órdenes
+                    Activas</h3>
+                <a href="#" style="color: #38bdf8; font-size: 0.8rem; text-decoration: none;">Ver todas <i
+                        class="fas fa-chevron-right ms-1"></i></a>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <th style="padding: 1rem; color: #64748b; font-size: 0.75rem; text-transform: uppercase;">
+                                Orden</th>
+                            <th style="padding: 1rem; color: #64748b; font-size: 0.75rem; text-transform: uppercase;">
+                                Proveedor</th>
+                            <th style="padding: 1rem; color: #64748b; font-size: 0.75rem; text-transform: uppercase;">
+                                Estado Actual</th>
+                            <th style="padding: 1rem; color: #64748b; font-size: 0.75rem; text-transform: uppercase;">
+                                ETA / Arribo</th>
+                            <th style="padding: 1rem; color: #64748b; font-size: 0.75rem; text-transform: uppercase;">
+                                Transporte</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for o in stats.ordenes_recientes %}
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.02); transition: background 0.2s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.02)'"
+                            onmouseout="this.style.background='none'">
+                            <td style="padding: 1.25rem 1rem;">
+                                <div style="font-weight: 700; color: #f1f5f9; font-family: monospace;">#{{
+                                    o.numero_comprobante or o.id }}</div>
+                            </td>
+                            <td style="padding: 1.25rem 1rem;">
+                                <div style="font-weight: 600; color: #cbd5e1; font-size: 0.85rem;">{{ o.proveedor_nombre
+                                    }}</div>
+                            </td>
+                            <td style="padding: 1.25rem 1rem;">
+                                {% set bg = 'rgba(56,189,248,0.1)' %}{% set fg = '#38bdf8' %}
+                                {% if o.estado_importacion == 'INGRESADO' %}{% set bg='rgba(52,211,153,0.1)' %}{% set
+                                fg='#34d399' %}
+                                {% elif o.estado_importacion == 'EMBARCADO' %}{% set bg='rgba(167,139,250,0.1)' %}{% set
+                                fg='#a78bfa' %}
+                                {% elif o.estado_importacion == 'OBSERVADO' %}{% set bg='rgba(248,113,113,0.1)' %}{% set
+                                fg='#f87171' %}{% endif %}
+                                <span
+                                    style="background: {{ bg }}; color: {{ fg }}; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 700;">
+                                    {{ o.estado_importacion or 'PENDIENTE' }}
+                                </span>
+                            </td>
+                            <td style="padding: 1.25rem 1rem;">
+                                <div style="color: #cbd5e1; font-size: 0.85rem;">{{ o.fecha_arribo_estimada or 'No
+                                    definida' }}</div>
+                            </td>
+                            <td style="padding: 1.25rem 1rem;">
+                                <div style="color: #64748b; font-size: 0.8rem;"><i class="fas fa-truck-moving me-1"></i>
+                                    {{ o.transportista or '—' }}</div>
+                            </td>
+                            <td style="padding: 1.25rem 1rem; text-align: right;">
+                                <a href="{{ url_for('compras.importacion_orden_detalle', orden_id=o.id) }}"
+                                    style="color: #38bdf8; text-decoration: none;">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sidebar: Resumen Workflow -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+            <!-- Workflow Gauge -->
+            <div
+                style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 1.5rem;">
+                <h4 style="margin: 0 0 1.5rem; font-size: 1rem; color: #f1f5f9; font-weight: 700;">Distribución de
+                    Pipeline</h4>
+
+                {% set totals = stats.resumen %}
+                {% set max_val = totals.total_ocs or 1 %}
+
+                <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.5rem; color: #cbd5e1;">
+                            <span>Tramitación / Documental</span>
+                            <span style="font-weight: 700;">{{ totals.en_tramite }}</span>
+                        </div>
+                        <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px;">
+                            <div
+                                style="width: {{ (totals.en_tramite / max_val * 100) }}%; height: 100%; background: #60a5fa; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.5rem; color: #cbd5e1;">
+                            <span>En Navegación / Vuelo</span>
+                            <span style="font-weight: 700;">{{ totals.embarcadas }}</span>
+                        </div>
+                        <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px;">
+                            <div
+                                style="width: {{ (totals.embarcadas / max_val * 100) }}%; height: 100%; background: #a78bfa; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.5rem; color: #cbd5e1;">
+                            <span>Trámites Aduaneros</span>
+                            <span style="font-weight: 700;">{{ totals.en_aduana }}</span>
+                        </div>
+                        <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px;">
+                            <div
+                                style="width: {{ (totals.en_aduana / max_val * 100) }}%; height: 100%; background: #fbbf24; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.5rem; color: #cbd5e1;">
+                            <span>Liberado / Ingresado</span>
+                            <span style="font-weight: 700;">{{ totals.finalizadas }}</span>
+                        </div>
+                        <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px;">
+                            <div
+                                style="width: {{ (totals.finalizadas / max_val * 100) }}%; height: 100%; background: #34d399; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 2rem; padding: 1rem; background: rgba(56,189,248,0.05); border: 1px dashed rgba(56,189,248,0.3); border-radius: 12px; font-size: 0.75rem; color: #38bdf8; line-height: 1.5;">
+                    <i class="fas fa-info-circle me-1"></i> Se están gestionando un total de <strong>{{ totals.total_ocs
+                        }}</strong> órdenes de importación activas.
+                </div>
+            </div>
+
+            <!-- Timeline / Cronograma (STAGE 5.3) -->
+            <div
+                style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 1.5rem; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <h4 style="margin: 0 0 1.25rem; font-size: 1rem; color: #f1f5f9; font-weight: 700;">Cronograma de
+                    Operaciones</h4>
+
+                <div style="overflow-y: auto; flex: 1; padding-right: 0.5rem;" class="custom-scroll">
+                    {% if stats.calendario %}
+                    {% for event in stats.calendario %}
+                    <div
+                        style="display: flex; gap: 1rem; margin-bottom: 1.25rem; position: relative; padding-left: 0.5rem;">
+                        <!-- Linea conectora -->
+                        {% if not loop.last %}
+                        <div
+                            style="position: absolute; left: 14px; top: 22px; bottom: -20px; width: 2px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        {% endif %}
+
+                        <div
+                            style="width: 20px; height: 20px; border-radius: 50%; background: {{ event.color }}; border: 4px solid #0f172a; flex-shrink: 0; z-index: 1; margin-top: 2px;">
+                        </div>
+
+                        <div style="flex: 1;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
+                                <span style="font-size: 0.75rem; font-weight: 700; color: {{ event.color }};">{{
+                                    event.tipo }}</span>
+                                <span style="font-size: 0.7rem; color: #64748b; font-family: monospace;">{{ event.fecha
+                                    }}</span>
+                            </div>
+                            <div style="font-size: 0.85rem; font-weight: 600; color: #f1f5f9;">{{ event.titulo }}</div>
+                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 0.1rem;">{{ event.subtitulo }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div style="text-align: center; padding: 2rem; color: #475569; font-size: 0.85rem;">
+                        No hay eventos próximos registrados.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.8rem; color: #64748b;">Pendiente Pago Est.</span>
+                        <span style="font-size: 1rem; font-weight: 700; color: #fbbf24;">U$S {{
+                            stats.financiero.pendiente_pago_usd | round(0) | do_human_format }}</span>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #0f172a;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #1e293b;
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #334155;
+    }
+</style>
+{% endblock %}

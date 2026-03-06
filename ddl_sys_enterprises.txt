@@ -1,0 +1,21 @@
+CREATE TABLE `sys_enterprises` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(50) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `estado` varchar(20) DEFAULT 'activo',
+  `fecha_creacion` datetime DEFAULT current_timestamp(),
+  `logo_path` varchar(255) DEFAULT NULL COMMENT 'Ruta al logo de la empresa (para emails y presentaciones)',
+  `cuit` varchar(20) DEFAULT NULL,
+  `domicilio` varchar(255) DEFAULT NULL,
+  `condicion_iva` varchar(50) DEFAULT NULL,
+  `ingresos_brutos` varchar(30) DEFAULT NULL,
+  `inicio_actividades` date DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `telefono` varchar(100) DEFAULT NULL,
+  `website` varchar(255) DEFAULT NULL,
+  `lema` varchar(255) DEFAULT NULL,
+  `iibb_condicion` varchar(50) DEFAULT NULL,
+  `is_saas_owner` tinyint(1) DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `codigo` (`codigo`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci

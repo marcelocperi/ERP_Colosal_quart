@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4 pb-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb bg-transparent p-0 mb-4">
+            <li class="breadcrumb-item"><a href="{{ url_for('compras.aprobaciones') }}">Aprobaciones</a></li>
+            <li class="breadcrumb-item active">PO #{{ po.id }}</li>
+        </ol>
+    </nav>
+
+    <form id="approvalForm" action="{{ url_for('compras.post_aprobacion_po', id=po.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-primary font-weight-bold">Contenido de la Orden</h5>
+                        <span class="badge badge-info shadow-none px-3">Revisión de Gerencia</span>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if po.estado in ['PENDIENTE_APROBACION_COMPRAS', 'RECHAZADA_TESORERIA', 'RECHAZADA_COMPRAS',
+                        'BORRADOR'] %}
+                        <div class="bg-light p-3 border-bottom">
+                            <h6 class="text-primary font-weight-bold mb-2"><i class="fas fa-plus-circle me-1"></i>
+                                Agregar Item</h6>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-8 col-md-6">
+                                    <select class="form-control select2-ajax" id="selectArticuloPO"
+                                        style="width: 100%;">
+                                        <option value="">Buscar artículo por código o nombre...</option>
+                                        {% for a in articulos %}
+                                        <option value="{{ a.id }}">{{ a.codigo }} - {{ a.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-4 col-md-2">
+                                    <input type="number" id="newCant" class="form-control" placeholder="Cant." value="1"
+                                        min="1">
+                                </div>
+                                <div class="col-12 col-md-3">
+                                    <button type="button" class="btn btn-sm btn-primary w-100"
+                                        onclick="agregarItemPO()">
+                                        <i class="fas fa-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="table-responsive">
+                            <table class="table table-flush mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="px-4">Artículo</th>
+                                        <th class="text-right" style="width: 150px;">Cantidad</th>
+                                        <th class="text-right" style="width: 180px;">Precio Unit. ($)</th>
+                                        <th class="text-right px-4">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr>
+                                        <td class="px-4">
+                                            <div class="d-flex flex-column">
+                                                <span class="font-weight-bold text-dark">{{ item.articulo_nombre
+                                                    }}</span>
+                                                <small class="text-muted">{{ item.articulo_codigo }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="1" name="cant_{{ item.id }}"
+                                                class="form-control form-control-sm text-right border-warning"
+                                                value="{{ item.cantidad }}" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" name="price_{{ item.id }}"
+                                                class="form-control form-control-sm text-right border-warning"
+                                                value="{{ item.precio_unitario }}" required>
+                                        </td>
+                                        <td class="text-right px-4 font-weight-bold">
+                                            ${{ "{:,.2f}".format(item.cantidad * item.precio_unitario) }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="3" class="text-right font-weight-bold">TOTAL ESTIMADO:</td>
+                                        <td class="text-right px-4 h5 mb-0 font-weight-bold text-primary">${{
+                                            "{:,.2f}".format(po.total_estimado) }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <label class="font-weight-bold text-dark small text-uppercase">Observaciones / Motivo de
+                            Ajuste</label>
+                        <textarea name="observaciones" class="form-control border-0 bg-light" rows="3"
+                            placeholder="Opcional: Indique por qué realizó ajustes o si hay condiciones especiales para tesorería..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- BUDGET OVERVIEW (Phase 2) -->
+                {% if budget_status %}
+                <div class="card shadow-sm border-0 mb-4 o-hidden">
+                    <div class="card-header bg-white py-3 border-bottom-success">
+                        <h6 class="mb-0 text-success text-uppercase font-weight-bold small">
+                            <i class="fas fa-wallet mr-2"></i> Presupuesto Asignado
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1 text-muted">
+                            {{ po.cost_center_code }} - {{ po.cost_center_name }}
+                        </div>
+                        <div class="h3 mb-2 font-weight-bold text-gray-800">
+                            ${{ "{:,.2f}".format(budget_status.available) }}
+                        </div>
+                        <div class="text-xs text-muted mb-3">Fondos Reales Disponibles</div>
+
+                        <!-- Progress bar para consumir el presupuesto -->
+                        {% set total_b = budget_status.allocated if budget_status.allocated > 0 else 1 %}
+                        {% set used_b = ((budget_status.committed + budget_status.actual) / total_b) * 100 %}
+                        {% set color_class = 'bg-success' if used_b < 75 else ('bg-warning' if used_b < 90
+                            else 'bg-danger' ) %} <div class="progress progress-sm mb-2" style="height: 5px;">
+                            <div class="progress-bar {{ color_class }}" role="progressbar" style="width: {{ used_b }}%">
+                            </div>
+                    </div>
+                    <div class="d-flex justify-content-between x-small text-muted font-weight-bold">
+                        <span>Utilizado: {{ "{:,.0f}".format(used_b) }}%</span>
+                        <span>Asignado: ${{ "{:,.0f}".format(budget_status.allocated) }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- WORKFLOW PROGRESS (Audit Standard) -->
+            {% if wf_history or wf_state %}
+            <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+                <div class="card-header bg-dark py-3">
+                    <h6 class="mb-0 text-white small text-uppercase font-weight-bold">
+                        <i class="fas fa-project-diagram mr-2"></i> Estado de Aprobación
+                    </h6>
+                </div>
+                <div class="card-body bg-light">
+                    {% if wf_state %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1 small">
+                            <span class="text-muted">Progreso:</span>
+                            <span class="font-weight-bold text-primary">{{ wf_state.current_step }} / {{
+                                wf_state.total_steps }}</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                                role="progressbar"
+                                style="width: {{ (wf_state.current_step / wf_state.total_steps) * 100 }}%"></div>
+                        </div>
+                    </div>
+                    <div class="p-2 bg-white rounded border border-primary-light mb-3 shadow-sm text-center">
+                        <small class="text-uppercase text-muted d-block mb-1"
+                            style="font-size: 9px; letter-spacing: 1px;">Pendiente en Nivel {{ wf_state.current_step
+                            }}:</small>
+                        <span class="font-weight-bold text-dark h6 mb-0">{{ wf_state.step_description or 'Siguiente
+                            Nivel' }}</span>
+                    </div>
+                    {% endif %}
+
+                    <h6 class="text-uppercase text-muted font-weight-bold x-small mb-3">Historial de Firmas (Log
+                        CISA)</h6>
+                    <div class="workflow-timeline">
+                        {% for log in wf_history %}
+                        <div class="timeline-item pb-3">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-center mb-0">
+                                    <span class="font-weight-bold text-dark small">{{ log.username }}</span>
+                                    <span class="text-muted x-small">{{ log.signed_at.strftime('%H:%M') if
+                                        log.signed_at else '' }}</span>
+                                </div>
+                                <div class="text-muted italic mb-1" style="font-size: 10px;">{{ log.role_name }} -
+                                    {{ log.step_name }}</div>
+                                {% if log.comment %}
+                                <div class="bg-white p-2 border rounded x-small mb-1 font-italic text-secondary">"{{
+                                    log.comment }}"</div>
+                                {% endif %}
+                                <div class="text-success font-weight-light text-truncate"
+                                    style="font-size: 8px; font-family: 'Courier New', Courier, monospace;">
+                                    <i class="fas fa-fingerprint mr-1"></i> {{ log.signature_hash }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        {% if wf_state and wf_state.status == 'PENDING' %}
+                        <div class="timeline-item pb-1 border-dashed">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <span class="text-muted italic small">Esperando acción de {{
+                                    wf_state.step_description }}...</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card shadow-sm border-0 border-top-primary mb-4">
+                <div class="card-body">
+                    <h6 class="text-uppercase text-muted font-weight-bold small mb-3">Gestión de Orden</h6>
+
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-soft-primary rounded p-3 mr-3">
+                            <i class="fas fa-file-invoice-dollar text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 font-weight-bold">Proveedor</h6>
+                            <small class="text-muted">{{ po.proveedor_nombre }}</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning small border-0 shadow-none mb-4">
+                        <i class="fas fa-shield-alt mr-2 text-warning"></i>
+                        <strong>Control de Riesgos:</strong> Esta PO requiere
+                        {{ wf_state.total_steps if wf_state else '1' }} nivel(es) de aprobación según el monto
+                        total.
+                    </div>
+
+                    <input type="hidden" name="action" id="actionInput" value="approve">
+
+                    <!-- Botón Dinámico de Aprobación -->
+                    {% set can_approve = (not wf_state or (wf_state.role_id == g.user.role_id)) and g.user.id !=
+                    po.user_id %}
+
+                    <button type="submit" onclick="setAction('approve')"
+                        class="btn btn-primary btn-block py-3 font-weight-bold mb-3 shadow transition-3d" {% if not
+                        can_approve %}disabled{% endif %}>
+                        <i class="fas fa-signature mr-2"></i>
+                        {% if wf_state %}
+                        FIRMAR NIVEL {{ wf_state.current_step }}
+                        {% else %}
+                        INICIAR WORKFLOW
+                        {% endif %}
+                    </button>
+
+                    <button type="submit" onclick="setAction('reject')"
+                        class="btn btn-outline-danger btn-block py-2 mb-4" {% if not can_approve %}disabled{% endif %}>
+                        <i class="fas fa-ban mr-2"></i> RECHAZAR
+                    </button>
+
+                    <hr>
+
+                    {% if g.user.id == po.user_id %}
+                    <div class="bg-dark p-2 rounded text-warning x-small mb-2">
+                        <i class="fas fa-user-shield mr-1"></i> SoD Alert: No puede aprobar su propia creación.
+                    </div>
+                    {% elif wf_state and wf_state.role_id != g.user.role_id %}
+                    <div class="bg-light p-2 rounded text-muted x-small border mb-2">
+                        <i class="fas fa-clock mr-1"></i> Esperando nivel: {{ wf_state.step_description }}.
+                    </div>
+                    {% endif %}
+
+                    <button type="button" onclick="reenviarCorreo({{ po.id }})"
+                        class="btn btn-link btn-sm btn-block text-muted">
+                        <i class="fas fa-share-square mr-1"></i> Re-enviar copia por Email
+                    </button>
+                </div>
+            </div>
+
+            <!-- Módulo de Importaciones -->
+            {% if po.es_importacion %}
+            <div class="card bg-gradient-primary border-0 shadow-sm text-white">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 font-weight-bold"><i class="fas fa-ship mr-2"></i> Importación Activa</h6>
+                        <a href="{{ url_for('compras.importacion_orden_detalle', orden_id=po.id) }}"
+                            class="btn btn-light btn-sm font-weight-bold">GESTIONAR</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+</div>
+</form>
+</div>
+
+<script>
+    function setAction(act) {
+        document.getElementById('actionInput').value = act;
+    }
+
+    function reenviarCorreo(id) {
+        if (!confirm('¿Está seguro de que desea re-enviar la Orden de Compra por correo?')) return;
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "/compras/reenviar_po/" + id;
+
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = 'csrf_token';
+        csrf.value = "{{ csrf_token }}";
+
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function agregarItemPO() {
+        // Obtener valor (puede ser jQuery o vanilla segun disponibilidad)
+        var artId = document.getElementById('selectArticuloPO').value;
+        var cant = document.getElementById('newCant').value;
+
+        // Si select2 esta activo, usar jQuery
+        if (typeof $ !== 'undefined') {
+            artId = $('#selectArticuloPO').val();
+        }
+
+        if (!artId || cant <= 0) {
+            alert("Por favor seleccione un artículo y una cantidad válida.");
+            return;
+        }
+
+        // Enviar POST a agregar_item_po
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ url_for('compras.agregar_item_po', id=po.id) }}";
+
+        var i1 = document.createElement('input'); i1.name = 'articulo_id'; i1.value = artId; i1.type = 'hidden';
+        var i2 = document.createElement('input'); i2.name = 'cantidad'; i2.value = cant; i2.type = 'hidden';
+        var i3 = document.createElement('input'); i3.name = 'csrf_token'; i3.value = "{{ csrf_token }}"; i3.type = 'hidden';
+
+        form.appendChild(i1); form.appendChild(i2); form.appendChild(i3);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    async function marcarComoImportacion(id) {
+        if (!confirm('¿Desea convertir esta Orden de Compra en una Importación?')) return;
+
+        try {
+            const resp = await fetch(`/compras/api/importaciones/orden/${id}/marcar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    moneda: 'USD',
+                    incoterm: 'FOB'
+                })
+            });
+            const r = await resp.json();
+            if (r.success) {
+                alert('La orden ahora es gestionada como Importación.');
+                window.location.href = `/compras/importaciones/orden/${id}`;
+            } else {
+                alert('Error: ' + r.message);
+            }
+        } catch (e) {
+            alert('Error de conexión al convertir la orden.');
+        }
+    }
+
+</script>
+
+<style>
+    .border-top-primary {
+        border-top: 4px solid #3498db !important;
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(52, 152, 219, 0.1);
+    }
+
+    .table-flush td {
+        vertical-align: middle;
+        border-top: 1px solid #f8f9fc;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #3498db;
+    }
+
+    .border-warning:focus {
+        border-color: #f39c12;
+    }
+</style>
+{% endblock %}

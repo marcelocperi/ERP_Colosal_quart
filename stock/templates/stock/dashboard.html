@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .stock-ok {
+        color: #10b981;
+    }
+
+    .stock-low {
+        color: #f59e0b;
+    }
+
+    .stock-out {
+        color: #ef4444;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .card-alert {
+        border-left: 4px solid #f59e0b !important;
+        background: rgba(245, 158, 11, 0.05) !important;
+    }
+
+    .icon-alert {
+        background: rgba(245, 158, 11, 0.1) !important;
+        color: #f59e0b !important;
+    }
+
+    .icon-normal {
+        background: rgba(100, 116, 139, 0.1);
+        color: #64748b;
+    }
+
+    .font-bold-xl {
+        font-weight: 800;
+        font-size: 1.1rem;
+    }
+</style>
+
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-cubes"></i> Módulo de Inventario ERP</h1>
+        <p class="text-muted">Control moderno de existencias y depósitos para Compras y Ventas</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <!-- Using stock.movimientos_historial instead of stock.movimientos -->
+        <a href="{{ url_for('stock.movimientos_historial') }}" class="btn-secondary">
+            <i class="fas fa-history"></i> Historial
+        </a>
+        <a href="{{ url_for('stock.movimiento_crear') }}" class="btn-action"
+            style="background: var(--primary);">
+            <i class="fas fa-exchange-alt"></i> Nuevo Movimiento
+        </a>
+    </div>
+</div>
+
+<!-- Key Performance Indicators (Modern ERP Cards) -->
+<div class="stats-grid"
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card"
+        style="display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem; border-left: 4px solid var(--primary);">
+        <div
+            style="background: rgba(99,102,241,0.1); color: var(--primary); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="fas fa-boxes"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Unidades en
+                Stock</div>
+            <div style="font-size: 1.8rem; font-weight: 800;">{{ total_stock }}</div>
+        </div>
+    </div>
+
+    <div class="card"
+        style="display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem; border-left: 4px solid #10b981;">
+        <div
+            style="background: rgba(16,185,129,0.1); color: #10b981; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="fas fa-warehouse"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Depósitos
+                Activos</div>
+            <a href="{{ url_for('stock.depositos_lista') }}" style="text-decoration: none; color: inherit;">
+                <div style="font-size: 1.8rem; font-weight: 800;">{{ depositos|length }}</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="card"
+        style="display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem; border-left: 4px solid #8b5cf6;">
+        <div
+            style="background: rgba(139,92,246,0.1); color: #8b5cf6; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="fas fa-barcode"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Artículos</div>
+            <a href="{{ url_for('stock.articulos') }}" style="text-decoration: none; color: inherit;">
+                <div style="font-size: 1.8rem; font-weight: 800;">Catálogo</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="card {{ 'card-alert' if low_stock_count > 0 else '' }}"
+        style="display: flex; align-items: center; gap: 1.5rem; padding: 1.5rem; border-left: 4px solid #f59e0b;">
+        <div class="{% if low_stock_count > 0 %}icon-alert{% else %}icon-normal{% endif %}"
+            style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Alertas Stock
+            </div>
+            <div
+                style="font-size: 1.8rem; font-weight: 800; color: {{ '#f59e0b' if low_stock_count > 0 else 'inherit' }};">
+                {{ low_stock_count }}</div>
+        </div>
+    </div>
+</div>
+<!-- Filtros de búsqueda avanzada -->
+<div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+    <form action="{{ url_for('stock.dashboard') }}" method="GET"
+        style="display: flex; gap: 1rem; align-items: flex-end;">
+        <input type="hidden" name="sid" value="{{ sid }}">
+
+        <div style="flex: 1;">
+            <label
+                style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">BUSCAR
+                ARTÍCULO</label>
+            <input type="text" name="q" placeholder="Nombre, ISBN o Código..." value="{{ request.args.get('q', '') }}"
+                style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white;">
+        </div>
+
+        <div style="width: 250px;">
+            <label
+                style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; font-weight: 600;">DEPÓSITO</label>
+            <select name="deposito_id"
+                style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.5); color: white;">
+                <option value="">Todos los depósitos</option>
+                {% for d in depositos %}
+                <option value="{{ d.id }}" {% if request.args.get('deposito_id')==d.id|string %}selected{% endif %}>
+                    {{
+                    d.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn-action" style="padding: 0.75rem 1.5rem;">
+            <i class="fas fa-filter"></i> Filtrar
+        </button>
+
+        <a href="{{ url_for('stock.dashboard') }}" class="btn-secondary" style="padding: 0.75rem 1rem;">
+            <i class="fas fa-redo"></i>
+        </a>
+    </form>
+</div>
+
+<!-- Listado de Existencias -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div
+        style="padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1rem;"><i class="fas fa-list"></i> Detalle de Inventario</h3>
+        <span style="font-size: 0.8rem; color: #64748b;">Mostrando {{ items|length }} registros</span>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ARTÍCULO / PRODUCTO</th>
+                <th>CÓDIGO / ISBN</th>
+                <th>DEPÓSITO</th>
+                <th style="text-align: right;">CANTIDAD</th>
+                <th>ESTADO</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>
+                    <div style="font-weight: 700; color: #f8fafc;">{{ item.articulo_nombre }}</div>
+                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ item.autor }}</div>
+                </td>
+                <td><code
+                        style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px;">{{ item.isbn }}</code>
+                </td>
+                <td>
+                    <span class="badge"
+                        style="background: rgba(99,102,241,0.1); color: var(--primary); border: 1px solid rgba(99,102,241,0.2);">
+                        {{ item.deposito_nombre }}
+                    </span>
+                </td>
+                <td class="text-right font-bold-xl {{ 'stock-out' if item.cantidad <= 0 else 'stock-ok' }}">
+                    {{ item.cantidad }}
+                </td>
+                <td>
+                    {% if item.cantidad > 10 %}
+                    <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">SALDO OK</span>
+                    {% elif item.cantidad > 0 %}
+                    <span class="badge" style="background: rgba(245,158,11,0.1); color: #f59e0b;">SALDO BAJO</span>
+                    {% else %}
+                    <span class="badge" style="background: rgba(239,68,68,0.1); color: #ef4444;">AGOTADO</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 4rem; color: #64748b;">
+                    <i class="fas fa-search"
+                        style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.3;"></i>
+                    No se encontraron artículos con los filtros seleccionados
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Maestro SaaS Owner{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold text-gradient"><i class="fas fa-crown me-2"></i>Maestro SaaS Owner</h2>
+                <p class="text-muted">Gestión de datos globales del dueño del sistema (SaaS Owner).</p>
+            </div>
+            <div>
+                <a href="{{ url_for('enterprise.list_enterprises') }}"
+                    class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Empresas
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form action="{{ url_for('enterprise.saas_owner_save') }}" method="POST">
+        <input type="hidden" name="sid" value="{{ sid }}">
+
+        <div class="row">
+            <div class="col-xl-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white p-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-tie fa-2x me-3 opacity-75"></i>
+                            <h5 class="mb-0 fw-bold">Perfil del Dueño del Sistema</h5>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 p-xl-5">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="nombre" class="form-label fw-bold text-uppercase small text-muted">Nombre de
+                                    la Organización SaaS</label>
+                                <input type="text" name="nombre" id="nombre" class="form-control form-control-lg"
+                                    value="{{ saas_owner.nombre }}" placeholder="Ej: Mi SaaS Global">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label fw-bold text-uppercase small text-muted">Correo de
+                                    Recuperación (Maestro)</label>
+                                <input type="email" name="email" id="email" class="form-control form-control-lg"
+                                    value="{{ saas_owner.email or '' }}" placeholder="recuperacion@saas.com">
+                                <small class="text-muted">Este correo se usará para notificaciones críticas y
+                                    recuperación de claves de nivel sistema.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telefono"
+                                    class="form-label fw-bold text-uppercase small text-muted">Teléfono de Contacto
+                                    Técnico</label>
+                                <input type="text" name="telefono" id="telefono" class="form-control form-control-lg"
+                                    value="{{ saas_owner.telefono or '' }}" placeholder="+XX XXX XXXXXXX">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="website" class="form-label fw-bold text-uppercase small text-muted">URL del
+                                    Dashboard Maestro</label>
+                                <input type="text" name="website" id="website" class="form-control form-control-lg"
+                                    value="{{ saas_owner.website or '' }}" placeholder="https://admin.colosal.com">
+                            </div>
+                            <div class="col-12">
+                                <label for="lema" class="form-label fw-bold text-uppercase small text-muted">Lema o
+                                    Footer Global</label>
+                                <input type="text" name="lema" id="lema" class="form-control form-control-lg"
+                                    value="{{ saas_owner.lema or '' }}"
+                                    placeholder="Plataforma de Gestión Multi-Tenant">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light p-4 text-end">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow">
+                            <i class="fas fa-save me-2"></i>Guardar Cambios Maestros
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="card border-0 shadow-sm mb-4 bg-light">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>¿Qué es el SaaS
+                            Owner?</h5>
+                        <p class="small text-muted">
+                            El **SaaS Owner** es la entidad legal y técnica que posee la plataforma.
+                            A diferencia de las empresas (Tenants), el SaaS Owner tiene acceso a funciones
+                            cross-platform.
+                        </p>
+                        <hr>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-success me-2">Activo</span>
+                            <span class="small fw-bold">ID de Empresa Maestro: {{ saas_owner.id }}</span>
+                        </div>
+                        <p class="small text-muted mb-0">
+                            Esta configuración afecta a los correos de sistema y la identidad global de la marca
+                            Biblioweb.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

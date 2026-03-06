@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-file-contract text-primary me-2"></i> Condiciones de Pago
+        </h2>
+        <button class="btn btn-primary" onclick="resetModal(); toggleModal('modalCondicion')">
+            <i class="fas fa-plus me-2"></i> Nueva Condición
+        </button>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Plazos y Descuentos de Venta</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre</th>
+                            <th>Días Venc.</th>
+                            <th>Descuento %</th>
+                            <th>Recargo %</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in condiciones %}
+                        <tr>
+                            <td class="text-muted small">#{{ c.id }}</td>
+                            <td class="fw-bold">{{ c.nombre }}</td>
+                            <td>{{ c.dias_vencimiento }} días</td>
+                            <td class="text-success">{{ c.descuento_pct }}%</td>
+                            <td class="text-danger">{{ c.recargo_pct }}%</td>
+                            <td>
+                                {% if c.activo %}
+                                <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick='editCondicion({{ c | tojson | safe }})'>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form action="{{ url_for('fondos.condiciones_pago') }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('¿Seguro desea eliminar esta condición?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="{{ c.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No hay condiciones de pago configuradas.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ABM -->
+<div id="modalCondicion" class="modal-premium modal-animate" style="display:none; max-width: 500px;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Nueva Condición de Pago</h5>
+            <button type="button" class="btn" onclick="toggleModal('modalCondicion')"
+                style="background:none; color:white; border:none;"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="{{ url_for('fondos.condiciones_pago') }}" method="POST">
+            <div class="modal-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="action" id="formAction" value="create">
+                <input type="hidden" name="id" id="condicionId">
+
+                <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-control" name="nombre" id="nombre" required
+                        placeholder="Ej: Contado 30 días">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Días para Vencimiento</label>
+                    <input type="number" class="form-control" name="dias_vencimiento" id="dias_vencimiento" value="0">
+                    <div class="form-text">0 para cobro inmediato.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Descuento (%)</label>
+                    <input type="number" step="0.01" class="form-control" name="descuento_pct" id="descuento_pct"
+                        value="0.00">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Recargo (%)</label>
+                    <input type="number" step="0.01" class="form-control" name="recargo_pct" id="recargo_pct"
+                        value="0.00">
+                </div>
+
+                <div class="mb-3 form-check" id="checkActivoContainer" style="display:none;">
+                    <input type="checkbox" class="form-check-input" name="activo" id="activo" checked>
+                    <label class="form-check-label" for="activo">Activo</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                    onclick="toggleModal('modalCondicion')">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function resetModal() {
+        document.getElementById('modalTitle').innerText = 'Nueva Condición de Pago';
+        document.getElementById('formAction').value = 'create';
+        document.getElementById('condicionId').value = '';
+        document.getElementById('nombre').value = '';
+        document.getElementById('dias_vencimiento').value = '0';
+        document.getElementById('descuento_pct').value = '0.00';
+        document.getElementById('recargo_pct').value = '0.00';
+        document.getElementById('checkActivoContainer').style.display = 'none';
+    }
+
+    function editCondicion(data) {
+        document.getElementById('modalTitle').innerText = 'Editar Condición de Pago';
+        document.getElementById('formAction').value = 'edit';
+        document.getElementById('condicionId').value = data.id;
+        document.getElementById('nombre').value = data.nombre;
+        document.getElementById('dias_vencimiento').value = data.dias_vencimiento;
+        document.getElementById('descuento_pct').value = data.descuento_pct;
+        document.getElementById('recargo_pct').value = data.recargo_pct;
+
+        const check = document.getElementById('activo');
+        check.checked = data.activo == 1;
+        document.getElementById('checkActivoContainer').style.display = 'block';
+
+        toggleModal('modalCondicion');
+    }
+</script>
+{% endblock %}

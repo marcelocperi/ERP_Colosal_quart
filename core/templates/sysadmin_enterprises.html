@@ -1,0 +1,757 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .carousel-item {
+        width: 60px;
+        min-width: 60px;
+        height: 60px;
+        object-fit: contain;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .carousel-item:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .carousel-item.active {
+        border-color: #10b981;
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+        background: rgba(16, 185, 129, 0.1);
+    }
+
+    #logo-carousel::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    #logo-carousel::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+    }
+</style>
+<div class="content-header">
+    <div class="header-title">
+        <h1>Gestión de Empresas</h1>
+        <p>Administración global de multi-tenencia</p>
+    </div>
+    <a href="{{ url_for('enterprise.create_enterprise_public') }}" class="btn btn-primary"><i class="fas fa-plus"></i>
+        Nueva Empresa</a>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Logo</th>
+                    <th>Código (Slug)</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Fecha Creación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ent in enterprises %}
+                <tr>
+                    <td>{{ ent.id }}</td>
+                    <td>
+                        {% if ent.logo_path %}
+                        <img src="{{ ent.logo_path }}?t={{ now_t }}" alt="Logo"
+                            style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px; background: rgba(255,255,255,0.05); padding: 4px;">
+                        {% else %}
+                        <div
+                            style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 4px; color: var(--text-muted);">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge" style="background: rgba(255,255,255,0.1);">{{ ent.codigo }}</span></td>
+                    <td style="font-weight: 600;">{{ ent.nombre }}</td>
+                    <td>
+                        <span class="badge {{ 'badge-success' if ent.estado == 'activo' else 'badge-danger' }}">
+                            {{ ent.estado|upper }}
+                        </span>
+                    </td>
+                    <td>{{ ent.fecha_creacion }}</td>
+                    <td style="display: flex; gap: 0.5rem;">
+                        <button data-id="{{ent.id}}" data-code="{{ent.codigo}}" data-name="{{ent.nombre}}"
+                            data-logo="{{ent.logo_path or ''}}" data-cuit="{{ent.cuit or ''}}"
+                            data-domicilio="{{ent.domicilio or ''}}" data-condicion_iva="{{ent.condicion_iva or ''}}"
+                            data-iibb="{{ent.ingresos_brutos or ''}}" data-inicio="{{ent.inicio_actividades or ''}}"
+                            data-iibb_condicion="{{ent.iibb_condicion or ''}}" data-afip_crt="{{ent.afip_crt or ''}}"
+                            data-afip_key="{{ent.afip_key or ''}}" data-afip_entorno="{{ent.afip_entorno or 'testing'}}"
+                            {% if is_super %} data-email_sender="{{ent.cuenta_mailing or ''}}"
+                            data-email_app_password="{% if ent.mailing_password %}********{% endif %}" {% endif %}
+                            onclick="openEditModalFromButton(this)" class="btn-icon" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <form action="{{ url_for('enterprise.toggle_enterprise_status', ent_id=ent.id) }}" method="POST"
+                            style="display:inline;">
+                            {% if ent.estado == 'activo' %}
+                            <button type="submit" class="btn-icon" title="Congelar" style="color: #ef4444;"
+                                onclick="return confirm('¿Congelar acceso a esta empresa? Los usuarios no podrán entrar.')">
+                                <i class="fas fa-pause-circle"></i>
+                            </button>
+                            {% else %}
+                            <button type="submit" class="btn-icon" title="Reactivar" style="color: #22c55e;">
+                                <i class="fas fa-play-circle"></i>
+                            </button>
+                            {% endif %}
+                        </form>
+                        <button data-id="{{ent.id}}" data-name="{{ent.nombre}}"
+                            onclick="openMigrationModalFromButton(this)" class="btn-icon"
+                            title="Migrar/Importar Datos Base" style="color: #f59e0b;">
+                            <i class="fas fa-box-open"></i>
+                        </button>
+                        <button data-id="{{ent.id}}" data-name="{{ent.nombre}}" onclick="openFiscalModal(this)"
+                            class="btn-icon" title="Obligaciones Fiscales (Agente)" style="color: #6366f1;">
+                            <i class="fas fa-gavel"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        No existen empresas registradas
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="modal-edit-enterprise" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; z-index: 5001; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <h3>Editar Empresa</h3>
+    <form action="{{ url_for('enterprise.update_enterprise') }}" method="POST" enctype="multipart/form-data"
+        style="margin-top: 1rem;">
+        <input type="hidden" name="id" id="edit_ent_id">
+        <label style="display:block; margin-top: 10px;">Slug / Código</label>
+        <input type="text" name="codigo" id="edit_ent_code" required class="form-control"
+            style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+        <label style="display:block; margin-top: 10px;">Nombre</label>
+        <input type="text" name="nombre" id="edit_ent_name" required class="form-control"
+            style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+        {% if is_super %}
+        <!-- EMAIL CONFIG SECTION -->
+        <div
+            style="border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(16, 185, 129, 0.05);">
+            <p
+                style="font-size: 0.8rem; font-weight: bold; color: #10b981; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fas fa-envelope"></i> Configuración de Correo (SMTP)
+            </p>
+            <label style="display:block; margin-top: 5px; font-size: 0.85rem;">Cuenta de Mailing (Email válido)</label>
+            <input type="email" name="cuenta_mailing" id="edit_ent_email_sender" class="form-control"
+                placeholder="ej: correo@dominio.com" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                title="Debe ser un email válido" style="width: 100%; padding: 8px; margin-bottom: 8px;">
+
+            <label style="display:block; margin-top: 5px; font-size: 0.85rem;">App Password / Contraseña</label>
+            <div style="position: relative;">
+                <input type="password" name="mailing_password" id="edit_ent_email_pass" class="form-control"
+                    placeholder="Dejar en blanco para mantener la actual"
+                    style="width: 100%; padding: 8px; margin-bottom: 8px;">
+                <button type="button" onclick="togglePassVisibility('edit_ent_email_pass')"
+                    style="position: absolute; right: 8px; top: 8px; background: none; border: none; color: #aaa; cursor: pointer;">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <small style="color: #64748b; font-size: 0.75rem;">Nota: Usar contraseña de aplicación de Google, NO la
+                contraseña normal.</small>
+        </div>
+        {% endif %}
+
+        <!-- DATOS FISCALES -->
+        <div
+            style="border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; margin-bottom: 15px; background: rgba(0,0,0,0.15);">
+            <p
+                style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fas fa-file-invoice"></i> Datos Fiscales (para Facturación)
+            </p>
+            <label style="display:block; margin-top: 5px; font-size: 0.85rem;">CUIT</label>
+            <input type="text" name="cuit" id="edit_ent_cuit" class="form-control" placeholder="20-12345678-9"
+                style="width: 100%; padding: 8px; margin-bottom: 8px;">
+
+            <label style="display:block; margin-top: 5px; font-size: 0.85rem;">Domicilio Fiscal</label>
+            <input type="text" name="domicilio" id="edit_ent_domicilio" class="form-control"
+                placeholder="Calle 123 - Ciudad, Provincia" style="width: 100%; padding: 8px; margin-bottom: 8px;">
+
+            <label style="display:block; margin-top: 5px; font-size: 0.85rem;">Condición frente al IVA</label>
+            <select name="condicion_iva" id="edit_ent_condicion_iva" class="form-control"
+                style="width: 100%; padding: 8px; margin-bottom: 8px; background: #1e293b; color: white; border: 1px solid #334155;">
+                <option value="">-- Seleccionar --</option>
+                <option value="Responsable Inscripto">Responsable Inscripto</option>
+                <option value="Responsable Monotributo">Responsable Monotributo</option>
+                <option value="Exento">Exento</option>
+                <option value="Consumidor Final">Consumidor Final</option>
+            </select>
+
+            <label style="display:block; margin-top: 5px; font-size: 0.85rem;">Ingresos Brutos</label>
+            <input type="number" name="ingresos_brutos" id="edit_ent_iibb" class="form-control"
+                style="width: 100%; padding: 8px; margin-bottom: 8px;">
+
+            <label style="display:block; margin-top: 5px; font-size: 0.85rem;">Condición IIBB</label>
+            <select name="iibb_condicion" id="edit_ent_iibb_cond" class="form-control"
+                style="width: 100%; padding: 8px; margin-bottom: 8px;">
+                <option value="Responsable">Responsable</option>
+                <option value="Exento">Exento</option>
+            </select>
+
+            <label style="display:block; margin-top: 5px; font-size: 0.85rem;">Fecha Inicio de Actividades</label>
+            <input type="text" name="inicio_actividades" id="edit_ent_inicio" class="form-control"
+                placeholder="DD/MM/AAAA"
+                style="width: 100%; padding: 8px; margin-bottom: 4px; background: #1e293b; color: white; border: 1px solid #334155;">
+
+            <!-- AFIP Credentials Section -->
+            <div
+                style="margin-top: 15px; padding: 12px; border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; background: rgba(99, 102, 241, 0.05);">
+                <p
+                    style="font-size: 0.75rem; font-weight: bold; color: #818cf8; margin-bottom: 8px; text-transform: uppercase;">
+                    <i class="fas fa-key"></i> Credenciales AFIP
+                </p>
+                <label style="display:block; font-size: 0.8rem;">Certificado CUIT (opcional si ya está arriba)</label>
+                <input type="text" name="afip_cuit" id="edit_ent_afip_cuit" class="form-control"
+                    style="width: 100%; padding: 6px; margin-bottom: 8px; font-size: 0.85rem;">
+
+                <label style="display:block; font-size: 0.8rem;">Certificado (.crt)</label>
+                <div id="crt_status_container"
+                    style="display: none; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 4px; padding: 6px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="badge bg-success" style="font-size: 0.65rem;"><i class="fas fa-check-circle"></i>
+                            Cargado</span>
+                        <code id="crt_preview_text" style="font-size: 0.65rem; color: #818cf8; opacity: 0.6;"></code>
+                    </div>
+                </div>
+                <input type="file" name="afip_crt_file" id="edit_ent_afip_crt_file" accept=".crt,.pem,.txt"
+                    class="form-control" style="font-size: 0.75rem; width: 100%; padding: 4px; margin-bottom: 12px;">
+                <textarea name="afip_crt" id="edit_ent_afip_crt" rows="1" class="form-control"
+                    style="display:none;"></textarea>
+
+                <label style="display:block; font-size: 0.8rem;">Clave Privada (.key)</label>
+                <div id="key_status_container"
+                    style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; padding: 6px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="badge bg-danger" style="font-size: 0.65rem;"><i class="fas fa-key"></i>
+                            Cargado</span>
+                        <code id="key_preview_text" style="font-size: 0.65rem; color: #f87171; opacity: 0.6;"></code>
+                    </div>
+                </div>
+                <input type="file" name="afip_key_file" id="edit_ent_afip_key_file" accept=".key,.pem,.txt"
+                    class="form-control" style="font-size: 0.75rem; width: 100%; padding: 4px; margin-bottom: 12px;">
+                <textarea name="afip_key" id="edit_ent_afip_key" rows="1" class="form-control"
+                    style="display:none;"></textarea>
+
+                <label style="display:block; font-size: 0.8rem;">Entorno</label>
+                <select name="afip_entorno" id="edit_ent_afip_entorno" class="form-control"
+                    style="width: 100%; padding: 6px; font-size: 0.85rem;">
+                    <option value="testing">Homologación</option>
+                    <option value="production">Producción</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="logo-preview-container"
+            style="text-align: center; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Logo Activo</p>
+            <img id="edit_logo_preview" src="" alt="Preview"
+                style="max-width: 80px; max-height: 80px; object-fit: contain; border-radius: 4px; display: none;">
+            <div id="edit_logo_placeholder"
+                style="width: 60px; height: 60px; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 4px; color: var(--text-muted);">
+                <i class="fas fa-building fa-2x"></i>
+            </div>
+        </div>
+
+        <div id="logo-history-section" style="margin-bottom: 15px;">
+            <label style="display:block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Historial de
+                Logos (Carrusel)</label>
+            <div id="logo-carousel"
+                style="display: flex; gap: 10px; overflow-x: auto; padding: 10px 5px; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-height: 80px; align-items: center;">
+                <!-- History items will be injected here -->
+                <p style="color: var(--text-muted); font-size: 0.75rem; width: 100%; text-align: center;">Cargando
+                    historial...</p>
+            </div>
+            <input type="hidden" name="selected_logo_path" id="selected_logo_path">
+        </div>
+
+        <label style="display:block; margin-top: 10px;">Subir Nuevo Logo <span
+                style="color: var(--text-muted); font-weight: normal; font-size: 0.85rem;">(JPG, PNG, max
+                2MB)</span></label>
+        <input type="file" name="logo" id="edit_logo_input" accept="image/jpeg,image/png,image/jpg" class="form-control"
+            style="width: 100%; padding: 8px; margin-bottom: 15px; border: 1px dashed rgba(255,255,255,0.2);"
+            onchange="previewNewLogo(this)">
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                onclick="closeAllModals()">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Migration Modal -->
+<div id="modal-migration" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; z-index: 5002; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <h3><i class="fas fa-dolly"></i> Importar Datos Base</h3>
+    <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1rem;">
+        Copiar configuraciones desde otra empresa. <br>
+        <span style="color: #fbbf24;"><i class="fas fa-exclamation-triangle"></i> Solo se migrarán datos de
+            configuración (Catálogos) que NO existan en el destino. No se afectan datos transaccionales.</span>
+    </p>
+
+    <form action="{{ url_for('enterprise.migrate_data') }}" method="POST">
+        <input type="hidden" name="target_id" id="mig_target_id">
+
+        <div class="form-group">
+            <label>Empresa Destino:</label>
+            <input type="text" id="mig_target_name" readonly class="form-control"
+                style="width: 100%; padding: 8px; background: rgba(0,0,0,0.2); color: #cbd5e1; border: 1px solid #334155; margin-bottom: 10px;">
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label>Empresa Origen (Template):</label>
+            <select name="source_id" id="mig_source_select" class="form-control" required
+                style="width: 100%; padding: 8px; background: #1e293b; color: white; border: 1px solid #334155;">
+                <option value="">Cargando empresas...</option>
+            </select>
+        </div>
+
+        <label style="display:block; margin-top: 1rem; margin-bottom: 0.5rem;">Tablas a Copiar:</label>
+        <div id="mig_tables_container"
+            style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border: 1px solid #334155;">
+            Loading tables...
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary"
+                onclick="return confirm('¿Confirmar importación de datos? Esto no se puede deshacer.')">
+                <i class="fas fa-file-import"></i> Iniciar Migración
+            </button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                onclick="closeAllModals()">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Fiscal Agents Modal -->
+<div id="modal-fiscal" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 750px; max-height: 90vh; overflow-y: auto; z-index: 5003; border: 1px solid rgba(99, 102, 241, 0.4); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0;"><i class="fas fa-gavel text-indigo"></i> Agente de Retención/Percepción</h3>
+        <span id="fiscal_ent_name" class="badge bg-indigo"></span>
+    </div>
+
+    <input type="hidden" id="fiscal_ent_id">
+
+    <div
+        style="background: rgba(99, 102, 241, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2); margin-bottom: 1.5rem;">
+        <h5 style="margin-top: 0; font-size: 0.9rem; color: #818cf8;">Nueva Obligación</h5>
+        <div class="row"
+            style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr; gap: 10px; align-items: end;">
+            <div>
+                <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Jurisdicción
+                    (Provincia/CABA)</label>
+                <input type="text" id="new_fiscal_juris" class="form-control" placeholder="Ej: ARBA, AGIP, Tucumán..."
+                    style="font-size: 0.85rem;">
+            </div>
+            <div>
+                <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Tipo</label>
+                <select id="new_fiscal_tipo" class="form-control" style="font-size: 0.85rem;">
+                    <option value="AMBOS">Ambos</option>
+                    <option value="PERCEPCION">Percepción</option>
+                    <option value="RETENCION">Retención</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">F. Notificación</label>
+                <input type="date" id="new_fiscal_fecha" class="form-control" style="font-size: 0.85rem;">
+            </div>
+            <div>
+                <label style="font-size: 0.75rem; display: block; margin-bottom: 4px;">Nro. Tramite/Notif.</label>
+                <input type="text" id="new_fiscal_nro" class="form-control" placeholder="Res. 123/2024"
+                    style="font-size: 0.85rem;">
+            </div>
+            <button onclick="saveFiscalAgent()" class="btn btn-primary" style="padding: 8px;"><i
+                    class="fas fa-plus"></i></button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Jurisdicción</th>
+                    <th>Tipo</th>
+                    <th>F. Notificación</th>
+                    <th>Nro. Notificación</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="fiscal_agents_body">
+                <!-- Rows injected by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 1.5rem; text-align: right;">
+        <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+            onclick="closeAllModals()">Cerrar</button>
+    </div>
+</div>
+
+<div id="modal-backdrop-edit" class="modal-backdrop" onclick="closeAllModals()"></div>
+
+<!-- External Data for JS -->
+<script id="migration-metadata" type="application/json">
+    {{ migration_metadata | tojson | safe }}
+</script>
+
+<script>
+    function closeAllModals() {
+        document.getElementById('modal-edit-enterprise').style.display = 'none';
+        document.getElementById('modal-migration').style.display = 'none';
+        document.getElementById('modal-fiscal').style.display = 'none';
+
+        const backdrop = document.getElementById('modal-backdrop-edit');
+        backdrop.style.opacity = '0';
+        setTimeout(() => backdrop.style.display = 'none', 300);
+    }
+
+    function togglePassVisibility(id) {
+        const input = document.getElementById(id);
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
+    }
+
+    function openEditModalFromButton(btn) {
+        const id = btn.getAttribute('data-id');
+        const code = btn.getAttribute('data-code');
+        const name = btn.getAttribute('data-name');
+        const logoUrl = btn.getAttribute('data-logo');
+        const fiscal = {
+            cuit: btn.getAttribute('data-cuit') || '',
+            domicilio: btn.getAttribute('data-domicilio') || '',
+            condicion_iva: btn.getAttribute('data-condicion_iva') || '',
+            iibb: btn.getAttribute('data-iibb') || '',
+            inicio: btn.getAttribute('data-inicio') || '',
+            iibb_condicion: btn.getAttribute('data-iibb_condicion') || '',
+            afip_crt: btn.getAttribute('data-afip_crt') || '',
+            afip_key: btn.getAttribute('data-afip_key') || '',
+            afip_entorno: btn.getAttribute('data-afip_entorno') || 'testing'
+        };
+        const emailConfig = {
+            sender: btn.getAttribute('data-email_sender') || '',
+            pass: btn.getAttribute('data-email_app_password') || ''
+        };
+
+        openEditModal(id, code, name, logoUrl, fiscal, emailConfig);
+    }
+
+    function openEditModal(id, code, name, logoUrl, fiscal, emailConfig) {
+        document.getElementById('edit_ent_id').value = id;
+        document.getElementById('edit_ent_code').value = code;
+        document.getElementById('edit_ent_name').value = name;
+
+        // Email Config (if elements exist)
+        if (document.getElementById('edit_ent_email_sender')) {
+            document.getElementById('edit_ent_email_sender').value = emailConfig ? emailConfig.sender : '';
+            document.getElementById('edit_ent_email_pass').value = emailConfig ? emailConfig.pass : '';
+        }
+
+        // Datos Fiscales
+        fiscal = fiscal || {};
+        document.getElementById('edit_ent_cuit').value = fiscal.cuit || '';
+        document.getElementById('edit_ent_domicilio').value = fiscal.domicilio || '';
+        document.getElementById('edit_ent_iibb').value = fiscal.iibb || '';
+        document.getElementById('edit_ent_iibb_cond').value = fiscal.iibb_condicion || 'Responsable';
+        document.getElementById('edit_ent_inicio').value = fiscal.inicio || '';
+        const selectIva = document.getElementById('edit_ent_condicion_iva');
+        selectIva.value = fiscal.condicion_iva || '';
+
+        // AFIP
+        document.getElementById('edit_ent_afip_cuit').value = fiscal.cuit || ''; // Fallback to main CUIT
+        document.getElementById('edit_ent_afip_crt').value = fiscal.afip_crt || '';
+        document.getElementById('edit_ent_afip_key').value = fiscal.afip_key || '';
+        document.getElementById('edit_ent_afip_entorno').value = fiscal.afip_entorno || 'testing';
+
+        // Reset file input and hidden path
+        document.getElementById('edit_logo_input').value = '';
+        document.getElementById('selected_logo_path').value = '';
+        document.getElementById('edit_ent_afip_crt_file').value = '';
+        document.getElementById('edit_ent_afip_key_file').value = '';
+
+        // Status badges for certificates
+        const hasCrt = fiscal.afip_crt && fiscal.afip_crt.length > 50;
+        const hasKey = fiscal.afip_key && fiscal.afip_key.length > 50;
+
+        document.getElementById('crt_status_container').style.display = hasCrt ? 'block' : 'none';
+        document.getElementById('key_status_container').style.display = hasKey ? 'block' : 'none';
+
+        if (hasCrt) {
+            document.getElementById('crt_preview_text').textContent =
+                fiscal.afip_crt.substring(0, 15) + "..." + fiscal.afip_crt.substring(fiscal.afip_crt.length - 15);
+        }
+        if (hasKey) {
+            document.getElementById('key_preview_text').textContent =
+                "••••••••••••••••" + fiscal.afip_key.substring(fiscal.afip_key.length - 15);
+        }
+
+        const previewImg = document.getElementById('edit_logo_preview');
+        const placeholder = document.getElementById('edit_logo_placeholder');
+
+        if (logoUrl && logoUrl !== '') {
+            previewImg.src = logoUrl + '?t=' + new Date().getTime();
+            previewImg.style.display = 'block';
+            placeholder.style.display = 'none';
+        } else {
+            previewImg.style.display = 'none';
+            placeholder.style.display = 'flex';
+        }
+
+        // Load History
+        const carousel = document.getElementById('logo-carousel');
+        carousel.innerHTML = '<p style="color: var(--text-muted); font-size: 0.75rem; width: 100%; text-align: center;">Cargando historial...</p>';
+
+        fetch(`/sysadmin/enterprises/logos/history/${id}?sid=${window.SID || ''}`)
+            .then(res => res.json())
+            .then(data => {
+                carousel.innerHTML = '';
+                if (!data.history || data.history.length === 0) {
+                    carousel.innerHTML = '<p style="color: var(--text-muted); font-size: 0.75rem; width: 100%; text-align: center;">No hay logos anteriores</p>';
+                } else {
+                    data.history.forEach(item => {
+                        const isCurrent = item.path === logoUrl;
+                        const img = document.createElement('img');
+                        img.src = item.path;
+                        img.className = 'carousel-item' + (isCurrent ? ' active' : '');
+                        img.onclick = () => selectLogoFromHistory(item.path, img);
+                        img.title = item.created_at || 'Desconocido';
+                        carousel.appendChild(img);
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("Error loading logo history:", err);
+                carousel.innerHTML = '<p style="color: #ef4444; font-size: 0.75rem; width: 100%; text-align: center;">Error al cargar</p>';
+            });
+
+        document.getElementById('modal-edit-enterprise').style.display = 'block';
+
+        // Init flatpickr for the modal field
+        flatpickr("#edit_ent_inicio", {
+            locale: "es",
+            altInput: true,
+            altFormat: "d/m/Y",
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+
+        const backdrop = document.getElementById('modal-backdrop-edit');
+        if (backdrop) {
+            backdrop.style.display = 'block';
+            setTimeout(() => backdrop.style.opacity = '1', 10);
+        }
+    }
+
+    function selectLogoFromHistory(path, element) {
+        // Clear new file input if any
+        document.getElementById('edit_logo_input').value = '';
+
+        // Mark as selected
+        document.getElementById('selected_logo_path').value = path;
+
+        // UI update
+        document.querySelectorAll('.carousel-item').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+
+        const previewImg = document.getElementById('edit_logo_preview');
+        previewImg.src = path;
+        previewImg.style.display = 'block';
+        document.getElementById('edit_logo_placeholder').style.display = 'none';
+    }
+
+    function previewNewLogo(input) {
+        if (input.files && input.files[0]) {
+            // Unselect from history
+            document.getElementById('selected_logo_path').value = '';
+            document.querySelectorAll('.carousel-item').forEach(el => el.classList.remove('active'));
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const previewImg = document.getElementById('edit_logo_preview');
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+                document.getElementById('edit_logo_placeholder').style.display = 'none';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Load data from JSON script tag safely
+    let MIGRATION_DATA = {};
+    try {
+        const dataNode = document.getElementById('migration-metadata');
+        if (dataNode) {
+            MIGRATION_DATA = JSON.parse(dataNode.textContent);
+        }
+    } catch (e) {
+        console.error("Error parsing migration metadata:", e);
+    }
+
+    function openMigrationModalFromButton(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        openMigrationModal(id, name);
+    }
+
+    function openMigrationModal(targetId, targetName) {
+        console.log("Opening migration modal for:", targetId, targetName);
+        const targetIdEl = document.getElementById('mig_target_id');
+        const targetNameEl = document.getElementById('mig_target_name');
+
+        if (!targetIdEl || !targetNameEl) {
+            console.error("Migration modal elements not found");
+            return;
+        }
+
+        targetIdEl.value = targetId;
+        targetNameEl.value = targetName;
+
+        // Show modal immediately
+        document.getElementById('modal-migration').style.display = 'block';
+        const backdrop = document.getElementById('modal-backdrop-edit');
+        backdrop.style.display = 'block';
+        setTimeout(() => backdrop.style.opacity = '1', 10);
+
+        // Load metadata from pre-injected variable
+        const sourceSelect = document.getElementById('mig_source_select');
+        const tablesDiv = document.getElementById('mig_tables_container');
+        const data = MIGRATION_DATA;
+
+        // Populate Sources
+        sourceSelect.innerHTML = '<option value="">-- Seleccione Origen --</option>';
+        if (data && data.sources) {
+            data.sources.forEach(src => {
+                if (src.id != targetId) { // Prevent self-copy
+                    sourceSelect.innerHTML += `<option value="${src.id}">${src.label}</option>`;
+                }
+            });
+        }
+
+        // Populate Tables
+        tablesDiv.innerHTML = '';
+        if (data && data.tables) {
+            data.tables.forEach(tbl => {
+                const checked = tbl.checked ? 'checked' : '';
+                tablesDiv.innerHTML += `
+                    <div style="margin-bottom: 8px; display: flex; align-items: center;">
+                        <input type="checkbox" name="tables" value="${tbl.name}" id="tbl_${tbl.name}" ${checked} style="transform: scale(1.2); margin-right: 8px;">
+                        <label for="tbl_${tbl.name}" style="cursor: pointer; color: #e2e8f0;">${tbl.label} <small style="color: #64748b;">(${tbl.name})</small></label>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    function openFiscalModal(btn) {
+        const id = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+
+        document.getElementById('fiscal_ent_id').value = id;
+        document.getElementById('fiscal_ent_name').textContent = name;
+
+        loadFiscalAgents(id);
+
+        document.getElementById('modal-fiscal').style.display = 'block';
+        const backdrop = document.getElementById('modal-backdrop-edit');
+        backdrop.style.display = 'block';
+        setTimeout(() => backdrop.style.opacity = '1', 10);
+    }
+
+    function loadFiscalAgents(entId) {
+        const body = document.getElementById('fiscal_agents_body');
+        body.innerHTML = '<tr><td colspan="5" class="text-center">Cargando...</td></tr>';
+
+        fetch(`/sysadmin/enterprises/fiscal/${entId}?sid=${window.SID || ''}`)
+            .then(res => res.json())
+            .then(data => {
+                body.innerHTML = '';
+                if (!data.agents || data.agents.length === 0) {
+                    body.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No posee obligaciones registradas.</td></tr>';
+                } else {
+                    data.agents.forEach(a => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${a.jurisdiccion}</strong></td>
+                            <td><span class="badge ${a.tipo === 'AMBOS' ? 'bg-indigo' : (a.tipo === 'RETENCION' ? 'bg-warning' : 'bg-success')}">${a.tipo}</span></td>
+                            <td>${a.fecha_notificacion || '-'}</td>
+                            <td>${a.nro_notificacion || '-'}</td>
+                            <td>
+                                <button onclick="deleteFiscalAgent(${a.id})" class="btn-icon" style="color: #ef4444;"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        body.appendChild(tr);
+                    });
+                }
+            });
+    }
+
+    function saveFiscalAgent() {
+        const entId = document.getElementById('fiscal_ent_id').value;
+        const payload = {
+            enterprise_id: entId,
+            jurisdiccion: document.getElementById('new_fiscal_juris').value,
+            tipo: document.getElementById('new_fiscal_tipo').value,
+            fecha_notificacion: document.getElementById('new_fiscal_fecha').value,
+            nro_notificacion: document.getElementById('new_fiscal_nro').value
+        };
+
+        if (!payload.jurisdiccion) {
+            alert("Debe indicar la jurisdicción");
+            return;
+        }
+
+        fetch(`/sysadmin/enterprises/fiscal/save?sid=${window.SID || ''}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadFiscalAgents(entId);
+                    // Clear inputs
+                    document.getElementById('new_fiscal_juris').value = '';
+                    document.getElementById('new_fiscal_fecha').value = '';
+                    document.getElementById('new_fiscal_nro').value = '';
+                } else {
+                    alert("Error: " + data.error);
+                }
+            });
+    }
+
+    function deleteFiscalAgent(id) {
+        if (!confirm('¿Eliminar esta obligación fiscal?')) return;
+        const entId = document.getElementById('fiscal_ent_id').value;
+        fetch(`/sysadmin/enterprises/fiscal/delete/${id}?sid=${window.SID || ''}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) loadFiscalAgents(entId);
+                else alert("Error: " + data.error);
+            });
+    }
+</script>
+{% endblock %}

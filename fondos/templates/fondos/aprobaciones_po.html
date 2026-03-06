@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-university text-success mr-2"></i>Aprobación de Fondos
+                (Tesorería)</h1>
+            <p class="text-muted">Órdenes de compra validadas esperando autorización financiera.</p>
+        </div>
+        <a href="{{ url_for('fondos.kpi_desembolsos') }}" class="btn btn-outline-success shadow-sm">
+            <i class="fas fa-calendar-alt mr-2"></i> Ver Calendario de Pagos
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4">PO #</th>
+                            <th>Aprobación Compras</th>
+                            <th>Proveedor</th>
+                            <th class="text-right">Monto a Autorizar</th>
+                            <th>Prioridad</th>
+                            <th class="text-center px-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for po in ordenes %}
+                        <tr>
+                            <td class="px-4"><strong>#{{ po.id }}</strong></td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span>{{ po.fecha_aprobacion_compras.strftime('%d/%m/%Y') }}</span>
+                                    <small class="text-muted font-italic">Rev: #{{ po.aprobador_compras_id }}</small>
+                                </div>
+                            </td>
+                            <td>{{ po.proveedor_nombre }}</td>
+                            <td class="text-right font-weight-bold text-success" style="font-size: 1.1rem;">
+                                ${{ "{:,.2f}".format(po.total_estimado) }}
+                            </td>
+                            <td>
+                                <span class="badge badge-soft-success border border-success text-success px-3 py-1">PARA
+                                    PAGO</span>
+                            </td>
+                            <td class="text-center px-4">
+                                <a href="{{ url_for('fondos.aprobar_po_detalle', id=po.id) }}"
+                                    class="btn btn-success btn-sm rounded-pill px-4 shadow-sm">
+                                    <i class="fas fa-coins mr-1"></i> Autorizar
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-shield-alt fa-3x mb-3 d-block opacity-25"></i>
+                                No hay requerimientos de fondos pendientes.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-soft-success {
+        background-color: rgba(46, 204, 113, 0.1);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(46, 204, 113, 0.05);
+        transition: background-color 0.2s ease;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,28 @@
+=== SYS_USERS SCHEMA ===
+CREATE TABLE `sys_users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `role_id` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `temp_password_hash` varchar(255) DEFAULT NULL,
+  `temp_password_expires` datetime DEFAULT NULL,
+  `recovery_attempts` int(11) DEFAULT 0,
+  `temp_password_used` tinyint(4) DEFAULT 0,
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `enterprise_id` int(11) NOT NULL,
+  `last_login_at` datetime DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `must_change_password` tinyint(1) DEFAULT 0,
+  `created_by` int(11) DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`,`enterprise_id`),
+  UNIQUE KEY `unique_user_per_ent` (`enterprise_id`,`username`),
+  KEY `role_id` (`role_id`),
+  KEY `id` (`id`),
+  KEY `idx_sys_users_ent_role_id` (`enterprise_id`,`role_id`),
+  KEY `idx_sys_users_ent_email` (`enterprise_id`,`email`),
+  CONSTRAINT `1` FOREIGN KEY (`role_id`) REFERENCES `sys_roles` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_sys_users_ent` FOREIGN KEY (`enterprise_id`) REFERENCES `sys_enterprises` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

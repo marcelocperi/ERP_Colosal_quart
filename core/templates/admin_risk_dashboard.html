@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Riesgos FMECA{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" id="risk-dashboard">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white fw-bold mb-0">
+                <i class="fas fa-shield-virus me-2 text-danger"></i>Centro de Mando FMECA
+            </h2>
+            <p class="text-muted small mb-0">Mapa de Riesgos · Heatmap por Módulo · Mitigaciones Activas</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            {% if is_super %}
+            <span class="badge bg-danger border border-danger-subtle px-3 py-2">
+                <i class="fas fa-globe me-1"></i> Vista Global (Todas las Empresas)
+            </span>
+            <form id="filterForm" class="d-flex gap-2 align-items-center mb-0" action="/admin/risk-dashboard"
+                method="GET">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-muted border-end-0">
+                        <i class="fas fa-calendar-alt"></i>
+                    </span>
+                    <select class="form-select bg-dark text-white border-secondary border-start-0" name="timeframe"
+                        id="timeframeSelect" onchange="toggleCustomDates()">
+                        <option value="all" {% if timeframe=='all' %}selected{% endif %}>Histórico Completo</option>
+                        <option value="day" {% if timeframe=='day' %}selected{% endif %}>Solo Hoy</option>
+                        <option value="week" {% if timeframe=='week' %}selected{% endif %}>Últimos 7 días</option>
+                        <option value="month" {% if timeframe=='month' %}selected{% endif %}>Últimos 30 días</option>
+                        <option value="range" {% if timeframe=='range' %}selected{% endif %}>Rango Personalizado...
+                        </option>
+                    </select>
+                </div>
+
+                <div id="customDates" class="d-flex gap-2 {% if timeframe != 'range' %}d-none{% endif %}">
+                    <input type="date" class="form-control bg-dark border-secondary text-white custom-date"
+                        name="date_start" value="{{ date_start or '' }}" required {% if timeframe != 'range' %}disabled{% endif %}>
+                    <input type="date" class="form-control bg-dark border-secondary text-white custom-date"
+                        name="date_end" value="{{ date_end or '' }}" required {% if timeframe != 'range' %}disabled{% endif %}>
+                </div>
+
+                <button type="submit" class="btn btn-outline-info">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </form>
+            <button class="btn btn-outline-secondary rounded" onclick="location.reload()" title="Refrescar">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <script>
+                function toggleCustomDates() {
+                    const select = document.getElementById('timeframeSelect');
+                    const dates = document.getElementById('customDates');
+                    const inputs = dates.querySelectorAll('input');
+                    if (select.value === 'range') {
+                        dates.classList.remove('d-none');
+                        inputs.forEach(i => i.disabled = false);
+                    } else {
+                        dates.classList.add('d-none');
+                        inputs.forEach(i => i.disabled = true);
+                        if (select.value !== 'range') document.getElementById('filterForm').submit();
+                    }
+                }
+            </script>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-lg h-100">
+                <div class="card-body text-center py-4">
+                    <div class="kpi-icon mb-2 text-info"><i class="fas fa-exchange-alt fa-2x"></i></div>
+                    <div class="kpi-value text-white">{{ (kpis.total_ops or 0)|int | format_number }}</div>
+                    <div class="kpi-label text-muted">Total Operaciones</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-lg h-100" style="border-top: 3px solid #ef4444 !important;">
+                <div class="card-body text-center py-4">
+                    <div class="kpi-icon mb-2 text-danger"><i class="fas fa-times-circle fa-2x"></i></div>
+                    <div class="kpi-value text-danger">{{ (kpis.total_errors or 0)|int }}</div>
+                    <div class="kpi-label text-muted">Errores Registrados</div>
+                    <div class="small text-muted mt-1">
+                        {% if kpis.total_ops and kpis.total_ops > 0 %}
+                        {{ "%.1f"|format((kpis.total_errors or 0) / kpis.total_ops * 100) }}% de tasa de error
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-lg h-100" style="border-top: 3px solid #f59e0b !important;">
+                <div class="card-body text-center py-4">
+                    <div class="kpi-icon mb-2 text-warning"><i class="fas fa-exclamation-triangle fa-2x"></i></div>
+                    <div class="kpi-value text-warning">{{ "%.1f"|format(kpis.avg_severity or 0) }}</div>
+                    <div class="kpi-label text-muted">Severidad Promedio</div>
+                    <div class="small text-muted mt-1">Máx: {{ (kpis.max_severity or 0)|int }}/10</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card kpi-card border-0 shadow-lg h-100" style="border-top: 3px solid #6366f1 !important;">
+                <div class="card-body text-center py-4">
+                    <div class="kpi-icon mb-2 text-primary"><i class="fas fa-tachometer-alt fa-2x"></i></div>
+                    <div class="kpi-value text-primary">{{ "%.0f"|format(kpis.avg_duration or 0) }} ms</div>
+                    <div class="kpi-label text-muted">Latencia Promedio</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Heatmap por Módulo -->
+        <div class="col-xl-7">
+            <div class="card bg-dark border-secondary shadow-lg h-100">
+                <div class="card-header border-secondary bg-transparent">
+                    <h5 class="mb-0 text-warning fw-bold">
+                        <i class="fas fa-fire me-2"></i>Mapa de Calor por Módulo (RPN)
+                    </h5>
+                    <small class="text-muted">RPN = Severidad Máxima × Total de Errores</small>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead class="bg-black bg-opacity-50">
+                                <tr class="extra-small text-muted uppercase">
+                                    <th class="ps-4">Módulo</th>
+                                    <th class="text-center">Operaciones</th>
+                                    <th class="text-center">Errores</th>
+                                    <th class="text-center">Sev. Máx</th>
+                                    <th class="text-center">RPN</th>
+                                    <th class="pe-4">Criticidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if not module_heatmap %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">Sin datos registrados aún.</td>
+                                </tr>
+                                {% endif %}
+                                {% for m in module_heatmap %}
+                                {% set rpn = (m.rpn or 0)|int %}
+                                {% set heat_class = 'heat-critical' if rpn >= 50 else ('heat-high' if rpn >= 20 else
+                                ('heat-medium' if rpn >= 5 else 'heat-low')) %}
+                                <tr class="heatmap-row {{ heat_class }}">
+                                    <td class="ps-4 fw-bold text-white">
+                                        <i class="fas fa-puzzle-piece me-2 text-muted"></i>{{ m.module|upper }}
+                                    </td>
+                                    <td class="text-center text-muted">{{ m.total_ops }}</td>
+                                    <td class="text-center">
+                                        <span class="badge {{ 'bg-danger' if m.errors > 0 else 'bg-success' }}">{{
+                                            m.errors or 0 }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span
+                                            class="badge {{ 'bg-danger' if m.max_severity >= 8 else ('bg-warning text-dark' if m.max_severity >= 5 else 'bg-secondary') }}">
+                                            {{ m.max_severity or 0 }}/10
+                                        </span>
+                                    </td>
+                                    <td
+                                        class="text-center fw-bold {{ 'text-danger' if rpn >= 50 else ('text-warning' if rpn >= 20 else ('text-info' if rpn >= 5 else 'text-muted')) }}">
+                                        {{ rpn }}
+                                    </td>
+                                    <td class="pe-4">
+                                        <div class="rpn-bar-container">
+                                            {% set max_rpn = module_heatmap[0].rpn or 1 %}
+                                            {% set pct = [((rpn / max_rpn) * 100)|int, 100]|min %}
+                                            <div class="rpn-bar {{ heat_class }}" style="width: {{ pct }}%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribución de Failure Modes + Chart -->
+        <div class="col-xl-5">
+            <div class="card bg-dark border-secondary shadow-lg h-100">
+                <div class="card-header border-secondary bg-transparent">
+                    <h5 class="mb-0 text-info fw-bold">
+                        <i class="fas fa-bug me-2"></i>Distribución de Modos de Falla
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="failureModeChart" height="200"></canvas>
+                    <hr class="border-secondary mt-3">
+                    {% for fm in failure_modes %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-secondary">
+                        <div>
+                            <span class="badge bg-secondary me-2">{{ loop.index }}</span>
+                            <span class="text-white small fw-bold">{{ fm.failure_mode or 'UNKNOWN' }}</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-danger-soft text-danger me-2">{{ fm.total }} casos</span>
+                            <span class="badge bg-warning-soft text-warning">Sev {{ fm.max_sev }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">Sin modos de falla registrados.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Chart + Mitigaciones -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-7">
+            <div class="card bg-dark border-secondary shadow-lg">
+                <div class="card-header border-secondary bg-transparent">
+                    <h5 class="mb-0 text-success fw-bold">
+                        <i class="fas fa-chart-area me-2"></i>Tendencia de Operaciones — Últimos 7 Días
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-5">
+            <div class="card bg-dark border-secondary shadow-lg h-100">
+                <div class="card-header border-secondary bg-transparent">
+                    <h5 class="mb-0 text-danger fw-bold">
+                        <i class="fas fa-bolt me-2"></i>Mitigaciones Recientes
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for m in mitigations %}
+                        <div class="list-group-item bg-transparent border-secondary py-2 px-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span
+                                        class="badge {{ 'bg-danger' if m.action_type == 'ALERT_EMAIL' else ('bg-warning text-dark' if m.action_type == 'LOG_CRITICAL' else 'bg-info text-dark') }} extra-small mb-1">
+                                        {{ m.action_type }}
+                                    </span>
+                                    <div class="small text-muted">Ent: {{ m.enterprise_id }} · Sev mín: {{
+                                        m.min_severity }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <span
+                                        class="badge {{ 'bg-success-soft text-success' if m.status == 'RESOLVED' else 'bg-danger-soft text-danger' }} extra-small">
+                                        {{ m.status }}
+                                    </span>
+                                    <div class="extra-small text-muted mt-1">{{ m.started_at }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="py-4 text-center text-muted">Sin mitigaciones activas.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eventos Críticos -->
+    <div class="card bg-dark border-secondary shadow-lg">
+        <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-danger fw-bold">
+                <i class="fas fa-exclamation-circle me-2"></i>Últimos Eventos Críticos (Severidad ≥ 8 + Error)
+            </h5>
+            <span class="badge bg-danger">{{ critical_events|length }} recientes</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle extra-small">
+                    <thead class="bg-black bg-opacity-50">
+                        <tr class="text-muted uppercase">
+                            <th class="ps-3">Empresa</th>
+                            <th>Módulo</th>
+                            <th>Endpoint</th>
+                            <th>Impacto</th>
+                            <th>Falla</th>
+                            <th>Sev</th>
+                            <th>Duración</th>
+                            <th class="pe-3">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if not critical_events %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-success"><i
+                                    class="fas fa-check-circle me-2"></i>Sin eventos críticos. ¡Excelente!</td>
+                        </tr>
+                        {% endif %}
+                        {% for ev in critical_events %}
+                        <tr>
+                            <td class="ps-3"><span class="badge bg-secondary">{{ ev.enterprise_id }}</span></td>
+                            <td class="text-info fw-bold">{{ ev.module|upper }}</td>
+                            <td class="text-white text-truncate" style="max-width: 200px;" title="{{ ev.endpoint }}">{{
+                                ev.endpoint }}</td>
+                            <td>
+                                <span
+                                    class="badge bg-{{ 'danger' if ev.impact_category in ['Financial', 'Integrity'] else 'warning text-dark' }}">{{
+                                    ev.impact_category }}</span>
+                            </td>
+                            <td class="text-muted">{{ ev.failure_mode or '—' }}</td>
+                            <td>
+                                <span class="badge bg-danger fw-bold">{{ ev.severity }}/10</span>
+                            </td>
+                            <td class="text-muted">{{ ev.duration_ms or 0 }} ms</td>
+                            <td class="pe-3 text-muted">{{ ev.created_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .kpi-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-top: 3px solid #0dcaf0;
+        transition: transform 0.2s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .kpi-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .kpi-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 4px;
+    }
+
+    .kpi-icon {
+        opacity: 0.8;
+    }
+
+    .rpn-bar-container {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        height: 8px;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .rpn-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.6s ease;
+    }
+
+    .heat-critical .rpn-bar {
+        background: #ef4444;
+    }
+
+    .heat-high .rpn-bar {
+        background: #f59e0b;
+    }
+
+    .heat-medium .rpn-bar {
+        background: #3b82f6;
+    }
+
+    .heat-low .rpn-bar {
+        background: #10b981;
+    }
+
+    .heatmap-row.heat-critical {
+        border-left: 3px solid #ef4444;
+    }
+
+    .heatmap-row.heat-high {
+        border-left: 3px solid #f59e0b;
+    }
+
+    .heatmap-row.heat-medium {
+        border-left: 3px solid #3b82f6;
+    }
+
+    .heatmap-row.heat-low {
+        border-left: 3px solid #10b981;
+    }
+
+    .extra-small {
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, .12);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, .12);
+    }
+
+    .bg-warning-soft {
+        background-color: rgba(255, 193, 7, .12);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    (function () {
+        // --- Failure Modes Doughnut Chart ---
+        const fmLabels = [{% for fm in failure_modes %}'{{ fm.failure_mode or "UNKNOWN" }}'{% if not loop.last %}, {% endif %} {% endfor %}];
+    const fmData = [{% for fm in failure_modes %}{ { fm.total or 0 } } {% if not loop.last %}, {% endif %} {% endfor %}];
+    const fmColors = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981'];
+
+    if (document.getElementById('failureModeChart') && fmData.length > 0) {
+        new Chart(document.getElementById('failureModeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: fmLabels,
+                datasets: [{ data: fmData, backgroundColor: fmColors, borderWidth: 2, borderColor: '#1a1a2e' }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 12, padding: 6 }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    // --- Trend Multi-Line Chart ---
+    const trendLabels = [{% for label in trend_data.labels %}'{{ label }}'{% if not loop.last %}, {% endif %} {% endfor %}];
+
+    if (document.getElementById('trendChart') && trendLabels.length > 0) {
+        const datasets = [
+            {% for ds in trend_data.datasets %} {
+        label: '{{ ds.label }}',
+            data: { { ds.data | tojson } },
+        borderColor: '{{ ds.color }}',
+            backgroundColor: '{{ ds.color }}20',
+                fill: {% if 'Total' in ds.label %} true{% else %} false{% endif %},
+        tension: 0.4,
+            pointRadius: 3,
+                borderWidth: {% if 'Total' in ds.label %} 3{% else %} 2{% endif %}
+    } {% if not loop.last %}, {% endif %}
+    {% endfor %}
+        ];
+
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: { labels: trendLabels, datasets: datasets },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        color: '#94a3b8',
+                        font: { size: 10 },
+                        boxWidth: 12,
+                        boxHeight: 4,
+                        padding: 8,
+                        usePointStyle: true,
+                        pointStyle: 'line'
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+            }
+        }
+    });
+    }
+}) ();
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="background-color: #f8fafc; min-height: 100vh; padding: 2rem;">
+    <!-- Header Area -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <nav aria-label="breadcrumb" style="margin-bottom: 0.5rem;">
+                <ol class="breadcrumb" style="background: transparent; padding: 0;">
+                    <li class="breadcrumb-item"><a href="{{ url_for('pricing.dashboard') }}"
+                            style="color: #6366f1;">Pricing</a></li>
+                    <li class="breadcrumb-item active">{{ lista.nombre }}</li>
+                    <li class="breadcrumb-item active" aria-current="page">Pendientes</li>
+                </ol>
+            </nav>
+            <h1 style="font-size: 1.875rem; font-weight: 700; color: #1e293b; margin: 0;">
+                <i class="fas fa-clipboard-check" style="color: #6366f1; margin-right: 0.75rem;"></i>
+                Aprobación de Costeo Sugerido
+            </h1>
+            <p class="text-muted">Revisión técnica de { propuestas|length }} artículos para la lista <strong>{{
+                    lista.nombre }}</strong>.</p>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card shadow-sm" style="border: none; border-radius: 1rem; overflow: hidden;">
+        <form id="approvalForm" action="{{ url_for('pricing.propuesta_accion') }}" method="POST">
+            <input type="hidden" name="lista_id" value="{{ lista.id }}">
+            <input type="hidden" id="formAccion" name="accion" value="">
+
+            <!-- Quick Actions Bar -->
+            <div
+                style="background: white; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="checkAll" onclick="toggleAll(this)">
+                        <label class="custom-control-label" for="checkAll"
+                            style="font-weight: 600; color: #475569;">Seleccionar Todo</label>
+                    </div>
+                    <span id="selectedCount" class="badge badge-pill badge-info"
+                        style="display: none; padding: 0.5rem 1rem;">0 seleccionados</span>
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn btn-outline-danger" onclick="confirmBatch('RECHAZADO')"
+                        style="border-radius: 0.5rem;">
+                        <i class="fas fa-times-circle"></i> Rechazar Selección
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="confirmBatch('APROBADO')"
+                        style="border-radius: 0.5rem; background-color: #10b981; border: none;">
+                        <i class="fas fa-check-circle"></i> Aprobar Selección
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover" style="margin-bottom: 0;">
+                    <thead style="background-color: #f8fafc;">
+                        <tr>
+                            <th style="width: 50px; padding-left: 1.5rem;"></th>
+                            <th>Artículo</th>
+                            <th>Método</th>
+                            <th class="text-right">Costo Base</th>
+                            <th class="text-right">Margen (%)</th>
+                            <th class="text-right" style="color: #6366f1;">Precio Sugerido</th>
+                            <th class="text-center">Propuesto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in propuestas %}
+                        <tr>
+                            <td style="padding-left: 1.5rem;">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" name="propuesta_ids" value="{{ p.id }}"
+                                        class="custom-control-input prop-check" id="prop_{{ p.id }}"
+                                        onchange="updateCounter()">
+                                    <label class="custom-control-label" for="prop_{{ p.id }}"></label>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="font-weight: 600; color: #1e293b;">{{ p.articulo_nombre }}</span>
+                                    <small class="text-muted">{{ p.articulo_codigo }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-light" style="font-weight: 500;">{{ p.metodo_nombre }}</span>
+                            </td>
+                            <td class="text-right"
+                                style="font-family: 'Courier New', Courier, monospace; font-weight: 600;">
+                                $ {{ "{:,.4f}".format(p.costo_base_snapshot) }}
+                            </td>
+                            <td class="text-right">
+                                <span
+                                    style="background: #eef2ff; color: #6366f1; padding: 2px 8px; border-radius: 4px; font-weight: 700;">
+                                    {{ "{:,.2f}".format((p.markup_aplicado - 1) * 100) }}%
+                                </span>
+                            </td>
+                            <td class="text-right" style="font-size: 1.1rem; font-weight: 800; color: #4f46e5;">
+                                $ {{ "{:,.2f}".format(p.precio_sugerido) }}
+                            </td>
+                            <td class="text-center">
+                                <small class="text-muted">{{ p.fecha_propuesta.strftime('%d/%m %H:%M') }}</small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal for Wording -->
+            <div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content" style="border: none; border-radius: 1rem;">
+                        <div class="modal-header" style="border-bottom: 1px solid #f1f5f9;">
+                            <h5 class="modal-title" id="modalTitle">Confirmar Acción</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="motivo" style="font-weight: 600; color: #475569;">Motivo / Comentario
+                                    Técnica (Obligatorio)</label>
+                                <textarea class="form-control" name="motivo" id="motivo" rows="3"
+                                    placeholder="Indique el motivo de la aprobación o el rechazo..."
+                                    required></textarea>
+                            </div>
+                            <p id="modalCountMsg" class="text-muted small"></p>
+                        </div>
+                        <div class="modal-footer" style="border-top: none;">
+                            <button type="button" class="btn btn-light" data-dismiss="modal"
+                                style="border-radius: 0.5rem;">Cancelar</button>
+                            <button type="submit" id="btnSubmitModal" class="btn btn-primary"
+                                style="border-radius: 0.5rem;">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleAll(source) {
+        checkboxes = document.getElementsByClassName('prop-check');
+        for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = source.checked;
+        }
+        updateCounter();
+    }
+
+    function updateCounter() {
+        let checked = document.querySelectorAll('.prop-check:checked').length;
+        let badge = document.getElementById('selectedCount');
+        if (checked > 0) {
+            badge.innerText = checked + ' seleccionados';
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function confirmBatch(accion) {
+        let checked = document.querySelectorAll('.prop-check:checked').length;
+        if (checked === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atención',
+                text: 'Seleccione al menos un artículo para procesar.',
+                confirmButtonColor: '#6366f1'
+            });
+            return;
+        }
+
+        document.getElementById('formAccion').value = accion;
+        document.getElementById('modalTitle').innerText = (accion === 'APROBADO' ? 'Aprobar' : 'Rechazar') + ' Propuestas';
+        document.getElementById('btnSubmitModal').className = (accion === 'APROBADO' ? 'btn btn-success' : 'btn btn-danger');
+        document.getElementById('modalCountMsg').innerText = 'Se procesarán ' + checked + ' artículos.';
+
+        $('#approvalModal').modal('show');
+    }
+</script>
+{% endblock %}

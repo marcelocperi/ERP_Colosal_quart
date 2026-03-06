@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Sistemas{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white fw-bold mb-0">
+                <i class="fas fa-server me-2 text-info"></i>Dashboard de Sistemas
+            </h2>
+            <p class="text-muted small mb-0">Estado global de procesos, servicios externos y seguridad.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-dark border border-secondary text-secondary p-2">
+                <i class="fas fa-clock me-1"></i> Actualizado: {{ now }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary h-100 shadow-sm hover-lift transition-all">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-shape bg-soft-info rounded-circle">
+                            <i class="fas fa-tasks text-info"></i>
+                        </div>
+                        <span class="badge bg-success-soft text-success">Live</span>
+                    </div>
+                    <h3 class="text-white mb-1">{{ active_tasks_count }}</h3>
+                    <p class="text-muted small uppercase fw-bold mb-0">Tareas en Ejecución</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary h-100 shadow-sm hover-lift transition-all">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-shape bg-soft-primary rounded-circle">
+                            <i class="fas fa-plug text-primary"></i>
+                        </div>
+                        <span class="badge bg-info-soft text-info">External</span>
+                    </div>
+                    {% set active_services = services|selectattr('activo', 'equalto', 1)|list|length %}
+                    <h3 class="text-white mb-1">{{ active_services }}/{{ services|length }}</h3>
+                    <p class="text-muted small uppercase fw-bold mb-0">Servicios Conectados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary h-100 shadow-sm hover-lift transition-all">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-shape bg-soft-warning rounded-circle">
+                            <i class="fas fa-clock text-warning"></i>
+                        </div>
+                        <span class="badge bg-warning-soft text-warning">Crons</span>
+                    </div>
+                    {% set active_crons = crons|selectattr('estado', 'equalto', 'activo')|list|length %}
+                    <h3 class="text-white mb-1">{{ active_crons }}/{{ crons|length }}</h3>
+                    <p class="text-muted small uppercase fw-bold mb-0">Crons Planificados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary h-100 shadow-sm hover-lift transition-all">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-shape bg-soft-danger rounded-circle">
+                            <i class="fas fa-shield-alt text-danger"></i>
+                        </div>
+                        <span class="badge bg-danger-soft text-danger">Auditoria</span>
+                    </div>
+                    {% set failure_logs = logs|selectattr('status', 'equalto', 'FAILURE')|list|length %}
+                    <h3 class="text-white mb-1">{{ failure_logs }}</h3>
+                    <p class="text-muted small uppercase fw-bold mb-0">Alertas Recientes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+        <!-- Servicios Externos -->
+        <div class="col-xl-8">
+            <div class="card bg-dark border-secondary h-100 shadow-lg">
+                <div
+                    class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-info fw-bold">
+                        <i class="fas fa-plug me-2"></i>Estado de Procesamientos Externos
+                    </h5>
+                    <a href="{{ url_for('core.admin_services') }}"
+                        class="btn btn-sm btn-outline-info rounded-pill">Ver Todos</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead class="bg-black bg-opacity-50">
+                                <tr class="extra-small text-muted uppercase">
+                                    <th class="ps-4">Servicio</th>
+                                    <th>Tipo</th>
+                                    <th>Estado / Status</th>
+                                    <th class="text-end pe-4">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if not services %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No hay servicios configurados.
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% for s in services %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-white">{{ s.nombre }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary opacity-75">{{ s.tipo_servicio }}</span>
+                                    </td>
+                                    <td>
+                                        {% if s.activo %}
+                                        <span
+                                            class="badge bg-success bg-opacity-10 text-success border border-success me-2">ACTIVO</span>
+                                        <small class="text-muted">{{ s.last_status }}</small>
+                                        {% else %}
+                                        <span
+                                            class="badge bg-danger bg-opacity-10 text-danger border border-danger me-2">DETENIDO</span>
+                                        <small class="text-muted">{{ s.last_status }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{{ url_for('core.admin_service_config', service_id=s.id) }}"
+                                            class="btn btn-sm btn-link text-info p-0"><i class="fas fa-cog"></i></a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs de Seguridad -->
+        <div class="col-xl-4">
+            <div class="card bg-dark border-secondary h-100 shadow-lg">
+                <div
+                    class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-info fw-bold">
+                        <i class="fas fa-list-ul me-2"></i>Logs Recientes
+                    </h5>
+                    <a href="{{ url_for('core.security_logs') }}"
+                        class="btn btn-sm btn-outline-info rounded-pill">Ver Historial</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush bg-transparent">
+                        {% if not logs %}
+                        <div class="p-4 text-center text-muted">No hay eventos recientes.</div>
+                        {% endif %}
+                        {% for log in logs %}
+                        <div class="list-group-item bg-transparent border-secondary py-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span
+                                        class="badge {% if log.status == 'SUCCESS' %}bg-success-soft text-success{% else %}bg-danger-soft text-danger{% endif %} extra-small mb-1">
+                                        {{ log.action }}
+                                    </span>
+                                    <div class="small fw-bold text-white">{{ log.details|truncate(60) }}</div>
+                                    <small class="text-muted">{{ log.event_time.strftime('%H:%M:%S') }} - IP: {{
+                                        log.ip_address }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crons Summary -->
+        <div class="col-md-12">
+            <div class="card bg-dark border-secondary shadow-lg">
+                <div
+                    class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-info fw-bold">
+                        <i class="fas fa-history me-2"></i>Tareas Programadas (Crons)
+                    </h5>
+                    <a href="{{ url_for('utilitarios.gestor_crons') }}"
+                        class="btn btn-sm btn-outline-info rounded-pill">Gestionar</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead class="bg-black bg-opacity-50">
+                                <tr class="extra-small text-muted uppercase">
+                                    <th class="ps-4">Tarea</th>
+                                    <th>Estado</th>
+                                    <th>Última Ejecución</th>
+                                    <th class="text-end pe-4">Próxima</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if not crons %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No hay crons registrados.</td>
+                                </tr>
+                                {% endif %}
+                                {% for c in crons %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-white">{{ c.nombre }}</div>
+                                    </td>
+                                    <td>
+                                        {% if c.estado == 'activo' %}
+                                        <span class="badge bg-success-soft text-success">Activo</span>
+                                        {% else %}
+                                        <span class="badge bg-warning-soft text-warning">{{ c.estado|upper }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small">{{ c.ultima_ejecucion or '-' }}</td>
+                                    <td class="text-end pe-4 small text-info">{{ c.proxima_ejecucion or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .icon-shape {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .bg-soft-info {
+        background-color: rgba(13, 202, 240, 0.1);
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .bg-soft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .bg-soft-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-info-soft {
+        background-color: rgba(13, 202, 240, 0.1);
+    }
+
+    .bg-warning-soft {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        border-color: var(--info) !important;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .extra-small {
+        font-size: 0.7rem;
+        letter-spacing: 0.05rem;
+    }
+
+    .bg-black {
+        background-color: #000;
+    }
+</style>
+{% endblock %}

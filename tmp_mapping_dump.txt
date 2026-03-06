@@ -1,0 +1,38 @@
+=== CONDICIONES DE PAGO ===
+ID: 1 | Name: Contado Efectivo
+ID: 2 | Name: Contado Transf/Debito
+ID: 3 | Name: Tarjeta 1 cuota
+ID: 4 | Name: Tarjeta 3 cuotas
+ID: 5 | Name: Tarjeta 6 cuotas
+ID: 6 | Name: Cuenta Corriente 30 dias
+ID: 7 | Name: Cuenta Corriente 60 dias
+ID: 8 | Name: Cheque al Dia NEW
+ID: 9 | Name: Cheque 30 dias
+ID: 10 | Name: Efectivo
+ID: 11 | Name: Tarjeta de Debito
+ID: 12 | Name: Tarjeta de Credito 1 cuota
+ID: 13 | Name: Tarjeta de Credito 3 cuotas
+ID: 14 | Name: Tarjeta de Credito 6 cuotas
+ID: 15 | Name: Transferencia Bancaria
+ID: 16 | Name: Mercado Pago
+ID: 17 | Name: Cheque Diferido
+ID: 18 | Name: Cuenta Corriente
+
+=== MEDIOS DE PAGO ===
+ID: 1 | Name: Efectivo | Type: EFECTIVO
+ID: 2 | Name: Tarjeta de Debito | Type: TARJETA
+ID: 3 | Name: Tarjeta de Credito 1 cuota | Type: TARJETA
+ID: 4 | Name: Tarjeta de Credito 3 cuotas | Type: TARJETA
+ID: 5 | Name: Tarjeta de Credito 6 cuotas | Type: TARJETA
+ID: 6 | Name: Transferencia Bancaria | Type: TRANSFERENCIA
+ID: 7 | Name: Mercado Pago | Type: BILLETERA_VIRTUAL
+ID: 8 | Name: Cheque al Dia | Type: CHEQUE
+ID: 9 | Name: Cheque Diferido | Type: CHEQUE
+ID: 10 | Name: Cuenta Corriente | Type: OTRO
+ID: 11 | Name: Retencion IIBB | Type: RETENCION
+ID: 12 | Name: Retencion Ganancias | Type: RETENCION
+ID: 13 | Name: Retencion IVA | Type: RETENCION
+
+=== MIXED CONDITIONS DETAILS ===
+{'mixta_nombre': '50 % contado y 50 porciento cheque a 30 dias', 'enterprise_id': 0, 'id': 3, 'mixta_id': 1, 'condicion_pago_id': 9, 'porcentaje': Decimal('50.00'), 'descuento_pct': Decimal('0.00'), 'recargo_pct': Decimal('0.00'), 'user_id': None, 'created_at': datetime.datetime(2026, 2, 27, 18, 1, 32), 'updated_at': datetime.datetime(2026, 2, 27, 18, 1, 32), 'user_id_update': None}
+{'mixta_nombre': '50 % contado y 50 porciento cheque a 30 dias', 'enterprise_id': 0, 'id': 4, 'mixta_id': 1, 'condicion_pago_id': 10, 'porcentaje': Decimal('50.00'), 'descuento_pct': Decimal('0.00'), 'recargo_pct': Decimal('0.00'), 'user_id': None, 'created_at': datetime.datetime(2026, 2, 27, 18, 1, 32), 'updated_at': datetime.datetime(2026, 2, 27, 18, 1, 32), 'user_id_update': None}

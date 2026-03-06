@@ -1,0 +1,20 @@
+﻿
+=== erp_terceros (33 cols) ===
+id, enterprise_id, codigo, nombre, naturaleza, cuit, tipo_responsable, condicion_iibb, iibb_condicion, observaciones, telefono, email, es_cliente, es_proveedor, activo, created_at, condicion_pago_id, condicion_pago_pendiente_id, estado_aprobacion_pago, id_gerente_aprobador, fecha_aprobacion_pago, condicion_mixta_id, afip_last_check, afip_data, es_convenio_multilateral, archivo_cm05_path, es_proveedor_extranjero, pais_origen, codigo_pais_iso, identificador_fiscal, codigo_swift, moneda_operacion, web
+
+=== stk_articulos (40 cols) ===
+id, enterprise_id, codigo, nombre, descripcion, marca, modelo, categoria_id, tipo_articulo_id, tipo_articulo, unidad_medida, precio_venta, api_checked, costo_promedio, stock_minimo, punto_pedido, metadata_json, created_at, updated_at, activo, es_comprable, es_prestable, es_recurrente, requiere_serie, patron_serie, validacion_serie_regex, longitud_serie_min, longitud_serie_max, prefijo_serie, genera_serie_automatica, ultimo_numero_serie, es_vendible, naturaleza, config_servicio_json, costo, costo_reposicion, fecha_costo_reposicion, metodo_costeo, costo_importacion_ultimo, fecha_costo_importacion
+
+=== erp_comprobantes (38 cols) ===
+id, enterprise_id, modulo, tipo_operacion, emisor_cuit, receptor_cuit, tercero_id, tipo_comprobante, punto_venta, numero, cot, fecha_emision, fecha_vencimiento, importe_neto, importe_iva, importe_total, importe_exento, importe_no_gravado, importe_percepcion_iva, importe_percepcion_iibb_arba, importe_percepcion_iibb_agip, jurisdiccion_id, importe_impuestos_internos, estado_pago, cae, vto_cae, asiento_id, comprobante_asociado_id, created_at, direccion_entrega_id, receptor_contacto_id, referencia_comercial, condicion_pago_id, logistica_id, transportista_nombre, transportista_cuit, vehiculo_patente, es_numerable
+
+=== imp_despachos (34 cols) ===
+id, enterprise_id, orden_compra_id, numero_despacho, despachante_id, fecha_oficializacion, fecha_liberacion, canal, transportista, guia_bl_tracking, vessel_mmsi, vessel_name, fecha_embarque, fecha_arribo_estimada, fecha_arribo_real, puerto_embarque, puerto_destino, bultos, peso_kg, dias_libres_puerto, costo_demora_diario_usd, fecha_devolucion_contenedor, alerta_demora_enviada, estado, valor_fob_usd, valor_cif_usd, derechos_ars, tasa_estadistica_ars, otros_tributos_ars, tipo_cambio_oficializacion, observaciones, user_id, created_at, updated_at
+
+*** compras_ordenes: ERROR -> (1146, "Table 'multi_mcp_db.compras_ordenes' doesn't exist")
+
+=== fin_condiciones_pago (9 cols) ===
+id, enterprise_id, nombre, dias_vencimiento, descuento_pct, recargo_pct, activo, created_at, updated_at
+
+=== fin_medios_pago (10 cols) ===
+id, enterprise_id, nombre, tipo, cuenta_contable_id, recargo_pct, activo, requiere_datos, created_at, updated_at

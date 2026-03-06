@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('core.manual_index') }}">Documentación</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Referencia Técnica</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3 d-none d-md-block">
+            <div class="sticky-top pt-4" style="top: 20px; z-index: 1;">
+                <nav id="navbar-tech" class="nav flex-column border-start ps-3">
+                    <a class="nav-link text-muted" href="#arquitectura">Arquitectura</a>
+                    <a class="nav-link text-muted" href="#tecnologias">Tecnologías</a>
+                    <a class="nav-link text-muted" href="#capas">Capas del Sistema</a>
+                    <a class="nav-link text-muted" href="#integraciones">Integraciones</a>
+                    <a class="nav-link text-muted" href="#seguridad">Seguridad</a>
+                    <a class="nav-link text-muted" href="#api">Referencia API (Live)</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <h1 class="mb-4">Documentación Técnica</h1>
+
+            <section id="arquitectura" class="mb-5">
+                <h2 class="text-primary border-bottom pb-2">Arquitectura del Sistema</h2>
+                <p>La plataforma está construida sobre una arquitectura <strong>Modular Monolítica</strong> utilizando
+                    el patrón MVC (Modelo-Vista-Controlador). Se organiza en módulos funcionales independientes
+                    encapsulados mediante <strong>Flask Blueprints</strong>.</p>
+                <div class="alert alert-light border">
+                    <strong>Módulos Principales:</strong>
+                    <ul>
+                        <li><code>core</code>: Gestión de autenticación, usuarios, roles y configuración base.</li>
+                        <li><code>biblioteca</code>: Lógica de negocio específica (libros, préstamos, inventario).</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="tecnologias" class="mb-5">
+                <h2 class="text-primary border-bottom pb-2">Stack Tecnológico</h2>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Tecnología</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Backend</td>
+                            <td>Python 3.9+ / Flask</td>
+                            <td>Framework web ligero y extensible.</td>
+                        </tr>
+                        <tr>
+                            <td>Base de Datos</td>
+                            <td>MariaDB / MySQL</td>
+                            <td>Motor relacional transaccional.</td>
+                        </tr>
+                        <tr>
+                            <td>Frontend</td>
+                            <td>HTML5 / Jinja2 / WinCSS</td>
+                            <td>Renderizado servidor con interfaz moderna estilo Windows 11.</td>
+                        </tr>
+                        <tr>
+                            <td>Conectividad</td>
+                            <td>SMTP / REST API</td>
+                            <td>Servicios de correo y consumo de APIs externas.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="capas" class="mb-5">
+                <h2 class="text-primary border-bottom pb-2">Capas del Sistema</h2>
+
+                <h4 class="mt-4">1. Capa de Presentación (Frontend/Views)</h4>
+                <p>Utiliza plantillas <strong>Jinja2</strong> con herencia (`base.html`). Los estilos se basan en una
+                    implementación personalizada de CSS (WinCSS) para ofrecer una experiencia de usuario similar a una
+                    aplicación nativa, con soporte para componentes interactivos (Modales, Tablas dinámicas).</p>
+
+                <h4 class="mt-4">2. Capa de Lógica de Negocio (Controllers/Routes)</h4>
+                <p>Gestionada por los archivos <code>routes.py</code> en cada blueprint. Implementa:</p>
+                <ul>
+                    <li><strong>Control de Acceso (RBAC):</strong> Decoradores <code>@permission_required</code> para
+                        validar permisos por recurso.</li>
+                    <li><strong>Transacciones:</strong> Manejo de atomicidad en movimientos de stock y préstamos.</li>
+                </ul>
+
+                <h4 class="mt-4">3. Capa de Datos (Data Access)</h4>
+                <p>Acceso directo mediante conector <code>mariadb</code>. Se utiliza un gestor de contexto
+                    <code>get_db_cursor()</code> para asegurar el cierre de conexiones y commits automáticos.
+                </p>
+            </section>
+
+            <section id="integraciones" class="mb-5">
+                <h2 class="text-primary border-bottom pb-2">Servicios e Integraciones</h2>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-light fw-bold">Servicio de Correo (Email Service)</div>
+                    <div class="card-body">
+                        <p>Módulo: <code>services/email_service.py</code></p>
+                        <p>Implementa envío asíncrono (Threading) mediante SMTP (Gmail). Funcionalidades:</p>
+                        <ul>
+                            <li><strong>Notificaciones Transaccionales:</strong> Préstamos, Devoluciones, Reservas.</li>
+                            <li><strong>Seguridad:</strong> Recuperación de claves, alertas de intentos fallidos.</li>
+                            <li><strong>Templating:</strong> Generación HTML dinámica con branding corporativo.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-light fw-bold">Datos Externos (DolarAPI)</div>
+                    <div class="card-body">
+                        <p>Módulo: <code>services/finance_service.py</code> (integrado en lógica)</p>
+                        <p>Captura diaria de cotización del dólar para cálculo de morosidad y valoración de activos.</p>
+                        <ul>
+                            <li><strong>Fuente:</strong> <code>https://dolarapi.com/v1/dolares/oficial</code></li>
+                            <li><strong>Uso:</strong> Conversión de valores históricos y cálculo de multas.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="api" class="mb-5">
+                <h2 class="text-primary border-bottom pb-2">Referencia de Rutas y API (Live)</h2>
+                <p>Generado automáticamente a partir del código fuente actual.</p>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover border">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Endpoint / Módulo</th>
+                                <th>URL</th>
+                                <th>Métodos</th>
+                                <th>Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-family: 'Consolas', monospace; font-size: 0.9rem;">
+                            {% for ruta in rutas %}
+                            <tr>
+                                <td class="text-primary fw-bold">{{ ruta.endpoint }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ ruta.url }}</span></td>
+                                <td>
+                                    {% if 'POST' in ruta.methods %}<span
+                                        class="badge bg-warning text-dark">POST</span>{% endif %}
+                                    {% if 'GET' in ruta.methods %}<span class="badge bg-info text-dark">GET</span>{%
+                                    endif %}
+                                </td>
+                                <td class="text-muted">{{ ruta.doc | safe }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

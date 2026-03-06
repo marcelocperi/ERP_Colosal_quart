@@ -1,0 +1,41 @@
+[
+  {
+    "id": 1,
+    "enterprise_id": 1,
+    "nombre": "OpenLibraryService",
+    "tipo_servicio": "DATA_PROVIDER",
+    "clase_implementacion": "services.library_api_service.LibraryApiService",
+    "config_json": "{\"base_url\": \"https://openlibrary.org\"}",
+    "activo": 1,
+    "created_at": "2026-02-09 18:37:12",
+    "modo_captura": "API",
+    "url_objetivo": "https://openlibrary.org",
+    "system_code": "OPEN_LIBRARY"
+  },
+  {
+    "id": 2,
+    "enterprise_id": 1,
+    "nombre": "Carga Manual (Nativo)",
+    "tipo_servicio": "DATA_PROVIDER",
+    "clase_implementacion": "services.book_service_factory.NativeService",
+    "config_json": "{}",
+    "activo": 1,
+    "created_at": "2026-02-09 18:43:38",
+    "modo_captura": "NATIVE",
+    "url_objetivo": null,
+    "system_code": "NATIVE"
+  },
+  {
+    "id": 3,
+    "enterprise_id": 1,
+    "nombre": "Goodreads Scraper",
+    "tipo_servicio": "DATA_PROVIDER",
+    "clase_implementacion": "services.scraping_service.GoodreadsScraper",
+    "config_json": "{\"wait_time\": 2}",
+    "activo": 1,
+    "created_at": "2026-02-09 18:43:38",
+    "modo_captura": "SCRAPING",
+    "url_objetivo": "https://www.goodreads.com/search?q={isbn}",
+    "system_code": "GOODREADS_SCRAPE"
+  }
+]

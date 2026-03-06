@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-history"></i> Historial de Artículo</h1>
+        <p style="color: var(--primary); font-weight: 700; margin: 0; font-size: 1.2rem;">{{ articulo.nombre }}</p>
+        <p class="text-muted">ISBN: {{ articulo.isbn or 'N/D' }}</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <a href="{{ url_for('stock.articulos') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a Artículos
+        </a>
+    </div>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>FECHA</th>
+                <th>OPERACIÓN / MOTIVO</th>
+                <th>TIPO</th>
+                <th style="text-align: center;">CANTIDAD</th>
+                <th>LOGÍSTICA / TERCERO</th>
+                <th>OPERADOR</th>
+                <th style="text-align: right;">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in historial %}
+            <tr>
+                <td>{{ h.fecha.strftime('%d/%m/%Y %H:%M') if h.fecha else '-' }}</td>
+                <td>
+                    <div style="font-weight: 700;">{{ h.motivo }}</div>
+                    {% if h.observaciones %}
+                    <div style="font-size: 0.75rem; color: #64748b;">{{ h.observaciones }}</div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if h.tipo == 'ENTRADA' %}
+                    <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">
+                        <i class="fas fa-arrow-down"></i> INGRESO
+                    </span>
+                    {% elif h.tipo == 'SALIDA' %}
+                    <span class="badge" style="background: rgba(239,68,68,0.1); color: #ef4444;">
+                        <i class="fas fa-arrow-up"></i> EGRESO
+                    </span>
+                    {% elif h.tipo == 'TRANSFERENCIA' %}
+                    <span class="badge" style="background: rgba(99,102,241,0.1); color: var(--primary);">
+                        <i class="fas fa-exchange-alt"></i> TRASLADO
+                    </span>
+                    {% else %}
+                    <span class="badge">{{ h.tipo }}</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: center; font-weight: 700; font-size: 1.1rem;">
+                    {% if h.tipo == 'ENTRADA' %}
+                    <span style="color: #10b981;">+{{ h.cantidad }}</span>
+                    {% elif h.tipo == 'SALIDA' %}
+                    <span style="color: #ef4444;">-{{ h.cantidad }}</span>
+                    {% else %}
+                    <span style="color: var(--primary);">{{ h.cantidad }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="font-size: 0.85rem;">
+                        {% if h.tercero %}
+                        <div style="font-weight: 600; color: #3b82f6;"><i class="fas fa-handshake"></i> {{ h.tercero }}
+                        </div>
+                        {% endif %}
+                        {% if h.origen %}
+                        <i class="fas fa-sign-out-alt" style="opacity: 0.5;"></i> {{ h.origen }}
+                        {% endif %}
+                        {% if h.origen and h.destino %} <i class="fas fa-long-arrow-alt-right"
+                            style="margin: 0 0.5rem; opacity: 0.3;"></i> {% endif %}
+                        {% if h.destino %}
+                        <i class="fas fa-sign-in-alt" style="opacity: 0.5;"></i> {{ h.destino }}
+                        {% endif %}
+                    </div>
+                </td>
+                <td><i class="fas fa-user-circle" style="opacity: 0.5;"></i> {{ h.username }}</td>
+                <td style="text-align: right;">
+                    <a href="{{ url_for('stock.movimiento_detalle', id=h.movimiento_id) }}"
+                        class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                        <i class="fas fa-eye"></i> Detalle Mov.
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 4rem; color: #64748b;">
+                    No hay movimientos registrados para este artículo.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

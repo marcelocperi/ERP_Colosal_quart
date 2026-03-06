@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .data-table th {
+        background: rgba(15, 23, 42, 0.8);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .data-table tr:hover {
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .stock-ok {
+        color: #10b981;
+        font-weight: 700;
+    }
+
+    .stock-out {
+        color: #ef4444;
+        font-weight: 700;
+    }
+
+    .stock-warning {
+        color: #f59e0b;
+        font-weight: 700;
+    }
+
+    .search-container {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.3);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .search-input {
+        flex: 1;
+        min-width: 250px;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(15, 23, 42, 0.5);
+        color: white;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .btn-loan-fast {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-loan-fast:hover {
+        background: #4f46e5;
+    }
+
+    .btn-edit-fast {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .btn-edit-fast:hover {
+        background: rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-reserve-fast {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .btn-reserve-fast:hover {
+        background: rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-info-fast {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        color: #94a3b8;
+    }
+</style>
+
+<div style="margin-bottom: 2rem;">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h1 class="page-title"><i class="fas fa-book"></i> Maestro de Artículos (Biblioteca)</h1>
+            <p class="text-muted">Gestión rápida de libros, préstamos y stock físico.</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <button class="btn btn-primary" onclick="openAddArticuloModal()">
+                <i class="fas fa-plus-circle"></i> Agregar Libro
+            </button>
+            <a href="{{ url_for('stock.articulos_importar') }}" class="btn btn-secondary">
+                <i class="fas fa-cloud-download-alt"></i> Importar desde API (ISBN)
+            </a>
+        </div>
+    </div>
+
+    <!-- Buscador Principal (Súper Rápido) -->
+    <form action="{{ url_for('biblioteca.articulos') }}" method="GET" class="search-container" id="fast-search">
+        <input type="hidden" name="sid" value="{{ sid }}">
+        <i class="fas fa-search" style="color: #64748b;"></i>
+        <input type="text" name="q" class="search-input" placeholder="Buscar por título, ISBN, autor o editorial..."
+            value="{{ current_filters.q }}" autofocus>
+
+        <select name="genero" class="search-input" style="flex: 0 0 180px;" onchange="this.form.submit()">
+            <option value="">Todos los Géneros</option>
+            {% for g in generos %}<option value="{{ g }}" {{ 'selected' if current_filters.genero==g }}>{{ g }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{{ url_for('biblioteca.articulos') }}" class="btn btn-secondary"><i
+                class="fas fa-sync-alt"></i></a>
+    </form>
+
+    <!-- Tabla de Resultados -->
+    <div class="card" style="padding: 0; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">IMG</th>
+                    <th>TÍTULO / AUTOR</th>
+                    <th>ISBN</th>
+                    <th>EDITORIAL</th>
+                    <th class="text-end">TOTAL</th>
+                    <th class="text-end">LIBRES</th>
+                    <th class="text-end">PRESTADOS</th>
+                    <th style="width: 130px; text-align: center;">ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in articulos %}
+                <tr>
+                    <td style="padding: 0.5rem; text-align: center;">
+                        {% if a.cover_url and a.cover_url != 'null' %}
+                        <img src="{{ a.cover_url }}"
+                            style="height: 45px; width: 30px; object-fit: cover; border-radius: 2px;" loading="lazy">
+                        {% else %}
+                        <div
+                            style="height: 45px; width: 30px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: #475569;">
+                            <i class="fas fa-book" style="font-size: 0.8rem;"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: #f8fafc;">{{ a.nombre }}</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">{{ a.autor or 'Autor N/D' }} | <span
+                                class="badge-info-fast">{{ a.genero or 'S/G' }}</span></div>
+                    </td>
+                    <td><code style="font-size: 0.85rem; color: var(--primary);">{{ a.isbn }}</code></td>
+                    <td style="font-size: 0.85rem; color: #cbd5e1;">{{ a.editorial or '-' }}</td>
+                    <td class="text-end" style="font-weight: 800;">{{ a.total_ejemplares }}</td>
+                    <td class="text-end {% if a.disponibles > 0 %}stock-ok{% else %}stock-out{% endif %}">
+                        {{ a.disponibles }}
+                    </td>
+                    <td class="text-end" style="color: #60a5fa;">{{ a.prestados }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            {% if a.disponibles > 0 %}
+                            <button class="btn-icon btn-loan-fast" title="Registrar Préstamo"
+                                onclick="openQuickLoanModal('{{ a.id }}', '{{ a.nombre|addslashes }}')">
+                                <i class="fas fa-handshake"></i>
+                            </button>
+                            {% else %}
+                            <button class="btn-icon btn-reserve-fast" title="Registrar Reserva"
+                                onclick="reservarDirecto('{{ a.id }}', '{{ a.nombre|addslashes }}')">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                            {% endif %}
+
+                            <button class="btn-icon btn-edit-fast" title="Editar Información"
+                                onclick="fillEditModal('{{ a.id }}', '{{ a.nombre|addslashes }}', '{{ a.autor|default('')|addslashes }}', '{{ a.genero|default('')|addslashes }}', '{{ a.isbn }}', '{{ a.precio_venta|default(0) }}', '{{ a.total_ejemplares|default(0) }}', '{{ a.editorial|default('')|addslashes }}', '{{ a.fecha_publicacion|default('') }}', '{{ a.tipo_articulo_id|default('') }}')">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not articulos %}
+        <div style="padding: 3rem; text-align: center; color: #64748b;">
+            <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.2;"></i>
+            <p>No se encontraron libros para la búsqueda realizada.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Reutilizamos el modal-libro de main.js para CAPTURA DE INFORMACION -->
+<div id="modal-libro" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 800px; z-index: 5001; border: 1px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <h3 id="modal-title">Captura de Información de Libro</h3>
+    <form action="" method="POST" id="form-libro">
+        <input type="hidden" name="sid" value="{{ sid }}">
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div class="form-group">
+                <label>Título / Nombre <span style="color:#ef4444;">*</span></label>
+                <input type="text" name="nombre" required placeholder="Ej: El Aleph">
+            </div>
+            <div class="form-group">
+                <label>Autor / Modelo <span style="color:#ef4444;">*</span></label>
+                <input type="text" name="autor" placeholder="Ej: Jorge Luis Borges">
+            </div>
+            <div class="form-group">
+                <label>ISBN / Código <span style="color:#ef4444;">*</span></label>
+                <input type="text" name="isbn" required placeholder="Ej: 9781234567890">
+            </div>
+            <div class="form-group">
+                <label>Género</label>
+                <input type="text" name="genero" placeholder="Ej: Literatura, Fantasía">
+            </div>
+            <div class="form-group">
+                <label>Precio de Reposición</label>
+                <input type="number" step="0.01" name="precio">
+            </div>
+            <div class="form-group">
+                <label>Ejemplares Físicos (Stock)</label>
+                <input type="number" name="numero_ejemplares" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>Editorial</label>
+                <input type="text" name="editorial">
+            </div>
+            <div class="form-group">
+                <label>Fecha Publicación</label>
+                <input type="date" name="fecha_publicacion">
+            </div>
+            <div class="form-group">
+                <label>Tipo de Artículo</label>
+                <select name="tipo_articulo_id">
+                    {% for t in tipos %}
+                    <option value="{{ t.id }}">{{ t.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div
+            style="margin-top: 2rem; display: flex; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Guardar y Confirmar</button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1); flex: 1;"
+                onclick="toggleModal('modal-libro')">Descartar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal: Préstamo Rápido -->
+<div id="modal-quick-loan" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; z-index: 5002; border: 2px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.6);">
+    <h3>Registrar Préstamo</h3>
+    <p id="loan-book-title" style="color: var(--primary); font-weight: 700; margin-bottom: 1.5rem;"></p>
+    <form action="{{ url_for('biblioteca.registrar_prestamo') }}" method="POST">
+        <input type="hidden" name="sid" value="{{ sid }}">
+        <input type="hidden" name="libro_id" id="loan-libro-id">
+
+        <div class="form-group">
+            <label>Socio que retira</label>
+            <select name="usuario_id" required
+                style="width: 100%; padding: 0.75rem; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px;">
+                <option value="">-- Seleccionar Socio --</option>
+                {% for u in usuarios %}
+                <option value="{{ u.id }}">{{ u.apellido }}, {{ u.nombre }} ({{ u.email }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+            <label>Fecha de Devolución</label>
+            <input type="date" name="fecha_devol_esperada" id="loan-date-default" required>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Confirmar Préstamo</button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1); flex: 1;"
+                onclick="toggleModal('modal-quick-loan')">Cerrar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function openQuickLoanModal(id, title) {
+        document.getElementById('loan-libro-id').value = id;
+        document.getElementById('loan-book-title').innerText = title;
+        const date = new Date();
+        date.setDate(date.getDate() + 14);
+        document.getElementById('loan-date-default').value = date.toISOString().split('T')[0];
+        toggleModal('modal-quick-loan');
+    }
+
+    async function reservarDirecto(libroId, title) {
+        const usuarioId = prompt("Ingrese ID de Socio para reservar \"" + title + "\":");
+        if (!usuarioId) return;
+        try {
+            const res = await fetch('/prestamos/reservar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ libro_id: libroId, usuario_id: usuarioId, sid: '{{ sid }}' })
+            });
+            const data = await res.json();
+            if (data.success) { alert("Reserva registrada correctamente."); location.reload(); }
+            else { alert("Error: " + (data.error || "No se pudo realizar la reserva")); }
+        } catch (e) { alert("Error de conexión"); }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1>Maestro de Tipos de Comprobante</h1>
+    <button class="btn btn-primary" onclick="openNewTipoModal()">
+        <i class="fas fa-plus"></i> Nuevo Tipo de Comprobante
+    </button>
+</div>
+
+<div class="card bg-info-light mb-4" style="padding: 1rem; border-left: 5px solid #0ea5e9;">
+    <p style="margin: 0; font-size: 0.9rem; color: #0c4a6e;">
+        <i class="fas fa-info-circle"></i> Este es el maestro global de tipos de comprobantes (Facturas, Notas de
+        Crédito, etc.).
+        Al crear un nuevo tipo aquí, el sistema inicializará automáticamente los registros de numeración para
+        <strong>todas las empresas</strong> creadas.
+    </p>
+</div>
+
+<div class="table-container card">
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Letra</th>
+                <th>Fiscal</th>
+                <th>Cod. AFIP</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tipo in tipos %}
+            <tr>
+                <td style="font-weight: 700;">{{ tipo.codigo }}</td>
+                <td>{{ tipo.descripcion }}</td>
+                <td style="text-align: center;">{{ tipo.letra or '-' }}</td>
+                <td style="text-align: center;">
+                    {% if tipo.es_fiscal %}
+                    <i class="fas fa-check-circle text-success"></i>
+                    {% else %}
+                    <i class="fas fa-times-circle text-muted"></i>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">{{ tipo.afip_code or '-' }}</td>
+                <td>
+                    <button class="btn btn-edit-tipo" data-codigo="{{ tipo.codigo }}" data-desc="{{ tipo.descripcion }}"
+                        data-letra="{{ tipo.letra or '' }}" data-fiscal="{{ '1' if tipo.es_fiscal else '0' }}"
+                        data-numerable="{{ '1' if tipo.es_numerable else '0' }}" data-afip="{{ tipo.afip_code or '' }}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Tipo Comprobante -->
+<div id="tipoModal" class="modal-premium"
+    style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; z-index: 5001;">
+    <div class="card" style="padding: 2rem;">
+        <h2 id="modalTitle">Editar Tipo de Comprobante</h2>
+        <form action="{{ url_for('core.admin_tipos_comprobante_save') }}" method="POST">
+            <input type="hidden" name="orig_codigo" id="tipo-orig-codigo">
+
+            <div class="form-group">
+                <label>Código Interno</label>
+                <input type="text" name="codigo" id="tipo-codigo" required placeholder="FAC_A">
+            </div>
+
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" name="descripcion" id="tipo-desc" required placeholder="Factura A">
+            </div>
+
+            <div class="grid-2-columns">
+                <div class="form-group">
+                    <label>Letra</label>
+                    <input type="text" name="letra" id="tipo-letra" maxlength="1" placeholder="A">
+                </div>
+                <div class="form-group">
+                    <label>Código AFIP</label>
+                    <input type="text" name="afip_code" id="tipo-afip" placeholder="001">
+                </div>
+            </div>
+
+            <div class="form-group"
+                style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="es_fiscal" id="tipo-fiscal" style="width: auto;">
+                    <label for="tipo-fiscal" style="margin: 0; cursor: pointer; font-weight: 600;">Es Comprobante Fiscal
+                        (Genera CAE)</label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                    <input type="checkbox" name="es_numerable" id="tipo-numerable" style="width: auto;">
+                    <label for="tipo-numerable" style="margin: 0; cursor: pointer; font-weight: 600;">Es Numerable
+                        (Auto-incrementar)</label>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 2rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.btn-edit-tipo').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const data = btn.dataset;
+                document.getElementById('modalTitle').innerText = 'Editar Tipo: ' + data.codigo;
+                document.getElementById('tipo-orig-codigo').value = data.codigo;
+                document.getElementById('tipo-codigo').value = data.codigo;
+                document.getElementById('tipo-desc').value = data.desc;
+                document.getElementById('tipo-letra').value = data.letra;
+                document.getElementById('tipo-afip').value = data.afip;
+                document.getElementById('tipo-fiscal').checked = data.fiscal === '1';
+                document.getElementById('tipo-numerable').checked = data.numerable === '1';
+
+                toggleModal('tipoModal');
+            });
+        });
+    });
+
+    function openNewTipoModal() {
+        document.getElementById('modalTitle').innerText = 'Nuevo Tipo de Comprobante';
+        document.getElementById('tipo-orig-codigo').value = '';
+        document.getElementById('tipo-codigo').value = '';
+        document.getElementById('tipo-desc').value = '';
+        document.getElementById('tipo-letra').value = '';
+        document.getElementById('tipo-afip').value = '';
+        document.getElementById('tipo-fiscal').checked = false;
+        document.getElementById('tipo-numerable').checked = true;
+        toggleModal('tipoModal');
+    }
+
+    function closeModal() {
+        toggleModal('tipoModal');
+    }
+</script>
+
+<style>
+    .grid-2-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .bg-info-light {
+        background-color: #f0f9ff;
+    }
+
+    .text-success {
+        color: #10b981;
+    }
+
+    .text-muted {
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}

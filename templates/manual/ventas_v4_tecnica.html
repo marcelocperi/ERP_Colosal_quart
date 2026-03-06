@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-11">
+            <div class="card shadow-lg border-0 mb-4 bg-dark text-white overflow-hidden" style="border-radius: 20px;">
+                <div class="card-body p-5 position-relative">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="display-4 fw-bold mb-2">
+                                <i class="fas fa-hand-holding-usd me-3 text-success"></i>Colosal Ventas MSAC v4.0
+                            </h1>
+                            <p class="lead opacity-75">Motor de Facturación Electrónica y Gestión de Cobranzas
+                                Industrial.</p>
+                            <div class="d-flex gap-3 mt-4">
+                                <span class="badge bg-success px-3 py-2"><i class="fas fa-file-invoice-dollar me-1"></i>
+                                    Facturación AFIP</span>
+                                <span class="badge bg-warning text-dark px-3 py-2"><i class="fas fa-percent me-1"></i>
+                                    Percepciones Dinámicas</span>
+                                <span class="badge bg-info px-3 py-2"><i class="fas fa-balance-scale me-1"></i>
+                                    Auditoría Cta. Cte.</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end d-none d-md-block opacity-25">
+                            <i class="fas fa-cash-register" style="font-size: 10rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Columna Técnica -->
+                <div class="col-lg-7">
+                    <div class="card h-100 border-0 shadow-sm" style="border-radius: 15px;">
+                        <div
+                            class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0 fw-bold"><i class="fas fa-database text-success me-2"></i>Arquitectura de
+                                Facturación</h3>
+                            <span class="text-muted small">v4.0.VTA</span>
+                        </div>
+                        <div class="card-body px-4 pb-4">
+                            <div class="tech-section mb-4">
+                                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Lógica Fiscal Core</h5>
+                                <div class="bg-light p-3 rounded-3 mb-3"
+                                    style="font-family: 'Courier New', Courier, monospace; font-size: 0.9rem;">
+                                    <p class="mb-1 text-success"># Lógica de Selección de Comprobante (BillingService)
+                                    </p>
+                                    <p class="mb-0 text-dark">
+                                        1. Verificar <strong>condicion_iva</strong> de Empresa.<br>
+                                        2. Cruzar con <strong>tipo_responsable</strong> del Cliente.<br>
+                                        3. Si Emisor='RI' y Receptor='RI' -> <strong>FACTURA A (001)</strong>.<br>
+                                        4. Si Receptor='CF' o 'MT' -> <strong>FACTURA B (006)</strong>.<br>
+                                        5. Recalcular Percepciones IIBB por jurisdicción.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="tech-section">
+                                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Relaciones de Tabla (Ventas)</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Tabla</th>
+                                                <th>Función</th>
+                                                <th>Módulo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><code>erp_terceros</code></td>
+                                                <td>Clientes (es_cliente=1)</td>
+                                                <td>VENTAS</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>erp_comprobantes</code></td>
+                                                <td>Cabecera (Invoices/NC/ND)</td>
+                                                <td>ERP CORE</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>erp_comprobantes_impuestos</code></td>
+                                                <td>Trazabilidad de Percepciones</td>
+                                                <td>FISCAL</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>fin_recibos</code></td>
+                                                <td>Cobranzas y Aplicaciones</td>
+                                                <td>FINANZAS</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Standalone y LLM -->
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm mb-4"
+                        style="border-radius: 15px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold mb-3"><i class="fas fa-terminal me-2"></i>Consultor Ventas CLI</h4>
+                            <p class="opacity-90">Acceda a auditorías rápidas de cuenta corriente y rankings de clientes
+                                sin usar la web.</p>
+                            <div class="bg-black bg-opacity-25 p-3 rounded-3 mb-4"
+                                style="font-family: 'Consolas', monospace; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2);">
+                                <span class="text-warning">PS C:\Colosal></span> python
+                                utils/colosal_ventas_consultant.py
+                            </div>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Ranking de Facturación</li>
+                                <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Cálculo Express de Saldo</li>
+                                <li class="mb-0"><i class="fas fa-check-circle me-2"></i> Auditoría de Comprobantes</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm"
+                        style="border-radius: 15px; background: #fffcf0; border: 1px dashed #f59e0b !important;">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold text-dark mb-3"><i class="fas fa-robot me-2 text-warning"></i>Entrenar
+                                Colosal-Ventas</h4>
+                            <p class="text-muted small">Use el siguiente comando para cargar el conocimiento
+                                especializado en Ollama:</p>
+                            <code class="d-block bg-dark text-white p-2 rounded mb-3" style="font-size: 0.75rem;">
+                                ollama create colosal-ventas -f backoffice/Modelfile-Colosal-Ventas.txt
+                            </code>
+                            <p class="mb-0 text-muted small"><i class="fas fa-info-circle me-1"></i> El modelo podrá
+                                explicar desvíos fiscales y letras de comprobantes automáticamente.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tech-section {
+        background: white;
+    }
+</style>
+{% endblock %}

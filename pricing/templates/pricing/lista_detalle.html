@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+    <div>
+        <nav style="margin-bottom: 0.5rem; font-size: 0.85rem;">
+            <a href="{{ url_for('pricing.dashboard') }}" style="color: var(--primary); text-decoration: none;"><i
+                    class="fas fa-chevron-left"></i> Volver al Dashboard</a>
+        </nav>
+        <h1 class="page-title"><i class="fas fa-list-ol"></i> {{ lista.nombre }}</h1>
+        <p class="text-muted">{{ lista.descripcion or 'Configuración de reglas de cálculo automático.' }}</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem; align-items: start;">
+        {% if pending_count > 0 %}
+        <div
+            style="background: rgba(234, 179, 8, 0.1); border: 1px solid #eab308; padding: 0.8rem 1.2rem; border-radius: 8px; color: #fef08a; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-exclamation-triangle" style="color: #eab308; font-size: 1.2rem;"></i>
+            <div>
+                <strong>Circuito de Aprobación Activo:</strong><br>
+                Existen <b>{{ pending_count }}</b> propuestas pendientes. Debe aprobar o rechazar para habilitar un
+                nuevo recalculo.
+            </div>
+            <a href="{{ url_for('pricing.lista_pendientes', id=lista.id) }}" class="btn btn-sm"
+                style="background: #eab308; color: #000; margin-left: 10px; font-weight: bold;">VER PENDIENTES</a>
+        </div>
+        <button class="btn btn-outline" disabled
+            style="border: 1px solid #475569; color: #475569; cursor: not-allowed; opacity: 0.6;">
+            <i class="fas fa-lock"></i> Recalculo Bloqueado
+        </button>
+        {% else %}
+        <form action="{{ url_for('pricing.lista_recalcular', id=lista.id) }}" method="POST" style="display: inline;">
+            <button type="submit" class="btn btn-outline" style="border: 1px solid #94a3b8; color: #94a3b8;"><i
+                    class="fas fa-sync"></i> Recalcular Precios</button>
+        </form>
+        {% endif %}
+        <button class="btn btn-primary" onclick="openReglaModal()">
+            <i class="fas fa-plus"></i> Nueva Regla
+        </button>
+    </div>
+</div>
+
+<div class="card"
+    style="padding: 0; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); background: rgba(15, 23, 42, 0.4);">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 25%">NATURALEZA</th>
+                <th style="width: 25%">MÉTODO DE COSTEO</th>
+                <th style="text-align: center; width: 15%">COEFICIENTE (%)</th>
+                <th style="text-align: center; width: 15%">PRIORIDAD</th>
+                <th style="text-align: right; width: 20%">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reglas %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="badge"
+                            style="background: rgba(99,102,241,0.1); color: var(--primary); padding: 5px 10px;">{{
+                            r.naturaleza }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-weight: 600;">{{ r.metodo_nombre }}</div>
+                    {% if r.formula_id %}
+                    <small style="color: #64748b;">Fórmula: {{ r.formula_nombre }}</small>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #10b981;">x {{
+                        r.coeficiente_markup }}</span>
+                    <div style="font-size: 0.75rem; color: #64748b;">(+ {{ ((r.coeficiente_markup - 1) * 100)|round(1)
+                        }}%)</div>
+                </td>
+                <td style="text-align: center;">
+                    <span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1;">{{ r.prioridad
+                        }}</span>
+                </td>
+                <td style="text-align: right;">
+                    <button class="btn btn-sm" onclick="editRegla({{ r|tojson }})"
+                        style="background: rgba(255,255,255,0.03); color: #cbd5e1;"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;"><i
+                            class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 4rem; color: #64748b;">
+                    No hay reglas definidas para esta lista. <br>
+                    <button class="btn btn-sm btn-primary" style="margin-top: 1rem;" onclick="openReglaModal()">Comenzar
+                        ahora</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal para Regla de Pricing -->
+<div id="modal-regla" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; z-index: 5001; border: 1px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5); padding: 2rem;">
+    <h3 id="modal-title" style="margin-bottom: 1.5rem; color: var(--primary);">Configurar Regla</h3>
+    <form id="form-regla" action="{{ url_for('pricing.regla_guardar') }}" method="POST">
+        <input type="hidden" name="id" id="regla-id">
+        <input type="hidden" name="lista_id" value="{{ lista.id }}">
+
+        <div class="form-group" style="margin-bottom: 1.2rem;">
+            <label>Naturaleza del Artículo</label>
+            <select name="naturaleza" id="regla-naturaleza" class="form-control" required
+                style="background: #000; color: #fff;">
+                {% for nat in naturalezas %}
+                <option value="{{ nat }}">{{ nat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.2rem;">
+            <label>Método de Costeo Base</label>
+            <select name="metodo_id" id="regla-metodo" class="form-control" required
+                style="background: #000; color: #fff;">
+                {% for m in metodos %}
+                <option value="{{ m.id }}">{{ m.nombre }}</option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">El precio se calculará aplicando el coeficiente sobre este valor.</small>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem;">
+            <div class="form-group">
+                <label>Coeficiente (Markup)</label>
+                <input type="number" step="0.0001" name="markup" id="regla-markup" value="1.0000" class="form-control"
+                    required style="background: #000; color: #fff;">
+                <small class="text-muted">Ej: 1.21 para +21%</small>
+            </div>
+            <div class="form-group">
+                <label>Prioridad</label>
+                <input type="number" name="prioridad" id="regla-prioridad" value="0" class="form-control"
+                    style="background: #000; color: #fff;">
+                <small class="text-muted">Mayor prioridad gana.</small>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+            <button type="button" class="btn btn-outline" onclick="toggleModal('modal-regla')">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Regla</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function openReglaModal() {
+        document.getElementById('modal-title').innerText = "Nueva Regla de Pricing";
+        document.getElementById('regla-id').value = "";
+        document.getElementById('regla-markup').value = "1.0000";
+        document.getElementById('regla-prioridad').value = "0";
+        toggleModal('modal-regla');
+    }
+
+    function editRegla(regla) {
+        document.getElementById('modal-title').innerText = "Editar Regla";
+        document.getElementById('regla-id').value = regla.id;
+        document.getElementById('regla-naturaleza').value = regla.naturaleza;
+        document.getElementById('regla-metodo').value = regla.metodo_costo_id;
+        document.getElementById('regla-markup').value = regla.coeficiente_markup;
+        document.getElementById('regla-prioridad').value = regla.prioridad;
+        toggleModal('modal-regla');
+    }
+</script>
+{% endblock %}

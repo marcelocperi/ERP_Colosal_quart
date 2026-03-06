@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-light"><i class="fas fa-balance-scale me-2 text-primary"></i>Dashboard Contable e Impositivo
+            </h2>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Gestión de Padrones (ARBA/AGIP) -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-dark border-secondary border-top border-4 shadow-lg h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title text-secondary mb-0">Padrones IIBB</h5>
+                        <i class="fas fa-file-import fa-2x text-muted opacity-50"></i>
+                    </div>
+                    <p class="text-muted small">Actualización de alícuotas ARBA y AGIP para percepciones y retenciones
+                        automáticas.</p>
+                    <a href="{{ url_for('contabilidad.padrones_iibb') }}"
+                        class="btn btn-outline-secondary w-100">
+                        Administrar Padrones
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Libro IVA Ventas -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-dark border-primary border-top border-4 shadow-lg h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title text-primary mb-0">Libro IVA Ventas</h5>
+                        <i class="fas fa-file-invoice-dollar fa-2x text-muted opacity-50"></i>
+                    </div>
+                    <p class="text-muted small">Registro detallado de facturación emitida y generación de archivos para
+                        AFIP (Libro IVA Digital).</p>
+                    <a href="{{ url_for('contabilidad.libro_iva_ventas') }}"
+                        class="btn btn-outline-primary w-100">
+                        Acceder al Libro
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Libro IVA Compras -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-dark border-info border-top border-4 shadow-lg h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title text-info mb-0">Libro IVA Compras</h5>
+                        <i class="fas fa-shopping-cart fa-2x text-muted opacity-50"></i>
+                    </div>
+                    <p class="text-muted small">Control de crédito fiscal y facturas recibidas de proveedores.
+                        Obligatorio según RG 4597.</p>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('contabilidad.libro_iva_compras') }}"
+                            class="btn btn-outline-info flex-grow-1">
+                            Libro Compras
+                        </a>
+                        <a href="{{ url_for('compras.facturar') }}" class="btn btn-info">
+                            <i class="fas fa-plus"></i> Cargar Factura
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan de Cuentas -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-dark border-warning border-top border-4 shadow-lg h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title text-warning mb-0">Plan de Cuentas</h5>
+                        <i class="fas fa-sitemap fa-2x text-muted opacity-50"></i>
+                    </div>
+                    <p class="text-muted small">Gestión de estructura contable, cuentas de activo, pasivo, patrimonio y
+                        resultados.</p>
+                    <a href="{{ url_for('contabilidad.plan_cuentas') }}" class="btn btn-outline-warning w-100">
+                        Configurar Cuentas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reporte IIBB -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-dark border-danger border-top border-4 shadow-lg h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title text-danger mb-0">Reporte IIBB</h5>
+                        <i class="fas fa-percent fa-2x text-muted opacity-50"></i>
+                    </div>
+                    <p class="text-muted small">Resumen de percepciones y retenciones de Ingresos Brutos por
+                        jurisdicción.</p>
+                    <a href="{{ url_for('contabilidad.reporte_iibb') }}" class="btn btn-outline-danger w-100">
+                        Ver Reporte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección Normativa AFIP -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-secondary bg-opacity-10 border-0 p-4">
+                <h6 class="text-warning text-uppercase mb-3"><i class="fas fa-gavel me-2"></i>Normativa Vigente - AFIP
+                </h6>
+                <p class="text-light small mb-0">
+                    Conforme a la RG 4597/2019, todos los contribuyentes (incluyendo exentos bajo código 479) deben
+                    cumplir con la registración electrónica de operaciones.
+                    Este sistema genera los archivos <code>REGINFO_CV_CBTE</code> listos para ser importados en el
+                    portal <strong>Libro IVA Digital</strong>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

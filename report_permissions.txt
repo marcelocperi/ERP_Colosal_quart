@@ -1,0 +1,10 @@
+=== AUDITORIA DE PERMISOS: CODIGO VS ROLES ASIGNABLES ===
+Total permisos inscriptos en BD (sys_permissions): 79
+Total permisos con al menos un rol asignado: 79
+
+| COMPRAS         | Endpoints Protegidos: 1   | Huérfanos: 0  | Sin Rol: 0  | Estado: 🟢 Seguro                            | Criticidad: Baja  |
+| STOCK           | Endpoints Protegidos: 4   | Huérfanos: 0  | Sin Rol: 0  | Estado: 🟢 Seguro                            | Criticidad: Baja  |
+| BIBLIOTECA      | Endpoints Protegidos: 9   | Huérfanos: 0  | Sin Rol: 0  | Estado: 🟢 Seguro                            | Criticidad: Baja  |
+| CORE            | Endpoints Protegidos: 33  | Huérfanos: 0  | Sin Rol: 0  | Estado: 🟢 Seguro                            | Criticidad: Baja  |
+
+=== DETALLE DE PERMISOS HUERFANOS/SIN ROL ===

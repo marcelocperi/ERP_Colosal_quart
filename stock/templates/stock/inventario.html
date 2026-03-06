@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title"><i class="fas fa-clipboard-check me-2 text-warning"></i>Auditoría de Inventarios</h1>
+        <p class="text-muted">Gestione sus controles de stock cíclicos, dirigidos y generales</p>
+    </div>
+    <button class="btn btn-warning btn-lg text-dark fw-bold" onclick="nuevoInventario()">
+        <i class="fas fa-plus me-2"></i> Nuevo Control
+    </button>
+</div>
+
+<div class="row g-4">
+    {% for inv in inventarios %}
+    <div class="col-md-4">
+        <div class="card bg-dark border-secondary h-100 hover-elevate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span
+                        class="badge bg-{{ 'primary' if inv.tipo == 'GENERAL' else 'info' if inv.tipo == 'CICLICO' else 'warning text-dark' }}">
+                        INVENTARIO {{ inv.tipo }}
+                    </span>
+                    <span class="text-muted small">#{{ inv.id }}</span>
+                </div>
+                <h5 class="text-white mb-2">{{ inv.deposito_nombre }}</h5>
+                <p class="text-muted small mb-3">
+                    <i class="far fa-calendar-alt me-1"></i> Iniciado: {{ inv.fecha_inicio.strftime('%d/%m/%Y') }}
+                </p>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="status-indicator">
+                        {% if inv.estado == 'BORRADOR' %}
+                        <span class="text-secondary"><i class="fas fa-edit me-1"></i> Borrador</span>
+                        {% elif inv.estado == 'EN_PROCESO' %}
+                        <span class="text-warning"><i class="fas fa-spinner fa-spin me-1"></i> En Proceso</span>
+                        {% elif inv.estado == 'CERRADO' %}
+                        <span class="text-success"><i class="fas fa-check-double me-1"></i> Cerrado</span>
+                        {% endif %}
+                    </div>
+                    <div class="progress flex-grow-1 mx-3" style="height: 6px; background: rgba(255,255,255,0.05);">
+                        <div class="progress-bar bg-{{ 'success' if inv.estado == 'CERRADO' else 'warning' }}"
+                            style="width: {{ inv.progreso or 0 }}%"></div>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('stock.inventario_toma', id=inv.id) }}" class="btn btn-outline-light w-100 py-2">
+                    {{ 'Continuar Toma' if inv.estado == 'EN_PROCESO' else 'Ver Detalles' if inv.estado == 'CERRADO'
+                    else 'Comenzar Auditoría' }}
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted">No hay auditorías de inventario registradas.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal Nuevo Inventario -->
+<div class="modal fade" id="modalNuevoInv" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Iniciar Nuevo Control de Stock</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formNuevoInv" action="{{ url_for('stock.api_inventario_crear') }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small uppercase">Depósito a Auditar</label>
+                        <select name="deposito_id" class="form-select bg-dark text-white border-secondary" required>
+                            {% for d in depositos %}
+                            <option value="{{ d.id }}">{{ d.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small uppercase">Tipo de Inventario</label>
+                        <select name="tipo" class="form-select bg-dark text-white border-secondary"
+                            onchange="toggleCriterios(this.value)">
+                            <option value="GENERAL">GENERAL (Todo el depósito)</option>
+                            <option value="CICLICO">CÍCLICO (Aleatorio segmentado)</option>
+                            <option value="DIRIGIDO">DIRIGIDO (Por marca/categoría)</option>
+                        </select>
+                    </div>
+                    <div id="div_criterios" class="p-3 bg-secondary bg-opacity-10 rounded d-none">
+                        <label class="form-label text-muted small uppercase">Criterio de Selección</label>
+                        <input type="text" name="criteria" class="form-control bg-dark text-white border-secondary"
+                            placeholder="Ej: Marca=PHILIPS">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold">Iniciar Auditoría</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function nuevoInventario() {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevoInv')).show();
+    }
+    function toggleCriterios(val) {
+        document.getElementById('div_criterios').classList.toggle('d-none', val === 'GENERAL');
+    }
+</script>
+{% endblock %}

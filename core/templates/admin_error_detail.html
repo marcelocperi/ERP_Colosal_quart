@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+{% block title %}Detalle de Error #{{ error.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header con toggle de perfil -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{{ url_for('core.error_log', profile=f_profile) }}" class="btn btn-sm btn-outline-secondary mb-2">
+                <i class="fas fa-arrow-left me-1"></i>Volver al listado
+            </a>
+            <h2 class="text-white fw-bold mb-0">
+                {% if f_profile == 'business' %}
+                <i class="fas fa-user-tie me-2 text-warning"></i>Reporte de Incidencia
+                {% else %}
+                <i class="fas fa-terminal me-2 text-info"></i>Diagnóstico Técnico
+                {% endif %}
+                <span class="badge bg-dark border border-secondary ms-2 fs-6">#{{ error.id }}</span>
+                {% if error.incident_status == 'RESOLVED' %}
+                <span class="badge bg-success ms-2 fs-6">Resuelto</span>
+                {% elif error.incident_status == 'IN_PROGRESS' %}
+                <span class="badge bg-warning text-dark ms-2 fs-6">En Revisión</span>
+                {% else %}
+                <span class="badge bg-danger ms-2 fs-6">Abierto</span>
+                {% endif %}
+            </h2>
+            <small class="text-muted">{{ error.created_at }} · Empresa {{ error.enterprise_id }}</small>
+            {% if error.dias_sin_resolucion and error.incident_status != 'RESOLVED' %}
+            <br><small class="text-warning fw-bold"><i class="fas fa-clock me-1"></i>{{ error.dias_sin_resolucion }}
+                días sin resolución</small>
+            {% endif %}
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('core.error_log_detail', error_id=error.id, profile='business') }}"
+                class="btn btn-sm {{ 'btn-warning text-dark fw-bold' if f_profile == 'business' else 'btn-outline-secondary' }}">
+                <i class="fas fa-user-tie me-1"></i>Vista Negocio
+            </a>
+            <a href="{{ url_for('core.error_log_detail', error_id=error.id, profile='expert') }}"
+                class="btn btn-sm {{ 'btn-info text-dark fw-bold' if f_profile == 'expert' else 'btn-outline-secondary' }}">
+                <i class="fas fa-terminal me-1"></i>Vista Experto
+            </a>
+        </div>
+    </div>
+
+    {% set fm = failure_labels.get(error.failure_mode, (error.failure_mode or 'DESCONOCIDO', 'Error no clasificado
+    automáticamente.')) %}
+    {% set imp = impact_labels.get(error.impact_category, ('⚪', error.impact_category or 'No especificado')) %}
+    {% set sev = error.severity or 0 %}
+    {% set sev_color = '#ef4444' if sev >= 8 else ('#f59e0b' if sev >= 5 else '#64748b') %}
+
+    <!-- ═══════════════════════════════════════════════════════════
+     PERFIL NEGOCIO
+     ═══════════════════════════════════════════════════════════ -->
+    {% if f_profile == 'business' %}
+
+    <!-- Tarjeta de Resumen Principal -->
+    <div class="card border-0 shadow-lg mb-4"
+        style="background: linear-gradient(135deg, #1e1b4b 0%, #1e293b 100%); border-left: 5px solid {{ sev_color }} !important;">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="display-6 me-3">{{ fm[0].split(' ')[0] }}</span>
+                        <div>
+                            <h4 class="text-white mb-1 fw-bold">{{ fm[0] }}</h4>
+                            <p class="text-muted mb-0">{{ fm[1] }}</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger bg-danger bg-opacity-10 border-danger-subtle mb-0 py-2">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Mensaje del sistema:</strong> {{ error.error_message or 'Sin mensaje adicional.' }}
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="severity-gauge mx-auto">
+                        <div class="gauge-number" style="color: {{ sev_color }};">{{ sev }}</div>
+                        <div class="gauge-label text-muted">de 10 — Nivel de Criticidad</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila: ¿Qué área? + ¿Qué impacto? + ¿Quién? -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-body">
+                    <h6 class="text-muted small text-uppercase mb-3"><i class="fas fa-map-marker-alt me-2"></i>¿Dónde
+                        ocurrió?</h6>
+                    <div class="fs-5 text-white mb-1">{{ module_labels.get(error.module, error.module or '—') }}</div>
+                    <div class="small text-muted">Acción: <span class="text-info">{{ error.request_method or '' }} {{
+                            error.endpoint or '' }}</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-body">
+                    <h6 class="text-muted small text-uppercase mb-3"><i
+                            class="fas fa-exclamation-triangle me-2"></i>¿Qué impacto tiene?</h6>
+                    <div class="fs-4 mb-1">{{ imp[0] }}</div>
+                    <div class="text-white">{{ imp[1] }}</div>
+                    <div class="small text-muted mt-1">Todo fue revertido automáticamente. No hay datos corruptos.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-body">
+                    <h6 class="text-muted small text-uppercase mb-3"><i class="fas fa-user me-2"></i>¿Quién lo originó?
+                    </h6>
+                    <div class="text-white mb-1">{{ error.username or ('Usuario ID: ' ~ error.user_id) if error.user_id
+                        else 'Usuario no identificado' }}</div>
+                    {% if error.user_email %}<div class="small text-muted">{{ error.user_email }}</div>{% endif %}
+                    <div class="small text-muted mt-1">{{ error.created_at }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Datos que intervinieron -->
+    {% if req_data %}
+    <div class="card bg-dark border-secondary shadow mb-4">
+        <div class="card-header border-secondary bg-transparent">
+            <h5 class="mb-0 text-warning fw-bold">
+                <i class="fas fa-database me-2"></i>Datos que Intervinieron en la Operación
+            </h5>
+            <small class="text-muted">Esta es la información que se intentó procesar cuando ocurrió el error.</small>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for key, val in req_data.items() %}
+                <div class="col-md-4">
+                    <div class="data-field p-3 rounded">
+                        <div class="data-label text-muted small text-uppercase mb-1">{{ key | replace('_', ' ') }}</div>
+                        <div class="data-value text-white">
+                            {% if val == '••••••••' %}
+                            <span class="text-muted fst-italic">{{ val }} (dato sensible)</span>
+                            {% elif val is mapping %}
+                            <code class="text-info extra-small">{{ val | tojson }}</code>
+                            {% elif val is iterable and val is not string %}
+                            <span class="badge bg-secondary">{{ val | length }} elementos</span>
+                            {% else %}
+                            {{ val if val != '' and val != None else '—' }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recomendación -->
+    <div class="card border-0 shadow"
+        style="background: rgba(16,185,129,0.08); border-left: 4px solid #10b981 !important;">
+        <div class="card-body">
+            <h6 class="text-success mb-2"><i class="fas fa-lightbulb me-2"></i>¿Qué hacer ahora?</h6>
+            {% if error.failure_mode == 'DATA_INTEGRITY' %}
+            <p class="text-muted mb-0">Verifique que los registros relacionados existan antes de intentar la operación.
+                Por ejemplo, si está asociando un artículo, confirme que su proveedor o código esté previamente
+                registrado en el maestro.</p>
+            {% elif error.failure_mode == 'SECURITY_AUTH' %}
+            <p class="text-muted mb-0">Consulte con el administrador si su usuario tiene los permisos necesarios para
+                esta operación. No intente repetirla sin los permisos correctos.</p>
+            {% elif error.failure_mode == 'NETWORK_TRANSIT' %}
+            <p class="text-muted mb-0">Este es un error transitorio. Espere unos minutos e intente nuevamente. Si
+                persiste, notifique al equipo de sistemas.</p>
+            {% else %}
+            <p class="text-muted mb-0">Revise los datos ingresados e intente nuevamente. Si el error persiste, contacte
+                al soporte técnico con el número de referencia <strong>#{{ error.id }}</strong>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+     PERFIL EXPERTO
+     ═══════════════════════════════════════════════════════════ -->
+    {% else %}
+
+    <!-- Fila: Metadata + Request Data -->
+    <div class="row g-3 mb-4">
+
+        <!-- Metadata técnica -->
+        <div class="col-md-5">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header border-secondary bg-transparent">
+                    <h6 class="mb-0 text-info fw-bold"><i class="fas fa-info-circle me-2"></i>Metadata Técnica</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-dark table-sm mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted ps-3">ID Log</td>
+                                <td class="font-monospace text-white">#{{ error.id }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">Enterprise ID</td>
+                                <td class="text-warning">{{ error.enterprise_id }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">User ID</td>
+                                <td>{{ error.user_id or '—' }} <small class="text-muted">({{ error.username or 'anon'
+                                        }})</small></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">Módulo</td>
+                                <td><code class="text-info">{{ error.module }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">Endpoint</td>
+                                <td><code
+                                        class="text-white extra-small">{{ error.request_method }} {{ error.endpoint }}</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">Severity</td>
+                                <td class="fw-bold" style="color:{{ sev_color }}">{{ sev }}/10</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">Impact</td>
+                                <td><span class="badge bg-secondary">{{ error.impact_category }}</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">Failure Mode</td>
+                                <td><code class="text-warning">{{ error.failure_mode or 'null' }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">Duración</td>
+                                <td class="text-muted">{{ error.duration_ms or 0 }} ms</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-3">Timestamp</td>
+                                <td class="font-monospace extra-small text-muted">{{ error.created_at }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request Data (JSON completo) -->
+        <div class="col-md-7">
+            <div class="card bg-dark border-secondary h-100">
+                <div
+                    class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 text-warning fw-bold"><i class="fas fa-database me-2"></i>Request Data (Datos
+                        intervinientes)</h6>
+                    <button class="btn btn-xs btn-outline-secondary" onclick="copyToClipboard('req-data-block')">
+                        <i class="fas fa-copy me-1"></i>Copiar
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <pre id="req-data-block" class="m-0 p-3 text-success extra-small"
+                        style="background:#0d1117; max-height: 280px; overflow-y:auto; border-radius: 0 0 8px 8px;">{{ req_data | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Incident Management Panel ─── -->
+    <div class="card bg-dark border-primary mb-4 shadow">
+        <div
+            class="card-header border-primary bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-white fw-bold"><i class="fas fa-tasks me-2 text-primary"></i>Gestión de Incidente</h5>
+            <span class="badge 
+                {% if error.incident_status == 'RESOLVED' %}bg-success
+                {% elif error.incident_status == 'IN_PROGRESS' %}bg-warning text-dark
+                {% else %}bg-danger{% endif %} fs-6">
+                {{ error.incident_status or 'OPEN' }}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Formulario de Actualización -->
+                <div class="col-md-6 border-end border-secondary">
+                    <form method="POST" action="{{ url_for('core.error_log_update_incident', error_id=error.id) }}">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Cambiar Estado</label>
+                            <select name="incident_status"
+                                class="form-select form-select-sm bg-dark text-white border-secondary">
+                                <option value="OPEN" {{ 'selected' if error.incident_status=='OPEN' else '' }}>Abierto
+                                </option>
+                                <option value="IN_PROGRESS" {{ 'selected' if error.incident_status=='IN_PROGRESS'
+                                    else '' }}>En revisión</option>
+                                <option value="RESOLVED" {{ 'selected' if error.incident_status=='RESOLVED' else '' }}>
+                                    Resuelto</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Asignar A</label>
+                            <select name="assigned_to"
+                                class="form-select form-select-sm bg-dark text-white border-secondary">
+                                <option value="">— Sin Asignar —</option>
+                                {% for u in users_list %}
+                                <option value="{{ u.id }}" {{ 'selected' if error.assigned_to==u.id else '' }}>{{
+                                    u.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Fecha Probable Res. (opcional)</label>
+                            <input type="date" name="resolution_date"
+                                class="form-control form-control-sm bg-dark text-white border-secondary"
+                                value="{{ error.resolution_date.strftime('%Y-%m-%d') if error.resolution_date else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Nota Técnica / Comentario</label>
+                            <textarea name="new_note"
+                                class="form-control form-control-sm bg-dark text-white border-secondary" rows="4"
+                                placeholder="Detalle la investigación o resolución…"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-save me-1"></i>Guardar Cambios y Notificar
+                        </button>
+                    </form>
+                </div>
+                <!-- Historial de Ticket -->
+                <div class="col-md-6">
+                    <h6 class="text-white fw-bold mb-3"><i class="fas fa-history me-2 text-info"></i>Historial del
+                        Ticket</h6>
+                    <div style="max-height: 350px; overflow-y: auto;" class="pe-2">
+                        {% if history_list %}
+                        {% for h in history_list | reverse %}
+                        <div
+                            class="p-3 mb-2 rounded bg-black bg-opacity-50 border-start border-3
+                                {{ 'border-success' if h.status_change == 'RESOLVED' else ('border-warning' if h.status_change == 'IN_PROGRESS' else 'border-danger') }}">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-info fw-bold">{{ h.user }}</small>
+                                <small class="text-muted extra-small">{{ h.date }}</small>
+                            </div>
+                            <div class="text-white small">{{ h.note or '— Sin mensaje —' }}</div>
+                            <div class="mt-2 text-end">
+                                <span class="badge bg-secondary extra-small">{{ h.status_change }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-muted small fst-italic">No hay historial de gestión registrado.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Error Message ─── -->
+    <div class="card bg-dark border-danger mb-4">
+        <div class="card-header border-danger bg-transparent">
+            <h6 class="mb-0 text-danger fw-bold"><i class="fas fa-times-circle me-2"></i>Error Message</h6>
+        </div>
+        <div class="card-body">
+            <code class="text-danger">{{ error.error_message or '(sin mensaje)' }}</code>
+        </div>
+    </div>
+
+    <!-- ─── CLOB: Full Traceback ─── -->
+    <div class="card bg-dark border-secondary shadow-lg mb-4">
+        <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 text-info fw-bold">
+                <i class="fas fa-scroll me-2"></i>Error Traceback (CLOB Completo)
+            </h6>
+            <div class="d-flex gap-2">
+                <button class="btn btn-xs btn-outline-info" onclick="copyToClipboard('traceback-block')">
+                    <i class="fas fa-copy me-1"></i>Copiar
+                </button>
+                <button class="btn btn-xs btn-outline-secondary" onclick="toggleWrap('traceback-block')">
+                    <i class="fas fa-text-width me-1"></i>Wrap
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% set clob_val = error.get('clob_data') or error.get('error_traceback') %}
+            {% if clob_val %}
+            <pre id="traceback-block" class="m-0 p-4 extra-small font-monospace"
+                style="background: #0a0c10; color: #ff6b6b; max-height: 600px; overflow: auto; white-space: pre; border-radius: 0 0 8px 8px; tab-size: 4;">{{ clob_val }}</pre>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <i class="fas fa-check-circle text-success me-2"></i>Sin traceback registrado (operación exitosa o error
+                no capturado).
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+
+<style>
+    .severity-gauge {
+        max-width: 160px;
+    }
+
+    .gauge-number {
+        font-size: 4rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .gauge-label {
+        font-size: 0.72rem;
+        margin-top: 4px;
+    }
+
+    .data-field {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .data-label {
+        letter-spacing: 0.06em;
+    }
+
+    .extra-small {
+        font-size: 0.72rem;
+    }
+
+    .font-monospace {
+        font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+    }
+
+    .btn-xs {
+        padding: 2px 8px;
+        font-size: 0.7rem;
+    }
+
+    pre {
+        line-height: 1.6;
+    }
+</style>
+
+<script>
+    function copyToClipboard(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Copiado al portapapeles', 'success');
+        });
+    }
+    function toggleWrap(elementId) {
+        const el = document.getElementById(elementId);
+        el.style.whiteSpace = el.style.whiteSpace === 'pre-wrap' ? 'pre' : 'pre-wrap';
+    }
+</script>
+{% endblock %}

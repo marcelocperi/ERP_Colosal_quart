@@ -1,0 +1,234 @@
+﻿Ô£à Connection Pool 'web_app_pool' initialized (size=5)
+
+================================================================================
+AUDITOR├ìA DE RUTAS vs sys_permissions  (76 permisos en BD)
+================================================================================
+
+  Ô£à Todos los permisos referenciados existen en sys_permissions.
+
+
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+  Ô£à PERMISOS CONFIRMADOS (43 rutas)
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ­ƒôü BIBLIOTECA
+     [OK]      GET      /prestamos                                    perm: 'loans_view'  [Pr├®stamos]
+     [OK]      GET      /prestamos/buscar                             perm: 'loans_view'  [Pr├®stamos]
+     [OK]      POST     /prestamos/devolver/<int:id>                  perm: 'loans_manage'  [Pr├®stamos]
+     [OK]      POST     /prestamos/registrar                          perm: 'loans_manage'  [Pr├®stamos]
+     [OK]      POST     /prestamos/reservar                           perm: 'loans_manage'  [Pr├®stamos]
+     [OK]      POST     /prestamos/reservas/anular/<int:id>           perm: 'loans_manage'  [Pr├®stamos]
+     [OK]      GET      /usuarios                                     perm: 'patrons_view'  [Clientes]
+     [OK]      POST     /usuarios/agregar                             perm: 'patrons_manage'  [Clientes]
+     [OK]      POST     /usuarios/modificar/<int:id>                  perm: 'patrons_manage'  [Clientes]
+
+  ­ƒôü COMPRAS
+     [OK]      GET      /compras/cotizaciones                         perm: 'compras.ver_reportes'  [Compras]
+
+  ­ƒôü CORE
+     [OK]      GET      /admin/dashboard                              perm: 'admin_users'  [Sistema]
+     [OK]      GET      /admin/empresa/fiscal                         perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/empresa/fiscal                         perm: 'admin_users'  [Sistema]
+     [OK]      GET      /admin/error-log                              perm: 'view_error_log'  [AUDITORIA]
+     [OK]      GET      /admin/error-log/detail/<int:error_id>        perm: 'view_error_log'  [AUDITORIA]
+     [OK]      GET      /admin/puestos                                perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/puestos/create                         perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/puestos/delete/<int:id>                perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/puestos/update/<int:id>                perm: 'admin_users'  [Sistema]
+     [OK]      GET      /admin/risk-dashboard                         perm: 'view_risk_dashboard'  [AUDITORIA]
+     [OK]      GET      /admin/roles                                  perm: 'admin_roles'  [Sistema]
+     [OK]      POST     /admin/roles/create                           perm: 'admin_roles'  [Sistema]
+     [OK]      POST     /admin/roles/delete/<int:role_id>             perm: 'admin_roles'  [Sistema]
+     [OK]      POST     /admin/roles/init-sod                         perm: 'admin_roles'  [Sistema]
+     [OK]      POST     /admin/roles/update_permissions/<int:role_id> perm: 'admin_roles'  [Sistema]
+     [OK]      GET      /admin/security-logs                          perm: 'admin_users'  [Sistema]
+     [OK]      GET      /admin/services                               perm: 'admin_users'  [Sistema]
+     [OK]      GET, POST /admin/services/config/<int:service_id>       perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/services/control/<int:service_id>      perm: 'admin_users'  [Sistema]
+     [OK]      GET, POST /admin/services/create                        perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/services/georef/sync                   perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/services/rotation                      perm: 'admin_users'  [Sistema]
+     [OK]      GET      /admin/threads                                perm: 'sysadmin'  [SISTEMA]
+     [OK]      POST     /admin/threads/cancel/<task_id>               perm: 'sysadmin'  [SISTEMA]
+     [OK]      GET      /admin/users                                  perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/users/create                           perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/users/reset-attempts/<int:user_id>     perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/users/reset-password/<int:user_id>     perm: 'admin_users'  [Sistema]
+     [OK]      POST     /admin/users/update/<int:user_id>             perm: 'admin_users'  [Sistema]
+
+  ­ƒôü STOCK
+     [OK]      GET      /api/stock/stats                              perm: 'stock_view'  [Inventario]
+     [OK]      POST     /articulos/guardar                            perm: 'books_add'  [Libros]
+     [OK]      GET, POST /articulos/importar                           perm: 'books_import'  [Libros]
+     [OK]      POST     /articulos/upload                             perm: 'books_import'  [Libros]
+
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+  ­ƒöÉ SOLO LOGIN_REQUIRED (sin permission_required) (130 rutas)
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ­ƒôü BIBLIOTECA
+     [LOGIN]   GET      /                                             fn: dashboard
+     [LOGIN]   GET      /api/dolar/refresh                            fn: refresh_dolar
+     [LOGIN]   GET      /api/libros/meta                              fn: api_meta
+     [LOGIN]   GET      /api/prestamos/reservas                       fn: api_reservas
+     [LOGIN]   GET      /dashboard                                    fn: dashboard
+
+  ­ƒôü COMPRAS
+     [LOGIN]   GET      /compras/alertas-detalle                      fn: alertas_detalle
+     [LOGIN]   GET      /compras/api/facturas-pendientes-proveedor/<int:proveedor_id> fn: api_facturas_pendientes_proveedor
+     [LOGIN]   POST     /compras/api/guardar-comprobante              fn: guardar_comprobante_api
+     [LOGIN]   POST     /compras/api/procesar-orden-pago              fn: api_procesar_orden_pago
+     [LOGIN]   POST     /compras/api/verificar-cae                    fn: api_verificar_cae
+     [LOGIN]   GET      /compras/aprobaciones                         fn: aprobaciones
+     [LOGIN]   GET      /compras/aprobar_po/<int:id>                  fn: aprobar_po_detalle
+     [LOGIN]   GET, POST /compras/cotizacion/<int:id>                  fn: cotizacion_detalle
+     [LOGIN]   POST     /compras/cotizacion/<int:id>/generar_po       fn: generar_po
+     [LOGIN]   POST     /compras/cotizacion/<int:id>/reenviar         fn: reenviar_cotizacion
+     [LOGIN]   GET      /compras/dashboard                            fn: dashboard
+     [LOGIN]   GET      /compras/facturar                             fn: facturar
+     [LOGIN]   POST     /compras/orden/<int:id>/agregar_item          fn: agregar_item_po
+     [LOGIN]   GET, POST /compras/orden_nueva                          fn: orden_nueva
+     [LOGIN]   GET      /compras/ordenes-compra                       fn: ordenes_compra
+     [LOGIN]   GET      /compras/ordenes-pago                         fn: ordenes_pago
+     [LOGIN]   GET      /compras/pagar                                fn: pagar
+     [LOGIN]   POST     /compras/po/<int:id>/reenviar                 fn: reenviar_po
+     [LOGIN]   POST     /compras/post_aprobacion_po/<int:id>          fn: post_aprobacion_po
+     [LOGIN]   GET      /compras/proveedores                          fn: proveedores
+     [LOGIN]   POST     /compras/proveedores/agregar-contacto/<int:id> fn: agregar_contacto
+     [LOGIN]   POST     /compras/proveedores/agregar-direccion/<int:id> fn: agregar_direccion
+     [LOGIN]   POST     /compras/proveedores/agregar-fiscal/<int:id>  fn: agregar_fiscal
+     [LOGIN]   POST     /compras/proveedores/editar/<int:id>          fn: editar_proveedor
+     [LOGIN]   GET      /compras/proveedores/eliminar-detalle/<string:tabla>/<int:item_id>/<int:id> fn: eliminar_detalle
+     [LOGIN]   GET, POST /compras/proveedores/nuevo                    fn: nuevo_proveedor
+     [LOGIN]   GET      /compras/proveedores/perfil/<int:id>          fn: perfil_proveedor
+     [LOGIN]   GET      /compras/registro-afip                        fn: registro_afip
+     [LOGIN]   GET      /compras/ver-retencion/<int:id>               fn: ver_retencion
+
+  ­ƒôü CONTABILIDAD
+     [LOGIN]   GET      /contabilidad/api/consultar-padron/<string:cuit> fn: api_consultar_padron
+     [LOGIN]   GET      /contabilidad/asiento/<int:id>                fn: ver_asiento
+     [LOGIN]   GET, POST /contabilidad/centralizacion                  fn: centralizacion
+     [LOGIN]   POST     /contabilidad/centralizar-sueldos/<int:id>    fn: centralizar_sueldos
+     [LOGIN]   GET, POST /contabilidad/config-fiscal                   fn: config_fiscal
+     [LOGIN]   GET      /contabilidad/dashboard                       fn: dashboard
+     [LOGIN]   GET      /contabilidad/exportar-afip                   fn: exportar_afip
+     [LOGIN]   GET      /contabilidad/exportar-sicore                 fn: exportar_sicore
+     [LOGIN]   POST     /contabilidad/importar-padron/<string:jurisdiccion> fn: importar_padron
+     [LOGIN]   GET      /contabilidad/libro-diario                    fn: libro_diario
+     [LOGIN]   GET      /contabilidad/libro-iva-compras               fn: libro_iva_compras
+     [LOGIN]   GET      /contabilidad/libro-iva-ventas                fn: libro_iva_ventas
+     [LOGIN]   POST     /contabilidad/liquidar-sueldos                fn: liquidar_sueldos
+     [LOGIN]   GET      /contabilidad/padrones-iibb                   fn: padrones_iibb
+     [LOGIN]   GET      /contabilidad/plan-cuentas                    fn: plan_cuentas
+     [LOGIN]   GET      /contabilidad/reporte-iibb                    fn: reporte_iibb
+     [LOGIN]   GET      /contabilidad/sueldos                         fn: sueldos_dashboard
+
+  ­ƒôü CORE
+     [LOGIN]   GET      /api/erp/areas                                fn: api_get_areas
+     [LOGIN]   GET      /api/erp/puestos                              fn: api_get_puestos
+     [LOGIN]   GET      /api/georef/calles                            fn: api_get_calles
+     [LOGIN]   GET      /api/georef/localidades                       fn: api_get_localidades
+     [LOGIN]   GET      /api/georef/municipio_info                    fn: api_get_municipio_info
+     [LOGIN]   GET      /api/georef/municipios                        fn: api_get_municipios
+     [LOGIN]   GET, POST /auth/enforce-change-password                 fn: enforce_password_change
+     [LOGIN]   GET      /manual                                       fn: manual_index
+     [LOGIN]   GET      /manual/tecnica                               fn: manual_tecnico
+     [LOGIN]   GET      /manual/usuario                               fn: manual_usuario
+     [LOGIN]   POST     /profile/change-password                      fn: change_password
+
+  ­ƒôü FONDOS
+     [LOGIN]   GET      /fondos/aprobaciones                          fn: aprobaciones
+     [LOGIN]   GET      /fondos/aprobar_po/<int:id>                   fn: aprobar_po_detalle
+     [LOGIN]   GET      /fondos/cajas                                 fn: cajas
+     [LOGIN]   GET, POST /fondos/condiciones-mixtas                    fn: condiciones_mixtas
+     [LOGIN]   GET, POST /fondos/condiciones-pago                      fn: condiciones_pago
+     [LOGIN]   GET      /fondos/configuracion-global                  fn: configuracion_global
+     [LOGIN]   GET      /fondos/dashboard                             fn: dashboard
+     [LOGIN]   GET, POST /fondos/impuestos                             fn: impuestos
+     [LOGIN]   GET      /fondos/kpi-desembolsos                       fn: kpi_desembolsos
+     [LOGIN]   GET, POST /fondos/medios-pago                           fn: medios_pago
+     [LOGIN]   POST     /fondos/post_aprobacion_po/<int:id>           fn: post_aprobacion_po
+
+  ­ƒôü STOCK
+     [LOGIN]   GET      /api/articulos/search                         fn: api_search
+     [LOGIN]   GET      /api/enrichment/service-efficiency            fn: api_service_efficiency
+     [LOGIN]   POST     /api/inventario/<int:id>/cerrar               fn: api_inventario_cerrar
+     [LOGIN]   POST     /api/inventario/crear                         fn: api_inventario_crear
+     [LOGIN]   POST     /api/inventario/item/<int:id>/update          fn: api_inventario_item_update
+     [LOGIN]   GET      /api/pending-count                            fn: api_pending_count
+     [LOGIN]   GET      /api/prestamos/libro/<int:id>                 fn: api_prestamos_libro
+     [LOGIN]   GET      /api/series/<int:articulo_id>                 fn: api_get_series
+     [LOGIN]   POST     /api/transferencia/<int:id>/despachar         fn: api_despachar_transferencia
+     [LOGIN]   POST     /api/transferencia/<int:id>/solicitar-cot     fn: api_solicitar_cot
+     [LOGIN]   POST     /api/transferencia/guardar                    fn: api_guardar_transferencia
+     [LOGIN]   GET      /articulos                                    fn: articulos
+     [LOGIN]   POST     /articulos/enrich                             fn: enrich_bulk
+     [LOGIN]   GET      /articulos/enrich/last-report                 fn: enrich_last_report
+     [LOGIN]   GET      /dashboard                                    fn: dashboard
+     [LOGIN]   GET      /depositos                                    fn: depositos_lista
+     [LOGIN]   GET, POST /depositos/editar/<int:id>                    fn: deposito_editar
+     [LOGIN]   GET, POST /depositos/nuevo                              fn: deposito_nuevo
+     [LOGIN]   GET      /download/ebook/<int:articulo_id>             fn: download_ebook
+     [LOGIN]   GET      /historial/<int:id>                           fn: articulo_historial
+     [LOGIN]   GET      /inventario/toma/<int:id>                     fn: inventario_toma
+     [LOGIN]   GET      /inventarios                                  fn: inventarios_lista
+     [LOGIN]   GET, POST /logistica/editar/<int:id>                    fn: logistica_editar
+     [LOGIN]   GET, POST /logistica/nueva                              fn: logistica_nueva
+     [LOGIN]   GET      /logisticas                                   fn: logisticas_lista
+     [LOGIN]   GET      /movimientos                                  fn: movimientos_historial
+     [LOGIN]   GET      /movimientos/detalle/<int:id>                 fn: movimiento_detalle
+     [LOGIN]   GET, POST /movimientos/nuevo                            fn: movimiento_crear
+     [LOGIN]   GET      /tipos                                        fn: tipos_articulo
+     [LOGIN]   POST     /tipos/guardar                                fn: tipos_articulo_guardar
+     [LOGIN]   GET      /transferencias                               fn: transferencias_lista
+     [LOGIN]   GET      /transferencias/nueva                         fn: transferencia_nueva
+
+  ­ƒôü VENTAS
+     [LOGIN]   GET      /api/ventas/afip/consultar/<cuit>             fn: consultar_afip
+     [LOGIN]   GET      /api/ventas/articulos/buscar                  fn: buscar_articulos
+     [LOGIN]   GET      /api/ventas/cliente/<int:id>/condiciones      fn: get_cliente_condiciones
+     [LOGIN]   GET      /api/ventas/cliente/<int:id>/finanzas         fn: api_cliente_finanzas
+     [LOGIN]   GET      /api/ventas/cliente/<int:id>/logistica        fn: api_cliente_logistica
+     [LOGIN]   GET      /api/ventas/fiscal/allowed-docs               fn: get_allowed_docs
+     [LOGIN]   GET      /ventas/clientes                              fn: clientes
+     [LOGIN]   POST     /ventas/clientes/agregar-contacto/<int:id>    fn: agregar_contacto
+     [LOGIN]   POST     /ventas/clientes/agregar-direccion/<int:id>   fn: agregar_direccion
+     [LOGIN]   POST     /ventas/clientes/agregar-fiscal/<int:id>      fn: agregar_fiscal
+     [LOGIN]   POST     /ventas/clientes/aprobar-condicion/<int:id>   fn: aprobar_condicion_pago
+     [LOGIN]   POST     /ventas/clientes/editar/<int:id>              fn: editar_cliente
+     [LOGIN]   GET      /ventas/clientes/eliminar-detalle/<string:tabla>/<int:item_id>/<int:cliente_id> fn: eliminar_detalle
+     [LOGIN]   POST     /ventas/clientes/habilitar-condiciones/<int:id> fn: habilitar_condiciones_pago
+     [LOGIN]   GET, POST /ventas/clientes/nuevo                        fn: nuevo_cliente
+     [LOGIN]   GET      /ventas/clientes/perfil/<int:id>              fn: perfil_cliente
+     [LOGIN]   POST     /ventas/clientes/solicitar-condicion/<int:id> fn: solicitar_condicion_pago
+     [LOGIN]   POST     /ventas/comprobante/<int:id>/reenviar         fn: reenviar_comprobante
+     [LOGIN]   GET      /ventas/comprobante/ver/<int:id>              fn: ver_comprobante
+     [LOGIN]   GET      /ventas/comprobantes                          fn: comprobantes
+     [LOGIN]   GET      /ventas/dashboard                             fn: dashboard
+     [LOGIN]   GET      /ventas/facturar                              fn: facturar
+     [LOGIN]   GET      /ventas/nota-credito/<int:factura_id>         fn: nota_credito
+     [LOGIN]   POST     /ventas/procesar-factura                      fn: procesar_factura
+     [LOGIN]   GET      /ventas/remito/ver/<int:id>                   fn: ver_remito
+
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+  ­ƒîÉ RUTAS P├ÜBLICAS (sin autenticaci├│n) (10 rutas)
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+     [PUBLIC]  POST     /auth/request-temp-password                   fn: request_temp_password
+     [PUBLIC]  POST     /auth/reset-confirm                           fn: reset_confirm
+     [PUBLIC]  GET, POST /auth/reset-password                          fn: reset_password_public
+     [PUBLIC]  GET      /auth/reset/<int:ent_id>/<int:user_id>/<token> fn: reset_with_token
+     [PUBLIC]  GET, POST /login                                        fn: login
+     [PUBLIC]  GET      /logout                                       fn: logout
+     [PUBLIC]  GET      /utilitarios/crons                            fn: gestor_crons
+     [PUBLIC]  GET      /utilitarios/crons/api/logs/<int:cron_id>     fn: get_cron_logs
+     [PUBLIC]  POST     /utilitarios/crons/delete/<int:cron_id>       fn: delete_cron
+     [PUBLIC]  POST     /utilitarios/crons/save                       fn: save_cron
+
+================================================================================
+  RESUMEN TOTAL:  183 rutas
+  ÔØî Missing perms : 0
+  Ô£à OK            : 43
+  ­ƒöÉ Solo login    : 130
+  ­ƒîÉ P├║blicas      : 10
+================================================================================
+

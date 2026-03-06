@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Añadir Nuevo Servicio Externo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white p-4">
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-plus-circle me-2"></i>Nuevo Servicio Externo</h4>
+                    <p class="mb-0 opacity-75">Configure una nueva integración de API o Scraper para su empresa.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('core.admin_service_create') }}" method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Nombre del Servicio *</label>
+                                <input type="text" name="nombre" class="form-control rounded-pill"
+                                    placeholder="Ej: Google Books API" required>
+                                <small class="text-muted">Nombre descriptivo para identificarlo en el panel.</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tipo de Servicio</label>
+                                <select name="tipo_servicio" class="form-select rounded-pill">
+                                    <option value="DATA_PROVIDER">DATA_PROVIDER (API de datos)</option>
+                                    <option value="SCRAPER">SCRAPER (Extracción web)</option>
+                                    <option value="UTILITY">UTILITY (Servicio de apoyo)</option>
+                                    <option value="PAYMENT">PAYMENT (Pasarela de pagos)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Modo de Captura</label>
+                                <select name="modo_captura" class="form-select rounded-pill">
+                                    <option value="API">API (JSON/XML)</option>
+                                    <option value="SCRAPING">SCRAPING (HTML)</option>
+                                    <option value="DB">DB (Conexión Directa)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Clase de Implementación (Python Path)</label>
+                                <input type="text" name="clase_implementacion" class="form-control rounded-pill"
+                                    placeholder="services.external.MyService">
+                                <small class="text-muted">Ruta completa a la clase que maneja la lógica (Ej:
+                                    <code>services.scraping_service.CuspideScraper</code>).</small>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">URL Objetivo</label>
+                                <input type="url" name="url_objetivo" class="form-control rounded-pill"
+                                    placeholder="https://api.example.com/v1">
+                                <small class="text-muted">URL base o sitio web a capturar.</small>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Código de Sistema (Opcional)</label>
+                                <input type="text" name="system_code" class="form-control rounded-pill"
+                                    placeholder="MY_UNIQUE_CODE">
+                                <small class="text-muted">Identificador único para lógica interna programada.</small>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Configuración Inicial (JSON)</label>
+                                <textarea name="config_json" class="form-control rounded-3" rows="4"
+                                    placeholder='{"api_key": "...", "timeout": 30}'>{}</textarea>
+                                <small class="text-muted">Parámetros específicos del servicio en formato JSON.</small>
+                            </div>
+
+                            <div class="col-12 mt-4 d-flex justify-content-between">
+                                <a href="{{ url_for('core.admin_services') }}"
+                                    class="btn btn-light rounded-pill px-4">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                                    <i class="fas fa-save me-2"></i>Guardar Servicio
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% macro render_menu_category(category_name, category_data, permissions, sid) %}
+<div class="sidebar-separator" id="sep-{{ category_name|lower }}" onclick="toggleNavGroup('{{ category_name|lower }}')">
+    <span>
+        <i class="{{ category_data.icon }} me-2"></i>
+        {{ category_name }}
+    </span>
+    <i class="fas fa-chevron-down"></i>
+</div>
+<div class="nav-group collapsed" id="group-{{ category_name|lower }}">
+    {% for module in category_data.modules %}
+    {% if 'all' in permissions or 'sysadmin' in permissions or module.permission in permissions %}
+    <a href="{{ url_for(module.route) }}" class="nav-link {{ 'active' if module.route in request.endpoint }}">
+        <i class="{{ module.icon }}"></i>
+        <span>{{ module.name }}</span>
+    </a>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{#
+Macro de renderizado para el menú jerárquico estructurado.
+Uso:
+{% from 'macros/menu.html' import render_menu_category %}
+{{ render_menu_category('COMPRA', menu_structure['COMPRA'], permissions, sid) }}
+#}

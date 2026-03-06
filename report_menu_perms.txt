@@ -1,0 +1,15 @@
+=== AUDITORIA DE PERMISOS: MENU VS BASE DE DATOS DE ROLES ===
+| AUDITORIA       | Módulos En UI: 5   | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| SISTEMA         | Módulos En UI: 4   | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| VENTA           | Módulos En UI: 4   | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| FONDOS          | Módulos En UI: 6   | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| CONFIGURACION   | Módulos En UI: 10  | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| UTILITARIOS     | Módulos En UI: 2   | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| COMPRA          | Módulos En UI: 9   | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| COBRANZAS       | Módulos En UI: 6   | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| CONTABILIDAD    | Módulos En UI: 12  | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+| STOCK           | Módulos En UI: 8   | Huérfanos en Perfiles: 1  | Sin Rol(Bloquea): 0  | Estado: 🔴 Peligro Falla UI/SoD              | Criticidad: Crítica    |
+| BIBLIOTECA      | Módulos En UI: 4   | Huérfanos en Perfiles: 0  | Sin Rol(Bloquea): 0  | Estado: 🟢 Seguro                            | Criticidad: Baja       |
+
+=== DETALLE DE PERMISOS ANOMALOS O FALTANTES ===
+[STOCK] 'Importación Masiva' (stock.articulos_importar) -> PIDE: 'admin_articulos' -> 🔴 Huérfano en Perfiles

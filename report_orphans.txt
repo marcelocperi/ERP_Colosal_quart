@@ -1,0 +1,10 @@
+=== RUTAS HURFANAS (EN CODIGO, PERO SIN ENLACE EN EL MENU) ===
+compras.alertas_detalle             -> /compras/alertas-detalle
+compras.api_buscar_proveedores      -> /compras/api/buscar-proveedores
+compras.ordenes_compra_alias        -> /compras/ordenes-compra
+fondos.bancos_api_buscar            -> /fondos/bancos/api/buscar
+stock.enrich_last_report            -> /articulos/enrich/last-report
+biblioteca.buscar_prestamos         -> /prestamos/buscar
+core.enforce_password_change        -> /auth/enforce-change-password
+core.manual_index                   -> /manual
+Total posibles desconectadas: 8

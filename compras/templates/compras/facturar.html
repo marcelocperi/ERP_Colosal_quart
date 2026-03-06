@@ -1,0 +1,1082 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-lg border-0 bg-dark text-light">
+                <div class="card-header bg-gradient-info text-dark d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Nueva Factura de Compra (Proveedor)</h4>
+                    <span class="badge bg-dark border border-info text-info">Registro de Crédito Fiscal</span>
+                </div>
+                <div class="card-body p-4">
+                    <form id="compraForm">
+                        <div class="row mb-3 mt-1">
+                            <div class="col-md-12">
+                                <div
+                                    class="p-3 border border-info border-dashed rounded bg-info bg-opacity-10 d-flex justify-content-between align-items-center shadow-sm">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-info p-2 me-3 text-dark"><i
+                                                class="fas fa-link"></i></div>
+                                        <div>
+                                            <h6 class="mb-0 text-info fw-bold">¿Vincular con Orden de Compra?</h6>
+                                            <p class="mb-0 text-muted small">Trae artículos y proveedor desde una PO
+                                                autorizada/recibida.</p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select form-select-sm bg-dark text-light border-info"
+                                            id="po_selector" style="min-width: 250px;">
+                                            <option value="">-- Buscar Ordenes Disponibles --</option>
+                                        </select>
+                                        <button type="button" class="btn btn-sm btn-info px-3"
+                                            onclick="cargarDatosPO()">
+                                            <i class="fas fa-download me-1"></i> Cargar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- ===== CABECERA ===== -->
+                        <div class="row mb-4 g-3">
+                            <div class="col-md-5">
+                                <label class="form-label text-muted small uppercase fw-bold">Proveedor</label>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text bg-dark border-secondary text-info"><i
+                                            class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control bg-dark text-light border-secondary"
+                                        id="buscar_proveedor" placeholder="Buscar por Código, Razón Social o CUIT..."
+                                        autocomplete="off">
+                                    <span class="input-group-text bg-dark border-secondary text-muted"
+                                        id="buscar_spinner" style="display:none">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </span>
+                                </div>
+                                <select class="form-select bg-dark text-light border-secondary" id="proveedor_id"
+                                    required>
+                                    <option value="">-- Escriba para buscar --</option>
+                                </select>
+                                <div class="form-text text-muted" style="font-size:0.75rem">
+                                    <i class="fas fa-info-circle me-1"></i>Escriba al menos 2 caracteres para buscar.
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Tipo de Comprobante</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="tipo_comprobante"
+                                    required>
+                                    {% for t in tipos_comprobante %}
+                                    <option value="{{ t.codigo }}">{{ t.descripcion }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Depósito (Ingreso)</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="deposito_id"
+                                    required>
+                                    {% for d in depositos %}
+                                    <option value="{{ d.id }}">{{ d.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label text-muted small uppercase fw-bold">Pto. Venta</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary"
+                                    id="punto_venta" placeholder="0001">
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label text-muted small uppercase fw-bold">Número</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary"
+                                    id="numero_comprobante" placeholder="00000001" required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label text-muted small uppercase fw-bold">Fecha</label>
+                                <input type="date" class="form-control bg-dark text-light border-secondary"
+                                    value="{{ now }}" id="fecha_emision">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label text-muted small uppercase fw-bold">CAE (Validación
+                                    AFIP)</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control bg-dark text-light border-secondary" id="cae"
+                                        placeholder="Número de CAE" maxlength="14">
+                                    <button class="btn btn-outline-info" type="button" id="btn_verificar_cae">
+                                        <i class="fas fa-shield-alt"></i> Verificar
+                                    </button>
+                                </div>
+                                <div id="cae_status" style="font-size: 0.7rem; margin-top: 4px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- ===== BANNER PERFIL IMPOSITIVO ===== -->
+                        <div id="perfil_banner" class="alert alert-secondary d-none mb-3" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="perfil_texto"></span>
+                        </div>
+
+                        <!-- Mensaje: seleccione proveedor primero -->
+                        <div id="msg_seleccione" class="alert alert-secondary text-center">
+                            <i class="fas fa-hand-point-up me-2"></i>
+                            Seleccione un proveedor para ver los campos impositivos correspondientes.
+                        </div>
+
+                        <hr class="border-secondary opacity-25">
+
+                        <!-- ===== DETALLE DE ARTÍCULOS (Para Costeo) ===== -->
+                        <div class="card bg-dark border border-secondary mb-4 shadow-sm">
+                            <div
+                                class="card-header bg-secondary bg-opacity-10 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 text-info"><i class="fas fa-boxes me-2"></i>Detalle de Artículos
+                                    (Opcional - Para Costeo)</h6>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-switch" type="checkbox" id="usar_items_para_neto">
+                                    <label class="form-check-label small text-muted ms-1"
+                                        for="usar_items_para_neto">Usar para calcular Totales</label>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-2 mb-3 align-items-end">
+                                    <div class="col-md-5">
+                                        <label class="small text-muted uppercase">Artículo</label>
+                                        <select class="form-select form-select-sm select2" id="item_articulo_id">
+                                            <option value="">Seleccione un artículo...</option>
+                                            {% for a in articulos %}
+                                            <option value="{{ a.id }}" data-codigo="{{ a.codigo }}">{{ a.codigo }} - {{
+                                                a.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="small text-muted uppercase">Cantidad</label>
+                                        <input type="number" step="1"
+                                            class="form-control form-control-sm bg-dark text-light border-secondary"
+                                            id="item_cantidad" value="1">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="small text-muted uppercase">Precio Unit. (Neto)</label>
+                                        <input type="number" step="0.01"
+                                            class="form-control form-control-sm bg-dark text-light border-secondary"
+                                            id="item_precio" value="0.00">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="small text-muted uppercase">IVA %</label>
+                                        <select class="form-select form-select-sm bg-dark text-light border-secondary"
+                                            id="item_iva">
+                                            <option value="21">21%</option>
+                                            <option value="10.5">10.5%</option>
+                                            <option value="27">27%</option>
+                                            <option value="0">0% / Exento</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-sm btn-info w-100"
+                                            onclick="agregarItemALista()">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-sm table-hover border-secondary mb-0"
+                                        id="tabla_items_costeo">
+                                        <thead class="small text-muted uppercase">
+                                            <tr class="border-bottom border-secondary">
+                                                <th>Cód / Artículo</th>
+                                                <th class="text-end">Cant.</th>
+                                                <th class="text-end">P. Unit.</th>
+                                                <th class="text-center">IVA</th>
+                                                <th class="text-end">Subtotal</th>
+                                                <th class="text-center"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbody_items_costeo">
+                                            <!-- filas dinámicas -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-secondary opacity-25">
+
+                        <!-- ===== SECCIÓN IVA (solo Responsable Inscripto) ===== -->
+                        <div id="seccion_iva" class="d-none">
+                            <h6 class="text-info mb-3"><i class="fas fa-percent me-2"></i>IVA — Importes por Alícuota
+                            </h6>
+                            <div class="row g-3" id="row_21">
+                                <div class="col-md-4">
+                                    <label class="form-label text-info small uppercase fw-bold">Neto Gravado
+                                        (21%)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-info" id="neto_21"
+                                            value="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-info small uppercase fw-bold">IVA (21%)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-info" id="iva_21" value="0.00"
+                                            readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-1" id="row_10_5">
+                                <div class="col-md-4">
+                                    <label class="form-label text-info small uppercase fw-bold">Neto Gravado
+                                        (10.5%)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-info" id="neto_10_5"
+                                            value="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-info small uppercase fw-bold">IVA (10.5%)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-info" id="iva_10_5"
+                                            value="0.00" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-1" id="row_27">
+                                <div class="col-md-4">
+                                    <label class="form-label text-info small uppercase fw-bold">Neto Gravado
+                                        (27%)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-info" id="neto_27"
+                                            value="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-info small uppercase fw-bold">IVA (27%)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-info" id="iva_27" value="0.00"
+                                            readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sin IVA (Monotributo / Exento / etc.) -->
+                        <div id="seccion_sin_iva" class="d-none">
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Sin IVA discriminado.</strong> Este proveedor no discrimina IVA. Ingrese el
+                                importe total del comprobante.
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label text-warning small uppercase fw-bold">Importe Total del
+                                        Comprobante</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-warning"
+                                            id="importe_total_sin_iva" value="0.00">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campos comunes (Exento, No Gravado, Perc. IVA) -->
+                        <div id="seccion_comun" class="d-none">
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-3">
+                                    <label class="form-label text-warning small uppercase fw-bold">Conceptos
+                                        Exentos</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-warning" id="importe_exento"
+                                            value="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-warning small uppercase fw-bold">No Gravado</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-warning"
+                                            id="importe_no_gravado" value="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-danger small uppercase fw-bold">Perc. IVA</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-danger" id="perc_iva"
+                                            value="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-danger small uppercase fw-bold">Otros
+                                        Impuestos</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01"
+                                            class="form-control bg-dark text-light border-danger" id="otros_imp"
+                                            value="0.00">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ===== SECCIÓN IIBB ===== -->
+                        <div id="seccion_iibb" class="d-none mt-3">
+                            <h6 class="text-danger mb-3"><i class="fas fa-map-marker-alt me-2"></i>Percepciones IIBB
+                            </h6>
+
+                            <!-- ARBA (Provincia de Buenos Aires) -->
+                            <div id="bloque_arba" class="d-none">
+                                <div class="row g-3 align-items-end mb-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label text-danger small uppercase fw-bold">Perc. IIBB ARBA
+                                            (Bs.As.)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" step="0.01"
+                                                class="form-control bg-dark text-light border-danger" id="perc_arba"
+                                                value="0.00">
+                                        </div>
+                                        <div id="sug_arba" class="text-muted"
+                                            style="font-size: 0.65rem; margin-top: 2px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AGIP (CABA) -->
+                            <div id="bloque_agip" class="d-none">
+                                <div class="row g-3 align-items-end mb-2">
+                                    <div class="col-md-3">
+                                        <label class="form-label text-danger small uppercase fw-bold">Perc. IIBB AGIP
+                                            (CABA)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" step="0.01"
+                                                class="form-control bg-dark text-light border-danger" id="perc_agip"
+                                                value="0.00">
+                                        </div>
+                                        <div id="sug_agip" class="text-muted"
+                                            style="font-size: 0.65rem; margin-top: 2px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CONVENIO MULTILATERAL: tabla dinámica de percepciones por jurisdicción -->
+                            <div id="bloque_cm" class="d-none">
+                                <div class="alert alert-info py-2 mb-3" style="font-size:0.85rem;">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Convenio Multilateral:</strong> El proveedor opera en múltiples
+                                    jurisdicciones.
+                                    Registre la percepción de cada jurisdicción que figure en el comprobante.
+                                    La base de cálculo es el <strong>neto gravado</strong> (sin IVA).
+                                    Cada jurisdicción puede aplicar hasta el 50% de su alícuota normal.
+                                </div>
+
+                                <table class="table table-dark table-sm table-bordered" id="tabla_cm">
+                                    <thead>
+                                        <tr>
+                                            <th>Jurisdicción</th>
+                                            <th>Importe Percepción ($)</th>
+                                            <th>N° Constancia (opcional)</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody_cm">
+                                        <!-- filas dinámicas -->
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="agregarFilaCM()">
+                                    <i class="fas fa-plus me-1"></i> Agregar Jurisdicción
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ===== TOTALES ===== -->
+                        <div id="seccion_totales" class="d-none">
+                            <div class="row mt-4 justify-content-end">
+                                <div class="col-md-4">
+                                    <div class="p-3 border border-info rounded bg-dark">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">Total Neto:</span>
+                                            <span id="txtNeto">$ 0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">Total IVA:</span>
+                                            <span id="txtIva">$ 0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-muted">Total Percepciones:</span>
+                                            <span id="txtPerc">$ 0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between border-top border-info pt-2 mt-2">
+                                            <h4 class="mb-0 text-info">TOTAL:</h4>
+                                            <h4 class="mb-0 text-success fw-bold" id="txtTotal">$ 0.00</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 d-flex justify-content-end">
+                                <button type="button" class="btn btn-outline-secondary me-2"
+                                    onclick="window.history.back()">Cancelar</button>
+                                <button type="button" class="btn btn-info btn-lg px-5" onclick="guardarCompra()">
+                                    Guardar Comprobante <i class="fas fa-save ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Datos del servidor — el linter JS ignora script type=application/json #}
+<script type="application/json" id="data-jurisdicciones">{{ jurisdicciones | tojson }}</script>
+
+<script>
+    // ===== JURISDICCIONES PARA CONVENIO MULTILATERAL =====
+    const JURISDICCIONES = JSON.parse(document.getElementById('data-jurisdicciones').textContent);
+
+    // ===== GESTIÓN DE ORDENES DE COMPRA PARA FACTURACIÓN =====
+    async function cargarListaOrdenes() {
+        const provId = document.getElementById('proveedor_id').value;
+        const selector = document.getElementById('po_selector');
+        try {
+            const resp = await fetch(`/compras/api/ordenes-para-facturar?proveedor_id=${provId}`);
+            const data = await resp.json();
+            selector.innerHTML = '<option value="">-- Seleccione PO --</option>';
+            data.forEach(po => {
+                const opt = document.createElement('option');
+                opt.value = po.id;
+                opt.textContent = `PO #${po.id} - ${po.fecha_emision} ($ ${po.total})`;
+                selector.appendChild(opt);
+            });
+        } catch (e) { console.error("Error cargando POs:", e); }
+    }
+
+    document.getElementById('proveedor_id').addEventListener('change', cargarListaOrdenes);
+
+    async function cargarDatosPO() {
+        const poId = document.getElementById('po_selector').value;
+        if (!poId) {
+            Swal.fire("Atención", "Seleccione una Orden de Compra primero.", "warning");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/compras/api/get_po_details/${poId}`);
+            const data = await resp.json();
+            if (!data.success) {
+                Swal.fire("Error", data.message, "error");
+                return;
+            }
+
+            // 1. Auto-seleccionar proveedor
+            const provSel = document.getElementById('proveedor_id');
+            provSel.value = data.po.proveedor_id;
+            // Disparar cambio manual para inicializar perfil
+            provSel.dispatchEvent(new Event('change'));
+
+            // 2. Limpiar tabla actual de items e insertar nuevos
+            ITEMS_COSTEO.length = 0; // vaciar array
+            data.items.forEach(it => {
+                const item = {
+                    id: Date.now() + Math.random(),
+                    articulo_id: it.articulo_id,
+                    codigo: it.articulo_codigo,
+                    nombre: it.articulo_nombre,
+                    cantidad: it.cantidad_solicitada,
+                    precio: it.precio_unitario,
+                    iva_tasa: 21, // Default por ahora
+                    subtotal: it.cantidad_solicitada * it.precio_unitario,
+                    detalle_po_id: it.id // Guardar para 3-way match
+                };
+                ITEMS_COSTEO.push(item);
+            });
+
+            // Marcar switch para usar items en totales
+            document.getElementById('usar_items_para_neto').checked = true;
+            renderizarItems();
+            actualizarNetosDesdeItems();
+
+            Swal.fire({
+                title: "Éxito",
+                text: `Se han cargado ${data.items.length} artículos de la PO #${poId}`,
+                icon: "success",
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+
+        } catch (e) { console.error("Error vinculando PO:", e); }
+    }
+
+
+
+    // ===== PERFILES IVA =====
+    // Normaliza el tipo_responsable y determina si discrimina IVA
+    function tieneIVA(tipo) {
+        const t = (tipo || '').toUpperCase().replace(/\s+/g, '_').replace(/-/g, '_');
+        const SIN_IVA = ['MONOTRIBUTO', 'MONOTRIBUTISTA', 'EXENTO', 'NO_RESPONSABLE',
+            'CONSUMIDOR_FINAL', 'PEQUENO_CONTRIBUYENTE'];
+        return !SIN_IVA.some(s => t.includes(s));
+    }
+
+    // ===== PERFILES IIBB =====
+    // condicion_iibb: 'ARBA', 'AGIP', 'AMBOS', 'CONVENIO_MULTILATERAL', 'CM', 'EXENTO', 'NO_INSCRIPTO', ''
+    function resolverIIBB(condicion) {
+        const c = (condicion || '').toUpperCase().replace(/\s+/g, '_');
+        return {
+            arba: c === 'ARBA' || c === 'AMBOS',
+            agip: c === 'AGIP' || c === 'AMBOS',
+            cm: c === 'CONVENIO_MULTILATERAL' || c === 'CM' || c === 'MULTILATERAL',
+            ninguno: c === 'EXENTO' || c === 'NO_INSCRIPTO' || c === ''
+        };
+    }
+
+    // ===== APLICAR PERFIL AL SELECCIONAR PROVEEDOR =====
+    function aplicarPerfil(tipo, condicionIIBB) {
+        const conIVA = tieneIVA(tipo);
+        const iibb = resolverIIBB(condicionIIBB);
+
+        // Ocultar mensaje inicial
+        document.getElementById('msg_seleccione').classList.add('d-none');
+
+        // IVA
+        document.getElementById('seccion_iva').classList.toggle('d-none', !conIVA);
+        document.getElementById('seccion_sin_iva').classList.toggle('d-none', conIVA);
+
+        // Campos comunes siempre visibles una vez seleccionado proveedor
+        document.getElementById('seccion_comun').classList.remove('d-none');
+        document.getElementById('seccion_totales').classList.remove('d-none');
+
+        // IIBB
+        const hayIIBB = iibb.arba || iibb.agip || iibb.cm;
+        document.getElementById('seccion_iibb').classList.toggle('d-none', !hayIIBB);
+        document.getElementById('bloque_arba').classList.toggle('d-none', !iibb.arba);
+        document.getElementById('bloque_agip').classList.toggle('d-none', !iibb.agip);
+        document.getElementById('bloque_cm').classList.toggle('d-none', !iibb.cm);
+
+        // Si CM y tabla vacía, agregar una fila inicial
+        if (iibb.cm && document.getElementById('tbody_cm').rows.length === 0) {
+            agregarFilaCM();
+        }
+
+        // Resetear valores si cambió el proveedor
+        if (!conIVA) {
+            ['neto_21', 'iva_21', 'neto_10_5', 'iva_10_5', 'neto_27', 'iva_27'].forEach(id => {
+                document.getElementById(id).value = '0.00';
+            });
+        }
+        if (!iibb.arba) document.getElementById('perc_arba').value = '0.00';
+        if (!iibb.agip) document.getElementById('perc_agip').value = '0.00';
+
+        // Banner informativo
+        let msg = `<strong>Perfil fiscal:</strong> ${tipo || 'No especificado'}`;
+        if (!conIVA) msg += ' — <span class="text-warning">No discrimina IVA</span>';
+        msg += ` | IIBB: <strong>${condicionIIBB || 'No inscripto'}</strong>`;
+        if (iibb.cm) msg += ' <span class="badge bg-info text-dark ms-1">Convenio Multilateral</span>';
+
+        document.getElementById('perfil_texto').innerHTML = msg;
+        const banner = document.getElementById('perfil_banner');
+        banner.classList.remove('d-none', 'alert-info', 'alert-warning', 'alert-secondary');
+        banner.classList.add(conIVA ? 'alert-info' : 'alert-warning');
+
+        actualizarTotales();
+    }
+
+    // ===== CONVENIO MULTILATERAL: filas dinámicas =====
+    let cmRowId = 0;
+    function agregarFilaCM() {
+        cmRowId++;
+        const id = cmRowId;
+        const opts = JURISDICCIONES.map(j =>
+            `<option value="${j.codigo}">${j.codigo} - ${j.nombre}</option>`
+        ).join('');
+
+        const tr = document.createElement('tr');
+        tr.id = `cm_row_${id}`;
+        tr.innerHTML = `
+            <td>
+                <select class="form-select form-select-sm bg-dark text-light border-secondary cm-jurisdiccion" id="cm_jur_${id}">
+                    <option value="">Seleccione...</option>
+                    ${opts}
+                </select>
+            </td>
+            <td>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">$</span>
+                    <input type="number" step="0.01" class="form-control bg-dark text-light border-danger cm-importe"
+                        id="cm_imp_${id}" value="0.00" oninput="actualizarTotales()">
+                </div>
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary cm-constancia"
+                    id="cm_const_${id}" placeholder="Opcional">
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('cm_row_${id}').remove(); actualizarTotales();">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        document.getElementById('tbody_cm').appendChild(tr);
+    }
+
+    // ===== BUSCADOR DINÁMICO DE PROVEEDORES =====
+    let _buscarTimer = null;
+
+    function poblarSelectProveedor(proveedores, seleccionarUnico = false) {
+        const sel = document.getElementById('proveedor_id');
+        const valorActual = sel.value;
+        sel.innerHTML = '<option value="">-- Seleccione un proveedor --</option>';
+        proveedores.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.dataset.cuit = p.cuit || '';
+            opt.dataset.codigo = p.codigo || '';
+            opt.dataset.tipo = p.tipo_responsable || '';
+            opt.dataset.iibb = p.condicion_iibb || '';
+            opt.dataset.iibbCond = p.iibb_condicion || '';
+            const label = (p.codigo ? `[${p.codigo}] ` : '') + p.nombre + ' | ' + (p.cuit || '') + (p.tipo_responsable ? ` (${p.tipo_responsable})` : '');
+            opt.textContent = label;
+            sel.appendChild(opt);
+        });
+        // Restaurar selección previa si existe
+        if (valorActual) sel.value = valorActual;
+        // Auto-seleccionar si hay un único resultado
+        if (seleccionarUnico && proveedores.length === 1) {
+            sel.value = proveedores[0].id;
+            sel.dispatchEvent(new Event('change'));
+        }
+    }
+
+    document.getElementById('buscar_proveedor').addEventListener('input', function () {
+        const q = this.value.trim();
+        clearTimeout(_buscarTimer);
+        if (q.length > 0 && q.length < 2) return; // esperar al menos 2 chars
+        const spinner = document.getElementById('buscar_spinner');
+        _buscarTimer = setTimeout(async () => {
+            spinner.style.display = '';
+            try {
+                const url = `/compras/api/buscar-proveedores?q=${encodeURIComponent(q)}&sid=${window.SID || ''}`;
+                const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (resp.status === 401) { window.location.href = '/'; return; }
+                if (!resp.ok) return;
+                const proveedores = await resp.json();
+                poblarSelectProveedor(proveedores, q.length >= 2);
+            } catch (e) {
+                console.error('Error buscando proveedores:', e);
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }, 300);
+    });
+
+    // Cargar primeros 30 al inicializar
+    (async () => {
+        try {
+            const resp = await fetch(`/compras/api/buscar-proveedores?q=&sid=${window.SID || ''}`, { headers: { 'Accept': 'application/json' } });
+            if (resp.status === 401) { window.location.href = '/'; return; }
+            if (!resp.ok) return;
+            const proveedores = await resp.json();
+            poblarSelectProveedor(proveedores);
+        } catch (e) { console.error(e); }
+    })();
+
+
+    let CURRENT_RATES = { ARBA: 0, AGIP: 0 };
+
+    // ===== CAMBIO DE PROVEEDOR =====
+    document.getElementById('proveedor_id').addEventListener('change', async function () {
+        const opt = this.options[this.selectedIndex];
+        if (!opt.value) {
+            document.getElementById('msg_seleccione').classList.remove('d-none');
+            document.getElementById('perfil_banner').classList.add('d-none');
+            document.getElementById('seccion_comun').classList.add('d-none');
+            document.getElementById('seccion_totales').classList.add('d-none');
+            return;
+        }
+
+        const cuit = opt.dataset.cuit;
+        const tipo = opt.dataset.tipo;
+        const condicionIIBB = opt.dataset.iibb;
+
+        // Limpiar tabla CM
+        document.getElementById('tbody_cm').innerHTML = '';
+        cmRowId = 0;
+
+        // Aplicar perfil visual
+        aplicarPerfil(tipo, condicionIIBB);
+
+        // Reset sugerencias padrón
+        document.getElementById('sug_arba').textContent = '';
+        document.getElementById('sug_agip').textContent = '';
+        CURRENT_RATES = { ARBA: 0, AGIP: 0 };
+
+        if (!cuit) return;
+
+        // Consultar padrón ARBA/AGIP
+        try {
+            const resp = await fetch(`/contabilidad/api/consultar-padron/${cuit}?sid=${window.SID || ''}`);
+            const rates = await resp.json();
+            if (rates.ARBA) {
+                const rate = rates.ARBA.alicuota_percepcion;
+                CURRENT_RATES.ARBA = rate;
+                let msg = `<i class="fas fa-info-circle me-1"></i> Padrón ARBA: <b>${rate.toFixed(2)}%</b>`;
+                if (rates.ARBA.desde && rates.ARBA.hasta) {
+                    msg += ` <small class="text-muted">(${rates.ARBA.desde} al ${rates.ARBA.hasta})</small>`;
+                }
+                if (rates.ARBA.exencion_iibb) {
+                    msg += ` <span class="badge bg-success ms-1">${rates.ARBA.exencion_iibb}</span>`;
+                }
+                document.getElementById('sug_arba').innerHTML = msg;
+            }
+            if (rates.AGIP) {
+                const rate = rates.AGIP.alicuota_percepcion;
+                CURRENT_RATES.AGIP = rate;
+                let msg = `<i class="fas fa-info-circle me-1"></i> Padrón AGIP: <b>${rate.toFixed(2)}%</b>`;
+                if (rates.AGIP.desde && rates.AGIP.hasta) {
+                    msg += ` <small class="text-muted">(${rates.AGIP.desde} al ${rates.AGIP.hasta})</small>`;
+                }
+                if (rates.AGIP.exencion_iibb) {
+                    msg += ` <span class="badge bg-success ms-1">${rates.AGIP.exencion_iibb}</span>`;
+                }
+                document.getElementById('sug_agip').innerHTML = msg;
+            }
+            recalcularPercepciones();
+        } catch (e) {
+            console.error("Error consultando padrón:", e);
+        }
+    });
+
+    function recalcularPercepciones() {
+        const base = getNetoTotal();
+        if (CURRENT_RATES.ARBA > 0) {
+            document.getElementById('perc_arba').value = (base * CURRENT_RATES.ARBA / 100).toFixed(2);
+        }
+        if (CURRENT_RATES.AGIP > 0) {
+            document.getElementById('perc_agip').value = (base * CURRENT_RATES.AGIP / 100).toFixed(2);
+        }
+        actualizarTotales();
+    }
+
+    function getNetoTotal() {
+        const n21 = parseFloat(document.getElementById('neto_21').value) || 0;
+        const n105 = parseFloat(document.getElementById('neto_10_5').value) || 0;
+        const n27 = parseFloat(document.getElementById('neto_27').value) || 0;
+        const sinIVA = parseFloat(document.getElementById('importe_total_sin_iva').value) || 0;
+        return n21 + n105 + n27 + sinIVA;
+    }
+
+    // ===== CÁLCULOS IVA =====
+    document.getElementById('neto_21').addEventListener('input', function () {
+        document.getElementById('iva_21').value = ((parseFloat(this.value) || 0) * 0.21).toFixed(2);
+        recalcularPercepciones();
+    });
+    document.getElementById('neto_10_5').addEventListener('input', function () {
+        document.getElementById('iva_10_5').value = ((parseFloat(this.value) || 0) * 0.105).toFixed(2);
+        recalcularPercepciones();
+    });
+    document.getElementById('neto_27').addEventListener('input', function () {
+        document.getElementById('iva_27').value = ((parseFloat(this.value) || 0) * 0.27).toFixed(2);
+        recalcularPercepciones();
+    });
+    document.getElementById('importe_total_sin_iva').addEventListener('input', actualizarTotales);
+
+    // ===== TOTALES =====
+    function actualizarTotales() {
+        const n21 = parseFloat(document.getElementById('neto_21').value) || 0;
+        const i21 = parseFloat(document.getElementById('iva_21').value) || 0;
+        const n105 = parseFloat(document.getElementById('neto_10_5').value) || 0;
+        const i105 = parseFloat(document.getElementById('iva_10_5').value) || 0;
+        const n27 = parseFloat(document.getElementById('neto_27').value) || 0;
+        const i27 = parseFloat(document.getElementById('iva_27').value) || 0;
+        const sinIVA = parseFloat(document.getElementById('importe_total_sin_iva').value) || 0;
+        const exento = parseFloat(document.getElementById('importe_exento').value) || 0;
+        const noGrav = parseFloat(document.getElementById('importe_no_gravado').value) || 0;
+        const pIVA = parseFloat(document.getElementById('perc_iva').value) || 0;
+        const pARBA = parseFloat(document.getElementById('perc_arba').value) || 0;
+        const pAGIP = parseFloat(document.getElementById('perc_agip').value) || 0;
+        const otros = parseFloat(document.getElementById('otros_imp').value) || 0;
+
+        // Sumar percepciones CM
+        let pCM = 0;
+        document.querySelectorAll('.cm-importe').forEach(inp => {
+            pCM += parseFloat(inp.value) || 0;
+        });
+
+        const neto_total = n21 + n105 + n27 + sinIVA;
+        const iva_total = i21 + i105 + i27;
+        const perc_total = pIVA + pARBA + pAGIP + pCM + exento + noGrav + otros;
+        const total = neto_total + iva_total + perc_total;
+
+        document.getElementById('txtNeto').textContent = "$ " + neto_total.toFixed(2);
+        document.getElementById('txtIva').textContent = "$ " + iva_total.toFixed(2);
+        document.getElementById('txtPerc').textContent = "$ " + perc_total.toFixed(2);
+        document.getElementById('txtTotal').textContent = "$ " + total.toFixed(2);
+    }
+
+    // ===== GESTIÓN DE ÍTEMS DE COSTEO =====
+    const ITEMS_COSTEO = [];
+
+    function agregarItemALista() {
+        const sel = document.getElementById('item_articulo_id');
+        const artId = sel.value;
+        const opt = sel.options[sel.selectedIndex];
+        if (!artId) return;
+
+        const cant = parseFloat(document.getElementById('item_cantidad').value) || 0;
+        const precio = parseFloat(document.getElementById('item_precio').value) || 0;
+        const iva = parseFloat(document.getElementById('item_iva').value) || 0;
+
+        if (cant <= 0) return;
+
+        const item = {
+            id: Date.now(),
+            articulo_id: artId,
+            codigo: opt.dataset.codigo,
+            nombre: opt.text.split(' - ')[1],
+            cantidad: cant,
+            precio: precio,
+            iva_tasa: iva,
+            subtotal: cant * precio
+        };
+
+        ITEMS_COSTEO.push(item);
+        renderizarItems();
+
+        if (document.getElementById('usar_items_para_neto').checked) {
+            actualizarNetosDesdeItems();
+        }
+
+        // Reset inputs
+        sel.value = "";
+        $(sel).trigger('change');
+        document.getElementById('item_cantidad').value = 1;
+        document.getElementById('item_precio').value = "0.00";
+    }
+
+    function eliminarItem(id) {
+        const idx = ITEMS_COSTEO.findIndex(i => i.id === id);
+        if (idx > -1) {
+            ITEMS_COSTEO.splice(idx, 1);
+            renderizarItems();
+            if (document.getElementById('usar_items_para_neto').checked) {
+                actualizarNetosDesdeItems();
+            }
+        }
+    }
+
+    function renderizarItems() {
+        const tbody = document.getElementById('tbody_items_costeo');
+        tbody.innerHTML = "";
+        ITEMS_COSTEO.forEach(i => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><small class="text-info">${i.codigo}</small> <br> ${i.nombre}</td>
+                <td class="text-end">${i.cantidad}</td>
+                <td class="text-end">$ ${i.precio.toFixed(2)}</td>
+                <td class="text-center small">${i.iva_tasa}%</td>
+                <td class="text-end fw-bold">$ ${i.subtotal.toFixed(2)}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-link text-danger p-0" onclick="eliminarItem(${i.id})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function actualizarNetosDesdeItems() {
+        let n21 = 0, n105 = 0, n27 = 0, n0 = 0;
+        ITEMS_COSTEO.forEach(i => {
+            if (i.iva_tasa == 21) n21 += i.subtotal;
+            else if (i.iva_tasa == 10.5) n105 += i.subtotal;
+            else if (i.iva_tasa == 27) n27 += i.subtotal;
+            else n0 += i.subtotal;
+        });
+
+        document.getElementById('neto_21').value = n21.toFixed(2);
+        document.getElementById('neto_21').dispatchEvent(new Event('input'));
+
+        document.getElementById('neto_10_5').value = n105.toFixed(2);
+        document.getElementById('neto_10_5').dispatchEvent(new Event('input'));
+
+        document.getElementById('neto_27').value = n27.toFixed(2);
+        document.getElementById('neto_27').dispatchEvent(new Event('input'));
+
+        document.getElementById('importe_total_sin_iva').value = n0.toFixed(2);
+        document.getElementById('importe_total_sin_iva').dispatchEvent(new Event('input'));
+    }
+
+    document.getElementById('usar_items_para_neto').addEventListener('change', function () {
+        if (this.checked) actualizarNetosDesdeItems();
+    });
+
+    ['importe_exento', 'importe_no_gravado', 'perc_iva', 'perc_arba', 'perc_agip', 'otros_imp'].forEach(id => {
+        document.getElementById(id).addEventListener('input', actualizarTotales);
+    });
+
+    // ===== GUARDAR =====
+    async function guardarCompra() {
+        const sinIVA = !document.getElementById('seccion_iva').classList.contains('d-none') === false;
+
+        // Recolectar percepciones CM
+        const percCM = [];
+        document.querySelectorAll('#tbody_cm tr').forEach(tr => {
+            const id = tr.id.replace('cm_row_', '');
+            const jur = document.getElementById(`cm_jur_${id}`)?.value;
+            const imp = parseFloat(document.getElementById(`cm_imp_${id}`)?.value) || 0;
+            const const_ = document.getElementById(`cm_const_${id}`)?.value || '';
+            if (jur && imp > 0) {
+                percCM.push({ jurisdiccion: jur, importe: imp, constancia: const_ });
+            }
+        });
+
+        const data = {
+            orden_compra_id: document.getElementById('po_selector').value || null,
+            proveedor_id: document.getElementById('proveedor_id').value,
+            tipo_comprobante: document.getElementById('tipo_comprobante').value,
+            deposito_id: document.getElementById('deposito_id').value,
+            punto_venta: document.getElementById('punto_venta').value,
+            numero: document.getElementById('numero_comprobante').value,
+            fecha: document.getElementById('fecha_emision').value,
+            neto_21: parseFloat(document.getElementById('neto_21').value) || 0,
+            iva_21: parseFloat(document.getElementById('iva_21').value) || 0,
+            neto_10_5: parseFloat(document.getElementById('neto_10_5').value) || 0,
+            iva_10_5: parseFloat(document.getElementById('iva_10_5').value) || 0,
+            neto_27: parseFloat(document.getElementById('neto_27').value) || 0,
+            iva_27: parseFloat(document.getElementById('iva_27').value) || 0,
+            importe_total_sin_iva: parseFloat(document.getElementById('importe_total_sin_iva').value) || 0,
+            exento: parseFloat(document.getElementById('importe_exento').value) || 0,
+            no_gravado: parseFloat(document.getElementById('importe_no_gravado').value) || 0,
+            perc_iva: parseFloat(document.getElementById('perc_iva').value) || 0,
+            perc_arba: parseFloat(document.getElementById('perc_arba').value) || 0,
+            perc_arba: parseFloat(document.getElementById('perc_arba').value) || 0,
+            perc_agip: parseFloat(document.getElementById('perc_agip').value) || 0,
+            otros_imp: parseFloat(document.getElementById('otros_imp').value) || 0,
+            perc_cm: percCM,
+            items: ITEMS_COSTEO.map(i => ({
+                articulo_id: i.articulo_id,
+                cantidad: i.cantidad,
+                precio_unitario: i.precio,
+                alicuota_iva: i.iva_tasa,
+                detalle_po_id: i.detalle_po_id || null
+            }))
+        };
+
+        if (!data.proveedor_id || !data.numero) {
+            alert("Por favor complete los campos obligatorios (Proveedor y Número de Factura).");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/compras/api/guardar-comprobante?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            });
+            const res = await resp.json();
+            if (res.success) {
+                alert("Comprobante guardado con éxito.");
+                window.location.href = "{{ url_for('contabilidad.libro_iva_compras') }}";
+            } else {
+                alert("Error: " + res.message);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error de conexión al guardar.");
+        }
+    }
+
+    // ===== VERIFICAR CAE CON AFIP =====
+    document.getElementById('btn_verificar_cae').addEventListener('click', async function () {
+        const cae = document.getElementById('cae').value;
+        const proveedor_opt = document.getElementById('proveedor_id').options[document.getElementById('proveedor_id').selectedIndex];
+        const cuit_emisor = proveedor_opt.dataset.cuit;
+
+        if (!cae || !cuit_emisor) {
+            showToast("Debe ingresar un CAE y seleccionar un proveedor para verificar.", "warning");
+            return;
+        }
+
+        const btn = this;
+        const status = document.getElementById('cae_status');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        status.innerHTML = '<span class="text-muted">Consultando AFIP...</span>';
+
+        try {
+            const resp = await fetch(`/compras/api/verificar-cae?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ cae, cuit_emisor })
+            });
+            const res = await resp.json();
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-shield-alt"></i> Verificar';
+
+            if (res.success) {
+                status.innerHTML = `<span class="text-success"><i class="fas fa-check-circle"></i> VÁLIDO: ${res.message}</span>`;
+                showToast("Comprobante verificado con éxito", "success");
+            } else {
+                status.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle"></i> RECHAZADO: ${res.error_afip || res.message}</span>`;
+                showToast(res.error_afip || res.message, "error");
+            }
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-shield-alt"></i> Verificar';
+            status.innerHTML = '<span class="text-danger">Error de conexión con el servicio de validación.</span>';
+        }
+    });
+</script>
+
+<style>
+    .bg-gradient-info {
+        background: linear-gradient(45deg, #36b9cc 0%, #1a8a9a 100%);
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    #seccion_iva,
+    #seccion_iibb,
+    #seccion_comun {
+        transition: opacity 0.3s ease;
+    }
+</style>
+{% endblock %}

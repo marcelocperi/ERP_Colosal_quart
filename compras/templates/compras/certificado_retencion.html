@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Certificado de Retención - {{ ret.numero_certificado }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 40px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            font-size: 12px;
+        }
+
+        .title {
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 20px 0;
+            border: 1px solid #000;
+            padding: 10px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+            padding: 5px;
+        }
+
+        .data-row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+
+        .label {
+            width: 180px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .value {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .amounts-box {
+            margin-top: 30px;
+            border: 1px solid #000;
+            padding: 15px;
+            background: #fdfdfd;
+        }
+
+        .print-btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        @media print {
+            .print-btn {
+                display: none;
+            }
+
+            body {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div style="text-align: right;">
+        <button onclick="window.print()" class="print-btn">Imprimir Certificado</button>
+    </div>
+
+    <div class="header">
+        <div>
+            <h2 style="margin: 0;">{{ empresa.nombre }}</h2>
+            <div>{{ empresa.direccion or 'Dirección no configurada' }}</div>
+            <div>{{ empresa.localidad }} - {{ empresa.provincia }}</div>
+            <div>CUIT: {{ empresa.cuit }}</div>
+            <div>Agente de Retención: SI</div>
+        </div>
+        <div style="text-align: right;">
+            <div>CERTIFICADO: <strong>{{ ret.numero_certificado }}</strong></div>
+            <div>FECHA: <strong>{{ ret.fecha.strftime('%d/%m/%Y') }}</strong></div>
+        </div>
+    </div>
+
+    <div class="title">
+        Constancia de Retención de {{ ret.tipo_retencion }}
+    </div>
+
+    <div class="section">
+        <div class="section-title">DATOS DEL SUJETO RETENIDO</div>
+        <div class="data-row">
+            <div class="label">Razón Social:</div>
+            <div class="value fw-bold">{{ ret.sujeto_nombre }}</div>
+        </div>
+        <div class="data-row">
+            <div class="label">CUIT:</div>
+            <div class="value">{{ ret.sujeto_cuit }}</div>
+        </div>
+        <div class="data-row">
+            <div class="label">IVA:</div>
+            <div class="value">{{ ret.sujeto_iva }}</div>
+        </div>
+        <div class="data-row">
+            <div class="label">Domicilio:</div>
+            <div class="value">{{ ret.calle }} {{ ret.numero }}, {{ ret.localidad }}, {{ ret.provincia }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">DATOS DE LA RETENCIÓN</div>
+        <div class="data-row">
+            <div class="label">Impuesto:</div>
+            <div class="value">{{ ret.tipo_retencion }}</div>
+        </div>
+        <div class="data-row">
+            <div class="label">Jurisdicción:</div>
+            <div class="value">{{ ret.provincia or 'NACIONAL' }}</div>
+        </div>
+        <p style="font-size: 13px; font-style: italic;">
+            Se ha practicado la retención de acuerdo con las normativas vigentes del organismo recaudador
+            correspondiente.
+        </p>
+    </div>
+
+    <div class="amounts-box">
+        <div class="data-row">
+            <div class="label">Base Imponible:</div>
+            <div class="value text-end">$ {{ (ret.base_imponible or 0)|format_currency }}</div>
+        </div>
+        <div class="data-row">
+            <div class="label">Alícuota Aplicada:</div>
+            <div class="value text-end">{{ ret.alicuota or '--' }} %</div>
+        </div>
+        <div class="data-row"
+            style="margin-top: 10px; font-size: 18px; border-top: 1px dotted #000; padding-top: 10px;">
+            <div class="label">MONTO RETENIDO:</div>
+            <div class="value text-end" style="font-weight: bold;">$ {{ ret.importe_retencion|format_currency }}</div>
+        </div>
+    </div>
+
+    <div style="margin-top: 80px; display: flex; justify-content: flex-end;">
+        <div style="width: 250px; border-top: 1px solid #000; text-align: center; font-size: 12px;">
+            Firma y Sello del Agente de Retención
+        </div>
+    </div>
+
+    <div class="footer">
+        Este documento es un comprobante válido para acreditar la retención sufrida ante los organismos fiscales.
+        Emitido por Sistema ERP - BibliotecaWEB.
+    </div>
+</body>
+
+</html>

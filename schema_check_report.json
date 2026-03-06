@@ -1,0 +1,10218 @@
+{
+  "generated_at": "2026-03-02T17:47:59.317281",
+  "version": "2.0",
+  "summary": {
+    "db_tables": 163,
+    "code_tables_referenced": 144,
+    "missing_tables": 0,
+    "missing_columns": 512,
+    "missing_columns_productive": 461,
+    "ok_tables": 144,
+    "ok_columns": 1032
+  },
+  "missing_tables": [],
+  "missing_columns": [
+    {
+      "table": "cmp_articulos_costos_indirectos",
+      "column": "activo",
+      "locations": [
+        [
+          "services\\industrial_costing_service.py",
+          99,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\industrial_costing_service.py",
+          178,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\industrial_costing_service.py",
+          99,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\industrial_costing_service.py",
+          178,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\industrial_costing_service.py",
+          86,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_articulos_costos_indirectos",
+      "column": "dictionary",
+      "locations": [
+        [
+          "services\\industrial_costing_service.py",
+          86,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\industrial_costing_service.py",
+          149,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_articulos_costos_indirectos",
+      "column": "rows",
+      "locations": [
+        [
+          "services\\industrial_costing_service.py",
+          86,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\industrial_costing_service.py",
+          86,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_articulos_costos_indirectos",
+      "column": "total_overhead",
+      "locations": [
+        [
+          "services\\industrial_costing_service.py",
+          86,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_articulos_costos_indirectos",
+      "column": "user_id_update",
+      "locations": [
+        [
+          "services\\industrial_costing_service.py",
+          149,
+          "UPDATE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_consignaciones",
+      "column": "articulo",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          28,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_consignaciones",
+      "column": "cons_id",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          28,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_consignaciones",
+      "column": "pendiente",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          28,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_consignaciones",
+      "column": "tercero",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          28,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_consignaciones",
+      "column": "valor_unitario",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          76,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\consignment_service.py",
+          28,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_cotizaciones",
+      "column": "cot",
+      "locations": [
+        [
+          "services\\purchase_order_mailer.py",
+          30,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_cotizaciones",
+      "column": "empresa_nombre",
+      "locations": [
+        [
+          "services\\quotation_mailer.py",
+          208,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\quotation_mailer.py",
+          208,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\quotation_mailer.py",
+          173,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_cotizaciones",
+      "column": "items",
+      "locations": [
+        [
+          "services\\purchase_order_mailer.py",
+          30,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_cotizaciones",
+      "column": "po_hash",
+      "locations": [
+        [
+          "services\\purchase_order_mailer.py",
+          30,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_cotizaciones",
+      "column": "razon_social",
+      "locations": [
+        [
+          "services\\quotation_mailer.py",
+          208,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\quotation_mailer.py",
+          208,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\quotation_mailer.py",
+          173,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "articulo_codigo",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1004,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1004,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1001,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          25,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          25,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "articulo_nombre",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1004,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1004,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1001,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          128,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          128,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "cant_facturada",
+      "locations": [
+        [
+          "services\\receiving_service.py",
+          130,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "cantidad",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1004,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1004,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1001,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          128,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          128,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "cargos",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          122,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          122,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "detalle_id",
+      "locations": [
+        [
+          "services\\receiving_service.py",
+          25,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          25,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          17,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "dictionary",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          122,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "items",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1226,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          122,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          122,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          17,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "linea",
+      "locations": [
+        [
+          "services\\receiving_service.py",
+          130,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "linea_po",
+      "locations": [
+        [
+          "services\\receiving_service.py",
+          60,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "pendiente_aparente",
+      "locations": [
+        [
+          "services\\receiving_service.py",
+          25,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          25,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          17,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "precio_usd",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          128,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          128,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          122,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "tipo_cambio_usd",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          75,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          75,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_orden",
+      "column": "total_ya_recibido",
+      "locations": [
+        [
+          "services\\receiving_service.py",
+          60,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_detalles_solicitud",
+      "column": "items",
+      "locations": [
+        [
+          "compras\\routes.py",
+          188,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_consignacion",
+      "column": "dictionary",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          28,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_consignacion",
+      "column": "disponible",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          28,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_consignacion",
+      "column": "res",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          28,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_consignacion",
+      "column": "sql",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          28,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_consignacion",
+      "column": "tercero_id",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          28,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_consignacion",
+      "column": "tipo",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          28,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_consignacion",
+      "column": "total_dev",
+      "locations": [
+        [
+          "services\\consignment_service.py",
+          28,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_cotizacion",
+      "column": "articulo_nombre",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          141,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          141,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          122,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_cotizacion",
+      "column": "codigo_interno",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1644,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1644,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1641,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\quotation_mailer.py",
+          237,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\quotation_mailer.py",
+          237,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_cotizacion",
+      "column": "nombre_articulo",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1644,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1644,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1641,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\quotation_mailer.py",
+          237,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\quotation_mailer.py",
+          237,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_cotizacion",
+      "column": "params",
+      "locations": [
+        [
+          "compras\\routes.py",
+          403,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_items_cotizacion",
+      "column": "precio_usd",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          141,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          141,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          122,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_ordenes_compra",
+      "column": "avg_lead_time_days",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_ordenes_compra",
+      "column": "not",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          682,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          682,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_ordenes_compra",
+      "column": "ocs_finalizadas",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_ordenes_compra",
+      "column": "orden",
+      "locations": [
+        [
+          "compras\\importaciones_routes_e2.py",
+          24,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_ordenes_compra",
+      "column": "proveedor",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          682,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          682,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          677,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_ordenes_compra",
+      "column": "proveedor_nombre",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1848,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1848,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1846,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          13,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\receiving_service.py",
+          13,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_ordenes_compra",
+      "column": "total_fob_usd",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_ordenes_compra",
+      "column": "total_ocs",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          913,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_overhead_templates",
+      "column": "detalles",
+      "locations": [
+        [
+          "compras\\industrial_routes.py",
+          94,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_overhead_templates",
+      "column": "methods",
+      "locations": [
+        [
+          "compras\\industrial_routes.py",
+          94,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_overhead_templates",
+      "column": "template_id",
+      "locations": [
+        [
+          "compras\\industrial_routes.py",
+          94,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_recetas_detalle",
+      "column": "comp_costo_data",
+      "locations": [
+        [
+          "services\\industrial_costing_service.py",
+          44,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cmp_recetas_detalle",
+      "column": "items",
+      "locations": [
+        [
+          "services\\industrial_costing_service.py",
+          44,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cont_asientos",
+      "column": "nro_asiento",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1980,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cont_asientos",
+      "column": "proximo",
+      "locations": [
+        [
+          "compras\\routes.py",
+          255,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          773,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          873,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1980,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2039,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cont_asientos",
+      "column": "proximo_nro",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          773,
+          "WHERE",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          873,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cont_asientos",
+      "column": "proximo_nro_asiento",
+      "locations": [
+        [
+          "compras\\routes.py",
+          255,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2039,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cont_asientos",
+      "column": "row_n",
+      "locations": [
+        [
+          "compras\\routes.py",
+          255,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2039,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cont_asientos_detalle",
+      "column": "detalles",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          721,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "cont_plan_cuentas",
+      "column": "res",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          793,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "base_r",
+      "locations": [
+        [
+          "services\\numeration_service.py",
+          33,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "cliente_cuit",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          59,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          59,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "cliente_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2275,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "cliente_nombre",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          59,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          59,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "codigo",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          2013,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "codigos",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1970,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "comprobante_data",
+      "locations": [
+        [
+          "services\\afip_service.py",
+          255,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "comprobante_id",
+      "locations": [
+        [
+          "services\\afip_service.py",
+          255,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "comprobante_nc_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "comprobante_venta_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "data",
+      "locations": [
+        [
+          "services\\afip_service.py",
+          255,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "detalles",
+      "locations": [
+        [
+          "services\\afip_service.py",
+          255,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "doc_row",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2275,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "estado",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2275,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "extra",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1528,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "fecha_devolucion",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "fecha_efectiva",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2275,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "max_n",
+      "locations": [
+        [
+          "services\\numeration_service.py",
+          34,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\numeration_service.py",
+          34,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\numeration_service.py",
+          33,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "numero_serie",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "orden_compra_id",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1306,
+          "INSERT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1306,
+          "INSERT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1304,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "proveedor_cuit",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          127,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          127,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          124,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "proveedor_nombre",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          127,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          127,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          124,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "row_r",
+      "locations": [
+        [
+          "services\\numeration_service.py",
+          33,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "saldo_comp",
+      "locations": [
+        [
+          "utils\\colosal_ventas_consultant.py",
+          72,
+          "SELECT",
+          true
+        ],
+        [
+          "utils\\colosal_ventas_consultant.py",
+          72,
+          "SELECT",
+          true
+        ],
+        [
+          "utils\\colosal_ventas_consultant.py",
+          70,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          670,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          670,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "tipo_desc",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          59,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          127,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          59,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          127,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "total",
+      "locations": [
+        [
+          "utils\\colosal_ventas_consultant.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "utils\\colosal_ventas_consultant.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "utils\\colosal_ventas_consultant.py",
+          12,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "afip_tipo",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          569,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          569,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          565,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "detalle_po_id",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1336,
+          "INSERT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1336,
+          "INSERT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1333,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "items_db",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1098,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "items_precargados",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1098,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "iva",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1909,
+          "INSERT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1909,
+          "INSERT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1905,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "neto",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1909,
+          "INSERT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1909,
+          "INSERT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1905,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "precio_referencia",
+      "locations": [
+        [
+          "services\\sourcing_service.py",
+          48,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\sourcing_service.py",
+          48,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\sourcing_service.py",
+          46,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "proveedor_id",
+      "locations": [
+        [
+          "services\\sourcing_service.py",
+          48,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\sourcing_service.py",
+          48,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\sourcing_service.py",
+          46,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "proveedor_nombre",
+      "locations": [
+        [
+          "services\\sourcing_service.py",
+          48,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\sourcing_service.py",
+          48,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\sourcing_service.py",
+          46,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "res_ops",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1084,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "total",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1909,
+          "INSERT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1909,
+          "INSERT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1905,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_detalle",
+      "column": "ultima_fecha",
+      "locations": [
+        [
+          "services\\sourcing_service.py",
+          48,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\sourcing_service.py",
+          48,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\sourcing_service.py",
+          46,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "_signo_tipo",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2187,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "asiento_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2187,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "case",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "cliente_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "cliente_nombre",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "comprobante_asociado_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "else",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "end",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "fecha",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2187,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "importe_bruto",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2187,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "not",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "nro_doc_aplicado",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2187,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "nro_documento",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2187,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "nro_recibo",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2187,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "null",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "perc_row",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          2059,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "then",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "tipo_doc",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2187,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "total",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          2059,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2155,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "total_perc",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          2059,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_comprobantes_impuestos",
+      "column": "when",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          54,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_movimientos_fondos",
+      "column": "movimientos",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          931,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_movimientos_fondos",
+      "column": "saldos",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          931,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_puestos",
+      "column": "distinct",
+      "locations": [
+        [
+          "core\\routes.py",
+          1110,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_puestos",
+      "column": "params",
+      "locations": [
+        [
+          "core\\routes.py",
+          1099,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "aprobador_nombre",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          368,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "cliente",
+      "locations": [
+        [
+          "utils\\colosal_ventas_consultant.py",
+          56,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1695,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "cliente_cuit",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1297,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "condicion_nombre",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          643,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          643,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          368,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "condicion_pendiente_nombre",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          368,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "cp1",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          368,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "cp2",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          368,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "debito_tipos",
+      "locations": [
+        [
+          "utils\\colosal_ventas_consultant.py",
+          56,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "fac",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1695,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "factura_nro",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1695,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "item",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1695,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "items_enriquecidos",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1695,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "localidad",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1146,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1168,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1146,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1168,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tercero_service.py",
+          35,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "master_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          881,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "mixta_nombre",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          372,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          368,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "res",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          881,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "erp_terceros",
+      "column": "ter_row",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1297,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_bancos",
+      "column": "codigo",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          858,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_bancos",
+      "column": "cuenta_banco_id",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          858,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_bancos",
+      "column": "dictionary",
+      "locations": [
+        [
+          "services\\bcra_service.py",
+          420,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_bancos",
+      "column": "params",
+      "locations": [
+        [
+          "services\\bcra_service.py",
+          420,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_bancos",
+      "column": "row",
+      "locations": [
+        [
+          "fondos\\routes.py",
+          472,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_bancos",
+      "column": "row_b",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          858,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_bancos",
+      "column": "solo_activos",
+      "locations": [
+        [
+          "services\\bcra_service.py",
+          420,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_bancos",
+      "column": "sql",
+      "locations": [
+        [
+          "services\\bcra_service.py",
+          420,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_condiciones_pago",
+      "column": "cond_row",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1288,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1277,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_condiciones_pago",
+      "column": "is_mixed",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          924,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          924,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          920,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_condiciones_pago_mixtas",
+      "column": "is_mixed",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          905,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_condiciones_pago_mixtas_detalle",
+      "column": "condicion_nombre",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          914,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          914,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          911,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_factura_cobros",
+      "column": "medio_nombre",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1135,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1135,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1132,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_medios_pago",
+      "column": "not",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1398,
+          "WHERE",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1398,
+          "WHERE",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1394,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1046,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1147,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_nominas",
+      "column": "nomina",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          1050,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago",
+      "column": "comprobante",
+      "locations": [
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago",
+      "column": "operador",
+      "locations": [
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago",
+      "column": "pago",
+      "locations": [
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago",
+      "column": "rol_operador",
+      "locations": [
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago",
+      "column": "total",
+      "locations": [
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1239,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago_comprobantes",
+      "column": "facturas_det",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1510,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago_comprobantes",
+      "column": "fopc",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1512,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1512,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1510,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago_comprobantes",
+      "column": "saldo",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1420,
+          "WHERE",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1420,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_ordenes_pago_comprobantes",
+      "column": "tipo_nombre",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1512,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1512,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          1510,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_recibos_detalles",
+      "column": "saldo_recibos",
+      "locations": [
+        [
+          "utils\\colosal_ventas_consultant.py",
+          81,
+          "SELECT",
+          true
+        ],
+        [
+          "utils\\colosal_ventas_consultant.py",
+          81,
+          "SELECT",
+          true
+        ],
+        [
+          "utils\\colosal_ventas_consultant.py",
+          79,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          678,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "_signo_tipo",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "asiento_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "base",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          607,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          607,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          599,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "cliente_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "cliente_nombre",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "comprobante_asociado_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "comprobante_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "importe_bruto",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "nro_doc_aplicado",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "nro_documento",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "nro_recibo",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "null",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "order",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "percepciones",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          607,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          607,
+          "SELECT",
+          true
+        ],
+        [
+          "contabilidad\\routes.py",
+          599,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "proximo",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1488,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "rec",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "rec_params",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          126,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "separator",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "tipo_doc",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_retenciones_emitidas",
+      "column": "total_percepciones",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          2215,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          112,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          464,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "fin_tipos_cambio",
+      "column": "max_fecha",
+      "locations": [
+        [
+          "services\\bcra_service.py",
+          654,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\bcra_service.py",
+          654,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\bcra_service.py",
+          498,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "imp_cargos",
+      "column": "row",
+      "locations": [
+        [
+          "compras\\importaciones_routes_e2.py",
+          170,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "imp_despachos",
+      "column": "arribo",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          662,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          662,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "imp_despachos",
+      "column": "buque_nombre",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          945,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          945,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          919,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "imp_despachos",
+      "column": "empresa_nombre",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          945,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          945,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          919,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "imp_despachos",
+      "column": "fecha",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          662,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          662,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "imp_despachos",
+      "column": "proveedor",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          662,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          662,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "imp_despachos",
+      "column": "tipo",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          662,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          662,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "imp_pagos",
+      "column": "total",
+      "locations": [
+        [
+          "services\\importacion_service.py",
+          619,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          619,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\importacion_service.py",
+          616,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "movimientos_pendientes",
+      "column": "autor",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          517,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          749,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          517,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          749,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          512,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "movimientos_pendientes",
+      "column": "en_camino",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1238,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "movimientos_pendientes",
+      "column": "isbn",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          517,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          749,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          517,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          749,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          512,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "movimientos_pendientes",
+      "column": "pendientes",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1216,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "prestamos",
+      "column": "autor",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          171,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          206,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          498,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          171,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          206,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "prestamos",
+      "column": "conditions",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          203,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "prestamos",
+      "column": "editorial",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          206,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          206,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          203,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "prestamos",
+      "column": "isbn",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          171,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          206,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          498,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          171,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          206,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "prestamos",
+      "column": "libro_nombre",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          338,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          338,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          330,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "prestamos",
+      "column": "params",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          203,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "prestamos",
+      "column": "user_id",
+      "locations": [
+        [
+          "biblioteca\\routes.py",
+          408,
+          "INSERT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          408,
+          "INSERT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          400,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_archivos_digitales",
+      "column": "params",
+      "locations": [
+        [
+          "services\\enrichment\\processor.py",
+          35,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "a_row",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1829,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "art",
+      "locations": [
+        [
+          "compras\\routes.py",
+          959,
+          "WHERE",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          205,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "articulo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          310,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1880,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1915,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2499,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "articulo_id",
+      "locations": [
+        [
+          "pricing\\service.py",
+          205,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1880,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "autor",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "biblioteca\\routes.py",
+          651,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "count_params",
+      "locations": [
+        [
+          "stock\\routes.py",
+          366,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "cover_url",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "disponibles",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "distinct",
+      "locations": [
+        [
+          "list_publishers_to_enrich.py",
+          15,
+          "SELECT",
+          false
+        ],
+        [
+          "list_publishers_to_enrich.py",
+          12,
+          "SELECT",
+          false
+        ],
+        [
+          "biblioteca\\routes.py",
+          579,
+          "SELECT",
+          true
+        ],
+        [
+          "biblioteca\\routes.py",
+          586,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          514,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "editorial",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "en_camino",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "entidad_tipo",
+      "locations": [
+        [
+          "compras\\industrial_routes.py",
+          117,
+          "WHERE",
+          true
+        ],
+        [
+          "compras\\industrial_routes.py",
+          114,
+          "WHERE",
+          true
+        ],
+        [
+          "compras\\industrial_routes.py",
+          120,
+          "WHERE",
+          true
+        ],
+        [
+          "produccion\\routes.py",
+          98,
+          "WHERE",
+          true
+        ],
+        [
+          "produccion\\routes.py",
+          101,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "fecha_publicacion",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "genero",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "isbn",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "find_candidate.py",
+          8,
+          "SELECT",
+          false
+        ],
+        [
+          "find_candidate.py",
+          8,
+          "SELECT",
+          false
+        ],
+        [
+          "list_books.py",
+          8,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "lengua",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "stock\\routes.py",
+          797,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "metadata",
+      "locations": [
+        [
+          "stock\\routes.py",
+          624,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          624,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "numero_ejemplares",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "numero_paginas",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "origen",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "stock\\routes.py",
+          797,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "pendientes",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "precio",
+      "locations": [
+        [
+          "compras\\routes.py",
+          959,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          969,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          969,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "precio_actual",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2123,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2123,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2120,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "prestados",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "printer",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1915,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "proveedor_nombre",
+      "locations": [
+        [
+          "compras\\routes.py",
+          42,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          42,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          37,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "row",
+      "locations": [
+        [
+          "stock\\routes.py",
+          624,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "seguridad",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1880,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "sku_propietario",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2123,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2123,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2120,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "sku_proveedor",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2123,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2123,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2120,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          969,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          969,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "sql",
+      "locations": [
+        [
+          "stock\\routes.py",
+          366,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "stock_actual",
+      "locations": [
+        [
+          "compras\\routes.py",
+          42,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          42,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          37,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "sugerido",
+      "locations": [
+        [
+          "compras\\routes.py",
+          42,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          42,
+          "SELECT",
+          true
+        ],
+        [
+          "compras\\routes.py",
+          37,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos",
+      "column": "titulo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          210,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos_precios",
+      "column": "precio_venta",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2123,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2123,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2120,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos_seguridad",
+      "column": "data",
+      "locations": [
+        [
+          "stock\\routes.py",
+          758,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos_seguridad",
+      "column": "existing_s",
+      "locations": [
+        [
+          "stock\\routes.py",
+          148,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos_seguridad",
+      "column": "incoming_s",
+      "locations": [
+        [
+          "stock\\routes.py",
+          133,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_articulos_seguridad",
+      "column": "item",
+      "locations": [
+        [
+          "stock\\routes.py",
+          148,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_barcode_rules",
+      "column": "rule",
+      "locations": [
+        [
+          "utils\\barcode_parser.py",
+          16,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_barcode_rules",
+      "column": "rules",
+      "locations": [
+        [
+          "utils\\barcode_parser.py",
+          16,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_barcode_rules",
+      "column": "sku_clean",
+      "locations": [
+        [
+          "utils\\barcode_parser.py",
+          16,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_barcode_rules",
+      "column": "sku_raw",
+      "locations": [
+        [
+          "utils\\barcode_parser.py",
+          16,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_barcode_rules",
+      "column": "val_num",
+      "locations": [
+        [
+          "utils\\barcode_parser.py",
+          16,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_barcode_rules",
+      "column": "val_raw",
+      "locations": [
+        [
+          "utils\\barcode_parser.py",
+          16,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_barcode_rules",
+      "column": "valor_final",
+      "locations": [
+        [
+          "utils\\barcode_parser.py",
+          16,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_depositos",
+      "column": "deposito",
+      "locations": [
+        [
+          "stock\\routes.py",
+          994,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_depositos",
+      "column": "depositos",
+      "locations": [
+        [
+          "stock\\routes.py",
+          34,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          874,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1584,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_depositos",
+      "column": "params",
+      "locations": [
+        [
+          "stock\\routes.py",
+          34,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_depositos",
+      "column": "sql",
+      "locations": [
+        [
+          "stock\\routes.py",
+          34,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes",
+      "column": "cantidad_recibida",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1847,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes",
+      "column": "detalles",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1847,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes",
+      "column": "iva_nc",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1847,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes",
+      "column": "neto_nc",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1847,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes",
+      "column": "not",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1737,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1737,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1735,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes",
+      "column": "sol",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1847,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes",
+      "column": "solicitud",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1751,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes",
+      "column": "solicitud_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1847,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes_det",
+      "column": "activo",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1764,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes_det",
+      "column": "detalles",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1764,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes_det",
+      "column": "enterprise_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1764,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1764,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_devoluciones_solicitudes_det",
+      "column": "transportistas",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1764,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "articulo_nombre",
+      "locations": [
+        [
+          "stock\\routes.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          34,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "autor",
+      "locations": [
+        [
+          "stock\\routes.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          34,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "codigo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "deposito_nombre",
+      "locations": [
+        [
+          "stock\\routes.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          34,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "genero",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "isbn",
+      "locations": [
+        [
+          "audit_stock.py",
+          31,
+          "SELECT",
+          false
+        ],
+        [
+          "audit_stock.py",
+          31,
+          "SELECT",
+          false
+        ],
+        [
+          "audit_stock.py",
+          27,
+          "SELECT",
+          false
+        ],
+        [
+          "stock\\routes.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "modelo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "nombre",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "params",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1608,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "precio",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "precio_venta",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1162,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "tipo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1608,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "total",
+      "locations": [
+        [
+          "audit_stock.py",
+          17,
+          "SELECT",
+          false
+        ],
+        [
+          "audit_stock.py",
+          14,
+          "SELECT",
+          false
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1222,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          34,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_existencias",
+      "column": "total_cantidad",
+      "locations": [
+        [
+          "stock\\routes.py",
+          381,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          381,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          394,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_inventarios",
+      "column": "articulo_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1688,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_inventarios",
+      "column": "cantidad",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1688,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_inventarios",
+      "column": "inv",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1641,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1688,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_inventarios",
+      "column": "inventario_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1688,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_inventarios",
+      "column": "item",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1688,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_inventarios",
+      "column": "items",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1688,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_inventarios",
+      "column": "last_updated",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1688,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_items_transferencia",
+      "column": "deposito_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1547,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_items_transferencia",
+      "column": "item",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1547,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_items_transferencia",
+      "column": "items",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1547,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_items_transferencia",
+      "column": "last_updated",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1547,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_listas_precios",
+      "column": "lista",
+      "locations": [
+        [
+          "pricing\\routes.py",
+          114,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_listas_precios",
+      "column": "lista_nombre",
+      "locations": [
+        [
+          "pricing\\service.py",
+          115,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_logisticas",
+      "column": "logistica",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1786,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_logisticas",
+      "column": "provincias",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1786,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_motivos",
+      "column": "motivo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          113,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "comprobante",
+      "locations": [
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "destino",
+      "locations": [
+        [
+          "stock\\routes.py",
+          242,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          273,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          242,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          273,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          238,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "modulo",
+      "locations": [
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "motivo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          242,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          273,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          242,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          273,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          238,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "mov",
+      "locations": [
+        [
+          "stock\\routes.py",
+          268,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "operador",
+      "locations": [
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "origen",
+      "locations": [
+        [
+          "stock\\routes.py",
+          242,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          273,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          242,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          273,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          238,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "rol_operador",
+      "locations": [
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "stock",
+      "locations": [
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "tercero",
+      "locations": [
+        [
+          "stock\\routes.py",
+          242,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          273,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          242,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          273,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          238,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "total",
+      "locations": [
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1253,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos_detalle",
+      "column": "articulo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          293,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          293,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          290,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos_detalle",
+      "column": "destino",
+      "locations": [
+        [
+          "stock\\routes.py",
+          323,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          323,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          320,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos_detalle",
+      "column": "detalles",
+      "locations": [
+        [
+          "stock\\routes.py",
+          290,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos_detalle",
+      "column": "isbn",
+      "locations": [
+        [
+          "stock\\routes.py",
+          293,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          293,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          290,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos_detalle",
+      "column": "motivo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          323,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          323,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          320,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos_detalle",
+      "column": "origen",
+      "locations": [
+        [
+          "stock\\routes.py",
+          323,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          323,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          320,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos_detalle",
+      "column": "signo",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1936,
+          "INSERT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1936,
+          "INSERT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1931,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_movimientos_detalle",
+      "column": "tercero",
+      "locations": [
+        [
+          "stock\\routes.py",
+          323,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          323,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          320,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "ajuste",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2458,
+          "SELECT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2458,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "comprobante_nc_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2241,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2241,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2223,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2223,
+          "UPDATE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "comprobante_venta_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2223,
+          "UPDATE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "fecha_devolucion",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2241,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2241,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2223,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2223,
+          "UPDATE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "lote",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2549,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2654,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2549,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2654,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2545,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "notas",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2549,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2549,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2545,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "p_row",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2447,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "params",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2703,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "parent_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2458,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          2458,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_numeros_serie",
+      "column": "serie_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          2243,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_propuestas",
+      "column": "costo_propuesto",
+      "locations": [
+        [
+          "produccion\\routes.py",
+          152,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_propuestas",
+      "column": "fecha_fin_vigencia",
+      "locations": [
+        [
+          "pricing\\service.py",
+          162,
+          "WHERE",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          162,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_propuestas",
+      "column": "lista_precio_id",
+      "locations": [
+        [
+          "pricing\\service.py",
+          162,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_propuestas",
+      "column": "prop",
+      "locations": [
+        [
+          "pricing\\service.py",
+          162,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_propuestas",
+      "column": "threshold",
+      "locations": [
+        [
+          "pricing\\service.py",
+          162,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_propuestas",
+      "column": "u_propuesta",
+      "locations": [
+        [
+          "pricing\\service.py",
+          162,
+          "WHERE",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          162,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_propuestas",
+      "column": "user_id",
+      "locations": [
+        [
+          "pricing\\service.py",
+          162,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_reglas",
+      "column": "lista_nombre",
+      "locations": [
+        [
+          "pricing\\service.py",
+          239,
+          "SELECT",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          239,
+          "SELECT",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          231,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_pricing_reglas",
+      "column": "metodo_codigo",
+      "locations": [
+        [
+          "pricing\\service.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          43,
+          "SELECT",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          33,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "clean",
+      "locations": [
+        [
+          "stock\\routes.py",
+          489,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "cursor",
+      "locations": [
+        [
+          "stock\\routes.py",
+          489,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "distinct",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1022,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1022,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1018,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "ensure",
+      "locations": [
+        [
+          "stock\\routes.py",
+          489,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "json",
+      "locations": [
+        [
+          "stock\\routes.py",
+          489,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "old_data",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1064,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "old_schema_str",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1064,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "select",
+      "locations": [
+        [
+          "stock\\routes.py",
+          489,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "serialization",
+      "locations": [
+        [
+          "stock\\routes.py",
+          489,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "specific",
+      "locations": [
+        [
+          "stock\\routes.py",
+          489,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo",
+      "column": "tipos",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1019,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_tipos_articulo_servicios",
+      "column": "new_id",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1109,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_transferencias",
+      "column": "patente_vehiculo",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1489,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1489,
+          "INSERT",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1486,
+          "INSERT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "stk_transferencias",
+      "column": "trans",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1522,
+          "WHERE",
+          true
+        ],
+        [
+          "stock\\routes.py",
+          1542,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_active_tasks",
+      "column": "row",
+      "locations": [
+        [
+          "core\\concurrency.py",
+          46,
+          "WHERE",
+          true
+        ],
+        [
+          "core\\concurrency.py",
+          121,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_ai_feedback",
+      "column": "summary",
+      "locations": [
+        [
+          "services\\ai_chat_routes.py",
+          173,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_budget_execution",
+      "column": "exec_data",
+      "locations": [
+        [
+          "services\\budget_service.py",
+          46,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_budget_execution",
+      "column": "total_actual",
+      "locations": [
+        [
+          "services\\budget_service.py",
+          49,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          49,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          46,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_budget_execution",
+      "column": "total_committed",
+      "locations": [
+        [
+          "services\\budget_service.py",
+          49,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          49,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          46,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          46,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_budgets",
+      "column": "budget_id",
+      "locations": [
+        [
+          "services\\budget_service.py",
+          26,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          35,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          26,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          35,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\budget_service.py",
+          29,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprise_numeracion",
+      "column": "base_p",
+      "locations": [
+        [
+          "services\\numeration_service.py",
+          19,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprise_numeracion",
+      "column": "row_p",
+      "locations": [
+        [
+          "services\\numeration_service.py",
+          19,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "config",
+      "locations": [
+        [
+          "services\\afip_service.py",
+          129,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "digits",
+      "locations": [
+        [
+          "services\\afip_service.py",
+          129,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "ent_status",
+      "locations": [
+        [
+          "core\\routes.py",
+          46,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "enterprise",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          37,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "res",
+      "locations": [
+        [
+          "core\\enterprise_admin.py",
+          116,
+          "WHERE",
+          true
+        ],
+        [
+          "scripts\\cron_update_padron.py",
+          107,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "row",
+      "locations": [
+        [
+          "services\\email_service.py",
+          27,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "status",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          37,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises_fiscal",
+      "column": "agents",
+      "locations": [
+        [
+          "core\\enterprise_admin.py",
+          355,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises_fiscal",
+      "column": "fiscal_id",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1242,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1242,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1237,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises_fiscal",
+      "column": "row",
+      "locations": [
+        [
+          "core\\enterprise_admin.py",
+          400,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_enterprises_fiscal",
+      "column": "sef",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          1242,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1242,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1242,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1242,
+          "SELECT",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1237,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_external_services",
+      "column": "service",
+      "locations": [
+        [
+          "core\\routes.py",
+          1918,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_external_services",
+      "column": "servicios_disponibles",
+      "locations": [
+        [
+          "stock\\routes.py",
+          1043,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_jurisdicciones",
+      "column": "activo",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1252,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_jurisdicciones",
+      "column": "enterprise_id",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1252,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_padrones_iibb",
+      "column": "cuit_cnt",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          183,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_padrones_iibb",
+      "column": "juris_cnt",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          183,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_padrones_iibb",
+      "column": "records",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          290,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_padrones_iibb",
+      "column": "rows",
+      "locations": [
+        [
+          "contabilidad\\routes.py",
+          227,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_permissions",
+      "column": "categories",
+      "locations": [
+        [
+          "services\\audit_certification_service.py",
+          135,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_permissions",
+      "column": "distinct",
+      "locations": [
+        [
+          "app.py",
+          173,
+          "SELECT",
+          false
+        ],
+        [
+          "app.py",
+          173,
+          "SELECT",
+          false
+        ],
+        [
+          "app.py",
+          170,
+          "SELECT",
+          false
+        ],
+        [
+          "services\\audit_certification_service.py",
+          135,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_permissions",
+      "column": "new_perms_list",
+      "locations": [
+        [
+          "core\\routes.py",
+          629,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_permissions",
+      "column": "p_cat",
+      "locations": [
+        [
+          "core\\routes.py",
+          702,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_permissions",
+      "column": "p_code",
+      "locations": [
+        [
+          "core\\routes.py",
+          702,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_permissions",
+      "column": "p_data",
+      "locations": [
+        [
+          "core\\routes.py",
+          702,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_permissions",
+      "column": "res",
+      "locations": [
+        [
+          "core\\routes.py",
+          609,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_provincias",
+      "column": "provincia_id",
+      "locations": [
+        [
+          "services\\georef_service.py",
+          225,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_risk_mitigation_rules",
+      "column": "action",
+      "locations": [
+        [
+          "services\\risk_mitigation_service.py",
+          24,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_risk_mitigation_rules",
+      "column": "rule",
+      "locations": [
+        [
+          "services\\risk_mitigation_service.py",
+          24,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_risk_mitigation_rules",
+      "column": "rules",
+      "locations": [
+        [
+          "services\\risk_mitigation_service.py",
+          24,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_roles",
+      "column": "conflict_roles_map",
+      "locations": [
+        [
+          "core\\routes.py",
+          1212,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_roles",
+      "column": "current_codes",
+      "locations": [
+        [
+          "core\\routes.py",
+          618,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_roles",
+      "column": "role_id",
+      "locations": [
+        [
+          "services\\sod_service.py",
+          108,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_roles",
+      "column": "role_info",
+      "locations": [
+        [
+          "core\\routes.py",
+          618,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_roles",
+      "column": "role_name",
+      "locations": [
+        [
+          "core\\routes.py",
+          618,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_roles",
+      "column": "roles",
+      "locations": [
+        [
+          "core\\routes.py",
+          1212,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_roles",
+      "column": "row",
+      "locations": [
+        [
+          "services\\sod_service.py",
+          108,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_security_logs",
+      "column": "actor_name",
+      "locations": [
+        [
+          "core\\routes.py",
+          1130,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1130,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1126,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_security_logs",
+      "column": "distinct",
+      "locations": [
+        [
+          "core\\routes.py",
+          1138,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1138,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1138,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1138,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_security_logs",
+      "column": "operator",
+      "locations": [
+        [
+          "core\\routes.py",
+          1192,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1192,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1187,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_security_logs",
+      "column": "params",
+      "locations": [
+        [
+          "core\\routes.py",
+          1126,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_security_logs",
+      "column": "target_name",
+      "locations": [
+        [
+          "core\\routes.py",
+          1130,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1130,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          1126,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_tipos_comprobante",
+      "column": "activo",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1244,
+          "WHERE",
+          true
+        ],
+        [
+          "ventas\\routes.py",
+          1028,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_tipos_comprobante",
+      "column": "t_row",
+      "locations": [
+        [
+          "services\\numeration_service.py",
+          16,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_tipos_comprobante",
+      "column": "tipos",
+      "locations": [
+        [
+          "ventas\\routes.py",
+          240,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "dias_sin_resolucion",
+      "locations": [
+        [
+          "core\\routes.py",
+          2418,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          2418,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          2415,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "dictionary",
+      "locations": [
+        [
+          "core\\routes.py",
+          2383,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "distinct",
+      "locations": [
+        [
+          "core\\routes.py",
+          2415,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          2433,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "err",
+      "locations": [
+        [
+          "core\\routes.py",
+          2672,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "error",
+      "locations": [
+        [
+          "core\\routes.py",
+          2468,
+          "WHERE",
+          true
+        ],
+        [
+          "core\\routes.py",
+          2557,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "total",
+      "locations": [
+        [
+          "core\\routes.py",
+          2383,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "distinct",
+      "locations": [
+        [
+          "pricing\\service.py",
+          110,
+          "SELECT",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          110,
+          "SELECT",
+          true
+        ],
+        [
+          "pricing\\service.py",
+          109,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "ent_id",
+      "locations": [
+        [
+          "core\\routes.py",
+          270,
+          "WHERE",
+          true
+        ],
+        [
+          "core\\routes.py",
+          348,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "is_used",
+      "locations": [
+        [
+          "core\\routes.py",
+          94,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "is_valid",
+      "locations": [
+        [
+          "core\\routes.py",
+          236,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "must_change",
+      "locations": [
+        [
+          "core\\routes.py",
+          61,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "new_hash",
+      "locations": [
+        [
+          "core\\routes.py",
+          449,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "new_sid",
+      "locations": [
+        [
+          "core\\routes.py",
+          61,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "passed",
+      "locations": [
+        [
+          "core\\routes.py",
+          449,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "resp",
+      "locations": [
+        [
+          "core\\routes.py",
+          2610,
+          "WHERE",
+          true
+        ],
+        [
+          "core\\routes.py",
+          2724,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "role_name",
+      "locations": [
+        [
+          "app.py",
+          139,
+          "SELECT",
+          false
+        ],
+        [
+          "app.py",
+          139,
+          "SELECT",
+          false
+        ],
+        [
+          "app.py",
+          124,
+          "SELECT",
+          false
+        ],
+        [
+          "core\\routes.py",
+          746,
+          "SELECT",
+          true
+        ],
+        [
+          "core\\routes.py",
+          746,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "row",
+      "locations": [
+        [
+          "core\\routes.py",
+          449,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "target_user_id",
+      "locations": [
+        [
+          "core\\routes.py",
+          449,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "temp_expires",
+      "locations": [
+        [
+          "core\\routes.py",
+          236,
+          "WHERE",
+          true
+        ],
+        [
+          "core\\routes.py",
+          236,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "u_email",
+      "locations": [
+        [
+          "core\\routes.py",
+          270,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "u_row",
+      "locations": [
+        [
+          "core\\routes.py",
+          270,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "used",
+      "locations": [
+        [
+          "core\\routes.py",
+          449,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "user",
+      "locations": [
+        [
+          "core\\routes.py",
+          61,
+          "WHERE",
+          true
+        ],
+        [
+          "core\\routes.py",
+          236,
+          "WHERE",
+          true
+        ],
+        [
+          "core\\routes.py",
+          348,
+          "WHERE",
+          true
+        ],
+        [
+          "core\\routes.py",
+          397,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_users",
+      "column": "users",
+      "locations": [
+        [
+          "core\\routes.py",
+          348,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_workflow_rules",
+      "column": "rule",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1792,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_workflow_rules",
+      "column": "rule_id",
+      "locations": [
+        [
+          "compras\\routes.py",
+          1792,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "sys_workflow_steps",
+      "column": "dictionary",
+      "locations": [
+        [
+          "services\\workflow_service.py",
+          52,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "case",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          341,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "else",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          341,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "end",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          341,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "es_propio",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          341,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "heredada",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "origen",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "propia",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "then",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          341,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_alicuotas",
+      "column": "when",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          361,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          466,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          341,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "alicuotas",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          524,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "case",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "else",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "end",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "heredada",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "impuesto_codigo",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "impuesto_nombre",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "impuesto_tipo",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "origen",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "propia",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "reglas",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          524,
+          "WHERE",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "then",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas",
+      "column": "when",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          445,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas_iibb",
+      "column": "case",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          308,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas_iibb",
+      "column": "else",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          308,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas_iibb",
+      "column": "end",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          308,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas_iibb",
+      "column": "es_propio",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          308,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas_iibb",
+      "column": "impuesto_codigo",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          308,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas_iibb",
+      "column": "then",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          308,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "tax_reglas_iibb",
+      "column": "when",
+      "locations": [
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          320,
+          "SELECT",
+          true
+        ],
+        [
+          "services\\tax_engine.py",
+          308,
+          "SELECT",
+          true
+        ]
+      ],
+      "productive": true
+    },
+    {
+      "table": "clientes",
+      "column": "actuales",
+      "locations": [
+        [
+          "create_master_entities.py",
+          166,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "empresa",
+      "locations": [
+        [
+          "find_nc_details.py",
+          8,
+          "SELECT",
+          false
+        ],
+        [
+          "find_nc_details.py",
+          8,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_comprobantes",
+      "column": "tercero",
+      "locations": [
+        [
+          "find_all_nc.py",
+          8,
+          "SELECT",
+          false
+        ],
+        [
+          "find_all_nc.py",
+          8,
+          "SELECT",
+          false
+        ],
+        [
+          "find_nc_details.py",
+          8,
+          "SELECT",
+          false
+        ],
+        [
+          "find_nc_details.py",
+          8,
+          "SELECT",
+          false
+        ],
+        [
+          "find_nc_empresa0.py",
+          22,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "cuits",
+      "locations": [
+        [
+          "enable_jurisdictions_api.py",
+          37,
+          "WHERE",
+          false
+        ],
+        [
+          "enable_jurisdictions_api.py",
+          37,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "current_count",
+      "locations": [
+        [
+          "create_mass_providers.py",
+          57,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "current_date",
+      "locations": [
+        [
+          "util_generate_sample_data.py",
+          82,
+          "SELECT",
+          false
+        ],
+        [
+          "util_generate_sample_data.py",
+          82,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "distinct",
+      "locations": [
+        [
+          "enable_jurisdictions_api.py",
+          37,
+          "SELECT",
+          false
+        ],
+        [
+          "populate_full_jurisdictions.py",
+          17,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "existing_names",
+      "locations": [
+        [
+          "list_publishers_to_enrich.py",
+          16,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "name",
+      "locations": [
+        [
+          "distribute_jurisdictions.py",
+          56,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "pendiente",
+      "locations": [
+        [
+          "util_generate_sample_data.py",
+          82,
+          "SELECT",
+          false
+        ],
+        [
+          "util_generate_sample_data.py",
+          82,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "providers",
+      "locations": [
+        [
+          "distribute_jurisdictions.py",
+          56,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "row",
+      "locations": [
+        [
+          "list_publishers_to_enrich.py",
+          16,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "tercero_ids",
+      "locations": [
+        [
+          "generate_full_test_cycle.py",
+          15,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "venta",
+      "locations": [
+        [
+          "util_generate_sample_data.py",
+          82,
+          "SELECT",
+          false
+        ],
+        [
+          "util_generate_sample_data.py",
+          82,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "erp_terceros",
+      "column": "ventas",
+      "locations": [
+        [
+          "util_generate_sample_data.py",
+          82,
+          "SELECT",
+          false
+        ],
+        [
+          "util_generate_sample_data.py",
+          82,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "fin_bancos",
+      "column": "cuenta",
+      "locations": [
+        [
+          "_seed_bancos_cbu.py",
+          130,
+          "SELECT",
+          false
+        ],
+        [
+          "_seed_bancos_cbu.py",
+          130,
+          "SELECT",
+          false
+        ],
+        [
+          "_seed_bancos_cbu.py",
+          126,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "fin_bancos",
+      "column": "cuenta_codigo",
+      "locations": [
+        [
+          "_seed_bancos.py",
+          47,
+          "SELECT",
+          false
+        ],
+        [
+          "_seed_bancos.py",
+          47,
+          "SELECT",
+          false
+        ],
+        [
+          "_seed_bancos.py",
+          37,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "legacy_libros",
+      "column": "distinct",
+      "locations": [
+        [
+          "list_publishers_to_enrich.py",
+          11,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "proveedores",
+      "column": "cnt",
+      "locations": [
+        [
+          "create_master_entities.py",
+          99,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_articulos",
+      "column": "articulos",
+      "locations": [
+        [
+          "generate_full_test_cycle.py",
+          19,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_articulos",
+      "column": "ebook_url",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_articulos",
+      "column": "modulo",
+      "locations": [
+        [
+          "generate_full_test_cycle.py",
+          19,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_articulos",
+      "column": "paginas",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_articulos",
+      "column": "precio_costo",
+      "locations": [
+        [
+          "generate_test_data.py",
+          42,
+          "INSERT",
+          false
+        ],
+        [
+          "generate_test_data.py",
+          42,
+          "INSERT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_articulos",
+      "column": "tiene_archivo",
+      "locations": [
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ],
+        [
+          "enrich_books_api.py",
+          123,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_articulos",
+      "column": "url",
+      "locations": [
+        [
+          "diag_ebooks_v2.py",
+          8,
+          "SELECT",
+          false
+        ],
+        [
+          "list_urls.py",
+          8,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_existencias",
+      "column": "select",
+      "locations": [
+        [
+          "audit_stock.py",
+          31,
+          "SELECT",
+          false
+        ],
+        [
+          "audit_stock.py",
+          31,
+          "SELECT",
+          false
+        ],
+        [
+          "audit_stock.py",
+          27,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "articulo_id",
+      "locations": [
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ],
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "cantidad",
+      "locations": [
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ],
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "concepto",
+      "locations": [
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ],
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "deposito_id",
+      "locations": [
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ],
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "stk_movimientos",
+      "column": "tipo",
+      "locations": [
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ],
+        [
+          "generate_test_data.py",
+          92,
+          "INSERT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_crons",
+      "column": "cron",
+      "locations": [
+        [
+          "scripts\\cron_update_padron.py",
+          73,
+          "WHERE",
+          false
+        ],
+        [
+          "scripts\\cron_update_padron.py",
+          73,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "all_results",
+      "locations": [
+        [
+          "scripts\\cron_update_padron.py",
+          107,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "emp",
+      "locations": [
+        [
+          "scripts\\cron_update_padron.py",
+          107,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "ent_row",
+      "locations": [
+        [
+          "app.py",
+          157,
+          "WHERE",
+          false
+        ],
+        [
+          "app.py",
+          184,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "enterprises_to_process",
+      "locations": [
+        [
+          "scripts\\cron_update_padron.py",
+          107,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "is_master_ent",
+      "locations": [
+        [
+          "app.py",
+          184,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_enterprises",
+      "column": "username_clean",
+      "locations": [
+        [
+          "app.py",
+          184,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_permissions",
+      "column": "db_perms",
+      "locations": [
+        [
+          "analyze_permissions.py",
+          23,
+          "WHERE",
+          false
+        ],
+        [
+          "audit_routes_vs_perms.py",
+          86,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_permissions",
+      "column": "existing",
+      "locations": [
+        [
+          "sync_menu_permissions.py",
+          23,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_permissions",
+      "column": "row",
+      "locations": [
+        [
+          "app.py",
+          170,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "clob_data",
+      "locations": [
+        [
+          "app.py",
+          333,
+          "INSERT",
+          false
+        ],
+        [
+          "app.py",
+          333,
+          "INSERT",
+          false
+        ],
+        [
+          "app.py",
+          329,
+          "INSERT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "detail",
+      "locations": [
+        [
+          "python_check_incident.py",
+          53,
+          "SELECT",
+          false
+        ],
+        [
+          "python_check_incident.py",
+          53,
+          "SELECT",
+          false
+        ],
+        [
+          "python_check_incident.py",
+          51,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_transaction_logs",
+      "column": "row",
+      "locations": [
+        [
+          "python_check_incident.py",
+          51,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_users",
+      "column": "enterprise_name",
+      "locations": [
+        [
+          "util_context.py",
+          22,
+          "SELECT",
+          false
+        ],
+        [
+          "util_context.py",
+          22,
+          "SELECT",
+          false
+        ],
+        [
+          "util_context.py",
+          19,
+          "SELECT",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_users",
+      "column": "name",
+      "locations": [
+        [
+          "util_context.py",
+          22,
+          "WHERE",
+          false
+        ],
+        [
+          "util_context.py",
+          22,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_users",
+      "column": "r_id",
+      "locations": [
+        [
+          "app.py",
+          124,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_users",
+      "column": "role_clean",
+      "locations": [
+        [
+          "app.py",
+          124,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_users",
+      "column": "user_row",
+      "locations": [
+        [
+          "app.py",
+          124,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    },
+    {
+      "table": "sys_users",
+      "column": "username_clean",
+      "locations": [
+        [
+          "app.py",
+          124,
+          "WHERE",
+          false
+        ]
+      ],
+      "productive": false
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+CREATE TABLE `sys_roles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `description` text DEFAULT NULL,
+  `enterprise_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`enterprise_id`),
+  UNIQUE KEY `unique_role_per_ent` (`enterprise_id`,`name`),
+  KEY `id` (`id`),
+  CONSTRAINT `fk_sys_roles_ent` FOREIGN KEY (`enterprise_id`) REFERENCES `sys_enterprises` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci

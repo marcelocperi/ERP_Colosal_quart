@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4 text-dark" style="background-color: #f8f9fa;">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0 fw-bold"><i class="fas fa-clipboard-check text-warning me-2"></i>Bandeja Global de Costos
+            </h2>
+            <p class="text-muted mb-0">Revisión y Aprobación de Estructuras de Costos (Producidos e Importados)</p>
+        </div>
+        <div
+            class="badge bg-warning bg-opacity-25 text-dark p-3 rounded-pill border border-warning border-opacity-50 fw-bold">
+            {{ propuestas|length }} Propuestas Pendientes
+        </div>
+    </div>
+
+    <!-- Tabla de Propuestas -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tablaCostos">
+                    <thead class="bg-light border-bottom">
+                        <tr class="small text-muted text-uppercase">
+                            <th class="px-4 py-3">Referencia / Artículo</th>
+                            <th class="py-3">Fecha Propuesta</th>
+                            <th class="py-3">Costo Actual ($)</th>
+                            <th class="py-3">Nuevo Costo ($)</th>
+                            <th class="py-3">Variación (%)</th>
+                            <th class="py-3 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in propuestas %}
+                        <tr>
+                            <td class="px-4">
+                                <div class="fw-bold">{{ p.articulo_nombre }}</div>
+                                <div class="small text-muted">Cód: {{ p.articulo_codigo }} · ID: #{{ p.id }}</div>
+                            </td>
+                            <td>
+                                <div>{{ p.fecha_propuesta.strftime('%d/%m/%Y') }}</div>
+                                <div class="small text-muted">{{ p.metodo_nombre or 'Standard Costing' }}</div>
+                            </td>
+                            <td class="fw-bold text-muted">${{ '{:,.2f}'.format(p.costo_actual) }}</td>
+                            <td class="fw-bold text-primary">${{ '{:,.2f}'.format(p.costo_propuesto) }}</td>
+                            <td>
+                                {% set var = 0 %}
+                                {% if p.costo_actual > 0 %}
+                                {% set var = ((p.costo_propuesto - p.costo_actual) / p.costo_actual) * 100 %}
+                                {% endif %}
+                                <span
+                                    class="badge {% if var > 0 %}bg-danger{% elif var < 0 %}bg-success{% else %}bg-secondary{% endif %} bg-opacity-10 text-{{ 'danger' if var > 0 else 'success' if var < 0 else 'secondary' }} px-3 py-2 border">
+                                    {{ '+' if var > 0 }}{{ '{:,.1f}'.format(var) }}%
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group shadow-sm rounded-pill overflow-hidden border">
+                                    <button class="btn btn-white btn-sm px-3 hover-primary" data-id="{{ p.id }}"
+                                        onclick="aprobarCosteo(this.dataset.id)" title="Aprobar e Impactar Precios">
+                                        <i class="fas fa-check text-success"></i>
+                                    </button>
+                                    <button class="btn btn-white btn-sm px-3 hover-secondary border-start"
+                                        data-id="{{ p.id }}" onclick="verDetalle(this.dataset.id)"
+                                        title="Ver Explosión de Costo">
+                                        <i class="fas fa-search text-info"></i>
+                                    </button>
+                                    <button class="btn btn-white btn-sm px-3 hover-danger border-start"
+                                        data-id="{{ p.id }}" onclick="rechazarCosteo(this.dataset.id)" title="Rechazar">
+                                        <i class="fas fa-times text-danger"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-coffee fa-3x mb-3 opacity-25"></i>
+                                <h5 class="fw-bold">No hay pendientes de costeo</h5>
+                                <p class="small mb-0">¡Todo está al día! Las variaciones de insumos no han superado el
+                                    umbral de alerta.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-primary:hover {
+        background-color: rgba(13, 110, 253, 0.05) !important;
+    }
+
+    .hover-secondary:hover {
+        background-color: rgba(108, 117, 125, 0.05) !important;
+    }
+
+    .hover-danger:hover {
+        background-color: rgba(220, 53, 69, 0.05) !important;
+    }
+
+    .btn-white {
+        background-color: white;
+        border: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.01);
+    }
+</style>
+
+<script>
+    function aprobarCosteo(id) {
+        if (!confirm('¿Desea aprobar esta estructura e impactar en el sistema de precios?')) return;
+
+        fetch(`/industrial/api/costeo/${id}/aprobar`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Costeo aprobado e impactado exitosamente.');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+    }
+
+    function rechazarCosteo(id) {
+        if (!confirm('¿Desea rechazar esta propuesta de costeo?')) return;
+
+        fetch(`/industrial/api/costeo/${id}/rechazar`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            });
+    }
+
+    function verDetalle(id) {
+        alert('Visualizando explosión de costos (Phase 2.2)...');
+    }
+</script>
+{% endblock %}

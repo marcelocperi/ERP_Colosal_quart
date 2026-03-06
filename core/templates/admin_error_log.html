@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+{% block title %}Consulta de Errores del Sistema{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="text-white fw-bold mb-0">
+                <i class="fas fa-bug me-2 text-danger"></i>CONSULTA DE ERRORES (V2)
+            </h2>
+            <p class="text-muted small mb-0">{{ total }} registros encontrados</p>
+        </div>
+        <div class="btn-group" role="group" aria-label="Perfil de Vista">
+            {% set base_args = request.args.copy() %}
+            <a href="{{ url_for('core.error_log', **dict(base_args, profile='business')) }}"
+                class="btn btn-sm {{ 'btn-warning text-dark fw-bold' if f_profile == 'business' else 'btn-outline-secondary' }}">
+                <i class="fas fa-user-tie me-1"></i>Perfil Negocio
+            </a>
+            <a href="{{ url_for('core.error_log', **dict(base_args, profile='expert')) }}"
+                class="btn btn-sm {{ 'btn-info text-dark fw-bold' if f_profile == 'expert' else 'btn-outline-secondary' }}">
+                <i class="fas fa-terminal me-1"></i>Perfil Experto
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <form method="GET" class="card bg-dark border-secondary shadow mb-4 p-3">
+        <input type="hidden" name="profile" value="{{ f_profile }}">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label text-muted small mb-1">Módulo</label>
+                <select name="module" class="form-select form-select-sm bg-dark text-white border-secondary">
+                    <option value="">— Todos —</option>
+                    {% for m in modules_list %}
+                    <option value="{{ m }}" {{ 'selected' if f_module==m }}>
+                        {{ module_labels.get(m, m)|upper }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small mb-1">Tipo de Falla</label>
+                <select name="failure_mode" class="form-select form-select-sm bg-dark text-white border-secondary">
+                    <option value="">— Todas —</option>
+                    {% for f in failures_list %}
+                    <option value="{{ f }}" {{ 'selected' if f_failure==f }}>
+                        {{ failure_labels.get(f, (f, ''))[0] if failure_labels.get(f) else f }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label text-muted small mb-1">Resultado</label>
+                <select name="status" class="form-select form-select-sm bg-dark text-white border-secondary">
+                    <option value="ERROR" {{ 'selected' if f_status=='ERROR' }}>Errores</option>
+                    <option value="SUCCESS" {{ 'selected' if f_status=='SUCCESS' }}>Éxitos</option>
+                    <option value="" {{ 'selected' if not f_status }}>Todos</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label text-muted small mb-1">Incidente</label>
+                <select name="incident_status" class="form-select form-select-sm bg-dark text-white border-secondary">
+                    <option value="OPEN" {{ 'selected' if f_incident=='OPEN' or not f_incident }}>Abierto</option>
+                    <option value="IN_PROGRESS" {{ 'selected' if f_incident=='IN_PROGRESS' }}>En Curso</option>
+                    <option value="FEEDBACK" {{ 'selected' if f_incident=='FEEDBACK' }}>Feedback</option>
+                    <option value="CLOSED" {{ 'selected' if f_incident=='CLOSED' }}>Cerrado</option>
+                    <option value="" {{ 'selected' if f_incident=='' }}>— Todos —</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label text-muted small mb-1">Usuario</label>
+                <select name="user_id" class="form-select form-select-sm bg-dark text-white border-secondary">
+                    <option value="">— Todos —</option>
+                    {% for u in users_list %}
+                    <option value="{{ u }}" {{ 'selected' if f_user_id==u|string }}>{{ u }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label text-muted small mb-1">Sev. Mín</label>
+                <input type="number" name="severity_min" min="1" max="10" value="{{ f_severity_min }}"
+                    class="form-control form-control-sm bg-dark text-white border-secondary">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small mb-1">Desde</label>
+                <input type="date" name="date_from" value="{{ f_date_from }}"
+                    class="form-control form-control-sm bg-dark text-white border-secondary">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small mb-1">Hasta</label>
+                <input type="date" name="date_to" value="{{ f_date_to }}"
+                    class="form-control form-control-sm bg-dark text-white border-secondary">
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-filter me-1"></i>Filtrar
+                </button>
+                <a href="{{ url_for('core.error_log', profile=f_profile) }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tabla -->
+    <div class="card bg-dark border-secondary shadow-lg">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle" id="error-table">
+                    <thead class="bg-black bg-opacity-60">
+                        <tr class="extra-small text-muted text-uppercase">
+                            {% if f_profile == 'business' %}
+                            <th class="ps-3" style="width: 50px;">#</th>
+                            <th>Cuándo</th>
+                            <th>Área</th>
+                            <th>¿Qué ocurrió?</th>
+                            <th>Impacto</th>
+                            <th>Severidad</th>
+                            <th style="width: 100px;">Estado</th>
+                            <th>Usuario</th>
+                            <th class="pe-3 text-end">Detalle</th>
+                            {% else %}
+                            <th class="ps-3" style="width:50px">ID</th>
+                            <th style="width:120px">Timestamp</th>
+                            <th style="width:80px">Emp/Mód</th>
+                            <th>Endpoint</th>
+                            <th style="width:120px">Failure Mode</th>
+                            <th style="width:60px">Sev</th>
+                            <th style="width:70px">Estado</th>
+                            <th class="pe-3 text-end" style="width:80px">Acción</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if not errors %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <i class="fas fa-check-circle text-success fa-2x mb-3 d-block"></i>
+                                <span class="text-muted">No se encontraron registros con los filtros aplicados.</span>
+                            </td>
+                        </tr>
+                        {% endif %}
+
+                        {% for err in errors %}
+                        {% set fm = failure_labels.get(err.failure_mode, (err.failure_mode, 'Error no clasificado')) %}
+                        {% set imp = impact_labels.get(err.impact_category, ('⚪', err.impact_category or '—')) %}
+                        {% set sev_class = 'text-danger fw-bold' if err.severity >= 8 else ('text-warning' if
+                        err.severity >= 5 else 'text-muted') %}
+
+                        {% if f_profile == 'business' %}
+                        <tr class="error-row" data-id="{{ err.id }}">
+                            <td class="ps-3 extra-small font-monospace text-muted">{{ err.id }}</td>
+                            <td class="small text-muted">
+                                {{ err.created_at.strftime('%d/%m/%Y') if err.created_at else '—' }}<br>
+                                <span class="extra-small">{{ err.created_at.strftime('%H:%M:%S') if err.created_at else
+                                    '' }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                    {{ module_labels.get(err.module, err.module or '—') }}
+                                </span>
+                            </td>
+                            <td class="text-white" style="max-width: 320px;">
+                                <div class="fw-semibold small">{{ fm[0] }}</div>
+                                <div class="extra-small text-muted">{{ fm[1] }}</div>
+                                {% if err.error_message %}
+                                <div class="extra-small text-danger mt-1 text-truncate" style="max-width:300px;"
+                                    title="{{ err.error_message }}">
+                                    {{ err.error_message|truncate(80) }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ imp[0] }} <small class="text-muted">{{ imp[1] }}</small></td>
+                            <td class="{{ sev_class }}">{{ err.severity }}/10</td>
+                            <td>
+                                {% if err.incident_status == 'RESOLVED' or err.incident_status == 'CLOSED' %}
+                                <span class="badge bg-success">✅ Cerrado</span>
+                                {% elif err.incident_status == 'FEEDBACK' %}
+                                <span class="badge bg-info text-dark">💬 Feedback</span>
+                                {% elif err.incident_status == 'IN_PROGRESS' %}
+                                <span class="badge bg-warning text-dark">⏳ En Revisión</span>
+                                {% else %}
+                                <span class="badge bg-danger">🔴 Abierto</span>
+                                {% endif %}
+                                {% if err.dias_sin_resolucion and err.incident_status != 'RESOLVED' and
+                                err.incident_status != 'CLOSED' %}
+                                <div class="extra-small text-muted mt-1">{{ err.dias_sin_resolucion }} días sin resolver
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="small text-info">{{ err.user_id or '—' }}</td>
+                            <td class="pe-3 text-end" style="white-space:nowrap">
+                                <a href="{{ url_for('core.error_log_detail', error_id=err.id, profile='business') }}"
+                                    class="btn btn-xs btn-outline-warning" title="Ver Detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if err.incident_status == 'FEEDBACK' %}
+                                <form method="POST"
+                                    action="{{ url_for('core.error_log_quick_action', error_id=err.id) }}"
+                                    class="d-inline">
+                                    <input type="hidden" name="action" value="close">
+                                    <input type="hidden" name="return_url" value="{{ request.url }}">
+                                    <button type="submit" class="btn btn-xs btn-outline-success"
+                                        title="Aprobar y Cerrar">
+                                        <i class="fas fa-check-double"></i>
+                                    </button>
+                                </form>
+                                <form method="POST"
+                                    action="{{ url_for('core.error_log_quick_action', error_id=err.id) }}"
+                                    class="d-inline">
+                                    <input type="hidden" name="action" value="reopen">
+                                    <input type="hidden" name="return_url" value="{{ request.url }}">
+                                    <button type="submit" class="btn btn-xs btn-outline-danger" title="Reabrir">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <!-- Perfil Experto -->
+                        <tr class="error-row" data-id="{{ err.id }}">
+                            <td class="ps-3 text-muted extra-small font-monospace">{{ err.id }}</td>
+                            <td class="extra-small text-muted font-monospace" style="white-space:nowrap">
+                                {{ err.created_at.strftime('%d/%m %H:%M') if err.created_at else '—' }}
+                            </td>
+                            <td>
+                                <span class="badge bg-dark border border-secondary d-block mb-1">{{ err.enterprise_id
+                                    }}</span>
+                                <span class="text-info fw-bold extra-small">{{ err.module|upper }}</span>
+                            </td>
+                            <td class="small text-truncate" style="max-width:200px">
+                                <span class="text-muted extra-small font-monospace"
+                                    title="{{ err.request_method }} {{ err.endpoint }}">{{ err.request_method }} {{
+                                    err.endpoint|truncate(45) }}</span>
+                            </td>
+                            <td>
+                                {% if err.failure_mode %}
+                                <code class="text-warning extra-small">{{ err.failure_mode }}</code>
+                                {% else %}
+                                <span class="text-muted extra-small">null</span>
+                                {% endif %}
+                            </td>
+                            <td class="{{ sev_class }} fw-bold text-center">{{ err.severity }}</td>
+                            <td>
+                                {% if err.incident_status == 'RESOLVED' or err.incident_status == 'CLOSED' %}
+                                <span class="badge bg-success extra-small">CERR</span>
+                                {% elif err.incident_status == 'FEEDBACK' %}
+                                <span class="badge bg-info text-dark extra-small">FDBK</span>
+                                {% elif err.incident_status == 'IN_PROGRESS' %}
+                                <span class="badge bg-warning text-dark extra-small">PROG</span>
+                                {% else %}
+                                <span class="badge bg-danger extra-small">OPEN</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-3 text-end" style="white-space:nowrap">
+                                <!-- Ver Detalle -->
+                                <a href="{{ url_for('core.error_log_detail', error_id=err.id, profile='expert') }}"
+                                    class="btn btn-xs btn-outline-info me-1" title="{{ err.duration_ms or 0 }}ms">
+                                    <i class="fas fa-code"></i>
+                                </a>
+                                <!-- Acción rápida según estado -->
+                                {% if err.incident_status != 'IN_PROGRESS' and err.incident_status != 'RESOLVED' and
+                                err.incident_status != 'FEEDBACK' and err.incident_status != 'CLOSED' %}
+                                <form method="POST"
+                                    action="{{ url_for('core.error_log_quick_action', error_id=err.id) }}"
+                                    class="d-inline">
+                                    <input type="hidden" name="action" value="take">
+                                    <input type="hidden" name="return_url" value="{{ request.url }}">
+                                    <button type="submit" class="btn btn-xs btn-outline-warning"
+                                        title="Tomar este incidente">
+                                        <i class="fas fa-hand-pointer"></i>
+                                    </button>
+                                </form>
+                                {% elif err.incident_status == 'IN_PROGRESS' %}
+                                <form method="POST"
+                                    action="{{ url_for('core.error_log_quick_action', error_id=err.id) }}"
+                                    class="d-inline">
+                                    <input type="hidden" name="action" value="feedback">
+                                    <input type="hidden" name="return_url" value="{{ request.url }}">
+                                    <button type="submit" class="btn btn-xs btn-outline-info"
+                                        title="Enviar a Feedback del Usuario">
+                                        <i class="fas fa-comment-dots"></i>
+                                    </button>
+                                </form>
+                                <form method="POST"
+                                    action="{{ url_for('core.error_log_quick_action', error_id=err.id) }}"
+                                    class="d-inline">
+                                    <input type="hidden" name="action" value="resolve">
+                                    <input type="hidden" name="return_url" value="{{ request.url }}">
+                                    <button type="submit" class="btn btn-xs btn-outline-success"
+                                        title="Marcar como Resuelto Directamente">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                                {% elif err.incident_status == 'FEEDBACK' %}
+                                <span class="extra-small text-info"><i class="fas fa-clock"></i> Esperando
+                                    Usuario</span>
+                                {% else %}
+                                <form method="POST"
+                                    action="{{ url_for('core.error_log_quick_action', error_id=err.id) }}"
+                                    class="d-inline">
+                                    <input type="hidden" name="action" value="reopen">
+                                    <input type="hidden" name="return_url" value="{{ request.url }}">
+                                    <button type="submit" class="btn btn-xs btn-outline-secondary"
+                                        title="Reabrir incidente">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    {% if total_pages > 1 %}
+    <nav class="mt-3 d-flex justify-content-center">
+        <ul class="pagination pagination-sm">
+            <li class="page-item {{ 'disabled' if page == 1 }}">
+                <a class="page-link bg-dark border-secondary text-white"
+                    href="?{{ request.query_string.decode() | replace('page='~page,'') }}&page={{ page - 1 }}">‹</a>
+            </li>
+            {% for p in range(1, total_pages + 1) %}
+            {% if p == page or p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %} <li
+                class="page-item {{ 'active' if p == page }}">
+                <a class="page-link bg-dark border-secondary {{ 'text-dark fw-bold bg-warning border-warning' if p == page else 'text-white' }}"
+                    href="?{{ request.query_string.decode() | replace('page='~page,'') }}&page={{ p }}">{{ p }}</a>
+                </li>
+                {% elif p == page - 3 or p == page + 3 %}
+                <li class="page-item disabled"><span class="page-link bg-dark border-secondary text-muted">…</span></li>
+                {% endif %}
+                {% endfor %}
+                <li class="page-item {{ 'disabled' if page == total_pages }}">
+                    <a class="page-link bg-dark border-secondary text-white"
+                        href="?{{ request.query_string.decode() | replace('page='~page,'') }}&page={{ page + 1 }}">›</a>
+                </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.7rem;
+        letter-spacing: 0.03em;
+    }
+
+    .font-monospace {
+        font-family: 'Courier New', monospace;
+    }
+
+    .btn-xs {
+        padding: 2px 8px;
+        font-size: 0.7rem;
+    }
+
+    .error-row:hover td {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .bg-secondary-subtle {
+        background: rgba(100, 116, 139, 0.1);
+    }
+
+    .form-select option {
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+</style>
+{% endblock %}

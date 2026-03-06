@@ -1,0 +1,13 @@
+CREATE TABLE `usuarios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) DEFAULT NULL,
+  `apellido` varchar(100) DEFAULT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `enterprise_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`enterprise_id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `id` (`id`),
+  KEY `fk_usuarios_ent` (`enterprise_id`),
+  CONSTRAINT `fk_usuarios_ent` FOREIGN KEY (`enterprise_id`) REFERENCES `sys_enterprises` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci

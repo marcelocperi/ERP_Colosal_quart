@@ -1,0 +1,7 @@
+CREATE TABLE `system_stats` (
+  `key_name` varchar(50) NOT NULL,
+  `value_int` int(11) DEFAULT 0,
+  `last_updated` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `value_str` text DEFAULT NULL,
+  PRIMARY KEY (`key_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci

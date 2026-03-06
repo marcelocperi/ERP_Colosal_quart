@@ -1,0 +1,18 @@
+﻿--- Service Efficiency ---
+{'service_name': 'Google Books', 'hits_count': 20, 'fields_provided': 32, 'ebooks_provided': 20}
+{'service_name': 'Open Library', 'hits_count': 6, 'fields_provided': 12, 'ebooks_provided': 0}
+
+--- Articles with Ebook URL or local file ---
+{'id': 2, 'nombre': 'RM/COBOL-85', 'url': 'http://books.google.com.ar/books?id=TAr9PAAACAAJ&dq=isbn:9788478970704&hl=&cd=1&source=gbs_api', 'local': 'false'}
+{'id': 3, 'nombre': 'El lenguaje unificado de modelado - Manual de referencia', 'url': 'http://books.google.com.ar/books?id=3tNccgAACAAJ&dq=isbn:9788478290376&hl=&cd=1&source=gbs_api', 'local': 'false'}
+{'id': 4, 'nombre': 'Biblia de Jerusalem', 'url': 'http://books.google.com.ar/books?id=3tNccgAACAAJ&dq=isbn:9788478290376&hl=&cd=1&source=gbs_api', 'local': 'false'}
+{'id': 42, 'nombre': 'Cr¾nicas de los HÚroes', 'url': 'http://books.google.com.ar/books?id=RKkx0QEACAAJ&dq=isbn:9786259868137&hl=&cd=1&source=gbs_api', 'local': 'false'}
+{'id': 75, 'nombre': 'Memorias de la Noche', 'url': 'http://books.google.com.ar/books?id=ogcASQAACAAJ&dq=isbn:9787300101600&hl=&cd=1&source=gbs_api', 'local': 'false'}
+{'id': 87, 'nombre': 'El Arte de los Sue±os', 'url': 'http://books.google.com.ar/books?id=ges8jwEACAAJ&dq=isbn:9787515512756&hl=&cd=1&source=gbs_api', 'local': 'false'}
+{'id': 90, 'nombre': 'La B·squeda de la Luna', 'url': 'http://books.google.com.ar/books?id=-_erugEACAAJ&dq=isbn:9781725151807&hl=&cd=1&source=gbs_api', 'local': 'false'}
+{'id': 104, 'nombre': 'La CaÝda de la Monta±a - Volumen 2', 'url': 'http://books.google.com.ar/books?id=KglQtAEACAAJ&dq=isbn:9783337157300&hl=&cd=1&source=gbs_api', 'local': 'false'}
+{'id': 399, 'nombre': 'El Enigma de los Dioses', 'url': 'http://books.google.com.ar/books?id=k_96RAAACAAJ&dq=isbn:9789047514879&hl=&cd=1&source=gbs_api', 'local': None}
+{'id': 2337, 'nombre': 'Savrasov', 'url': 'http://books.google.com.ar/books?id=QjpOAAAAMAAJ&dq=isbn:9785300029869&hl=&cd=1&source=gbs_api', 'local': None}
+{'id': 2434, 'nombre': 'Black Phoenix : Volume I', 'url': 'http://books.google.com.ar/books?id=DrnDxwEACAAJ&dq=isbn:9781078211246&hl=&cd=1&source=gbs_api', 'local': None}
+{'id': 2755, 'nombre': 'Invordering door de overheid', 'url': 'http://books.google.com.ar/books?id=TXkJugEACAAJ&dq=isbn:9789462905290&hl=&cd=1&source=gbs_api', 'local': None}
+{'id': 2843, 'nombre': 'Snow Dog', 'url': 'http://books.google.com.ar/books?id=pkmNZ6i_ZqcC&dq=isbn:9780552547031&hl=&cd=1&source=gbs_api', 'local': None}

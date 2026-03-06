@@ -1,0 +1,20 @@
+/* Utility classes for alignment */
+.text-right,
+.text-end {
+    text-align: right !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-left,
+.text-start {
+    text-align: left !important;
+}
+
+/* Specific alignment for numeric columns in tables */
+td.numeric,
+th.numeric {
+    text-align: right;
+}

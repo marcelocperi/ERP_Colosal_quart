@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: 1.5rem; color: #e2e8f0; font-family: 'Inter', sans-serif;">
+
+    <!-- ══════ HEADER ══════ -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h1 style="font-size: 1.6rem; font-weight: 700; color: #f1f5f9; margin: 0;">
+                <i class="fas fa-ship" style="color: #38bdf8; margin-right: 0.5rem;"></i>
+                Módulo de Importaciones
+            </h1>
+            <p style="color: #64748b; margin: 0.25rem 0 0; font-size: 0.85rem;">
+                Circuito completo: Orden → Documentos → Aduana → Ingreso
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('compras.importaciones_dashboard_avanzado') }}" class="btn btn-sm"
+                style="background: linear-gradient(135deg, #a78bfa, #7c3aed); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600;">
+                <i class="fas fa-chart-line me-1"></i> Dashboard Ejecutivo
+            </a>
+            <a href="{{ url_for('compras.nuevo_proveedor_internacional') }}" class="btn btn-sm"
+                style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px;">
+                <i class="fas fa-globe me-1"></i> Nuevo Proveedor Ext.
+            </a>
+            <a href="{{ url_for('compras.ordenes') }}" class="btn btn-sm"
+                style="background: rgba(255,255,255,0.07); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 6px;">
+                <i class="fas fa-list me-1"></i> Todas las OC
+            </a>
+        </div>
+
+    </div>
+
+    <!-- ══════ TIPOS DE CAMBIO ══════ -->
+    <div
+        style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); border-radius: 10px; padding: 1rem 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h6 style="margin: 0; color: #38bdf8; font-size: 0.9rem; font-weight: 600;">
+                <i class="fas fa-dollar-sign me-2"></i>Tipos de Cambio Vigentes (BCRA)
+            </h6>
+            <button onclick="actualizarCotizaciones()" class="btn btn-sm"
+                style="background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); font-size: 0.75rem; padding: 0.3rem 0.75rem; border-radius: 4px;">
+                <i class="fas fa-sync-alt me-1" id="icon-refresh"></i> Actualizar BCRA
+            </button>
+        </div>
+        <div id="tc-grid" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+            {% if tipos_cambio %}
+            {% for tc in tipos_cambio %}
+            <div
+                style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 0.6rem 1rem; min-width: 150px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                    {{ tc.moneda }} / {{ tc.tipo.replace('_', ' ') }}
+                </div>
+                <div style="font-size: 1.2rem; font-weight: 700; color: #f0fdf4; margin-top: 2px;">
+                    $ {{ "%.2f"|format(tc.valor) }}
+                </div>
+                <div style="font-size: 0.68rem; color: #475569;">{{ tc.fecha }}</div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="color: #64748b; font-size: 0.85rem; padding: 0.5rem;">
+                <i class="fas fa-info-circle me-1"></i>
+                Sin cotizaciones. Haga clic en "Actualizar BCRA" para obtenerlas.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Carga manual -->
+        <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.06);">
+            <small style="color: #64748b;">
+                <i class="fas fa-edit me-1"></i>
+                Carga manual:
+            </small>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap;">
+                <select id="tc-moneda"
+                    style="background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="BRL">BRL</option>
+                    <option value="CNY">CNY</option>
+                    <option value="GBP">GBP</option>
+                </select>
+                <select id="tc-tipo"
+                    style="background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                    <option value="OFICIAL_VENDEDOR">Oficial</option>
+                    <option value="MEP">MEP / Bolsa</option>
+                    <option value="OFICIAL_MINORISTA">Minorista</option>
+                </select>
+                <input type="number" id="tc-valor" step="0.01" placeholder="Valor ARS"
+                    style="background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.8rem; width: 120px;">
+                <input type="date" id="tc-fecha"
+                    style="background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                <button onclick="guardarTCManual()" class="btn btn-sm"
+                    style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: 4px;">
+                    <i class="fas fa-save me-1"></i>Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════ ÓRDENES DE IMPORTACIÓN ══════ -->
+    <div
+        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h6 style="margin: 0; font-size: 1rem; font-weight: 600; color: #f1f5f9;">
+                <i class="fas fa-file-import me-2" style="color: #a78bfa;"></i>Órdenes de Importación Activas
+            </h6>
+            <a href="{{ url_for('compras.orden_nueva') }}" class="btn btn-sm"
+                style="background: rgba(167,139,250,0.1); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); font-size: 0.8rem; padding: 0.3rem 0.75rem; border-radius: 4px;">
+                <i class="fas fa-plus me-1"></i> Nueva OC
+            </a>
+        </div>
+
+        {% if ordenes_imp %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                <thead>
+                    <tr style="background: rgba(255,255,255,0.05); color: #94a3b8;">
+                        <th style="padding: 0.5rem; text-align: left;">OC#</th>
+                        <th style="padding: 0.5rem; text-align: left;">Proveedor</th>
+                        <th style="padding: 0.5rem; text-align: left;">País</th>
+                        <th style="padding: 0.5rem; text-align: left;">Moneda</th>
+                        <th style="padding: 0.5rem; text-align: left;">Incoterm</th>
+                        <th style="padding: 0.5rem; text-align: left;">TC</th>
+                        <th style="padding: 0.5rem; text-align: left;">Estado</th>
+                        <th style="padding: 0.5rem; text-align: left;">Fecha</th>
+                        <th style="padding: 0.5rem;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in ordenes_imp %}
+                    <tr style="border-top: 1px solid rgba(255,255,255,0.04);">
+                        <td style="padding: 0.5rem; color: #a78bfa; font-weight: 600;">#{{ o.id }}</td>
+                        <td style="padding: 0.5rem;">{{ o.proveedor_nombre or '-' }}</td>
+                        <td style="padding: 0.5rem;">
+                            <span
+                                style="font-size: 0.75rem; background: rgba(56,189,248,0.1); color: #38bdf8; padding: 0.15rem 0.5rem; border-radius: 4px;">
+                                {{ o.pais_origen or '?' }}
+                            </span>
+                        </td>
+                        <td style="padding: 0.5rem; font-weight: 600;">{{ o.moneda or 'ARS' }}</td>
+                        <td style="padding: 0.5rem; color: #94a3b8;">{{ o.incoterm or '-' }}</td>
+                        <td style="padding: 0.5rem; color: #fbbf24;">
+                            {% if o.tipo_cambio_valor %}$ {{ "%.2f"|format(o.tipo_cambio_valor) }}{% else %}-{% endif %}
+                        </td>
+                        <td style="padding: 0.5rem;">
+                            <span
+                                style="font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px;
+                                background: {% if o.estado == 'APROBADA' %}rgba(16,185,129,0.15){% elif o.estado == 'PENDIENTE_APROBACION_COMPRAS' %}rgba(251,191,36,0.15){% else %}rgba(148,163,184,0.1){% endif %};
+                                color: {% if o.estado == 'APROBADA' %}#34d399{% elif o.estado == 'PENDIENTE_APROBACION_COMPRAS' %}#fbbf24{% else %}#94a3b8{% endif %};">
+                                {{ o.estado }}
+                            </span>
+                        </td>
+                        <td style="padding: 0.5rem; color: #64748b;">{{ o.fecha_emision }}</td>
+                        <td style="padding: 0.5rem;">
+                            <a href="{{ url_for('compras.importacion_orden_detalle', orden_id=o.id) }}"
+                                style="color: #60a5fa; font-size: 0.8rem; text-decoration: none;"
+                                title="Gestionar Importación">
+                                <i class="fas fa-ship"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 2rem; color: #475569;">
+            <i class="fas fa-ship" style="font-size: 2rem; opacity: 0.3; margin-bottom: 0.75rem; display: block;"></i>
+            No hay órdenes de importación activas.<br>
+            <small>Cree una Orden de Compra y conviértala a importación desde el detalle.</small>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ══════ DOCUMENTOS PENDIENTES ══════ -->
+    <div
+        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <h6 style="margin: 0 0 1rem; font-size: 1rem; font-weight: 600; color: #f1f5f9;">
+            <i class="fas fa-folder-open me-2" style="color: #fb923c;"></i>Documentos Pendientes de Recepción
+            {% if docs_pendientes %}
+            <span
+                style="background: rgba(251,146,60,0.2); color: #fb923c; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 10px; margin-left: 0.5rem;">
+                {{ docs_pendientes|length }}
+            </span>
+            {% endif %}
+        </h6>
+
+        <!-- Formulario rápido para agregar documento -->
+        <details style="margin-bottom: 1rem;">
+            <summary style="cursor: pointer; color: #60a5fa; font-size: 0.85rem; padding: 0.5rem 0;">
+                <i class="fas fa-plus-circle me-1"></i> Agregar Documento de Importación
+            </summary>
+            <form method="POST" action="{{ url_for('compras.importacion_agregar_documento') }}"
+                enctype="multipart/form-data"
+                style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-top: 0.5rem;">
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <label
+                            style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Tipo</label>
+                        <select name="tipo_documento"
+                            style="width:100%; background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.4rem;">
+                            <option value="PROFORMA">Proforma Invoice</option>
+                            <option value="COMMERCIAL_INVOICE">Commercial Invoice</option>
+                            <option value="PACKING_LIST">Packing List</option>
+                            <option value="BL">Bill of Lading (BL)</option>
+                            <option value="AWB">Airway Bill (AWB)</option>
+                            <option value="CERTIFICADO_ORIGEN">Certificado de Origen</option>
+                            <option value="OTRO">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Nro.
+                            Documento</label>
+                        <input type="text" name="numero_documento" placeholder="INV-2024-001"
+                            style="width:100%; background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.4rem;">
+                    </div>
+                    <div>
+                        <label
+                            style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Fecha</label>
+                        <input type="date" name="fecha_documento"
+                            style="width:100%; background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.4rem;">
+                    </div>
+                    <div>
+                        <label
+                            style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Monto</label>
+                        <input type="number" step="0.01" name="monto" placeholder="0.00"
+                            style="width:100%; background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.4rem;">
+                    </div>
+                    <div>
+                        <label
+                            style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Moneda</label>
+                        <select name="moneda"
+                            style="width:100%; background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.4rem;">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="BRL">BRL</option>
+                            <option value="CNY">CNY</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                            style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Archivo
+                            (PDF/Img)</label>
+                        <input type="file" name="archivo" accept=".pdf,.jpg,.jpeg,.png,.xlsx"
+                            style="width:100%; color: #cbd5e1; font-size: 0.8rem;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 0.75rem;">
+                    <label
+                        style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.25rem;">Descripción
+                        / Observaciones</label>
+                    <input type="text" name="descripcion" placeholder="Descripción opcional"
+                        style="width:100%; background: rgba(0,0,0,0.3); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.4rem;">
+                </div>
+                <button type="submit" class="btn btn-sm"
+                    style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; border: none; padding: 0.4rem 1rem; border-radius: 4px;">
+                    <i class="fas fa-upload me-1"></i> Registrar Documento
+                </button>
+            </form>
+        </details>
+
+        {% if docs_pendientes %}
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+            <thead>
+                <tr style="background: rgba(255,255,255,0.05); color: #94a3b8;">
+                    <th style="padding: 0.5rem; text-align: left;">Tipo</th>
+                    <th style="padding: 0.5rem; text-align: left;">Número</th>
+                    <th style="padding: 0.5rem; text-align: left;">Proveedor</th>
+                    <th style="padding: 0.5rem; text-align: left;">Monto</th>
+                    <th style="padding: 0.5rem; text-align: left;">Fecha</th>
+                    <th style="padding: 0.5rem; text-align: left;">Estado</th>
+                    <th style="padding: 0.5rem;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in docs_pendientes %}
+                <tr style="border-top: 1px solid rgba(255,255,255,0.04);">
+                    <td style="padding: 0.5rem;">
+                        <span
+                            style="font-size: 0.72rem; background: rgba(251,146,60,0.1); color: #fb923c; padding: 0.2rem 0.5rem; border-radius: 4px;">
+                            {{ d.tipo_documento.replace('_', ' ') }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.5rem; color: #cbd5e1;">{{ d.numero_documento or '-' }}</td>
+                    <td style="padding: 0.5rem; color: #94a3b8;">{{ d.proveedor_nombre or '-' }}</td>
+                    <td style="padding: 0.5rem; font-weight: 600;">
+                        {% if d.monto %}{{ d.moneda }} {{ "%.2f"|format(d.monto) }}{% else %}-{% endif %}
+                    </td>
+                    <td style="padding: 0.5rem; color: #64748b;">{{ d.fecha_documento or '-' }}</td>
+                    <td style="padding: 0.5rem;">
+                        <span
+                            style="font-size: 0.72rem; background: rgba(251,191,36,0.1); color: #fbbf24; padding: 0.2rem 0.5rem; border-radius: 4px;">
+                            {{ d.estado }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.5rem;">
+                        {% if d.archivo_path %}
+                        <a href="/static/{{ d.archivo_path }}" target="_blank"
+                            style="color: #60a5fa; font-size: 0.8rem;">
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 1.5rem; color: #475569; font-size: 0.85rem;">
+            <i class="fas fa-check-circle" style="color: #34d399; margin-right: 0.5rem;"></i>
+            Sin documentos pendientes.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    async function actualizarCotizaciones() {
+        const icon = document.getElementById('icon-refresh');
+        icon.classList.add('fa-spin');
+        try {
+            const resp = await fetch(`/compras/api/tipos-cambio?actualizar=1&sid=${window.SID || ''}`);
+            const r = await resp.json();
+            if (r.success) {
+                showToast(`Cotizaciones actualizadas: ${r.total} registros`, 'success');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                showToast('No se pudo actualizar desde el BCRA: ' + r.message, 'warning');
+            }
+        } catch (e) {
+            showToast('Error de conexión con el BCRA', 'error');
+        } finally {
+            icon.classList.remove('fa-spin');
+        }
+    }
+
+    async function guardarTCManual() {
+        const moneda = document.getElementById('tc-moneda').value;
+        const tipo = document.getElementById('tc-tipo').value;
+        const valor = parseFloat(document.getElementById('tc-valor').value);
+        const fecha = document.getElementById('tc-fecha').value;
+        if (!valor || valor <= 0) { showToast('Ingrese un valor válido', 'warning'); return; }
+        try {
+            const resp = await fetch(`/compras/api/tipos-cambio/manual?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '{{ csrf_token }}' },
+                body: JSON.stringify({ moneda, tipo, valor, fecha })
+            });
+            const r = await resp.json();
+            if (r.success) { showToast(r.message, 'success'); setTimeout(() => location.reload(), 1000); }
+            else showToast(r.message, 'error');
+        } catch (e) { showToast('Error al guardar', 'error'); }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+('id', 'int(11)', 'NO', 'PRI', None, 'auto_increment')
+('nombre', 'varchar(100)', 'YES', '', None, '')
+('apellido', 'varchar(100)', 'YES', '', None, '')
+('telefono', 'varchar(20)', 'YES', '', None, '')
+('email', 'varchar(100)', 'YES', 'UNI', None, '')
+('enterprise_id', 'int(11)', 'NO', 'PRI', None, '')

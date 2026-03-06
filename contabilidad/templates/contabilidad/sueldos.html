@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Módulo de Sueldos (Nóminas)</h1>
+        <button type="button" class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal"
+            data-bs-target="#modalLiquidar">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Nueva Liquidación Mensual
+        </button>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Historial de Nóminas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Periodo</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th class="text-end">Total Bruto</th>
+                            <th class="text-end">Total Neto</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for n in nominas %}
+                        <tr>
+                            <td>{{ n.periodo }}</td>
+                            <td>{{ n.descripcion }}</td>
+                            <td>
+                                <span
+                                    class="badge {% if n.estado == 'CONTABILIZADO' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ n.estado }}
+                                </span>
+                            </td>
+                            <td class="text-end">${{ n.total_bruto }}</td>
+                            <td class="text-end">${{ n.total_neto }}</td>
+                            <td class="text-center">
+                                {% if not n.asiento_id %}
+                                <form action="{{ url_for('contabilidad.centralizar_sueldos', id=n.id) }}" method="POST"
+                                    style="display:inline;">
+                                    <input type="hidden" name="sid" value="{{ sid }}">
+                                    <button type="submit" class="btn btn-sm btn-info" title="Centralizar Contablemente">
+                                        <i class="fas fa-magic"></i> Centralizar
+                                    </button>
+                                </form>
+                                {% else %}
+                                <a href="{{ url_for('contabilidad.ver_asiento', id=n.asiento_id) }}"
+                                    class="btn btn-sm btn-secondary">
+                                    Ver Asiento #{{ n.asiento_id }}
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No hay nóminas registradas.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Liquidar -->
+<div class="modal fade" id="modalLiquidar" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{{ url_for('contabilidad.liquidar_sueldos') }}" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Generar Liquidación Mensual</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="sid" value="{{ sid }}">
+                <div class="mb-3">
+                    <label class="form-label">Periodo (YYYY-MM)</label>
+                    <input type="month" name="periodo" class="form-control" required value="{{ current_period }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descripción Opcional</label>
+                    <input type="text" name="descripcion" class="form-control"
+                        placeholder="Ej: Sueldos de Febrero 2026">
+                </div>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Esta acción generará las liquidaciones para todos los
+                    usuarios activos basados en los parámetros configurados.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Procesar Liquidación</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

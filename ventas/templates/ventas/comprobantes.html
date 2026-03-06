@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-light"><i class="fas fa-list-alt me-2 text-primary"></i>Comprobantes de Venta</h2>
+        <a href="{{ url_for('ventas.facturar') }}" class="btn btn-primary btn-lg shadow">
+            <i class="fas fa-plus me-2"></i>Nueva Factura
+        </a>
+    </div>
+
+    <div class="card bg-dark border-0 shadow-sm mb-3">
+        <div class="card-body py-2 px-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-secondary border-0 text-muted"><i
+                                class="fas fa-search"></i></span>
+                        <input type="text" id="globalSearch" class="form-control bg-dark border-0 text-light"
+                            placeholder="Buscar...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select id="filterTipo" class="form-select form-select-sm bg-dark border-0 text-light filter-select"
+                        data-col="1">
+                        <option value="">Todos los Tipos</option>
+                        <option value="FACTURA">Facturas</option>
+                        <option value="N/CRÉD">Notas de Crédito</option>
+                        <option value="N/DÉB">Notas de Débito</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="filterFecha"
+                        class="form-select form-select-sm bg-dark border-0 text-light filter-select" data-col="0">
+                        <option value="">Fechas</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="filterCliente"
+                        class="form-select form-select-sm bg-dark border-0 text-light filter-select" data-col="2">
+                        <option value="">Clientes</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select id="filterEstado"
+                        class="form-select form-select-sm bg-dark border-0 text-light filter-select" data-col="3">
+                        <option value="">Estados</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-dark border-0 shadow-lg">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="comprobantesTable" class="table table-dark table-hover mb-0 align-middle">
+                    <thead class="bg-secondary bg-opacity-10 text-muted small uppercase">
+                        <tr>
+                            <th class="ps-4">Fecha</th>
+                            <th>Nro. Comprobante</th>
+                            <th>Cliente</th>
+                            <th>Estado</th>
+                            <th class="text-end">Neto</th>
+                            <th class="text-end">IVA</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if not comprobantes %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted italic">No se encontraron comprobantes
+                                emitidos.</td>
+                        </tr>
+                        {% endif %}
+                        {% for c in comprobantes %}
+                        <tr class="row-item">
+                            <td class="ps-4">{{ c.fecha_emision }}</td>
+                            <td>
+                                <span class="badge bg-secondary me-2">{{ c.letra }}</span>
+                                <a href="{{ url_for('ventas.ver_comprobante', id=c.id) }}" target="_blank"
+                                    class="text-info text-decoration-none fw-bold">
+                                    {{ "%05d" | format(c.punto_venta) }}-{{ "%08d" | format(c.numero) }}
+                                </a>
+                                <div class="small text-muted">{{ c.tipo_nombre }}</div>
+                            </td>
+                            <td>{{ c.cliente_nombre }}</td>
+                            <td>
+                                {% if c.estado_pago == 'PENDIENTE' %}
+                                <span class="badge rounded-pill bg-warning text-dark">Pendiente</span>
+                                {% elif c.estado_pago == 'PAGADO' %}
+                                <span class="badge rounded-pill bg-success">Pagado</span>
+                                {% else %}
+                                <span class="badge rounded-pill bg-info">{{ c.estado_pago }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-muted">$ {{ "%.2f" | format(c.importe_neto) }}</td>
+                            <td class="text-end text-muted">$ {{ "%.2f" | format(c.importe_iva) }}</td>
+                            <td class="text-end fw-bold text-success">$ {{ "%.2f" | format(c.importe_total) }}</td>
+                            <td class="text-center pe-4">
+                                <a href="{{ url_for('ventas.ver_comprobante', id=c.id) }}" target="_blank"
+                                    class="btn btn-outline-info btn-sm" title="Ver / Imprimir">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                                <a href="{{ url_for('ventas.ver_comprobante', id=c.id) }}?es_copia=1" target="_blank"
+                                    class="btn btn-outline-info btn-sm ms-1" title="Reimprimir (Copia Fiel)">
+                                    <i class="fas fa-copy"></i>
+                                </a>
+                                <a href="{{ url_for('ventas.ver_remito', id=c.id) }}" target="_blank"
+                                    class="btn btn-outline-secondary btn-sm ms-1" title="Imprimir Remito">
+                                    <i class="fas fa-truck"></i>
+                                </a>
+                                {% if c.tipo_comprobante in ['001', '006', '011'] %}
+                                {% if c.nc_solicitada > 0 or c.nc_emitida > 0 %}
+                                <button class="btn btn-outline-secondary btn-sm ms-1" disabled
+                                    title="Ya posee una Nota de Crédito asociada o solicitada">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                                {% else %}
+                                <a href="{{ url_for('ventas.nota_credito', factura_id=c.id) }}"
+                                    class="btn btn-outline-danger btn-sm ms-1"
+                                    title="Generar Nota de Crédito (Devolución)">
+                                    <i class="fas fa-undo"></i>
+                                </a>
+                                {% endif %}
+                                {% endif %}
+                                <button class="btn btn-outline-warning btn-sm ms-1 reenviar-btn" data-id="{{ c.id }}"
+                                    title="Re-enviar por Email">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-dark border-0 py-2">
+            <span class="text-muted small" id="rowCount">Mostrando {{ comprobantes|length }} comprobantes</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        populateFilters();
+
+        // Event listeners
+        document.querySelectorAll('.filter-select').forEach(select => {
+            select.addEventListener('change', applyFilters);
+        });
+        document.getElementById('globalSearch').addEventListener('input', applyFilters);
+    });
+
+    function populateFilters() {
+        const table = document.getElementById('comprobantesTable');
+        const rows = table.querySelectorAll('tbody tr.row-item');
+        const filters = table.querySelectorAll('.filter-select');
+
+        const filterData = {};
+        filters.forEach(f => {
+            // Saltamos el de 'Tipo' porque es hardcoded para limpieza
+            if (f.id !== 'filterTipo') {
+                filterData[f.id] = { colIdx: parseInt(f.dataset.col), values: new Set() };
+            }
+        });
+
+        rows.forEach(row => {
+            for (let id in filterData) {
+                const cell = row.cells[filterData[id].colIdx];
+                if (cell) {
+                    const text = cell.textContent.trim().split('\n')[0].trim();
+                    if (text && text !== '-') filterData[id].values.add(text);
+                }
+            }
+        });
+
+        for (let id in filterData) {
+            const select = document.getElementById(id);
+            const sortedValues = Array.from(filterData[id].values).sort((a, b) => b.localeCompare(a));
+            sortedValues.forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
+            });
+        }
+    }
+
+    function applyFilters() {
+        const rows = document.querySelectorAll('#comprobantesTable tbody tr.row-item');
+        const searchTerm = document.getElementById('globalSearch').value.toLowerCase().trim();
+        const activeFilters = Array.from(document.querySelectorAll('.filter-select'))
+            .filter(f => f.value !== "")
+            .map(f => ({ col: parseInt(f.dataset.col), val: f.value.toLowerCase() }));
+
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            let matchesFilter = true;
+            for (const f of activeFilters) {
+                const cellText = row.cells[f.col].textContent.toLowerCase();
+                if (!cellText.includes(f.val)) {
+                    matchesFilter = false;
+                    break;
+                }
+            }
+
+            let matchesSearch = true;
+            if (searchTerm) {
+                const rowText = row.textContent.toLowerCase();
+                matchesSearch = rowText.includes(searchTerm);
+            }
+
+            const isVisible = matchesFilter && matchesSearch;
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+        });
+
+        document.getElementById('rowCount').textContent = `Mostrando ${visibleCount} de ${rows.length} comprobantes`;
+    }
+
+    function resetFilters() {
+        document.getElementById('globalSearch').value = "";
+        document.querySelectorAll('.filter-select').forEach(f => f.value = "");
+        applyFilters();
+    }
+
+    // Código original de reenviar email...
+    document.querySelectorAll('.reenviar-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            if (!confirm('¿Seguro que desea re-enviar este comprobante por email?')) return;
+
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            this.disabled = true;
+
+            fetch(`/ventas/comprobante/${id}/reenviar?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(text || `Error ${response.status}`) });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                    } else {
+                        alert('ERROR DE ENVIO:\n' + data.message + '\n\nSi el problema persiste, contacte al administrador.');
+                    }
+                    this.innerHTML = '<i class="fas fa-envelope"></i>';
+                    this.disabled = false;
+                })
+                .catch(err => {
+                    alert('Error: ' + err.message);
+                    this.innerHTML = '<i class="fas fa-envelope"></i>';
+                    this.disabled = false;
+                });
+        });
+    });
+</script>
+
+<style>
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .table-dark {
+        --bs-table-bg: #1a1d20;
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: #1a1d20;
+        color: white;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}

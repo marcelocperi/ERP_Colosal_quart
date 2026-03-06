@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-light"><i class="fas fa-cogs me-2 text-info"></i>Configuración Fiscal y AFIP</h2>
+        <a href="{{ url_for('contabilidad.padrones_iibb') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Volver a Padrones
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark border-info shadow-lg">
+                <div
+                    class="card-header bg-info bg-opacity-10 border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white"><i class="fas fa-file-contract me-2"></i>Credenciales Webservices AFIP
+                    </h5>
+                    {% if status %}
+                    {% if status.success %}
+                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Conexión Lista</span>
+                    {% else %}
+                    <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Error en Configuración</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if status %}
+                    <div
+                        class="alert alert-{{ 'success' if status.success else 'danger' }} bg-dark border-{{ 'success' if status.success else 'danger' }} mb-4">
+                        <h6 class="alert-heading fw-bold">Estado de la Integración:</h6>
+                        <p class="mb-0 small">
+                            {{ status.mensaje or status.error }}
+                            {% if status.expiracion %}
+                            <br><strong>Vence el:</strong> {{ status.expiracion }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                    <form action="{{ url_for('contabilidad.config_fiscal') }}" method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small uppercase fw-bold">CUIT de la Empresa</label>
+                                <input type="text" name="cuit" class="form-control bg-dark text-light border-secondary"
+                                    value="{{ enterprise.cuit or '' }}" placeholder="20123456789" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Entorno de Trabajo</label>
+                                <select name="afip_entorno" class="form-select bg-dark text-light border-secondary">
+                                    <option value="testing" {{ 'selected' if enterprise.afip_entorno=='testing' }}>
+                                        Testing (Homologación)</option>
+                                    <option value="produccion" {{ 'selected' if enterprise.afip_entorno=='produccion'
+                                        }}>Producción (Real)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small uppercase fw-bold">Certificado AFIP (.crt)</label>
+                            <p class="text-muted extra-small">Abra su archivo .crt con un editor de texto (Notepad) y
+                                pegue el contenido aquí.</p>
+                            <textarea name="afip_crt"
+                                class="form-control bg-dark text-info border-secondary font-monospace" rows="6"
+                                placeholder="-----BEGIN CERTIFICATE----- ...">{{ enterprise.afip_crt or '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small uppercase fw-bold">Clave Privada (.key)</label>
+                            <p class="text-muted extra-small">Abra su archivo .key y pegue el contenido. Mantenga esto
+                                bajo estricta seguridad.</p>
+                            <textarea name="afip_key"
+                                class="form-control bg-dark text-warning border-secondary font-monospace" rows="4"
+                                placeholder="-----BEGIN PRIVATE KEY----- ...">{{ enterprise.afip_key or '' }}</textarea>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-info py-2 fw-bold">
+                                <i class="fas fa-save me-2"></i> Guardar Configuración Fiscal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-transparent border-secondary text-muted small">
+                    <i class="fas fa-shield-alt me-1 text-success"></i> Las claves se almacenan de forma segura en su
+                    base de datos privada. No comparta estos archivos fuera del sistema.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

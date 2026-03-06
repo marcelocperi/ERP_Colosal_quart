@@ -1,0 +1,10 @@
+=== MODALES SIN BOTÓN CANCELAR ===
+
+Archivo: biblioteca\templates\usuarios.html
+ID: user-modal-actions
+Título: Sin título
+Footer: No
+Submit: Sí
+
+==================================================
+

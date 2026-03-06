@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-balance-scale"></i> Gestión de Balanzas</h1>
+        <p class="text-muted">Configuración de equipos centrales y de mostrador — Sincronización de PLUs y pesaje
+            directo</p>
+    </div>
+    <button onclick="openBalanzaModal()" class="btn-action"><i class="fas fa-plus"></i> Nueva Balanza</button>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>NOMBRE / UBICACIÓN</th>
+                <th>MARCA / MODELO</th>
+                <th style="text-align:center;">NRO. SERIE</th>
+                <th style="text-align:center;">MODO CONEXIÓN</th>
+                <th>DETALLE TÉCNICO</th>
+                <th style="text-align:center;">ESTADO</th>
+                <th style="text-align:right;">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in balanzas %}
+            <tr>
+                <td>
+                    <div style="font-weight:700;">{{ b.nombre }}</div>
+                    {% if b.es_predeterminada %}
+                    <span class="badge" style="background:rgba(16,185,129,0.1); color:#10b981; font-size:0.7rem;">⭐
+                        PRINCIPAL</span>
+                    {% endif %}
+                </td>
+                <td><span style="color:#fbbf24;">{{ b.marca }}</span> <small class="text-muted">{{ b.modelo or ''
+                        }}</small></td>
+                <td style="text-align:center; color:#94a3b8; font-family:monospace;">{{ b.numero_serie or '—' }}</td>
+                <td style="text-align:center;">
+                    {% if b.tipo_conexion == 'IP_RED' %}
+                    <span class="badge" style="background:rgba(245,158,11,0.15); color:#fbbf24;">🌐 Red
+                        Ethernet/WiFi</span>
+                    {% elif b.tipo_conexion == 'SERIAL_USB' %}
+                    <span class="badge" style="background:rgba(139,92,246,0.15); color:#a78bfa;">🔌 RS232 / USB</span>
+                    {% elif b.tipo_conexion == 'SOFTWARE_SYNC' %}
+                    <span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981;">🔄 Sinc.
+                        Software</span>
+                    {% else %}
+                    <span class="badge" style="background:rgba(59,130,246,0.15); color:#60a5fa;">🖥️ Navegador</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:0.8rem; color:#94a3b8;">
+                    {% if b.ip_red %}{{ b.ip_red }}:{{ b.puerto_red or 9100 }}{% else %}Conexión Local{% endif %}
+                </td>
+                <td style="text-align:center;">
+                    {% if b.activo %}
+                    <span class="badge" style="background:rgba(16,185,129,0.1); color:#10b981;">ACTIVA</span>
+                    {% else %}
+                    <span class="badge" style="background:rgba(255,255,255,0.05); color:#64748b;">INACTIVA</span>
+                    {% endif %}
+                </td>
+                <td style="text-align:right; display:flex; gap:0.5rem; justify-content:end;">
+                    <button class="btn-secondary btn-edit-balanza" data-id="{{ b.id }}" data-nombre="{{ b.nombre }}"
+                        data-marca="{{ b.marca }}" data-modelo="{{ b.modelo or '' }}"
+                        data-serie="{{ b.numero_serie or '' }}" data-tipo="{{ b.tipo_conexion or 'IP_RED' }}"
+                        data-ip="{{ b.ip_red or '' }}" data-puerto="{{ b.puerto_red or 9100 }}"
+                        data-pred="{{ '1' if b.es_predeterminada else '0' }}" data-act="{{ '1' if b.activo else '0' }}"
+                        style="padding:0.4rem 0.8rem; font-size:0.8rem;">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <form action="{{ url_for('stock.balanza_eliminar', id=b.id) }}" method="POST"
+                        style="display:inline;" onsubmit="return confirm('¿Eliminar esta balanza?');">
+                        <button type="submit" class="btn-secondary"
+                            style="padding:0.4rem 0.8rem; font-size:0.8rem; color:#ef4444;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align:center; padding:4rem; color:#64748b;">
+                    <i class="fas fa-balance-scale fa-3x" style="opacity:0.2; display:block; margin-bottom:1rem;"></i>
+                    No hay balanzas configuradas. Use el botón "Nueva Balanza" para comenzar.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card"
+    style="background: rgba(59, 130, 246, 0.05); border: 1px dashed rgba(59, 130, 246, 0.3); margin-top: 1.5rem; margin-bottom: 2rem;">
+    <h4 style="color: #60a5fa; margin-bottom: 0.8rem;"><i class="fas fa-info-circle"></i> ¿Cómo funciona el pesaje
+        dinámico?</h4>
+    <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;">
+        El sistema interpreta etiquetas <strong>EAN-13</strong> generadas por balanzas (ej: Systel, Kretz).
+        <br><br>
+        <strong>1. Código de Barras:</strong> El ERP busca el prefijo <code>21</code> (configurable).
+        Ejemplo: <code style="color:#fbbf24">21 00005 01250 8</code>
+        <br>
+        <strong>2. PLU / Producto:</strong> El ERP extrae el código (<code style="color:#fbbf24">00005</code>) y lo
+        busca en el campo <strong>Código</strong> del Maestro de Artículos.
+        <br>
+        <strong>3. Peso:</strong> Los dígitos del final (<code style="color:#fbbf24">01250</code>) se interpretan como
+        peso (divisor 1000), resultando en <code>1.250 kg</code>.
+    </p>
+</div>
+
+<!-- Modal Configurar Balanza -->
+<div id="modal-balanza" class="card modal-animate"
+    style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:560px; z-index:5001; border:1px solid var(--primary); box-shadow:0 20px 50px rgba(0,0,0,0.5); padding:2rem; max-height:90vh; overflow-y:auto;">
+
+    <h3 id="modal-balanza-title" style="color:var(--primary); margin-bottom:1.5rem;">Añadir Balanza</h3>
+
+    <form action="{{ url_for('stock.balanza_guardar') }}" method="POST">
+        <input type="hidden" name="id" id="bal-id">
+
+        <div class="form-group">
+            <label>Nombre / Ubicación</label>
+            <input type="text" name="nombre" id="bal-nombre" required
+                placeholder="Ej: Balanza Despacho, Fiambrería, Recepción...">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+                <label>Marca</label>
+                <select name="marca" id="bal-marca"
+                    style="width:100%; padding:0.8rem; background:rgba(15,23,42,0.8); color:white; border-radius:8px;">
+                    <option value="Systel">Systel</option>
+                    <option value="Kretz">Kretz</option>
+                    <option value="Hobart">Hobart</option>
+                    <option value="Dibal">Dibal</option>
+                    <option value="Epson">Epson (Check-out)</option>
+                    <option value="Otra">Otra / Genérica</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Modelo (Opcional)</label>
+                <input type="text" name="modelo" id="bal-modelo" placeholder="Ej: Cuora, Report, Croma...">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Número de Serie</label>
+            <input type="text" name="numero_serie" id="bal-serie" placeholder="Ej: SN-12345678">
+        </div>
+
+        <!-- Modo de Conexión -->
+        <div class="form-group" style="margin-top:1rem;">
+            <label>Tipo de Conectividad</label>
+            <select name="tipo_conexion" id="bal-tipo"
+                style="width:100%; padding:0.8rem; background:rgba(15,23,42,0.8); color:white; border-radius:8px;"
+                onchange="toggleBalConnectionFields()">
+                <option value="IP_RED">🌐 Red TCP/IP — Comunicación Directa</option>
+                <option value="SERIAL_USB">🔌 Puerto Serial (RS232) / USB</option>
+                <option value="BROWSER_TICKET">🖥️ Lectura de Ticket (Prefijo EAN-13)</option>
+                <option value="SOFTWARE_SYNC">🔄 Sincronización por Software de Marca</option>
+            </select>
+        </div>
+
+        <!-- Panel: IP Red -->
+        <div id="panel-bal-ip"
+            style="display:none; background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:1rem; margin-top:0.5rem;">
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:1rem;">
+                <div class="form-group">
+                    <label>IP de la Balanza</label>
+                    <input type="text" name="ip_red" id="bal-ip" placeholder="192.168.1.150">
+                </div>
+                <div class="form-group">
+                    <label>Puerto</label>
+                    <input type="number" name="puerto_red" id="bal-puerto" value="9100">
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="margin-top:1rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:1rem; display:flex; gap:2rem;">
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" name="es_predeterminada" id="bal-predeterminada" value="1"
+                    style="width:18px; height:18px;">
+                <span>⭐ Balanza Principal</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" name="activo" id="bal-activo" value="1" checked style="width:18px; height:18px;">
+                <span>Equipo Activo</span>
+            </label>
+        </div>
+
+        <div style="margin-top:1.5rem; display:flex; gap:1rem;">
+            <button type="submit" class="btn btn-primary" style="flex:1;">Guardar Balanza</button>
+            <button type="button" class="btn btn-secondary" style="flex:1;"
+                onclick="toggleModal('modal-balanza')">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-edit-balanza').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const d = this.dataset;
+                editBalanza(
+                    d.id,
+                    d.nombre,
+                    d.marca,
+                    d.modelo,
+                    d.serie,
+                    d.tipo,
+                    d.ip,
+                    d.puerto,
+                    d.pred,
+                    d.act
+                );
+            });
+        });
+    });
+
+    function toggleBalConnectionFields() {
+        const tipo = document.getElementById('bal-tipo').value;
+        document.getElementById('panel-bal-ip').style.display = (tipo === 'IP_RED') ? 'block' : 'none';
+    }
+
+    function openBalanzaModal() {
+        document.getElementById('modal-balanza-title').innerText = "Añadir Balanza";
+        ['bal-id', 'bal-nombre', 'bal-modelo', 'bal-serie', 'bal-ip'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('bal-marca').value = 'Systel';
+        document.getElementById('bal-tipo').value = 'IP_RED';
+        document.getElementById('bal-puerto').value = '9100';
+        document.getElementById('bal-predeterminada').checked = false;
+        document.getElementById('bal-activo').checked = true;
+        toggleBalConnectionFields();
+        toggleModal('modal-balanza');
+    }
+
+    function editBalanza(id, nombre, marca, modelo, serie, tipo, ip, puerto, pred, act) {
+        document.getElementById('modal-balanza-title').innerText = "Editar Balanza";
+        document.getElementById('bal-id').value = id;
+        document.getElementById('bal-nombre').value = nombre;
+        document.getElementById('bal-marca').value = marca;
+        document.getElementById('bal-modelo').value = modelo;
+        document.getElementById('bal-serie').value = serie;
+        document.getElementById('bal-tipo').value = tipo || 'IP_RED';
+        document.getElementById('bal-ip').value = ip;
+        document.getElementById('bal-puerto').value = puerto || 9100;
+        document.getElementById('bal-predeterminada').checked = (pred === '1');
+        document.getElementById('bal-activo').checked = (act === '1');
+        toggleBalConnectionFields();
+        toggleModal('modal-balanza');
+    }
+</script>
+{% endblock %}

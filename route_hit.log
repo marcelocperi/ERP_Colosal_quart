@@ -1,0 +1,38 @@
+[2026-02-12 09:13:46.587469] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 09:13:46.686384] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 09:35:38.349479] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 09:35:38.432973] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 09:45:41.960194] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 09:45:42.053540] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 09:48:10.493248] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 09:48:10.580015] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 09:59:55.301707] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 09:59:55.384374] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 10:08:46.928134] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 10:08:47.008927] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 10:22:05.535638] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 10:22:05.623850] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 10:23:56.393290] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 10:23:56.479574] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 10:49:10.995612] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 10:49:11.092346] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 11:08:40.749708] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 11:08:40.838719] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 11:13:23.961715] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 11:13:24.048370] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 11:19:49.189179] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 11:19:49.292238] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 11:25:20.438333] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 11:25:20.567826] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 11:45:18.680288] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 11:45:18.785226] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 11:54:31.079829] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 11:54:31.166012] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 18:39:03.964026] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 18:39:04.059602] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 19:04:57.162036] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 19:04:57.255606] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-12 20:45:38.074144] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-12 20:45:38.162364] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep
+[2026-02-13 09:18:10.130386] enrich_bulk HIT. deep=1, strategy=smart
+[2026-02-13 09:18:10.228233] SUBPROCESS TRIGGERED: C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\python.exe C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\enrich_books_api.py --enterprise 1 --strategy smart --limit 100 --deep

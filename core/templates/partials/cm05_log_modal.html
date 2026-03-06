@@ -1,0 +1,76 @@
+<div class="modal fade" id="modalCM05Log" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-clock-history me-2"></i>Historial de Cambios CM05
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha Efectiva</th>
+                                <th>Acción</th>
+                                <th>Usuario</th>
+                                <th>Jurisdicción</th>
+                                <th>Año/Periodo</th>
+                                <th>Coeficiente</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cm05LogTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Cargando historial...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewCM05Log(terceroId) {
+        var modal = new bootstrap.Modal(document.getElementById('modalCM05Log'));
+        modal.show();
+
+        document.getElementById('cm05LogTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-muted"><div class="spinner-border spinner-border-sm" role="status"></div> Cargando historial...</td></tr>';
+
+        const sid = window.SID || new URLSearchParams(window.location.search).get('sid') || '';
+        fetch('/api/terceros/' + terceroId + '/cm05-log?sid=' + sid)
+            .then(response => response.json())
+            .then(data => {
+                var tbody = document.getElementById('cm05LogTableBody');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay historial de cambios registrado.</td></tr>';
+                    return;
+                }
+
+                data.forEach(function (row) {
+                    var badgeClass = 'bg-success';
+                    if (row.id_action === 2) badgeClass = 'bg-primary';
+                    if (row.id_action === 3) badgeClass = 'bg-danger';
+
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = `
+                    <td>${row.fecha_efectiva}</td>
+                    <td><span class="badge ${badgeClass}">${row.action_label}</span></td>
+                    <td>${row.user_name}</td>
+                    <td>${row.jurisdiccion}</td>
+                    <td>${row.periodo_anio}</td>
+                    <td class="text-end fw-bold">${row.coeficiente}</td>
+                `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching CM05 logs:', error);
+                document.getElementById('cm05LogTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar historial.</td></tr>';
+            });
+    }
+</script>

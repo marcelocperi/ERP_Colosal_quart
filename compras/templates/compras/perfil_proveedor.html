@@ -1,0 +1,949 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('compras.proveedores') }}">Proveedores</a></li>
+                <li class="breadcrumb-item active">Ficha de Proveedor</li>
+            </ol>
+        </nav>
+        <div>
+            <h1 class="h3 text-gray-800 mb-0">{{ proveedor.nombre }}</h1>
+            <small class="text-muted">Código: <strong>{{ proveedor.codigo or '-' }}</strong></small>
+        </div>
+    </div>
+    <div class="col-auto">
+        <span class="badge bg-dark fs-6">{{ proveedor.tipo_responsable }}</span>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sidebar Resumen -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-dark text-white d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold">Datos Básicos</h6>
+                <button class="btn btn-sm btn-outline-light border-0" onclick="toggleModal('modalEditarProveedor')">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <p><strong>CUIT:</strong> {{ proveedor.cuit }}</p>
+                <p><strong>Email Principal:</strong> {{ proveedor.email or 'N/D' }}</p>
+                <p><strong>Teléfono Principal:</strong> {{ proveedor.telefono or 'N/D' }}</p>
+                <hr>
+                <p><strong>Observaciones:</strong><br>
+                    <span class="text-muted small">{{ proveedor.observaciones or 'Sin observaciones' }}</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pestañas Detalle -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header p-0">
+                <ul class="nav nav-tabs card-header-tabs ms-0 me-0" id="proveedorTab" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="sedes-tab" data-bs-toggle="tab" data-bs-target="#sedes"
+                            type="button" role="tab">Sedes / Depósitos</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="contactos-tab" data-bs-toggle="tab" data-bs-target="#contactos"
+                            type="button" role="tab">Contactos</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="fiscal-tab" data-bs-toggle="tab" data-bs-target="#fiscal"
+                            type="button" role="tab">Situación Fiscal</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="cm05-tab" data-bs-toggle="tab" data-bs-target="#cm05" type="button"
+                            role="tab" title="Convenio Multilateral">CM05 / Conv. Multi.</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="proveedorTabContent">
+                    <!-- SEDES -->
+                    <div class="tab-pane fade show active" id="sedes" role="tabpanel">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="font-weight-bold">Direcciones de Retiro / Administración</h6>
+                            <button class="btn btn-sm btn-dark" onclick="nuevaDireccion()">
+                                <i class="fas fa-plus"></i> Agregar Sede
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Etiqueta</th>
+                                        <th>Dirección (Calle y Altura)</th>
+                                        <th>Localidad (Ciudad)</th>
+                                        <th>Tipo</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for d in direcciones %}
+                                    <tr>
+                                        <td><strong>{{ d.etiqueta }}</strong></td>
+                                        <td>{{ d.calle }} {{ d.numero }} {{ d.piso }} {{ d.depto }}</td>
+                                        <td>{{ d.localidad }} ({{ d.provincia }})</td>
+                                        <td>
+                                            {% if d.es_fiscal %}<span class="badge bg-warning text-dark">Fiscal</span>{%
+                                            endif %}
+                                            {% if d.es_entrega %}<span class="badge bg-info text-dark">Depósito</span>{%
+                                            endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm text-primary" data-item='{{ d|tojson|safe }}'
+                                                    onclick='editarDireccion(this)' title="Editar"><i
+                                                        class="fas fa-edit"></i></button>
+                                                <a href="{{ url_for('compras.eliminar_detalle', tabla='erp_direcciones', item_id=d.id, id=proveedor.id) }}"
+                                                    class="btn btn-sm text-danger"><i class="fas fa-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No hay direcciones registradas.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- CONTACTOS -->
+                    <div class="tab-pane fade" id="contactos" role="tabpanel">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="font-weight-bold">Ejecutivos de Cuenta / Contactos</h6>
+                            <button class="btn btn-sm btn-dark" onclick="nuevoContacto()">
+                                <i class="fas fa-plus"></i> Agregar Contacto
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Área / Función</th>
+                                        <th>Teléfono</th>
+                                        <th>Email</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in contactos %}
+                                    <tr>
+                                        <td><strong>{{ c.nombre }}</strong></td>
+                                        <td><span class="badge bg-light text-dark border">{{ c.tipo_contacto
+                                                }}</span><br><small>{{ c.puesto_nombre if c.puesto_nombre else c.puesto
+                                                }}</small></td>
+                                        <td>{{ c.telefono }}</td>
+                                        <td>{{ c.email }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm text-primary" data-item='{{ c|tojson|safe }}'
+                                                    onclick='editarContacto(this)' title="Editar"><i
+                                                        class="fas fa-edit"></i></button>
+                                                <a href="{{ url_for('compras.eliminar_detalle', tabla='erp_contactos', item_id=c.id, id=proveedor.id) }}"
+                                                    class="btn btn-sm text-danger"><i class="fas fa-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No hay contactos registrados.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- FISCAL -->
+                    <div class="tab-pane fade" id="fiscal" role="tabpanel">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="font-weight-bold">Inscripciones e Impuestos Alcanzados</h6>
+                            <button class="btn btn-sm btn-dark" onclick="nuevoFiscal()">
+                                <i class="fas fa-plus"></i> Agregar Dato Fiscal
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Impuesto</th>
+                                        <th>Jurisdicción</th>
+                                        <th>Condición</th>
+                                        <th>Nro. Inscripción</th>
+                                        <th>Alícuota %</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for f in fiscales %}
+                                    <tr>
+                                        <td><strong>{{ f.impuesto }}</strong></td>
+                                        <td>{{ f.jurisdiccion }}</td>
+                                        <td>{{ f.condicion }}</td>
+                                        <td>{{ f.numero_inscripcion }}</td>
+                                        <td>{{ f.alicuota }}%</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm text-primary" data-item='{{ f|tojson|safe }}'
+                                                    onclick='editarFiscal(this)' title="Editar"><i
+                                                        class="fas fa-edit"></i></button>
+                                                <a href="{{ url_for('compras.eliminar_detalle', tabla='erp_datos_fiscales', item_id=f.id, id=proveedor.id) }}"
+                                                    class="btn btn-sm text-danger"><i class="fas fa-trash"></i></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Sin datos fiscales.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- CM05 / CONVENIO MULTILATERAL -->
+                    <div class="tab-pane fade" id="cm05" role="tabpanel">
+                        <div class="p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h6 class="font-weight-bold mb-1">Liquidación Convenio Multilateral (Sustento
+                                        Territorial)</h6>
+                                    <p class="text-muted small mb-0">Gestión de coeficientes de CM05 para cálculo base
+                                        en Impuestos.</p>
+                                </div>
+                                <div>
+                                    <form action="{{ url_for('compras.toggle_convenio', id=proveedor.id) }}"
+                                        method="POST" class="d-inline">
+                                        <div class="form-check form-switch form-switch-lg d-inline-block">
+                                            <input class="form-check-input" type="checkbox" id="flexSwitchConvenio"
+                                                name="es_convenio" onchange="this.form.submit()" {% if
+                                                proveedor.es_convenio_multilateral %}checked{% endif %}>
+                                            <label class="form-check-label fw-bold mx-2" for="flexSwitchConvenio">Es
+                                                Convenio Multilateral</label>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            {% if proveedor.es_convenio_multilateral %}
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="card shadow-sm border-left-info h-100">
+                                        <div class="card-body">
+                                            <h6 class="fw-bold text-info"><i class="fas fa-file-pdf me-2"></i> Subrir
+                                                Archivo CM05</h6>
+                                            <p class="small text-muted mb-3">Adjunte el último formulario CM05 anual
+                                                para dejar respaldo fiscal ante auditorías.</p>
+                                            <form action="{{ url_for('compras.upload_cm05', id=proveedor.id) }}"
+                                                method="POST" enctype="multipart/form-data">
+                                                <div class="input-group mb-2">
+                                                    <input type="file" class="form-control form-control-sm"
+                                                        name="archivo_cm05" accept=".pdf">
+                                                    <button class="btn btn-sm btn-outline-info"
+                                                        type="submit">Subir</button>
+                                                </div>
+                                            </form>
+                                            {% if proveedor.archivo_cm05_path %}
+                                            <div class="mt-2 text-success small">
+                                                <i class="fas fa-check-circle me-1"></i> Archivo actual subido.
+                                                <a href="{{ url_for('static', filename=proveedor.archivo_cm05_path) }}"
+                                                    target="_blank" class="text-info ms-2">Ver PDF adjunto</a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div
+                                            class="card-header bg-white d-flex justify-content-between py-2 align-items-center border-bottom-0">
+                                            <h6 class="fw-bold m-0"><i class="fas fa-percentage me-2 text-warning"></i>
+                                                Coeficientes Asignados</h6>
+                                            <div>
+                                                <button class="btn btn-sm btn-outline-primary"
+                                                    onclick="toggleModal('modalCoeficiente')"><i
+                                                        class="fas fa-plus"></i>
+                                                    Añadir Jurisdicción</button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <table class="table table-sm table-hover mb-0">
+                                                <thead class="bg-light text-muted">
+                                                    <tr>
+                                                        <th>Provincia / Jurisdicción</th>
+                                                        <th>Año</th>
+                                                        <th>Coeficiente</th>
+                                                        <th class="text-end">Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for coef in coeficientes_cm %}
+                                                    <tr>
+                                                        <td class="align-middle fw-bold">{{ coef.jurisdiccion_code }} -
+                                                            {{ coef.provincia_nombre }}</td>
+                                                        <td class="align-middle">{{ coef.periodo_anio }}</td>
+                                                        <td class="align-middle text-primary fw-bold">{{
+                                                            "%.4f"|format(coef.coeficiente) }}</td>
+                                                        <td class="text-end">
+                                                            <a href="{{ url_for('compras.eliminar_detalle', tabla='erp_terceros_cm05', item_id=coef.id, id=proveedor.id) }}"
+                                                                class="btn btn-sm text-danger"><i
+                                                                    class="fas fa-trash"></i></a>
+                                                        </td>
+                                                    </tr>
+                                                    {% else %}
+                                                    <tr>
+                                                        <td colspan="4" class="text-center py-4 text-muted">
+                                                            Aún no asignaste los coeficientes del CM05 para
+                                                            cobrarle/pagarle correctamente.<br>
+                                                            <small>Usa el botón de Añadir Jurisdicción.</small>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-secondary p-4 text-center border-0 bg-light">
+                                <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
+                                <h6>El proveedor actualmente NO opera bajo Convenio Multilateral.</h6>
+                                <p class="small text-muted mb-0">Si desea agregar su matriz de impuestos provinciales,
+                                    marque el interruptor superior.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales -->
+
+<!-- Modal Editar Proveedor -->
+<div id="modalEditarProveedor" class="modal-premium modal-animate" style="display:none;">
+    <div class="modal-dialog modal-lg">
+        <form class="modal-content" action="{{ url_for('compras.editar_proveedor', id=proveedor.id) }}" method="POST">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i> Editar Datos Básicos</h5>
+                <button type="button" class="btn-close btn-close-white"
+                    onclick="toggleModal('modalEditarProveedor')"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-barcode me-1"></i> Código</label>
+                        <input type="text" name="codigo" class="form-control" value="{{ proveedor.codigo or '' }}">
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label"><i class="fas fa-building me-1"></i> Razón Social</label>
+                        <input type="text" name="nombre" class="form-control" value="{{ proveedor.nombre }}" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-id-card me-1"></i> CUIT</label>
+                        <input type="text" name="cuit" class="form-control" value="{{ proveedor.cuit }}" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-envelope me-1"></i> Email Principal</label>
+                            <input type="email" name="email" class="form-control" value="{{ proveedor.email }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><i class="fas fa-phone me-1"></i> Teléfono</label>
+                            <input type="text" name="telefono" class="form-control" value="{{ proveedor.telefono }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-file-invoice-dollar me-1"></i> Responsabilidad
+                            IVA</label>
+                        <select name="tipo_responsable" class="form-select">
+                            <option {% if proveedor.tipo_responsable=='Responsable Inscripto' %}selected{% endif %}>
+                                Responsable Inscripto</option>
+                            <option {% if proveedor.tipo_responsable=='Monotributo' %}selected{% endif %}>Monotributo
+                            </option>
+                            <option {% if proveedor.tipo_responsable=='Exento' %}selected{% endif %}>Exento</option>
+                            <option {% if proveedor.tipo_responsable=='Consumidor Final' %}selected{% endif %}>
+                                Consumidor
+                                Final</option>
+                        </select>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label"><i class="fas fa-comment-alt me-1"></i> Observaciones</label>
+                        <textarea name="observaciones" class="form-control"
+                            rows="3">{{ proveedor.observaciones }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Guardar
+                    Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Dirección -->
+<div id="modalDireccion" class="modal-premium modal-animate" style="display:none;">
+    <div class="modal-dialog modal-lg">
+        <form class="modal-content" action="{{ url_for('compras.agregar_direccion', id=proveedor.id) }}" method="POST"
+            id="formDireccion">
+            <input type="hidden" name="item_id" id="dir_item_id">
+            <div class="modal-header">
+                <h5 class="modal-title" id="titleDireccion"><i class="fas fa-map-marked-alt me-2"></i> Gestión de Sede /
+                    Dirección</h5>
+                <button type="button" class="btn-close btn-close-white"
+                    onclick="toggleModal('modalDireccion')"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="form-label"><i class="fas fa-tag me-1"></i> Etiqueta (Ej: Casa Central, Depósito
+                        Norte...)</label>
+                    <input type="text" name="etiqueta" id="dir_etiqueta" class="form-control" required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-map me-1"></i> Provincia</label>
+                        <select name="provincia" id="dir_provincia" class="form-select" required
+                            onchange="onProvinciaChange(this.value)">
+                            <option value="">Seleccionar...</option>
+                            {% for p in provincias %}
+                            <option value="{{ p.nombre }}">{{ p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label"><i class="fas fa-city me-1"></i> Localidad (Ciudad/Barrio)</label>
+                        <input type="text" name="localidad" id="dir_localidad" class="form-control"
+                            list="list_localidades" required onchange="onLocalidadChange(this.value)"
+                            onfocus="ensureDataOnFocus('localidad')">
+                        <datalist id="list_localidades"></datalist>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label"><i class="fas fa-road me-1"></i> Calle (Arteria/Ruta)</label>
+                            <input type="text" name="calle" id="dir_calle" class="form-control" list="list_calles"
+                                required oninput="debouncedSearchCalles(this.value)">
+                            <datalist id="list_calles"></datalist>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="fas fa-sort-numeric-up me-1"></i> Número
+                                (Altura)</label>
+                            <input type="text" name="numero" id="dir_numero" class="form-control" required>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Piso</label>
+                            <input type="text" name="piso" id="dir_piso" class="form-control">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Depto</label>
+                            <input type="text" name="depto" id="dir_depto" class="form-control">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label"><i class="fas fa-mail-bulk me-1"></i> Código Postal (C.P.)</label>
+                            <input type="text" name="cod_postal" id="dir_cp" class="form-control" list="list_cp"
+                                required>
+                            <datalist id="list_cp"></datalist>
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 rounded-4" style="background: rgba(255,255,255,0.03);">
+                        <div class="d-flex gap-4">
+                            <div class="form-check custom-check">
+                                <input class="form-check-input" type="checkbox" name="es_fiscal" id="dir_chkFiscal"
+                                    value="1">
+                                <label class="form-check-label text-white">Domicilio Fiscal</label>
+                            </div>
+                            <div class="form-check custom-check">
+                                <input class="form-check-input" type="checkbox" name="es_entrega" id="dir_chkEntrega"
+                                    value="1">
+                                <label class="form-check-label text-white">Punto de Entrega / Retiro</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Guardar
+                    Dirección</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Contacto -->
+<div id="modalContacto" class="modal-premium modal-animate" style="display:none;">
+    <div class="modal-dialog">
+        <form class="modal-content" action="{{ url_for('compras.agregar_contacto', id=proveedor.id) }}" method="POST"
+            id="formContacto">
+            <input type="hidden" name="item_id" id="con_item_id">
+            <div class="modal-header">
+                <h5 class="modal-title" id="titleContacto"><i class="fas fa-user-tie me-2"></i> Persona de Contacto</h5>
+                <button type="button" class="btn-close btn-close-white" onclick="toggleModal('modalContacto')"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-user me-1"></i> Nombre Completo</label>
+                    <input type="text" name="nombre" id="con_nombre" class="form-control" placeholder="Ej: Juan Pérez"
+                        required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-list me-1"></i> Área</label>
+                        <select name="tipo_contacto" id="con_tipo" class="form-select"
+                            onchange="onAreaChange(this.value)">
+                            <option value="">Seleccione Área...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-briefcase me-1"></i> Función</label>
+                        <select name="puesto" id="con_puesto" class="form-select" required>
+                            <option value="">Seleccione Función...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-phone me-1"></i> Teléfono</label>
+                        <input type="text" name="telefono" id="con_telefono" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-envelope me-1"></i> Email</label>
+                        <input type="email" name="email" id="con_email" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Guardar
+                    Contacto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Fiscal -->
+<div id="modalFiscal" class="modal-premium modal-animate" style="display:none;">
+    <div class="modal-dialog">
+        <form class="modal-content" action="{{ url_for('compras.agregar_fiscal', id=proveedor.id) }}" method="POST"
+            id="formFiscal">
+            <input type="hidden" name="item_id" id="fis_item_id">
+            <div class="modal-header">
+                <h5 class="modal-title" id="titleFiscal"><i class="fas fa-university me-2"></i> Inscripción Fiscal</h5>
+                <button type="button" class="btn-close btn-close-white" onclick="toggleModal('modalFiscal')"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-file-contract me-1"></i> Gravamen / Impuesto</label>
+                        <select name="impuesto" id="fis_impuesto" class="form-select">
+                            <option>IIBB</option>
+                            <option>Ganancias</option>
+                            <option>SUSS</option>
+                            <option>Otros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-globe me-1"></i> Jurisdicción</label>
+                        <select name="jurisdiccion" id="fis_jurisdiccion" class="form-select" required>
+                            <option value="NACIONAL">NACIONAL</option>
+                            {% for p in provincias %}
+                            <option value="{{ p.nombre }}">{{ p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><i class="fas fa-check-circle me-1"></i> Condición</label>
+                    <input type="text" name="condicion" id="fis_condicion" class="form-control"
+                        placeholder="Ej: Exento, Agente de Retención">
+                </div>
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label"><i class="fas fa-hashtag me-1"></i> Nro. Inscripción</label>
+                        <input type="text" name="numero_inscripcion" id="fis_inscripcion" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label"><i class="fas fa-percentage me-1"></i> Alícuota</label>
+                        <input type="number" step="0.01" name="alicuota" id="fis_alicuota" class="form-control"
+                            value="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Guardar Datos
+                    Fiscales</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Nuevo Coeficiente CM05 -->
+<div id="modalCoeficiente" class="modal-premium modal-animate" style="display:none;">
+    <div class="modal-dialog">
+        <form class="modal-content" action="{{ url_for('compras.agregar_cm05', id=proveedor.id) }}" method="POST">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i> Nuevo Coeficiente Provincial</h5>
+                <button type="button" class="btn-close btn-close-white"
+                    onclick="toggleModal('modalCoeficiente')"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-3">Ingrese el coeficiente (hasta 4 decimales) declarado en el Formulario
+                    CM05.</p>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-map me-1"></i> Jurisdicción /
+                            Provincia</label>
+                        <select name="jurisdiccion_code" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            <option value="901">901 - CABA</option>
+                            <option value="902">902 - Buenos Aires</option>
+                            <option value="903">903 - Catamarca</option>
+                            <option value="904">904 - Córdoba</option>
+                            <option value="905">905 - Corrientes</option>
+                            <option value="906">906 - Chaco</option>
+                            <option value="907">907 - Chubut</option>
+                            <option value="908">908 - Entre Ríos</option>
+                            <option value="909">909 - Formosa</option>
+                            <option value="910">910 - Jujuy</option>
+                            <option value="911">911 - La Pampa</option>
+                            <option value="912">912 - La Rioja</option>
+                            <option value="913">913 - Mendoza</option>
+                            <option value="914">914 - Misiones</option>
+                            <option value="915">915 - Neuquén</option>
+                            <option value="916">916 - Río Negro</option>
+                            <option value="917">917 - Salta</option>
+                            <option value="918">918 - San Juan</option>
+                            <option value="919">919 - San Luis</option>
+                            <option value="920">920 - Santa Cruz</option>
+                            <option value="921">921 - Santa Fe</option>
+                            <option value="922">922 - S. del Estero</option>
+                            <option value="923">923 - Tierra del Fuego</option>
+                            <option value="924">924 - Tucumán</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-calendar-alt me-1"></i> Año Declarado</label>
+                        <input type="number" name="periodo_anio" class="form-control" value="2024" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="fas fa-percentage me-1"></i> Coeficiente</label>
+                        <input type="number" step="0.0001" min="0" max="1" name="coeficiente" class="form-control"
+                            placeholder="Ej: 0.5000" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-check me-2"></i> Guardar
+                    Jurisdicción</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        if (modal.classList.contains('modal')) {
+            const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+            if (modal.style.display === 'block' || modal.classList.contains('show')) {
+                bsModal.hide();
+            } else {
+                bsModal.show();
+            }
+        } else {
+            if (modal.style.display === 'none' || !modal.style.display) {
+                modal.style.display = 'block';
+                setTimeout(() => modal.classList.add('show'), 10);
+            } else {
+                modal.classList.remove('show');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
+        }
+    }
+
+    function nuevaDireccion() {
+        document.getElementById('formDireccion').reset();
+        document.getElementById('dir_item_id').value = '';
+        document.getElementById('titleDireccion').innerText = 'Agregar Sede / Dirección';
+        toggleModal('modalDireccion');
+    }
+
+    async function editarDireccion(btn) {
+        const data = JSON.parse(btn.getAttribute('data-item'));
+        document.getElementById('formDireccion').reset();
+        document.getElementById('dir_item_id').value = data.id;
+        document.getElementById('dir_etiqueta').value = data.etiqueta;
+
+        // Cargar contexto de provincia antes de asignar valores
+        document.getElementById('dir_provincia').value = data.provincia;
+        await cargarLocalidades(data.provincia);
+
+        document.getElementById('dir_localidad').value = data.localidad;
+
+        document.getElementById('dir_calle').value = data.calle;
+        document.getElementById('dir_numero').value = data.numero;
+        document.getElementById('dir_piso').value = data.piso || '';
+        document.getElementById('dir_depto').value = data.depto || '';
+        document.getElementById('dir_cp').value = data.cod_postal;
+        document.getElementById('dir_chkFiscal').checked = data.es_fiscal == 1;
+        document.getElementById('dir_chkEntrega').checked = data.es_entrega == 1;
+
+        // Poblar datalist de calles
+        cargarCalles(data.localidad);
+
+        document.getElementById('titleDireccion').innerText = 'Editar Sede / Dirección';
+        toggleModal('modalDireccion');
+    }
+
+    function nuevoContacto() {
+        document.getElementById('formContacto').reset();
+        document.getElementById('con_item_id').value = '';
+        document.getElementById('titleContacto').innerText = 'Agregar Contacto';
+        toggleModal('modalContacto');
+    }
+
+    function editarContacto(btn) {
+        const data = JSON.parse(btn.getAttribute('data-item'));
+        document.getElementById('con_item_id').value = data.id;
+        document.getElementById('con_nombre').value = data.nombre;
+
+        cargarAreas().then(() => {
+            const selectArea = document.getElementById('con_tipo');
+            selectArea.value = data.tipo_contacto || '';
+            onAreaChange(data.tipo_contacto).then(() => {
+                document.getElementById('con_puesto').value = data.puesto_nombre || data.puesto || '';
+            });
+        });
+
+        document.getElementById('con_telefono').value = data.telefono;
+        document.getElementById('con_email').value = data.email || '';
+        document.getElementById('titleContacto').innerText = 'Editar Contacto';
+        toggleModal('modalContacto');
+    }
+
+    function nuevoFiscal() {
+        document.getElementById('formFiscal').reset();
+        document.getElementById('fis_item_id').value = '';
+        document.getElementById('titleFiscal').innerText = 'Agregar Dato Fiscal';
+        toggleModal('modalFiscal');
+    }
+
+    function editarFiscal(btn) {
+        const data = JSON.parse(btn.getAttribute('data-item'));
+        document.getElementById('fis_item_id').value = data.id;
+        document.getElementById('fis_impuesto').value = data.impuesto;
+        document.getElementById('fis_jurisdiccion').value = data.jurisdiccion;
+        document.getElementById('fis_condicion').value = data.condicion;
+        document.getElementById('fis_inscripcion').value = data.numero_inscripcion;
+        document.getElementById('fis_alicuota').value = data.alicuota;
+        document.getElementById('titleFiscal').innerText = 'Editar Dato Fiscal';
+        toggleModal('modalFiscal');
+    }
+
+    // --- GEOREF Cascading Selects (Premium Flow) ---
+    let _localidadesCache = [];
+    let _searchTimeout = null;
+
+    const getSID = () => window.SID || '{{ sid }}' || '';
+
+    function onProvinciaChange(provincia) {
+        if (!provincia) return;
+        document.getElementById('dir_localidad').value = '';
+        document.getElementById('dir_calle').value = '';
+        cargarLocalidades(provincia);
+    }
+
+    async function cargarLocalidades(provincia) {
+        if (!provincia) return;
+        console.log(`Buscando localidades para ${provincia}`);
+        const datalist = document.getElementById('list_localidades');
+
+        try {
+            let baseUrl = `{{ url_for('core.api_get_localidades') }}`;
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            let url = `${baseUrl}${separator}provincia=${encodeURIComponent(provincia)}`;
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            _localidadesCache = data;
+            datalist.innerHTML = '';
+            data.forEach(loc => {
+                const opt = document.createElement('option');
+                opt.value = loc.nombre;
+                datalist.appendChild(opt);
+            });
+            console.log(`Cargadas ${data.length} localidades`);
+        } catch (e) { console.error("Error cargando localidades:", e); }
+    }
+
+
+    function ensureDataOnFocus(type) {
+        const prov = document.getElementById('dir_provincia').value;
+        if (!prov) return;
+
+        if (type === 'localidad' && document.getElementById('list_localidades').children.length === 0) {
+            cargarLocalidades(prov);
+        }
+    }
+
+    async function onLocalidadChange(localidadNombre) {
+        if (!localidadNombre) return;
+        document.getElementById('dir_calle').value = '';
+        document.getElementById('dir_cp').value = '';
+        const loc = _localidadesCache.find(l => l.nombre.toLowerCase() === localidadNombre.toLowerCase());
+        if (loc) {
+            const prov = document.getElementById('dir_provincia').value;
+            if (prov) {
+                cargarCodigosPostales(prov, loc.nombre);
+                cargarCalles(loc.nombre);
+            }
+        }
+    }
+
+    async function cargarCodigosPostales(provincia, localidad) {
+        const datalist = document.getElementById('list_cp');
+        const cpInput = document.getElementById('dir_cp');
+        if (!datalist) return;
+
+        try {
+            let baseUrl = `{{ url_for('core.api_get_cp') }}`;
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            let url = `${baseUrl}${separator}provincia=${encodeURIComponent(provincia)}&localidad=${encodeURIComponent(localidad)}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            datalist.innerHTML = '';
+            if (data && data.length > 0) {
+                data.forEach(cp => {
+                    const opt = document.createElement('option');
+                    opt.value = cp;
+                    datalist.appendChild(opt);
+                });
+                if (data.length === 1 && (!cpInput.value || cpInput.value.length < 2)) {
+                    cpInput.value = data[0];
+                }
+            }
+        } catch (e) { console.error("Error cargando CP:", e); }
+    }
+
+
+    function debouncedSearchCalles(val) {
+        clearTimeout(_searchTimeout);
+        if (val.length < 3) return;
+        _searchTimeout = setTimeout(() => {
+            const localidad = document.getElementById('dir_localidad').value;
+            cargarCalles(localidad, val);
+        }, 500);
+    }
+
+    async function cargarCalles(localidad, partialName = '') {
+        const provincia = document.getElementById('dir_provincia').value;
+        const datalist = document.getElementById('list_calles');
+
+        try {
+            const sid = getSID();
+            let baseUrl = `{{ url_for('core.api_get_calles') }}`;
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            let url = `${baseUrl}${separator}localidad=${encodeURIComponent(localidad)}`;
+            if (provincia) url += `&provincia=${encodeURIComponent(provincia)}`;
+            if (partialName) url += `&nombre=${encodeURIComponent(partialName)}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+            datalist.innerHTML = '';
+            data.forEach(calle => {
+                const opt = document.createElement('option');
+                opt.value = calle.nombre;
+                datalist.appendChild(opt);
+            });
+        } catch (e) { console.error(e); }
+    }
+    async function cargarAreas() {
+        try {
+            const response = await fetch(`{{ url_for('core.api_get_areas') }}`);
+            const areas = await response.json();
+            const select = document.getElementById('con_tipo');
+            if (select) {
+                const currentVal = select.value;
+                select.innerHTML = '<option value="">Seleccione Área...</option>';
+                areas.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.nombre; // Usar el nombre como valor
+                    opt.textContent = a.nombre;
+                    select.appendChild(opt);
+                });
+                if (currentVal) select.value = currentVal;
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function onAreaChange(area) {
+        if (!area) return;
+        const selectPuesto = document.getElementById('con_puesto');
+        if (selectPuesto) selectPuesto.innerHTML = '<option value="">Cargando...</option>';
+
+        try {
+            const response = await fetch(`{{ url_for('core.api_get_puestos') }}&area=${encodeURIComponent(area)}`);
+            const puestos = await response.json();
+            if (selectPuesto) {
+                selectPuesto.innerHTML = '<option value="">Seleccione Función...</option>';
+                puestos.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.nombre;
+                    opt.textContent = p.nombre;
+                    selectPuesto.appendChild(opt);
+                });
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    // Al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarAreas();
+
+        // Validar CUIT en modal de edición
+        const cuitInput = document.querySelector('input[name="cuit"]');
+        if (cuitInput) {
+            cuitInput.addEventListener('input', function () {
+                if (!this.value) {
+                    this.classList.remove('is-invalid', 'is-valid');
+                    return;
+                }
+                if (validarCUIT(this.value)) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                    this.setCustomValidity('');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                    this.setCustomValidity('CUIT Inválido');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

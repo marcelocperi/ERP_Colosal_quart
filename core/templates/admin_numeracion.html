@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1>Administración de Numeración</h1>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        {% if g.user.role_name == 'SuperAdmin' %}
+        <form method="GET" action="{{ url_for('core.admin_numeracion') }}" id="filterForm">
+            <select name="ent_id" onchange="document.getElementById('filterForm').submit()">
+                {% for ent in enterprises %}
+                <option value="{{ ent.id }}" {% if ent.id==selected_ent_id %}selected{% endif %}>{{ ent.nombre }} (ID:
+                    {{ ent.id }})</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+        <button class="btn btn-warning" onclick="openCloneModal()">
+            <i class="fas fa-copy"></i> Clonar a otro Punto de Venta
+        </button>
+        <button class="btn btn-primary" onclick="openNewNumeracionModal()">
+            <i class="fas fa-plus"></i> Nueva Numeración
+        </button>
+    </div>
+</div>
+
+<div class="card bg-info-light mb-4" style="padding: 1rem; border-left: 5px solid #0ea5e9;">
+    <p style="margin: 0; font-size: 0.9rem; color: #0c4a6e;">
+        <i class="fas fa-info-circle"></i> Aquí puede configurar el <strong>Punto de Venta</strong> y el <strong>Último
+            Número</strong> generado para cada tipo de comprobante.
+        Esto es útil para inicializar el sistema con los números correlativos de una facturación anterior.
+    </p>
+</div>
+
+<div class="table-container card">
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Punto Venta</th>
+                <th>Último Número</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in numeracion %}
+            <tr>
+                <td>
+                    <span class="badge" style="background: #e0f2fe; color: #0369a1;">{{ item.entidad_tipo }}</span>
+                </td>
+                <td style="font-weight: 700;">{{ item.entidad_codigo }}</td>
+                <td>{{ item.tipo_nombre or '-' }}</td>
+                <td style="text-align: center;">{{ item.punto_venta }}</td>
+                <td style="text-align: right; font-family: monospace; font-weight: 600; color: #1e293b;">
+                    {{ "%08d"|format(item.ultimo_numero) }}
+                </td>
+                <td style="display: flex; gap: 0.25rem;">
+                    <button class="btn btn-edit-num" data-id="{{ item.id }}" data-tipo="{{ item.entidad_tipo }}"
+                        data-codigo="{{ item.entidad_codigo }}" data-pv="{{ item.punto_venta }}"
+                        data-numero="{{ item.ultimo_numero }}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <form action="{{ url_for('core.admin_numeracion_delete', id=item.id) }}" method="POST"
+                        style="margin:0; padding:0;"
+                        onsubmit="return confirm('¿Está seguro de que desea eliminar permanentemente este registro del numerador?');">
+                        <input type="hidden" name="enterprise_id" value="{{ selected_ent_id }}">
+                        <button type="submit" class="btn" style="background-color: #ef4444; color: white;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not numeracion %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 3rem; color: #94a3b8;">
+                    No hay parámetros de numeración configurados para esta empresa.
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Numeración -->
+<div id="numeracionModal" class="modal-premium"
+    style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; z-index: 5001;">
+    <div class="card"
+        style="padding: 2rem; border: 1px solid #e2e8f0; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+        <h2 id="modalTitle">Editar Numeración</h2>
+        <form action="{{ url_for('core.admin_numeracion_save') }}" method="POST">
+            <input type="hidden" name="id" id="num-id">
+            <input type="hidden" name="enterprise_id" value="{{ selected_ent_id }}">
+
+            <div class="form-group" id="group-tipo">
+                <label>Tipo de Entidad</label>
+                <select name="entidad_tipo" id="num-tipo" required>
+                    <option value="COMPROBANTE">Comprobante (Factura, NC, ND)</option>
+                    <option value="RECIBO">Recibo</option>
+                    <option value="ORDEN_PAGO">Orden de Pago</option>
+                    <option value="ORDEN_COMPRA">Orden de Compra</option>
+                    <option value="MOV_STOCK">Movimiento de Stock</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="group-codigo">
+                <label>Código (ej: A, B, RC)</label>
+                <input type="text" name="entidad_codigo" id="num-codigo" required placeholder="A">
+            </div>
+
+            <div class="grid-2-columns">
+                <div class="form-group">
+                    <label>Punto de Venta</label>
+                    <input type="number" name="punto_venta" id="num-pv" required min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>Último Número Generado</label>
+                    <input type="number" name="ultimo_numero" id="num-numero" required min="0" value="0">
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 2rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Clonar -->
+<div id="cloneModal" class="modal-premium"
+    style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 400px; z-index: 5001;">
+    <div class="card"
+        style="padding: 2rem; border: 1px solid #e2e8f0; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+        <h2>Clonar a Punto de Venta</h2>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">Copia los códigos actuales hacia un nuevo
+            punto de venta inicializando en 0.</p>
+        <form action="{{ url_for('core.admin_numeracion_clone') }}" method="POST"
+            onsubmit="return confirm('¿Está dispuesto y seguro de crear este nuevo Punto de Venta?');">
+            <input type="hidden" name="enterprise_id" value="{{ selected_ent_id }}">
+            <div class="form-group">
+                <label>Número de nuevo Punto de Venta</label>
+                <input type="number" name="nuevo_pv" required min="1" placeholder="Ej: 2, 3...">
+            </div>
+            <div style="text-align: right; margin-top: 2rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="toggleModal('cloneModal')">Cancelar</button>
+                <button type="submit" class="btn btn-warning"><i class="fas fa-magic"></i> Ejecutar Clonación</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.btn-edit-num').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const data = btn.dataset;
+                document.getElementById('modalTitle').innerText = 'Editar Numeración: ' + data.tipo + ' ' + data.codigo;
+                document.getElementById('num-id').value = data.id;
+                document.getElementById('num-tipo').value = data.tipo;
+                document.getElementById('num-codigo').value = data.codigo;
+                document.getElementById('num-pv').value = data.pv;
+                document.getElementById('num-numero').value = data.numero;
+
+                // Bloquear campos clave si estamos editando
+                document.getElementById('num-tipo').disabled = true;
+                document.getElementById('num-codigo').readOnly = true;
+
+                // Pero necesitamos enviarlos, así que nos aseguramos que haya inputs ocultos o habilitarlos al submit
+
+                toggleModal('numeracionModal');
+            });
+        });
+    });
+
+    function openNewNumeracionModal() {
+        document.getElementById('modalTitle').innerText = 'Nueva Numeración';
+        document.getElementById('num-id').value = '';
+        document.getElementById('num-tipo').disabled = false;
+        document.getElementById('num-codigo').readOnly = false;
+        document.getElementById('num-tipo').value = 'COMPROBANTE';
+        document.getElementById('num-codigo').value = '';
+        document.getElementById('num-pv').value = 1;
+        document.getElementById('num-numero').value = 0;
+        toggleModal('numeracionModal');
+    }
+
+    function closeModal() {
+        toggleModal('numeracionModal');
+    }
+
+    function openCloneModal() {
+        toggleModal('cloneModal');
+    }
+</script>
+
+<style>
+    .grid-2-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .bg-info-light {
+        background-color: #f0f9ff;
+    }
+</style>
+{% endblock %}

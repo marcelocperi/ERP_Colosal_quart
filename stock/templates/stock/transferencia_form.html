@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container mb-4">
+    <h1 class="page-title"><i class="fas fa-truck-moving me-2 text-info"></i>Nueva Transferencia de Mercadería</h1>
+    <p class="text-muted">Mueva stock entre depósitos. Las transferencias a destinos externos requieren COT.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-dark border-secondary shadow-sm mb-4">
+            <div class="card-header bg-secondary bg-opacity-10">
+                <h6 class="mb-0 text-white"><i class="fas fa-info-circle me-2"></i>Cabecera</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted small uppercase fw-bold">Depósito Origen</label>
+                    <select id="origen_id" class="form-select bg-dark text-light border-secondary">
+                        <option value="">Seleccione origen...</option>
+                        {% for d in depositos %}
+                        <option value="{{ d.id }}">{{ d.nombre }} ({{ d.tipo }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small uppercase fw-bold">Depósito Destino</label>
+                    <select id="destino_id" class="form-select bg-dark text-light border-secondary">
+                        <option value="">Seleccione destino...</option>
+                        {% for d in depositos %}
+                        <option value="{{ d.id }}" data-tipo="{{ d.tipo }}">{{ d.nombre }} ({{ d.tipo }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small uppercase fw-bold">Tipo de Transporte</label>
+                    <select id="tipo_transporte" class="form-select bg-dark text-light border-secondary"
+                        onchange="toggleLogistica()">
+                        <option value="PROPIO">Envío Propio</option>
+                        <option value="LOGISTICA">Vía Logística / Terceros</option>
+                    </select>
+                </div>
+
+                <div id="logistica_fields" class="d-none">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small uppercase fw-bold">Empresa Logística</label>
+                        <select id="logistica_id" class="form-select bg-dark text-light border-secondary">
+                            <option value="">Seleccione operador...</option>
+                            {% for l in logisticas %}
+                            <option value="{{ l.id }}">{{ l.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-muted small">El COT se generará hasta el depósito de la logística.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small uppercase fw-bold">Dirección Destino Final</label>
+                        <input type="text" id="destino_final_direccion"
+                            class="form-control bg-dark text-light border-secondary"
+                            placeholder="Dirección del cliente...">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small uppercase fw-bold">Patente Vehículo (Requerida para
+                        COT)</label>
+                    <input type="text" id="patente" class="form-control bg-dark text-light border-secondary"
+                        placeholder="ABC-123">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small uppercase fw-bold">Observaciones / Motivo</label>
+                    <textarea id="observaciones" class="form-control bg-dark text-light border-secondary"
+                        rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div id="cot_alert" class="alert alert-warning d-none">
+            <i class="fas fa-exclamation-triangle me-2"></i> Este destino es <b>Externo/Satelite</b>.
+            Al guardar, se habilitará la solicitud de <b>COT ARBA/AGIP</b>.
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card bg-dark border-secondary shadow-sm">
+            <div class="card-header bg-secondary bg-opacity-10 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 text-white"><i class="fas fa-list me-2"></i>Items a Transferir</h6>
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="addItem()">
+                    <i class="fas fa-plus me-1"></i> Agregar Articulo
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-dark mb-0" id="itemsTable">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Articulo</th>
+                            <th style="width: 150px;">Cantidad</th>
+                            <th style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsBody">
+                        <!-- Items dynamically added here -->
+                    </tbody>
+                </table>
+                <div id="noItems" class="text-center py-4 text-muted small">
+                    No hay items cargados.
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-secondary text-end p-3">
+                <button class="btn btn-secondary me-2" onclick="window.history.back()">Cancelar</button>
+                <button class="btn btn-info px-5" onclick="guardarTransferencia()">
+                    <i class="fas fa-save me-2"></i> Crear Transferencia
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para fila de item -->
+<template id="itemRowTemplate">
+    <tr class="item-row">
+        <td class="ps-3">
+            <select class="form-select bg-dark text-light border-secondary item-select">
+                <option value="">Buscar articulo...</option>
+                {% for a in articulos %}
+                <option value="{{ a.id }}">{{ a.nombre }} ({{ a.codigo }})</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="number" step="0.01" class="form-control bg-dark text-light border-secondary item-cantidad"
+                value="1.00">
+        </td>
+        <td class="text-end pe-3">
+            <button class="btn btn-link text-danger p-0" onclick="this.closest('tr').remove(); checkEmpty();">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+<script>
+    document.getElementById('destino_id').addEventListener('change', function () {
+        const opt = this.options[this.selectedIndex];
+        const tipo = opt.dataset.tipo;
+        const alert = document.getElementById('cot_alert');
+        if (tipo && tipo !== 'INTERNO') {
+            alert.classList.remove('d-none');
+        } else {
+            alert.classList.add('d-none');
+        }
+    });
+
+    function addItem() {
+        const template = document.getElementById('itemRowTemplate');
+        const clone = template.content.cloneNode(true);
+        document.getElementById('itemsBody').appendChild(clone);
+        document.getElementById('noItems').classList.add('d-none');
+    }
+
+    function checkEmpty() {
+        if (document.querySelectorAll('.item-row').length === 0) {
+            document.getElementById('noItems').classList.remove('d-none');
+        }
+    }
+
+    function toggleLogistica() {
+        const type = document.getElementById('tipo_transporte').value;
+        const fields = document.getElementById('logistica_fields');
+        if (type === 'LOGISTICA') {
+            fields.classList.remove('d-none');
+        } else {
+            fields.classList.add('d-none');
+        }
+    }
+
+    async function guardarTransferencia() {
+        const data = {
+            origen_id: document.getElementById('origen_id').value,
+            destino_id: document.getElementById('destino_id').value,
+            tipo_transporte: document.getElementById('tipo_transporte').value,
+            logistica_id: document.getElementById('logistica_id').value || null,
+            destino_final_direccion: document.getElementById('destino_final_direccion').value || '',
+            patente: document.getElementById('patente').value,
+            observaciones: document.getElementById('observaciones').value,
+            items: []
+        };
+
+        if (!data.origen_id || !data.destino_id) return alert("Seleccione origen y destino.");
+        if (data.origen_id === data.destino_id) return alert("El origen y destino no pueden ser el mismo.");
+
+        document.querySelectorAll('.item-row').forEach(row => {
+            const id = row.querySelector('.item-select').value;
+            const cant = row.querySelector('.item-cantidad').value;
+            if (id && cant > 0) {
+                data.items.append({ id, cant });
+            }
+        });
+
+        if (data.items.length === 0) return alert("Cargue al menos un artículo.");
+
+        try {
+            const resp = await fetch(`/stock/api/transferencia/guardar?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            });
+            const res = await resp.json();
+            if (res.success) {
+                location.href = "{{ url_for('stock.transferencias_lista') }}";
+            } else {
+                alert("Error: " + res.message);
+            }
+        } catch (e) {
+            alert("Error de conexión.");
+        }
+    }
+</script>
+{% endblock %}

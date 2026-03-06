@@ -1,0 +1,1306 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-lg border-0 bg-dark text-light">
+                <div
+                    class="card-header {{ 'bg-danger' if es_nota_credito else 'bg-gradient-primary' }} text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>{{ 'Nueva Nota de Crédito
+                        (Devolución)' if es_nota_credito else 'Nueva Factura de Venta' }}</h4>
+                    <span class="badge bg-info">Modo Argentino (IVA Discriminado)</span>
+                </div>
+                <div class="card-body p-4">
+                    <form id="facturaForm">
+                        <div class="row mb-4">
+                            <!-- Datos del Cliente -->
+                            <div class="col-md-5">
+                                <label class="form-label text-muted small uppercase fw-bold">Cliente</label>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text bg-dark border-secondary text-info"><i
+                                            class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control bg-dark text-light border-secondary"
+                                        id="buscar_cliente" placeholder="Buscar por nombre o CUIT...">
+                                </div>
+                                <select class="form-select bg-dark text-light border-secondary" id="cliente_id"
+                                    required>
+                                    <option value="">Seleccione un cliente...</option>
+                                    {% for c in clientes %}
+                                    <option value="{{ c.id }}" data-tipo="{{ c.tipo_responsable }}"
+                                        data-cuit="{{ c.cuit }}">
+                                        {{ c.nombre }} | {{ c.cuit }} ({{ c.tipo_responsable }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div id="saldoClienteBadge" class="mt-2 animate__animated animate__fadeIn"
+                                    style="display:none;">
+                                    <table class="w-100 small fw-bold mt-1 border-top border-secondary"
+                                        style="border-collapse: separate; border-spacing: 0; table-layout: fixed;">
+                                        <tr>
+                                            <td id="txtAsignado" class="text-start text-info py-2"
+                                                style="width:35%; vertical-align: middle; white-space: nowrap;"></td>
+                                            <td id="txtDiferencia" class="text-center py-2"
+                                                style="width:30%; vertical-align: middle; white-space: nowrap;"></td>
+                                            <td id="txtImpago" class="text-end py-2"
+                                                style="width:35%; vertical-align: middle; white-space: nowrap;"></td>
+                                        </tr>
+                                    </table>
+                                    <div id="extensionRequestBtn" class="text-center mt-2" style="display:none;">
+                                        <button type="button" class="btn btn-xs btn-warning py-0 shadow-sm"
+                                            onclick="solicitarExtensionCtaCte()" style="font-size: 0.75rem;">
+                                            <i class="fas fa-plus-circle me-1"></i> Solicitar a Tesorería extensión de
+                                            límite
+                                        </button>
+                                    </div>
+                                    <div id="pendingExtensionStatus" class="text-center mt-2" style="display:none;">
+                                        <div class="alert alert-info py-1 px-2 mb-0 d-inline-block small shadow-sm animate__animated animate__pulse animate__infinite"
+                                            style="font-size: 0.75rem; border: 1px dashed #0dcaf0;">
+                                            <i class="fas fa-clock me-1"></i> <span id="txtMontoSolicitado"></span>
+                                            <button type="button" class="btn btn-link btn-sm text-info p-0 ms-2"
+                                                onclick="document.getElementById('cliente_id').dispatchEvent(new Event('change'))"
+                                                title="Refrescar estado">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tipo de Comprobante -->
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Tipo de Comprobante</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="tipo_comprobante"
+                                    required>
+                                    {% for t in tipos_comprobante %}
+                                    <option value="{{ t.codigo }}">{{ t.descripcion }}{% if t.letra %} ({{ t.letra }}){%
+                                        endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Depósito -->
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Depósito (Egreso)</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="deposito_id"
+                                    required>
+                                    {% for d in depositos %}
+                                    <option value="{{ d.id }}">{{ d.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-1">
+                                <label class="form-label text-muted small uppercase fw-bold">Pv</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary" value="001"
+                                    readonly title="Punto de Venta">
+                            </div>
+
+                            <!-- Condición de Pago -->
+                            <div class="col-md-3">
+                                <label class="form-label text-info small uppercase fw-bold"><i
+                                        class="fas fa-file-contract me-1"></i>Condición de Pago</label>
+                                <select class="form-select bg-dark text-light border-info" id="condicion_pago_id"
+                                    required>
+                                    <option value="">Seleccione condición...</option>
+                                    {% for cp in condiciones %}
+                                    <option value="{{ cp.id }}" data-dias="{{ cp.dias_vencimiento }}"
+                                        data-desc="{{ cp.descuento_pct }}">
+                                        {{ cp.nombre }} ({{ cp.dias_vencimiento }} días)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div id="info_mixta" class="small mt-1 text-info animate__animated animate__fadeIn"
+                                    style="display:none;">
+                                    <i class="fas fa-info-circle me-1"></i> <span id="txt_detalle_mixta"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Fecha</label>
+                                <input type="date" class="form-control bg-dark text-light border-secondary"
+                                    value="{{ now }}" id="fecha_emision">
+                            </div>
+                        </div>
+
+                        <!-- Logística de Entrega -->
+                        <div class="row mb-4 animate__animated animate__fadeIn" id="seccion_logistica"
+                            style="display:none;">
+                            <div class="col-md-2">
+                                <label class="form-label text-info small uppercase fw-bold"><i
+                                        class="fas fa-map-marker-alt me-1"></i>Destino</label>
+                                <select class="form-select bg-dark text-light border-info" id="entrega_direccion_id">
+                                    <option value="">Seleccione destino...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label text-info small uppercase fw-bold"><i
+                                        class="fas fa-user-check me-1"></i>Receptor</label>
+                                <select class="form-select bg-dark text-light border-info" id="entrega_receptor_id">
+                                    <option value="">Cualquier persona / N/D</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-info small uppercase fw-bold"><i
+                                        class="fas fa-truck me-1"></i>Transportista</label>
+                                <select class="form-select bg-dark text-light border-info" id="logistica_transportista">
+                                    <option value="PROPIO">-- Transporte Propio --</option>
+                                    {% for t in transportistas %}
+                                    <option value="{{ t.nombre }}" data-cuit="{{ t.cuit }}">{{ t.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-info small uppercase fw-bold">Nro. COT</label>
+                                <input type="text" class="form-control bg-dark text-light border-info"
+                                    id="logistica_cot" placeholder="Opcional">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label text-info small uppercase fw-bold">Patente</label>
+                                <input type="text" class="form-control bg-dark text-light border-info"
+                                    id="logistica_patente" placeholder="Def. por defecto">
+                            </div>
+                        </div>
+
+                        <hr class="border-secondary opacity-25">
+
+                        <!-- Selector de Artículos -->
+                        <div class="row align-items-end g-2 mb-4">
+                            <!-- NUEVO: Filtro Naturaleza -->
+                            <div class="col-md-2">
+                                <label class="form-label text-muted small uppercase fw-bold">Rubro / Tipo</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="filtro_naturaleza">
+                                    <option value="">Todos</option>
+                                    {% for n in naturalezas %}
+                                    <option value="{{ n }}">{{ n|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Filtro Texto -->
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Buscar</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary"
+                                    id="filtro_texto" placeholder="Buscar...">
+                            </div>
+
+                            <!-- Selector Producto -->
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Seleccionar</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="producto_selector">
+                                    <option value="">Cargando artículos...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label text-muted small uppercase fw-bold">Cant.</label>
+                                <input type="number" class="form-control bg-dark text-light border-secondary"
+                                    id="prod_cantidad" value="1" min="1">
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label text-muted small uppercase fw-bold">Precio</label>
+                                <input type="number" class="form-control bg-dark text-light border-secondary"
+                                    id="prod_precio" step="0.01">
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label text-muted small uppercase fw-bold">IVA %</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="prod_iva">
+                                    <option value="21">21%</option>
+                                    <option value="10.5">10.5%</option>
+                                    <option value="27">27%</option>
+                                    <option value="0">Exento</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-primary w-100" id="btnAddItem">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Detalle de Factura -->
+                        <div class="table-responsive bg-secondary bg-opacity-10 rounded">
+                            <table class="table table-dark table-hover mb-0" id="itemsTable">
+                                <thead>
+                                    <tr class="text-muted small">
+                                        <th>Descripción</th>
+                                        <th class="text-end">Cant.</th>
+                                        <th class="text-end">Precio U.</th>
+                                        <th class="text-end">IVA</th>
+                                        <th class="text-end">Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totales -->
+                        <div class="row mt-4 justify-content-end">
+                            <div class="col-md-4">
+                                <div class="p-3 border border-secondary rounded bg-dark">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Subtotal Neto:</span>
+                                        <span id="txtNeto">$ 0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">IVA Total:</span>
+                                        <span id="txtIva">$ 0.00</span>
+                                    </div>
+                                    <div id="percepciones_container">
+                                        <!-- Dynamic perception rows injected here -->
+                                    </div>
+                                    <div class="d-flex justify-content-between border-top border-secondary pt-2 mt-2">
+                                        <h4 class="mb-0">TOTAL:</h4>
+                                        <h4 class="mb-0 text-success fw-bold" id="txtTotal">$ 0.00</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary me-2"
+                                onclick="window.history.back()">Cancelar</button>
+                            <button type="submit" class="btn btn-success btn-lg px-5">Emitir Factura <i
+                                    class="fas fa-check-circle ms-2"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const esNC = {{ es_nota_credito|default (false) | tojson }};
+    const itemsPrecargados = {{ items_precargados|default ([]) | tojson | safe }};
+    const tipoSugerido = "{{ tipo_sugerido|default('') }}";
+    const clientePreseleccionado = "{{ cliente_preseleccionado|default('') }}";
+    const condicionIvaEmpresa = "{{ condicion_iva_empresa|default('') }}";
+    const agentePercepciones = {{ agente_percepciones|default ([]) | tojson | safe }};
+
+    let items = [];
+    let clientFiscalData = [];
+    let condicionesData = [];
+    let alicARBA = 0;
+    let alicAGIP = 0;
+    let allReceptores = [];
+    let granTotalCalculado = 0;
+    let pagosList = [];
+    let totalGeneral = 0;
+
+    // --- MANEJO DE BORRADOR LOCAL (AUTO-SAVE) ---
+    const DRAFT_KEY = esNC ? 'factura_draft_nc' : 'factura_draft';
+
+    function guardarBorrador() {
+        // No guardar borrador si venimos de una NC precargada u otro flujo estricto
+        if (esNC || clientePreseleccionado) return;
+
+        const draft = {
+            cliente_id: document.getElementById('cliente_id').value,
+            tipo_comprobante: document.getElementById('tipo_comprobante').value,
+            condicion_pago_id: document.getElementById('condicion_pago_id').value,
+            deposito_id: document.getElementById('deposito_id').value,
+            items: items
+        };
+
+        if (items.length === 0 && !draft.cliente_id) {
+            localStorage.removeItem(DRAFT_KEY);
+        } else {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        }
+    }
+
+    // Listeners generales para borrador
+    window.addEventListener('beforeunload', guardarBorrador);
+    document.getElementById('tipo_comprobante').addEventListener('change', guardarBorrador);
+    document.getElementById('condicion_pago_id').addEventListener('change', guardarBorrador);
+    document.getElementById('deposito_id').addEventListener('change', guardarBorrador);
+
+    // Buscador de Clientes
+    document.getElementById('buscar_cliente').addEventListener('input', function (e) {
+        const busqueda = e.target.value.toLowerCase();
+        const select = document.getElementById('cliente_id');
+        const options = select.options;
+        for (let i = 1; i < options.length; i++) {
+            const texto = options[i].text.toLowerCase();
+            const cuit = options[i].getAttribute('data-cuit') || '';
+            const match = texto.includes(busqueda) || cuit.includes(busqueda);
+            options[i].style.display = match ? '' : 'none';
+        }
+    });
+
+    // --- LÓGICA UNIFICADA PRINCIPAL: Cambio de Cliente ---
+    document.getElementById('cliente_id').addEventListener('change', async function () {
+        const clienteId = this.value;
+        const opt = this.options[this.selectedIndex];
+        const selCond = document.getElementById('condicion_pago_id');
+        const selTipoComp = document.getElementById('tipo_comprobante');
+        const logisticaDiv = document.getElementById('seccion_logistica');
+
+        if (!clienteId) {
+            logisticaDiv.style.display = 'none';
+            document.getElementById('saldoClienteBadge').style.display = 'none';
+            alicARBA = 0; alicAGIP = 0;
+            actualizarTotales();
+            return;
+        }
+
+        const tipoResponsable = opt.dataset.tipo;
+        const cuit = opt.dataset.cuit;
+
+        // Consultar y Mostrar Saldo Actual (Cta. Cte.)
+        const badgeSaldo = document.getElementById('saldoClienteBadge');
+        const txtAsignado = document.getElementById('txtAsignado');
+        const txtDiferencia = document.getElementById('txtDiferencia');
+        const txtImpago = document.getElementById('txtImpago');
+        const btnExt = document.getElementById('extensionRequestBtn');
+        const divPendiente = document.getElementById('pendingExtensionStatus');
+        const txtPendiente = document.getElementById('txtMontoSolicitado');
+
+        // Mostrar badge y limpiar estados previos (Loading)
+        badgeSaldo.style.display = 'block';
+        txtAsignado.innerHTML = '<span class="text-muted"><i class="fas fa-sync fa-spin"></i></span>';
+        txtDiferencia.innerHTML = '<span class="text-muted">...</span>';
+        txtImpago.innerHTML = '<span class="text-muted">...</span>';
+        btnExt.style.display = 'none';
+        divPendiente.style.display = 'none';
+
+        try {
+            const urlSaldo = new URL(`/api/ventas/cliente/${clienteId}/saldo`, window.location.origin);
+            if (window.SID) urlSaldo.searchParams.set('sid', window.SID);
+            const rSaldo = await fetch(urlSaldo.toString());
+            const dataSaldo = await rSaldo.json();
+
+            if (!dataSaldo.success) {
+                throw new Error(dataSaldo.error || "Unknown server error", { cause: dataSaldo.incident_id });
+            }
+
+            const saldo = parseFloat(dataSaldo.saldo || 0);
+            const limite = parseFloat(dataSaldo.monto_cta_cte || 0);
+            const disponible = limite - saldo;
+
+            // Formato con punto para miles y coma para decimales
+            const format = (val) => Math.abs(val).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // 1. Saldo Asignado (Izquierda - Celeste Info)
+            txtAsignado.innerHTML = `Saldo asignado Cta. Cte: $ ${format(limite)}`;
+
+            // 2. Diferencia (Centro - Rojo si es negativo, Verde si es positivo)
+            if (disponible < 0) {
+                txtDiferencia.innerHTML = `<span class="text-danger animate__animated animate__flash animate__infinite">Saldo Excedido: -${format(disponible)}</span>`;
+
+                // Lógica de botón vs pendiente
+                if (dataSaldo.estado_pendiente === 'PENDIENTE') {
+                    btnExt.style.display = 'none';
+                    divPendiente.style.display = 'block';
+                    txtPendiente.innerHTML = `Límite solicitado: $ ${format(dataSaldo.monto_pendiente)}`;
+                } else {
+                    btnExt.style.display = 'block';
+                    divPendiente.style.display = 'none';
+                }
+            } else {
+                txtDiferencia.innerHTML = `<span class="text-success">Saldo Remanente: ${format(disponible)}</span>`;
+                btnExt.style.display = 'none';
+                divPendiente.style.display = 'none';
+            }
+
+            // 3. Saldo Impago (Derecha - Rojo)
+            txtImpago.innerHTML = `<span class="${saldo > 0 ? 'text-danger' : 'text-success'}">Saldo Impago Cta. Cte: ${format(saldo)}</span>`;
+
+
+        } catch (e) {
+            console.error("Error saldo:", e);
+            const incidentId = e.cause || `INC-LOCAL-${Date.now()}`;
+
+            // Ocultar badge y mostrar error persistente premium
+            document.getElementById('saldoClienteBadge').style.display = 'none';
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Cuenta Corriente',
+                html: `
+                    <div class="text-start">
+                        <p>No se pudo obtener la información financiera del cliente.</p>
+                        <hr class="border-secondary opacity-25">
+                        <div class="small text-muted">
+                            <strong>Detalle:</strong> ${e.message}<br>
+                            <strong>Incidente:</strong> <span class="text-warning">${incidentId}</span>
+                        </div>
+                    </div>
+                `,
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#d33'
+            });
+        }
+
+        // 1. Tipos de Comprobante (API Fiscal)
+        if (tipoResponsable && !esNC) {
+            try {
+                const apiDocsUrl = new URL(`/api/ventas/fiscal/allowed-docs`, window.location.origin);
+                apiDocsUrl.searchParams.set('tipo_responsable', tipoResponsable);
+                if (window.SID) apiDocsUrl.searchParams.set('sid', window.SID);
+
+                const r = await fetch(apiDocsUrl.toString());
+                const data = await r.json();
+                const valorActual = selTipoComp.value;
+                selTipoComp.innerHTML = '';
+                data.forEach(t => {
+                    const o = document.createElement('option');
+                    o.value = t.codigo;
+                    o.textContent = `${t.descripcion}${t.letra ? ' (' + t.letra + ')' : ''}`;
+                    selTipoComp.appendChild(o);
+                });
+                if (valorActual && data.some(t => t.codigo == valorActual)) selTipoComp.value = valorActual;
+                else if (tipoSugerido) selTipoComp.value = tipoSugerido;
+            } catch (e) { console.error("Error docs fiscales:", e); }
+        }
+
+        // 2. Padrones (ARBA/AGIP)
+        if (cuit) {
+            try {
+                const padronUrl = new URL(`/contabilidad/api/consultar-padron/${cuit}`, window.location.origin);
+                if (window.SID) padronUrl.searchParams.set('sid', window.SID);
+                const resp = await fetch(padronUrl.toString());
+                const rates = await resp.json();
+                alicARBA = (rates.ARBA && rates.ARBA.alicuota_percepcion) ? rates.ARBA.alicuota_percepcion : 0;
+                alicAGIP = (rates.AGIP && rates.AGIP.alicuota_percepcion) ? rates.AGIP.alicuota_percepcion : 0;
+            } catch (e) { console.error("Error padrones:", e); }
+        }
+
+        // 3. Condiciones de Pago y Finanzas
+        try {
+            const condUrl = new URL(`/api/ventas/cliente/${clienteId}/condiciones`, window.location.origin);
+            if (window.SID) condUrl.searchParams.set('sid', window.SID);
+            const finUrl = new URL(`/api/ventas/cliente/${clienteId}/finanzas`, window.location.origin);
+            if (window.SID) finUrl.searchParams.set('sid', window.SID);
+
+            const [resCond, resFin] = await Promise.all([
+                fetch(condUrl.toString()),
+                fetch(finUrl.toString())
+            ]);
+
+            const condiciones = await resCond.json();
+            selCond.innerHTML = '<option value="">-- Seleccionar Condición --</option>';
+            // Guardamos las condiciones permitidas globalmente para filtrar el modal de pagos
+            window.clientAllowedConditions = condiciones.map(c => c.nombre.toLowerCase());
+
+            condicionesData = condiciones;
+            condiciones.forEach(c => {
+                const o = document.createElement('option');
+                o.value = c.id;
+                o.textContent = c.nombre + (c.is_mixed ? ' [MIXTA]' : '');
+                o.dataset.mixed = c.is_mixed ? '1' : '0';
+                selCond.appendChild(o);
+            });
+
+            const finData = await resFin.json();
+            if (finData && finData.condicion_pago_id) {
+                selCond.value = finData.condicion_pago_id;
+                selCond.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => selCond.classList.remove('animate__animated', 'animate__pulse'), 1000);
+            }
+            clientFiscalData = finData.datos_fiscales || [];
+
+            // Actualizar selector de medios de pago en el modal de forma preventiva
+            filterMediosPago();
+        } catch (e) { console.error("Error finanzas/condiciones:", e); }
+
+        // 4. Logística
+        try {
+            const logisticaUrl = new URL(`/api/ventas/cliente/${clienteId}/logistica`, window.location.origin);
+            if (window.SID) logisticaUrl.searchParams.set('sid', window.SID);
+            const resLog = await fetch(logisticaUrl.toString());
+            const logData = await resLog.json();
+            const selDir = document.getElementById('entrega_direccion_id');
+            allReceptores = logData.receptores || [];
+
+            selDir.innerHTML = '<option value="">Seleccione destino...</option>';
+            (logData.direcciones || []).forEach(d => {
+                const o = document.createElement('option');
+                o.value = d.id;
+                o.textContent = `${d.etiqueta}: ${d.calle} ${d.numero} (${d.localidad})`;
+                selDir.appendChild(o);
+            });
+            renderReceptores(null);
+            logisticaDiv.style.display = 'flex';
+            if (logData.direcciones && logData.direcciones.length === 1) {
+                selDir.selectedIndex = 1;
+                renderReceptores(selDir.value);
+            }
+        } catch (e) { console.error("Error logística:", e); }
+
+        actualizarTotales();
+        guardarBorrador();
+    });
+
+    document.getElementById('filtro_naturaleza').addEventListener('change', function () {
+        const opt = this.options[this.selectedIndex];
+        if (opt.value) {
+            document.getElementById('prod_precio').value = opt.dataset.precio;
+        }
+    });
+
+    // Manejo de Selección de Producto
+    document.getElementById('producto_selector').addEventListener('change', function () {
+        const opt = this.options[this.selectedIndex];
+        if (opt.value) {
+            document.getElementById('prod_precio').value = opt.dataset.precio;
+        }
+    });
+
+    // === CONTROL DE DESBORDE DE PÁGINA IMPRESA ===
+    const MAX_DESC_CHARS = 45;   // Máximo caracteres por línea de descripción
+    const MAX_PRINT_LINES = 15;  // Líneas disponibles en la factura impresa (área items)
+
+    function calcPrintLines(descripcion) {
+        // Calcula cuántas líneas de impresión consume una descripción
+        if (!descripcion || descripcion.length <= MAX_DESC_CHARS) return 1;
+        let lines = 0;
+        let remaining = descripcion;
+        while (remaining.length > 0) {
+            if (remaining.length <= MAX_DESC_CHARS) {
+                lines++;
+                break;
+            }
+            let cutPos = remaining.substring(0, MAX_DESC_CHARS).lastIndexOf(' ');
+            if (cutPos <= 0) cutPos = MAX_DESC_CHARS;
+            lines++;
+            remaining = remaining.substring(cutPos).trim();
+        }
+        return lines;
+    }
+
+    function getTotalPrintLines() {
+        return items.reduce((total, item) => total + calcPrintLines(item.nombre), 0);
+    }
+
+    // Agregar Item
+    document.getElementById('btnAddItem').addEventListener('click', function () {
+        const prodSelect = document.getElementById('producto_selector');
+        const opt = prodSelect.options[prodSelect.selectedIndex];
+
+        if (!opt.value) return;
+
+        const item = {
+            id: opt.value,
+            nombre: opt.dataset.nombre,
+            cantidad: parseFloat(document.getElementById('prod_cantidad').value),
+            precio: parseFloat(document.getElementById('prod_precio').value),
+            iva: parseFloat(document.getElementById('prod_iva').value)
+        };
+
+        // Validar desborde de página impresa
+        const lineasActuales = getTotalPrintLines();
+        const lineasNuevoItem = calcPrintLines(item.nombre);
+        if (lineasActuales + lineasNuevoItem > MAX_PRINT_LINES) {
+            showPremiumAlert(`⚠️ El máximo de artículos para esta factura ha sido alcanzado.<br><br>` +
+                `Líneas usadas: ${lineasActuales} / ${MAX_PRINT_LINES}<br>` +
+                `Este artículo necesita ${lineasNuevoItem} línea(s) más.<br><br>` +
+                `Considere crear un nuevo comprobante para los artículos restantes.`, 'warning', 'LÍMITE DE IMPRESIÓN');
+            return;
+        }
+
+        items.push(item);
+        renderTable();
+
+        // Reset fields
+        prodSelect.value = '';
+        document.getElementById('prod_cantidad').value = 1;
+        document.getElementById('prod_precio').value = '';
+    });
+
+    function removeItem(index) {
+        items.splice(index, 1);
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.querySelector('#itemsTable tbody');
+        tbody.innerHTML = '';
+
+        let neto = 0;
+        let iva = 0;
+
+        items.forEach((item, index) => {
+            const itemNeto = item.cantidad * item.precio;
+            const itemIva = itemNeto * (item.iva / 100);
+            const itemTotal = itemNeto + itemIva;
+
+            neto += itemNeto;
+            iva += itemIva;
+
+            tbody.innerHTML += `
+            <tr class="align-middle">
+                <td>${item.nombre}</td>
+                <td class="text-end">${item.cantidad}</td>
+                <td class="text-end">$ ${item.precio.toFixed(2)}</td>
+                <td class="text-end">${item.iva}% ($ ${itemIva.toFixed(2)})</td>
+                <td class="text-end fw-bold">$ ${itemTotal.toFixed(2)}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-link text-danger p-0" onclick="removeItem(${index})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+        });
+        actualizarTotales(); // sincronizar totales y granTotalCalculado
+    }
+
+    function actualizarTotales() {
+        let netoTotal = 0;
+        let ivaTotal = 0;
+
+        items.forEach(item => {
+            netoTotal += item.cantidad * item.precio;
+            ivaTotal += item.cantidad * item.precio * (item.iva / 100);
+        });
+
+        document.getElementById('txtNeto').textContent = "$ " + netoTotal.toFixed(2);
+        document.getElementById('txtIva').textContent = "$ " + ivaTotal.toFixed(2);
+
+        // Dinamic Perceptions Mapping
+        const container = document.getElementById('percepciones_container');
+        container.innerHTML = '';
+        let percTotalGeneral = 0;
+
+        clientFiscalData.forEach(df => {
+            const jurisUpper = df.jurisdiccion.toUpperCase();
+            if (agentePercepciones.includes(jurisUpper)) {
+                const alic = parseFloat(df.alicuota) || 0;
+                if (alic > 0) {
+                    const importe = netoTotal * (alic / 100);
+                    percTotalGeneral += importe;
+
+                    const row = document.createElement('div');
+                    row.className = 'd-flex justify-content-between mb-2 text-danger';
+                    row.innerHTML = `
+                        <span class="small">Perc. IIBB ${df.jurisdiccion} (${alic}%):</span>
+                        <span>$ ${importe.toFixed(2)}</span>
+                    `;
+                    container.appendChild(row);
+                }
+            }
+        });
+
+        const granTotal = netoTotal + ivaTotal + percTotalGeneral;
+        granTotalCalculado = granTotal; // guardar para el modal de pagos
+        document.getElementById('txtTotal').textContent = "$ " + granTotal.toFixed(2);
+        guardarBorrador();
+    }
+
+    // --- LÓGICA DE ENVÍO Y MANEJO DE PAGOS ---
+
+    // Trigger principal al hacer submit
+    document.getElementById('facturaForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        if (items.length === 0) {
+            showPremiumAlert('Debe agregar al menos un ítem a la factura.', 'warning');
+            return;
+        }
+
+        // Usar directamente el total calculado (evita bugs de parseo del DOM)
+        totalGeneral = granTotalCalculado;
+        if (!totalGeneral || totalGeneral <= 0) {
+            // Fallback: intentar leer del DOM limpiando todos los caracteres no numéricos excepto punto y menos
+            const rawText = document.getElementById('txtTotal').textContent.replace(/[^0-9.]/g, '');
+            totalGeneral = parseFloat(rawText) || 0;
+        }
+
+        // --- LÓGICA DE CONDICIONES MIXTAS Y CTA. CTE. ---
+        const condId = document.getElementById('condicion_pago_id').value;
+        const condSelect = document.getElementById('condicion_pago_id');
+        const condText = condSelect.options[condSelect.selectedIndex].text.toLowerCase();
+        const condObj = condicionesData.find(c => c.id == condId);
+
+        // Si es Cuenta Corriente pura, no requerimos pasar por el modal de pagos (se emite en pendiente)
+        if (condText.includes('cuenta corriente') || condText.includes('cta. cte') || condText.includes('cta cte')) {
+            enviarFactura(true);
+            return;
+        }
+
+        pagosList = [];
+
+        if (condObj && condObj.is_mixed && condObj.detalles) {
+            // Predeterminar pagos según los tramos de la mixta
+            condObj.detalles.forEach(det => {
+                const importeTramo = (totalGeneral * (parseFloat(det.porcentaje) / 100)).toFixed(2);
+                pagosList.push({
+                    medio_id: document.getElementById('pagoMedio').value || 1,
+                    importe: parseFloat(importeTramo),
+                    label: det.condicion_nombre + ' (' + det.porcentaje + '%)'
+                });
+            });
+        }
+
+        // Preparar Modal
+        document.getElementById('modalTotalPagar').innerText = '$ ' + totalGeneral.toFixed(2);
+        actualizarInfoPagos();
+
+        if (pagosList.length === 0) {
+            document.getElementById('pagoImporte').value = totalGeneral.toFixed(2);
+        } else {
+            document.getElementById('pagoImporte').value = '';
+        }
+
+        toggleModal('modalPagos');
+    });
+
+    // Listener para mostrar info de mixtas
+    document.getElementById('condicion_pago_id').addEventListener('change', function () {
+        const condId = this.value;
+        const condObj = condicionesData.find(c => c.id == condId);
+        const infoDiv = document.getElementById('info_mixta');
+        const txtDetalle = document.getElementById('txt_detalle_mixta');
+
+        if (condObj && condObj.is_mixed && condObj.detalles) {
+            const resumen = condObj.detalles.map(d => `${d.porcentaje}% ${d.condicion_nombre}`).join(' | ');
+            txtDetalle.innerText = "Composición: " + resumen;
+            infoDiv.style.display = 'block';
+        } else {
+            infoDiv.style.display = 'none';
+        }
+    });
+
+    // --- LÓGICA DE FILTRADO DE MEDIOS DE PAGO ---
+    function filterMediosPago() {
+        const selMedio = document.getElementById('pagoMedio');
+        const options = selMedio.options;
+        const allowed = window.clientAllowedConditions || [];
+
+        let firstVisible = -1;
+        for (let i = 0; i < options.length; i++) {
+            const opt = options[i];
+            const nombreMedio = opt.text.toLowerCase();
+
+            // Lógica de coincidencia: si el nombre del medio está contenido en alguna condición permitida
+            // o si alguna condición permitida contiene el nombre del medio.
+            const isAllowed = allowed.some(a => a.includes(nombreMedio) || nombreMedio.includes(a));
+
+            if (isAllowed || allowed.length === 0) {
+                opt.style.display = '';
+                if (firstVisible === -1) firstVisible = i;
+            } else {
+                opt.style.display = 'none';
+            }
+        }
+
+        if (firstVisible !== -1) selMedio.selectedIndex = firstVisible;
+    }
+
+    function actualizarInfoPagos() {
+        const totalPagado = pagosList.reduce((sum, p) => sum + p.importe, 0);
+        const diferencia = totalGeneral - totalPagado;
+        const absDiferencia = Math.abs(diferencia);
+        const badgeFalta = document.getElementById('modalFaltaCubrir');
+        const containerFalta = badgeFalta.parentElement;
+
+        if (diferencia > 0.01) {
+            // Aún falta cubrir
+            containerFalta.innerHTML = `Falta Cubrir: <span class="badge bg-warning text-dark" id="modalFaltaCubrir">$ ${diferencia.toFixed(2)}</span>`;
+        } else if (diferencia < -0.01) {
+            // Se excedió
+            containerFalta.innerHTML = `Excedente: <span class="badge bg-danger" id="modalFaltaCubrir">$ ${absDiferencia.toFixed(2)}</span>`;
+        } else {
+            // Cubierto exacto
+            containerFalta.innerHTML = `Estado: <span class="badge bg-success" id="modalFaltaCubrir">CUBIERTO</span>`;
+        }
+
+        // Render lista de pagos agregados
+        const tbody = document.getElementById('listaPagos');
+        tbody.innerHTML = '';
+        pagosList.forEach((p, idx) => {
+            const sel = document.getElementById('pagoMedio');
+            let nombre = "Desconocido";
+            for (let op of sel.options) {
+                if (op.value == p.medio_id) nombre = op.text;
+            }
+
+            tbody.innerHTML += `
+                <tr class="animate__animated animate__fadeIn">
+                    <td>${nombre}</td>
+                    <td class="fw-bold">$ ${p.importe.toFixed(2)}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="quitarPago(${idx})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Habilitar botón confirmar SOLO si la diferencia es despreciable (0)
+        const btn = document.getElementById('btnConfirmarPago');
+        if (absDiferencia < 0.01) {
+            btn.disabled = false;
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-success');
+        } else {
+            btn.disabled = true;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-secondary');
+        }
+    }
+
+    window.agregarPago = function () {
+        const sel = document.getElementById('pagoMedio');
+        const imp = parseFloat(document.getElementById('pagoImporte').value);
+
+        if (!sel.value || isNaN(imp) || imp <= 0) return;
+
+        pagosList.push({
+            medio_id: sel.value,
+            importe: imp
+        });
+
+        actualizarInfoPagos();
+
+        const totalPagado = pagosList.reduce((sum, p) => sum + p.importe, 0);
+        const falta = totalGeneral - totalPagado;
+        document.getElementById('pagoImporte').value = falta > 0 ? falta.toFixed(2) : '';
+    };
+
+    window.quitarPago = function (idx) {
+        pagosList.splice(idx, 1);
+        actualizarInfoPagos();
+    };
+
+    window.enviarFactura = async function (esCtaCte) {
+        // === VALIDACION DE CAMPOS DE ENTREGA (Incidente 666) ===
+        const tipoComp = document.getElementById('tipo_comprobante').value;
+        const esNCFact = ['003', '008', '013'].includes(tipoComp);
+
+        if (!esNCFact) {
+            const dirId = document.getElementById('entrega_direccion_id').value;
+            const transp = document.getElementById('logistica_transportista').value;
+            const patente = document.getElementById('logistica_patente').value;
+
+            if (!dirId) {
+                showPremiumAlert('🚨 Debe seleccionar un Destino de entrega.', 'warning', 'LOGÍSTICA INCOMPLETA');
+                return;
+            }
+            if (!transp) {
+                showPremiumAlert('🚨 Debe seleccionar un Transportista.', 'warning', 'LOGÍSTICA INCOMPLETA');
+                return;
+            }
+            if (!patente) {
+                showPremiumAlert('🚨 Debe ingresar la Patente del vehículo.', 'warning', 'LOGÍSTICA INCOMPLETA');
+                return;
+            }
+        }
+
+        // Ocultar modal si está abierto
+        const modalP = document.getElementById('modalPagos');
+        if (modalP && modalP.style.display !== 'none' && modalP.style.display !== '') {
+            toggleModal('modalPagos');
+        }
+
+        const payload = {
+            cliente_id: document.getElementById('cliente_id').value,
+            tipo_comprobante: document.getElementById('tipo_comprobante').value,
+            deposito_id: document.getElementById('deposito_id').value,
+            condicion_pago_id: document.getElementById('condicion_pago_id').value,
+            direccion_entrega_id: document.getElementById('entrega_direccion_id').value,
+            receptor_contacto_id: document.getElementById('entrega_receptor_id').value,
+            transportista_nombre: document.getElementById('logistica_transportista').value,
+            transportista_cuit: document.getElementById('logistica_transportista').options[document.getElementById('logistica_transportista').selectedIndex].dataset.cuit || '',
+            cot: document.getElementById('logistica_cot').value,
+            patente: document.getElementById('logistica_patente').value,
+            items: items,
+            pagos: esCtaCte ? [] : pagosList,
+            alic_arba: alicARBA,
+            alic_agip: alicAGIP
+        };
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        try {
+            const url = new URL(`{{ url_for('ventas.procesar_factura') }}`, window.location.origin);
+            if (window.SID) url.searchParams.set('sid', window.SID);
+
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || 'Error en el servidor');
+            }
+            const data = await response.json();
+            if (data.success) {
+                showPremiumAlert('Operación exitosa: se generó la factura y el remito.', 'success');
+                let pUrl = new URL("{{ url_for('ventas.ver_comprobante', id=0) }}", window.location.origin);
+                pUrl.pathname = pUrl.pathname.replace('/0', '/' + data.id);
+                if (window.SID) pUrl.searchParams.set('sid', window.SID);
+
+                let rUrl = new URL("{{ url_for('ventas.ver_remito', id=0) }}", window.location.origin);
+                rUrl.pathname = rUrl.pathname.replace('/0', '/' + data.id);
+                if (window.SID) rUrl.searchParams.set('sid', window.SID);
+
+                window.open(pUrl.toString(), '_blank');
+                window.open(rUrl.toString(), '_blank');
+
+                // Limpiar borrador local al éxito
+                localStorage.removeItem(DRAFT_KEY);
+
+                const redirectUrl = new URL("{{ url_for('ventas.comprobantes') }}", window.location.origin);
+                if (window.SID) redirectUrl.searchParams.set('sid', window.SID);
+                window.location.href = redirectUrl.toString();
+            } else {
+                showPremiumAlert('Error: ' + data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showPremiumAlert('Ocurrió un error al procesar la factura: ' + error.message, 'error');
+        }
+    };
+
+
+
+    // Cascada: Al cambiar dirección, filtrar receptores
+    document.getElementById('entrega_direccion_id').addEventListener('change', function () {
+        renderReceptores(this.value);
+    });
+
+    function renderReceptores(direccionId) {
+        const recSelect = document.getElementById('entrega_receptor_id');
+        recSelect.innerHTML = '<option value="">Cualquier persona / N/D</option>';
+
+        // Filtrar receptores que:
+        // 1. No tienen dirección asignada (globales)
+        // 2. Están asignados a la dirección seleccionada
+        const filtrados = allReceptores.filter(r =>
+            !r.direccion_id || r.direccion_id == direccionId
+        );
+
+        filtrados.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.textContent = `${r.nombre} (${r.puesto || 'Contacto'})`;
+            recSelect.appendChild(opt);
+        });
+    }
+
+    // --- Búsqueda de Artículos (AJAX) ---
+    const filtroNat = document.getElementById('filtro_naturaleza');
+    const filtroTxt = document.getElementById('filtro_texto');
+    const selProd = document.getElementById('producto_selector');
+
+    let debounceTimer;
+
+    function buscarArticulos() {
+        const nat = filtroNat.value;
+        const txt = filtroTxt.value;
+
+        // Bloquear UI
+        selProd.disabled = true;
+        selProd.innerHTML = '<option value="">Cargando artículos...</option>';
+
+        const params = new URLSearchParams({
+            naturaleza: nat,
+            q: txt
+        });
+
+        const baseUrl = `{{ url_for('ventas.buscar_articulos') }}`;
+        const finalUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + params.toString();
+
+        fetch(finalUrl)
+            .then(r => {
+                if (!r.ok) {
+                    return r.text().then(text => { throw new Error(text || `HTTP ${r.status}`) });
+                }
+                return r.json();
+            })
+            .then(data => {
+                selProd.innerHTML = '<option value="">Seleccione un artículo...</option>';
+                if (data.length === 0) {
+                    selProd.innerHTML = '<option value="">No se encontraron artículos</option>';
+                    return;
+                }
+
+                data.forEach((a, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${a.nombre} - $${a.precio}`;
+                    opt.dataset.precio = a.precio;
+                    opt.dataset.nombre = a.nombre;
+
+                    // Inyectar datos de balanza si existen
+                    if (a.dynamic_barcode) {
+                        opt.dataset.dynamic = "1";
+                        opt.dataset.val = a.dynamic_value;
+                        opt.textContent = `[BALANZA] ${opt.textContent} | PESO: ${a.dynamic_value} ${a.unidad_medida || 'kg'}`;
+                    }
+
+                    selProd.appendChild(opt);
+                });
+                selProd.disabled = false;
+
+                // FASE 2.2: AUTO-ADD si es un escaneo de balanza unívoco
+                if (data.length === 1 && data[0].dynamic_barcode && txt.length >= 12) {
+                    selProd.value = data[0].id;
+                    // Actualizar precio e IVA si corresponde
+                    document.getElementById('prod_precio').value = data[0].precio;
+                    document.getElementById('prod_cantidad').value = data[0].dynamic_value;
+
+                    // Pequeña pausa visual para que el usuario vea qué se agregó
+                    setTimeout(() => {
+                        document.getElementById('btnAddItem').click();
+                        filtroTxt.value = ''; // Limpiar buscador para el siguiente scan
+                        filtroTxt.focus();
+                    }, 300);
+                }
+            })
+            .catch(e => {
+                console.error("Error en buscarArticulos:", e);
+                selProd.innerHTML = `<option value="">Error: ${e.message}</option>`;
+            });
+    }
+
+    filtroNat.addEventListener('change', buscarArticulos);
+
+    filtroTxt.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(buscarArticulos, 500);
+    });
+
+    // Carga inicial
+    document.addEventListener('DOMContentLoaded', function () {
+        buscarArticulos();
+
+        // Recuperar Borrador Local si existe
+        if (!esNC && !clientePreseleccionado) {
+            const draftJson = localStorage.getItem(DRAFT_KEY);
+            if (draftJson) {
+                try {
+                    const draft = JSON.parse(draftJson);
+                    if (draft.items?.length > 0 || draft.cliente_id) {
+                        // Restauramos silenciosamente el borrador para mejorar UX
+
+                        if (draft.cliente_id) {
+                            const selCli = document.getElementById('cliente_id');
+                            selCli.value = draft.cliente_id;
+                            // Disparamos el refresco de cliente despues para poblar logistica, tipos y condiciones
+                            setTimeout(() => {
+                                selCli.dispatchEvent(new Event('change'));
+
+                                // Restablecemos resto de controles cuando termine (aproximado)
+                                setTimeout(() => {
+                                    if (draft.tipo_comprobante) document.getElementById('tipo_comprobante').value = draft.tipo_comprobante;
+                                    if (draft.deposito_id) document.getElementById('deposito_id').value = draft.deposito_id;
+                                    if (draft.condicion_pago_id) document.getElementById('condicion_pago_id').value = draft.condicion_pago_id;
+                                }, 800);
+                            }, 100);
+                        }
+
+                        if (draft.items) {
+                            items = draft.items;
+                            renderTable();
+                        }
+
+                        // Show a small non-intrusive toast or alert to let user know draft was loaded
+                        const toast = document.createElement('div');
+                        toast.className = "alert alert-info py-2 px-3 position-fixed shadow-sm animate__animated animate__fadeInDown";
+                        toast.style.cssText = "top: 20px; right: 20px; z-index: 9999;";
+                        toast.innerHTML = `<i class="fas fa-undo me-2"></i>Borrador recuperado automáticamente.`;
+                        document.body.appendChild(toast);
+                        setTimeout(() => toast.remove(), 4000);
+                    }
+                } catch (e) { console.error("Error leyendo borrador:", e); }
+            }
+        }
+
+        if (esNC) {
+            // Cargar items
+            items = itemsPrecargados;
+            renderTable();
+
+            // Preseleccionar cliente y bloquear
+            if (clientePreseleccionado) {
+                const selCli = document.getElementById('cliente_id');
+                selCli.value = clientePreseleccionado;
+                selCli.setAttribute('disabled', 'disabled'); // Visualmente bloqueado
+                // Disparar evento para logistica
+                setTimeout(() => selCli.dispatchEvent(new Event('change')), 500);
+            }
+
+            // Preseleccionar tipo y bloquearlo estrictamente
+            if (tipoSugerido) {
+                const selTipo = document.getElementById('tipo_comprobante');
+                selTipo.value = tipoSugerido;
+                selTipo.setAttribute('disabled', 'disabled');
+                // Estilo visual de "bloqueado" pero legible
+                selTipo.style.backgroundColor = '#2c3034';
+                selTipo.style.cursor = 'not-allowed';
+            }
+
+            // Adaptar textos Modal
+            document.querySelector('#modalPagos .modal-title').textContent = "Registar Devolución de Fondos";
+            const btnConf = document.getElementById('btnConfirmarPago');
+            btnConf.textContent = "Confirmar Devolución";
+            btnConf.classList.remove('btn-primary');
+            btnConf.classList.add('btn-danger');
+
+            const btnCtaCte = document.querySelector('button[onclick="enviarFactura(true)"]');
+            if (btnCtaCte) btnCtaCte.textContent = "Imputar en Cta. Cte. (Saldo a Favor)";
+        }
+
+        // Trigger inicial de tipos de comprobante
+        document.getElementById('cliente_id').dispatchEvent(new Event('change'));
+    });
+
+    // --- Solicitud de Extensión de Límite (Premium) ---
+    async function solicitarExtensionCtaCte() {
+        const clienteId = document.getElementById('cliente_id').value;
+        if (!clienteId) return;
+
+        const { value: nuevoMonto } = await Swal.fire({
+            title: 'Solicitar Extensión de Límite',
+            html: `
+                <div class="text-start small mb-3">Ingrese el nuevo monto máximo deseado para este cliente:</div>
+            `,
+            input: 'number',
+            inputAttributes: {
+                min: 0,
+                step: 100,
+                class: 'form-control bg-dark text-light border-secondary'
+            },
+            background: '#1a1a1a',
+            color: '#fff',
+            showCancelButton: true,
+            confirmButtonText: 'Enviar Solicitud',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            inputValidator: (value) => {
+                if (!value || value <= 0) {
+                    return 'Debe ingresar un monto válido mayor a 0'
+                }
+            }
+        });
+
+        if (nuevoMonto) {
+            try {
+                const formData = new FormData();
+                formData.append('habilita_cta_cte', 'on');
+                formData.append('monto_cta_cte', nuevoMonto);
+                formData.append('motivo', 'Extensión solicitada desde Facturación por límite excedido.');
+
+                const response = await fetch(`/ventas/clientes/solicitar-cta-cte/${clienteId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Solicitud Enviada',
+                        text: 'El Tesorero ha sido notificado de su pedido.',
+                        background: '#1a1a1a',
+                        color: '#fff'
+                    });
+                    // Refrescar automáticamente la consulta de saldo
+                    document.getElementById('cliente_id').dispatchEvent(new Event('change'));
+                } else {
+                    throw new Error("Failed to send");
+                }
+            } catch (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo procesar la solicitud en este momento.',
+                    background: '#1a1a1a',
+                    color: '#fff'
+                });
+            }
+        }
+    }
+</script>
+
+<!-- Modal de Pagos -->
+<div id="modalPagos" class="modal-premium modal-animate" style="display:none; max-width: 850px;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Registrar Cobro</h3>
+            <button type="button" class="btn" onclick="toggleModal('modalPagos')"
+                style="background:none; color:white; border:none;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h4>Total a Pagar: <span class="badge bg-success" id="modalTotalPagar">$0.00</span></h4>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h4>Falta Cubrir: <span class="badge bg-danger" id="modalFaltaCubrir">$0.00</span></h4>
+                </div>
+            </div>
+
+            <div class="card p-3 bg-light mb-3">
+                <h6>Agregar Pago</h6>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label>Medio de Pago</label>
+                        <select class="form-select" id="pagoMedio">
+                            {% for m in medios_pago %}
+                            <option value="{{ m.id }}" data-recargo="{{ m.recargo_pct }}">{{ m.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label>Importe</label>
+                        <input type="number" step="0.01" class="form-control" id="pagoImporte">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-success w-100" onclick="agregarPago()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Medio</th>
+                        <th>Importe</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="listaPagos">
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" onclick="enviarFactura(true)">Facturar en Cta. Cte.
+                (Sin Pago)</button>
+            <button type="button" class="btn btn-primary" id="btnConfirmarPago" onclick="enviarFactura(false)"
+                disabled>Confirmar Pago y Facturar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(45deg, #4e73df 0%, #224abe 100%);
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .table-dark {
+        background-color: #1a1d20;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-boxes mr-2"></i>Recepción Ciega - PO #{{ po.id }}</h5>
+                <span class="badge badge-light text-dark px-3 py-2">{{ po.fecha_emision.strftime('%d/%m/%Y') }}</span>
+            </div>
+            <div class="card-body bg-light p-4">
+
+                <div class="alert alert-info border-0 shadow-sm mb-4">
+                    <div class="d-flex">
+                        <div class="mr-3 mt-1">
+                            <i class="fas fa-info-circle fa-2x"></i>
+                        </div>
+                        <div>
+                            <h6 class="font-weight-bold mb-1">Procedimiento de Auditoría (CISA)</h6>
+                            <p class="mb-0 small">
+                                Por políticas de control anti-fraude, <strong>las cantidades originales solicitadas en
+                                    la Orden de Compra están ocultas</strong>. <br>
+                                Por favor, cuente físicamente la mercadería en el piso e ingrese la cantidad real exacta
+                                en cada casilla correspondiente para este proveedor (<strong>{{ po.proveedor_nombre
+                                    }}</strong>).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('compras.recepcion_ciega_procesar', po_id=po.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="font-weight-bold text-dark small">Número de Remito Proveedor <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" name="numero_remito" class="form-control" placeholder="Ej: 0001-0012354"
+                                required autocomplete="off">
+                            <small class="form-text text-muted">El código impreso en el remito papel.</small>
+                        </div>
+                    </div>
+
+                    <div class="card border-primary-light shadow-sm mb-4">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-flush mb-0">
+                                    <thead class="bg-primary text-white text-uppercase">
+                                        <tr>
+                                            <th class="px-4 border-0">Documento a Recibir</th>
+                                            <th class="text-center border-0" style="width: 250px;">Conteo Físico Real
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in po.items %}
+                                        <tr>
+                                            <td class="px-4 py-3 border-bottom-0">
+                                                <div class="font-weight-bold text-dark h6 mb-1">{{ item.articulo_nombre
+                                                    }}</div>
+                                                <small class="text-muted"><i class="fas fa-barcode mr-1"></i> SN: {{
+                                                    item.articulo_codigo }}</small>
+                                            </td>
+                                            <td class="bg-light text-center border-bottom-0 border-left">
+                                                <div class="px-4 py-2">
+                                                    <label class="sr-only">Cantidad Recibida</label>
+                                                    <div class="input-group input-group-lg">
+                                                        <input type="number" step="0.01" min="0"
+                                                            name="cant_{{ item.detalle_id }}"
+                                                            class="form-control text-center font-weight-bold border-primary"
+                                                            placeholder="0" autocomplete="off"
+                                                            style="font-size: 1.5rem;">
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text bg-white border-primary"><i
+                                                                    class="fas fa-box-open text-primary"></i></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="font-weight-bold text-dark small">Novedades u Observaciones del Ingreso</label>
+                        <textarea class="form-control border-light shadow-sm" name="observaciones" rows="3"
+                            placeholder="Opcional. Ej: Las cajas llegaron algo golpeadas, faltó parte de la descarga..."></textarea>
+                    </div>
+
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <a href="{{ url_for('compras.recepcion_ciega_list') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver sin guardar
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm"
+                            onclick="return confirm('¿Confirma que este conteo es definitivo y exacto? No podrá ser modificado bajo estándares de auditoría.');">
+                            <i class="fas fa-check-double mr-2"></i> Cerrar Remito
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

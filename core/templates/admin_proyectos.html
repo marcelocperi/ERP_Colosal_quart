@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Proyectos y Requerimientos{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2><i class="fas fa-tasks text-primary me-2"></i> Gestión de Proyectos, Sugerencias y Requerimientos</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reqModal" onclick="openReqModal()">
+            <i class="fas fa-plus"></i> Nuevo Requerimiento
+        </button>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Título</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Prioridad</th>
+                        <th>Descripción</th>
+                        <th>Reportado por</th>
+                        <th>Fecha</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in proyectos %}
+                    <tr>
+                        <td class="fw-bold">{{ p.titulo }}</td>
+                        <td>
+                            {% if p.tipo == 'BUG' %}
+                            <span class="badge bg-danger">Bug</span>
+                            {% elif p.tipo == 'PROYECTO' %}
+                            <span class="badge bg-info text-dark">Proyecto</span>
+                            {% elif p.tipo == 'SUGERENCIA' %}
+                            <span class="badge bg-secondary">Sugerencia</span>
+                            {% else %}
+                            <span class="badge bg-primary">Requerimiento</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.estado == 'PENDIENTE' %}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> Pendiente</span>
+                            {% elif p.estado == 'EN_PROGRESO' %}
+                            <span class="badge bg-primary"><i class="fas fa-spinner fa-spin"></i> En Progreso</span>
+                            {% elif p.estado == 'COMPLETADO' %}
+                            <span class="badge bg-success"><i class="fas fa-check"></i> Completado</span>
+                            {% elif p.estado == 'DESCARTADO' %}
+                            <span class="badge bg-dark"><i class="fas fa-times"></i> Descartado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.prioridad == 'ALTA' %}
+                            <span class="text-danger fw-bold"><i class="fas fa-arrow-up"></i> Alta</span>
+                            {% elif p.prioridad == 'BAJA' %}
+                            <span class="text-success"><i class="fas fa-arrow-down"></i> Baja</span>
+                            {% else %}
+                            <span class="text-primary"><i class="fas fa-minus"></i> Media</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 250px;" title="{{ p.descripcion }}">
+                                {{ p.descripcion or '-' }}
+                            </div>
+                        </td>
+                        <td>{{ p.reported_by or 'Sistema' }}</td>
+                        <td>{{ p.created_at.strftime('%Y-%m-%d %H:%M') if p.created_at else '-' }}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary"
+                                onclick="editReq('{{ p.id }}', '{{ p.titulo|replace("'", "\\'") }}', '{{ p.tipo }}', '{{ p.estado }}', '{{ p.prioridad }}', '{{ p.descripcion|replace('\n', '\\n')|replace("'", "\\'") }}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <form action="{{ url_for('core.admin_proyectos_eliminar', id=p.id) }}" method="POST"
+                                class="d-inline" onsubmit="return confirm('¿Eliminar de forma definitiva?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i
+                                        class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">No hay requerimientos cargados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Funcionalidad -->
+<div class="modal fade" id="reqModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalTitle">Nuevo Requerimiento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="reqForm" method="POST" action="{{ url_for('core.admin_proyectos_guardar') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="reqId">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Título del Ticket <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="titulo" id="reqTitulo" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Tipo <span class="text-danger">*</span></label>
+                            <select class="form-select" name="tipo" id="reqTipo" required>
+                                <option value="REQUERIMIENTO">Requerimiento</option>
+                                <option value="BUG">Bug / Incidente</option>
+                                <option value="PROYECTO">Proyecto</option>
+                                <option value="SUGERENCIA">Sugerencia</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Prioridad <span class="text-danger">*</span></label>
+                            <select class="form-select" name="prioridad" id="reqPrioridad" required>
+                                <option value="ALTA">Alta</option>
+                                <option value="MEDIA" selected>Media</option>
+                                <option value="BAJA">Baja</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Estado <span class="text-danger">*</span></label>
+                            <select class="form-select" name="estado" id="reqEstado" required>
+                                <option value="PENDIENTE" selected>Pendiente</option>
+                                <option value="EN_PROGRESO">En Progreso</option>
+                                <option value="COMPLETADO">Completado</option>
+                                <option value="DESCARTADO">Descartado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción / Detalles <span
+                                class="text-danger">*</span></label>
+                        <textarea class="form-control" name="descripcion" id="reqDescripcion" rows="6" required
+                            placeholder="Describa funcionalmente lo que se necesita..."></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openReqModal() {
+        document.getElementById('modalTitle').innerText = 'Nuevo Requerimiento';
+        document.getElementById('reqForm').reset();
+        document.getElementById('reqId').value = '';
+    }
+
+    function editReq(id, titulo, tipo, estado, prioridad, descripcion) {
+        document.getElementById('modalTitle').innerText = 'Editar Requerimiento';
+        document.getElementById('reqForm').reset();
+
+        document.getElementById('reqId').value = id;
+        document.getElementById('reqTitulo').value = titulo;
+        document.getElementById('reqTipo').value = tipo;
+        document.getElementById('reqEstado').value = estado;
+        document.getElementById('reqPrioridad').value = prioridad;
+        document.getElementById('reqDescripcion').value = descripcion;
+
+        var myModal = new bootstrap.Modal(document.getElementById('reqModal'));
+        myModal.show();
+    }
+</script>
+{% endblock %}

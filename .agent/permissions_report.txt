@@ -1,0 +1,78 @@
+# REPORTE DE PERMISOS DEL SISTEMA
+======================================================================
+
+
+## AUDITORIA (3 permisos)
+----------------------------------------------------------------------
+  - auditar_inventario
+  - view_error_log
+  - view_permission_audit
+
+## BIBLIOTECA (3 permisos)
+----------------------------------------------------------------------
+  - dashboard_view
+  - patrons_view
+  - view_prestamos
+
+## COBRANZAS (2 permisos)
+----------------------------------------------------------------------
+  - admin_medios_pago
+  - view_cobranzas
+
+## COMPRA (5 permisos)
+----------------------------------------------------------------------
+  - compras.ver_reportes
+  - create_orden_compra
+  - facturar_compras
+  - view_compras
+  - view_proveedores
+
+## CONFIGURACION (4 permisos)
+----------------------------------------------------------------------
+  - admin_empresa
+  - admin_plan_cuentas
+  - admin_roles
+  - admin_tipos_articulo
+
+## CONTABILIDAD (2 permisos)
+----------------------------------------------------------------------
+  - admin_contabilidad
+  - view_contabilidad
+
+## FONDOS (3 permisos)
+----------------------------------------------------------------------
+  - admin_cuentas
+  - create_pago
+  - view_pagos
+
+## PRECIOS (2 permisos)
+----------------------------------------------------------------------
+  - cost_accounting
+  - view_precios
+
+## SISTEMA (2 permisos)
+----------------------------------------------------------------------
+  - sysadmin
+  - view_risk_dashboard
+
+## STOCK (6 permisos)
+----------------------------------------------------------------------
+  - admin_depositos
+  - admin_logistica
+  - books_import
+  - create_transferencia
+  - view_articulos
+  - view_movimientos
+
+## UTILITARIOS (2 permisos)
+----------------------------------------------------------------------
+  - admin_users
+  - all
+
+## VENTA (2 permisos)
+----------------------------------------------------------------------
+  - facturar_ventas
+  - view_clientes
+
+
+**TOTAL: 36 permisos únicos**

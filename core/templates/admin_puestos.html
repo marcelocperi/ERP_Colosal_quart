@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Administración de Puestos - ERP Premium{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white fw-bold mb-0"><i class="fas fa-briefcase me-2 text-primary"></i> Maestro de Puestos
+            </h2>
+            <p class="text-muted mb-0">Gestione los cargos y puestos para contactos de Clientes y Proveedores.</p>
+        </div>
+        <button class="btn btn-primary px-4 rounded-pill shadow-sm" onclick="toggleModal('modalPuestoNuevo')">
+            <i class="fas fa-plus-circle me-2"></i> Nuevo Puesto
+        </button>
+    </div>
+
+    <!-- Filters Section (Glassmorphism) -->
+    <div class="card mb-4 border-0 shadow-lg"
+        style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 20px;">
+        <div class="card-body p-3">
+            <form method="GET" class="row g-3 align-items-center">
+                <input type="hidden" name="sid" value="{{ sid }}">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-0 text-muted"><i
+                                class="fas fa-filter"></i></span>
+                        <select name="area" class="form-select bg-dark text-white border-0 rounded-3"
+                            onchange="this.form.submit()">
+                            <option value="">Todas las Áreas</option>
+                            {% for a in areas %}
+                            <option value="{{ a.nombre }}" {% if current_area==a.nombre %}selected{% endif %}>
+                                {{ a.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ url_for('core.admin_puestos') }}"
+                        class="btn btn-outline-light btn-sm w-100 rounded-3">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Puestos Table (Premium Table) -->
+    <div class="card border-0 shadow-lg"
+        style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border-radius: 25px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="color: #e2e8f0;">
+                <thead style="background: rgba(255, 255, 255, 0.05);">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Nombre del Puesto</th>
+                        <th>Área</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in puestos %}
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;">
+                        <td class="ps-4 text-muted">#{{ p.id }}</td>
+                        <td>
+                            <div class="fw-bold text-white">{{ p.nombre }}</div>
+                        </td>
+                        <td>
+                            <span
+                                class="badge rounded-pill {% if p.area == 'COMPRAS' %}bg-info{% elif p.area == 'VENTAS' %}bg-success{% else %}bg-secondary{% endif %} px-3">
+                                {{ p.area }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if p.activo %}
+                            <span
+                                class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3">Activo</span>
+                            {% else %}
+                            <span
+                                class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <button
+                                class="btn btn-sm btn-icon-only text-white bg-white bg-opacity-10 rounded-circle me-1 btn-editar"
+                                data-puesto='{{ p | tojson }}'>
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <form action="{{ url_for('core.delete_puesto', id=p.id) }}" method="POST" class="d-inline"
+                                onsubmit="return confirm('¿Eliminar este puesto?')">
+                                <button type="submit"
+                                    class="btn btn-sm btn-icon-only text-danger bg-danger bg-opacity-10 rounded-circle">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-25"></i>
+                            No se encontraron puestos definidos.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Puesto -->
+<div id="modalPuestoNuevo" class="modal-premium modal-animate" style="display:none;">
+    <div class="modal-dialog">
+        <form class="modal-content" action="{{ url_for('core.create_puesto') }}" method="POST">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i> Nuevo Puesto</h5>
+                <button type="button" class="btn-close btn-close-white"
+                    onclick="toggleModal('modalPuestoNuevo')"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-white">Nombre del Puesto</label>
+                    <input type="text" name="nombre" class="form-control" placeholder="Ej: Comprador Senior" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-white">Área / Categoría</label>
+                    <select name="area" class="form-select" required>
+                        <option value="">-- Seleccionar Área --</option>
+                        {% for a in areas %}
+                        <option value="{{ a.nombre }}">{{ a.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Crear
+                    Puesto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Puesto -->
+<div id="modalEditarPuesto" class="modal-premium modal-animate" style="display:none;">
+    <div class="modal-dialog">
+        <form class="modal-content" id="formEditarPuesto" method="POST">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i> Editar Puesto</h5>
+                <button type="button" class="btn-close btn-close-white"
+                    onclick="toggleModal('modalEditarPuesto')"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-white">Nombre del Puesto</label>
+                    <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-white">Área / Categoría</label>
+                    <select name="area" id="edit_area" class="form-select" required>
+                        <option value="">-- Seleccionar Área --</option>
+                        {% for a in areas %}
+                        <option value="{{ a.nombre }}">{{ a.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-check form-switch mt-3">
+                    <input class="form-check-input" type="checkbox" name="activo" id="edit_activo" value="1">
+                    <label class="form-check-label text-white" for="edit_activo">Puesto Activo</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i> Guardar
+                    Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.btn-editar').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const puesto = JSON.parse(this.getAttribute('data-puesto'));
+            const form = document.getElementById('formEditarPuesto');
+            form.action = `{{ url_for('core.admin_puestos') }}/update/${puesto.id}`;
+            document.getElementById('edit_nombre').value = puesto.nombre;
+            document.getElementById('edit_area').value = puesto.area;
+            document.getElementById('edit_activo').checked = puesto.activo;
+            toggleModal('modalEditarPuesto');
+        });
+    });
+</script>
+
+<style>
+    .btn-icon-only {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}

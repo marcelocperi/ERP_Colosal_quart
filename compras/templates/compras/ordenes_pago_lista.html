@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Listado de Ordenes de Pago -->
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 bg-dark text-light mb-4 text-white">
+                <div
+                    class="card-header bg-gradient-success text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-money-check-alt me-2"></i>Ordenes de Pago</h4>
+                    <a href="{{ url_for('compras.pagar') }}" class="btn btn-light btn-sm fw-bold">Nueva OP <i
+                            class="fas fa-plus ms-1"></i></a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead class="bg-secondary bg-opacity-10">
+                                <tr>
+                                    <th>OP Nro</th>
+                                    <th>Fecha</th>
+                                    <th>Proveedor</th>
+                                    <th class="text-end">Total Facturas</th>
+                                    <th class="text-end text-danger">Retenciones</th>
+                                    <th class="text-end text-success">Neto Pagado</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for o in ops %}
+                                <tr>
+                                    <td class="fw-bold text-info">OP-{{ "%06d"|format(o.numero) }}</td>
+                                    <td>{{ o.fecha.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ o.proveedor_nombre }}</td>
+                                    <td class="text-end">$ {{ o.importe_total|format_currency if o.importe_total else
+                                        '0.00' }}</td>
+                                    <td class="text-end text-danger">$ {{ o.importe_retenciones|format_currency if
+                                        o.importe_retenciones else '0.00' }}</td>
+                                    <td class="text-end text-success fw-bold">$ {{ (o.importe_total -
+                                        (o.importe_retenciones or 0))|format_currency }}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-outline-info btn-sm" title="Ver OP"><i
+                                                class="fas fa-eye"></i></button>
+                                        <button class="btn btn-outline-light btn-sm" title="Imprimir"><i
+                                                class="fas fa-print"></i></button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Listado de Retenciones Emitidas -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 bg-dark text-light text-white">
+                <div class="card-header bg-gradient-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-certificate me-2"></i>Certificados de Retención</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for r in retenciones %}
+                        <div class="list-group-item bg-dark border-secondary p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-danger">{{ r.tipo_retencion }}</span>
+                                <small class="text-muted">{{ r.fecha.strftime('%d/%m/%Y') }}</small>
+                            </div>
+                            <div class="fw-bold text-info mb-1">{{ r.numero_certificado }}</div>
+                            <div class="small text-light opacity-75 mb-2">{{ r.sujeto_nombre }}</div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-danger fw-bold">$ {{ r.importe_retencion|format_currency }}</span>
+                                <a href="{{ url_for('compras.ver_retencion', id=r.id) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-info">
+                                    Ver Certificado <i class="fas fa-external-link-alt ms-1"></i>
+                                </a>
+                            </div>
+                            <div class="smaller text-muted mt-1 text-end">Originado en OP-{{ "%06d"|format(r.op_numero)
+                                }}</div>
+                        </div>
+                        {% else %}
+                        <div class="p-4 text-center text-muted">No hay retenciones emitidas aún.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-success {
+        background: linear-gradient(45deg, #1cc88a 0%, #13855c 100%);
+    }
+
+    .bg-gradient-danger {
+        background: linear-gradient(45deg, #e74a3b 0%, #be2617 100%);
+    }
+
+    .smaller {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

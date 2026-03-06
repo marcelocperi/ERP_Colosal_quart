@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block title %}Administración de Servicios Externos{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold text-gradient"><i class="fas fa-plug me-2"></i>Servicios Externos</h2>
+                <p class="text-muted">Gestione la conectividad con APIs y scrapers externos.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('core.admin_empresa_fiscal') }}"
+                    class="btn btn-outline-primary rounded-pill px-4 fw-bold">
+                    <i class="fas fa-building me-2"></i>Datos de Empresa
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for service in services %}
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift transition-all">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-shape bg-soft-primary rounded-circle me-3">
+                            <i
+                                class="fas {% if 'Scraper' in service.nombre or 'Reld' in service.nombre %}fa-spider{% else %}fa-cloud-download-alt{% endif %} text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-0 fw-bold">{{ service.nombre }}</h5>
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">{{
+                                service.tipo_servicio }}</small>
+                        </div>
+                        <div>
+                            {% if service.activo %}
+                            <span class="badge rounded-pill bg-success-soft text-success px-3 py-2 animate-pulse">
+                                <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i> {{ service.last_status or
+                                'RUNNING' }}
+                            </span>
+                            {% else %}
+                            <span class="badge rounded-pill bg-danger-soft text-danger px-3 py-2">
+                                <i class="fas fa-stop-circle me-1"></i> {{ service.last_status or 'STOPPED' }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="text-muted small mb-1">Implementación:</p>
+                        <code class="d-block bg-light p-2 rounded text-truncate" style="font-size: 0.8rem;">
+                            {{ service.clase_implementacion or 'Nativa' }}
+                        </code>
+                        {% if service.url_objetivo %}
+                        <p class="text-muted small mb-0 mt-2">Target: <a href="{{ service.url_objetivo }}"
+                                target="_blank" class="text-decoration-none">{{ service.url_objetivo }}</a></p>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <form action="{{ url_for('core.control_service', service_id=service.id) }}"
+                            method="POST" class="flex-grow-1">
+                            <input type="hidden" name="sid" value="{{ sid }}">
+                            {% if service.activo %}
+                            <input type="hidden" name="action" value="stop">
+                            <button type="submit" class="btn btn-outline-danger w-100 rounded-pill fw-bold">
+                                <i class="fas fa-pause me-2"></i>Detener
+                            </button>
+                            {% else %}
+                            <input type="hidden" name="action" value="start">
+                            <button type="submit" class="btn btn-success w-100 rounded-pill shadow-sm fw-bold">
+                                <i class="fas fa-play me-2"></i>Iniciar
+                            </button>
+                            {% endif %}
+                        </form>
+
+                        <form action="{{ url_for('core.control_service', service_id=service.id) }}"
+                            method="POST">
+                            <input type="hidden" name="sid" value="{{ sid }}">
+                            <input type="hidden" name="action" value="restart">
+                            <button type="submit" class="btn btn-light rounded-circle shadow-sm" title="Reiniciar">
+                                <i class="fas fa-sync-alt text-primary"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    {% if service.mapping %}
+                    <div class="mt-3">
+                        <button class="btn btn-link btn-sm w-100 text-decoration-none text-muted btn-show-mapping"
+                            data-id="{{ service.id }}" data-name="{{ service.nombre }}"
+                            data-mapping="{{ service.mapping | tojson | forceescape }}">
+                            <i class="fas fa-sitemap me-1"></i> Ver Mapeo DOM vs DB
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-4 px-4">
+                    <hr class="my-0 mb-3 opacity-10">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Creado: {{ service.created_at.strftime('%d/%m/%Y') if
+                            service.created_at else '-' }}</small>
+                        <a href="{{ url_for('core.admin_service_config', service_id=service.id) }}"
+                            class="btn btn-link btn-sm text-primary p-0 text-decoration-none">
+                            Configurar <i class="fas fa-chevron-right ms-1 small"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- GEOREF CARD - MANUAL SYNC -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift transition-all">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-shape bg-soft-info rounded-circle me-3">
+                            <i class="fas fa-map-marked-alt text-info"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-0 fw-bold">Georef API</h5>
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Utility
+                                Service</small>
+                        </div>
+                        <span class="badge rounded-pill bg-success-soft text-success px-3 py-2">Active</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="text-muted small mb-1">Descripción:</p>
+                        <p class="small text-muted">Servicio de normalización geográfica (Provincias, Municipios,
+                            Localidades). Sincronización con API Nacional.</p>
+                    </div>
+
+                    <form action="{{ url_for('core.admin_georef_sync') }}" method="POST">
+                        <input type="hidden" name="sid" value="{{ sid }}">
+                        <button type="submit" class="btn btn-info w-100 rounded-pill shadow-sm fw-bold text-white">
+                            <i class="fas fa-sync me-2"></i>Sincronizar Localidades
+                        </button>
+                    </form>
+                    <small class="d-block text-center mt-2 text-muted" style="font-size: 0.7rem;">* Ejecuta en segundo
+                        plano (Batch)</small>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-4 px-4">
+                    <hr class="my-0 mb-3 opacity-10">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Estado: OK</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROTATION MANAGER CARD -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift transition-all">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-shape bg-soft-warning rounded-circle me-3">
+                            <i class="fas fa-sync-alt text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-0 fw-bold">Rotation Manager</h5>
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Utility
+                                Service</small>
+                        </div>
+                        <span class="badge rounded-pill bg-success-soft text-success px-3 py-2">Active</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small">Modo Actual:</span>
+                            <span class="badge bg-light text-dark border">{{ rotation_status.mode }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small">Peticiones:</span>
+                            <span class="fw-bold">{{ rotation_status.count }} / {{ rotation_status.threshold }}</span>
+                        </div>
+                        {% if rotation_status.mode == 'POOL' %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted small">Pool Size:</span>
+                            <span class="fw-bold">{{ rotation_status.pool_size }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <form action="{{ url_for('core.admin_rotation_control') }}" method="POST">
+                            <input type="hidden" name="sid" value="{{ sid }}">
+                            <input type="hidden" name="action" value="rotate">
+                            <button type="submit"
+                                class="btn btn-warning w-100 rounded-pill shadow-sm fw-bold text-dark">
+                                <i class="fas fa-random me-2"></i>Rotar Identidad
+                            </button>
+                        </form>
+
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#configRotation" aria-expanded="false"
+                            aria-controls="configRotation">
+                            <i class="fas fa-cog me-1"></i> Configurar
+                        </button>
+
+                        <div class="collapse mt-2" id="configRotation">
+                            <div class="card card-body p-2 bg-light border-0">
+                                <form action="{{ url_for('core.admin_rotation_control') }}" method="POST">
+                                    <input type="hidden" name="sid" value="{{ sid }}">
+                                    <input type="hidden" name="action" value="config">
+                                    <input type="hidden" name="mode" id="rotationModeInput">
+                                    <label class="small text-muted mb-1">Cambiar Modo:</label>
+                                    <div class="d-grid gap-1">
+                                        <button type="submit"
+                                            onclick="document.getElementById('rotationModeInput').value='DIRECT'"
+                                            class="btn btn-sm {% if rotation_status.mode == 'DIRECT' %}btn-primary{% else %}btn-outline-secondary{% endif %}">DIRECTO</button>
+                                        <button type="submit"
+                                            onclick="document.getElementById('rotationModeInput').value='TOR'"
+                                            class="btn btn-sm {% if rotation_status.mode == 'TOR' %}btn-primary{% else %}btn-outline-secondary{% endif %}">TOR</button>
+                                        <button type="submit"
+                                            onclick="document.getElementById('rotationModeInput').value='POOL'"
+                                            class="btn btn-sm {% if rotation_status.mode == 'POOL' %}btn-primary{% else %}btn-outline-secondary{% endif %}">POOL</button>
+                                        <button type="submit"
+                                            onclick="document.getElementById('rotationModeInput').value='SCRAPERAPI'"
+                                            class="btn btn-sm {% if rotation_status.mode == 'SCRAPERAPI' %}btn-primary{% else %}btn-outline-secondary{% endif %}">SCRAPERAPI</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-4 px-4">
+                    <hr class="my-0 mb-3 opacity-10">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">Estrategia: {{ rotation_status.mode }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div
+                class="card h-100 border-0 border-dashed bg-transparent d-flex align-items-center justify-content-center py-5">
+                <div class="text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-plus-circle fa-3x text-muted opacity-50"></i>
+                    </div>
+                    <h5 class="text-muted fw-bold">Añadir Servicio</h5>
+                    <p class="text-muted small">Configure una nueva integración de API o Scraper.</p>
+                    <a href="{{ url_for('core.admin_service_create') }}"
+                        class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">Nuevo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal de Mapeo DOM vs DB -->
+<div id="modal-mapping" class="modal-premium" style="display:none;">
+    <div class="modal-premium-content p-0 overflow-hidden">
+        <div class="modal-premium-header p-4 bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-sitemap me-2"></i>Mapeo Técnico: <span
+                    id="mapping-service-name"></span></h5>
+            <button class="btn-close-white" onclick="closeMappingModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-premium-body p-4" style="max-height: 70vh; overflow-y: auto;">
+            <div id="mapping-container">
+                <!-- Se llena vía JS -->
+            </div>
+        </div>
+        <div class="modal-premium-footer p-3 bg-light text-end">
+            <button class="btn btn-secondary rounded-pill px-4" onclick="closeMappingModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+<div id="modal-mapping-backdrop" class="modal-backdrop-premium" style="display:none;" onclick="closeMappingModal()">
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-show-mapping').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const mappingStr = this.getAttribute('data-mapping');
+                try {
+                    const mapping = JSON.parse(mappingStr);
+                    showMappingModal(id, name, mapping);
+                } catch (e) {
+                    console.error("Error parsing mapping JSON:", e);
+                    alert("Error al cargar los datos técnico del servicio.");
+                }
+            });
+        });
+    });
+
+    function showMappingModal(id, name, mapping) {
+        document.getElementById('mapping-service-name').innerText = name;
+        const container = document.getElementById('mapping-container');
+        container.innerHTML = '';
+
+        mapping.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'mapping-row mb-3 d-flex align-items-stretch';
+            row.innerHTML = `
+            <div class="mapping-box mapping-dom p-3 flex-fill bg-soft-info border-info-subtle border rounded-start text-break">
+                <small class="text-uppercase text-info fw-bold" style="font-size: 0.6rem;">DOM / Selectores</small>
+                <div class="fw-mono mt-1">${item.dom}</div>
+                <small class="text-muted d-block mt-1">${item.desc}</small>
+            </div>
+            <div class="mapping-arrow d-flex align-items-center bg-light px-2 border-top border-bottom">
+                <i class="fas fa-long-arrow-alt-right text-primary fa-lg"></i>
+            </div>
+            <div class="mapping-box mapping-db p-3 flex-fill bg-soft-success border-success-subtle border rounded-end">
+                <small class="text-uppercase text-success fw-bold" style="font-size: 0.6rem;">Base de Datos (DB)</small>
+                <div class="fw-bold mt-1">${item.db}</div>
+                <small class="text-muted d-block mt-1">Tabla: stk_articulos</small>
+            </div>
+        `;
+            container.appendChild(row);
+        });
+
+        document.getElementById('modal-mapping').style.display = 'block';
+        document.getElementById('modal-mapping-backdrop').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMappingModal() {
+        document.getElementById('modal-mapping').style.display = 'none';
+        document.getElementById('modal-mapping-backdrop').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+</script>
+
+<style>
+    .modal-premium {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 800px;
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .modal-premium-content {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-backdrop-premium {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+        z-index: 9998;
+    }
+
+    .btn-close-white {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+    }
+
+    .bg-soft-info {
+        background-color: #f0faff !important;
+        border-color: #b3e5fc !important;
+    }
+
+    .bg-soft-success {
+        background-color: #f3faf4 !important;
+        border-color: #c8e6c9 !important;
+    }
+
+    /* Forzar texto oscuro en el contenido del mapeo */
+    .mapping-box * {
+        color: #1a202c !important;
+    }
+
+    .mapping-dom .text-info {
+        color: #0c5460 !important;
+        background: transparent !important;
+    }
+
+    .mapping-db .text-success {
+        color: #155724 !important;
+        background: transparent !important;
+    }
+
+    .mapping-box .text-muted {
+        color: #4a5568 !important;
+    }
+
+    .modal-premium-header h5,
+    .modal-premium-header span,
+    .modal-premium-header i,
+    .modal-premium-header button {
+        color: #ffffff !important;
+    }
+
+    .fw-mono {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 0.9rem;
+        word-break: break-all;
+        background: rgba(0, 0, 0, 0.03);
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translate(-50%, -40%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translate(-50%, -50%);
+            opacity: 1;
+        }
+    }
+
+    .text-gradient {
+        background: linear-gradient(45deg, #1e3c72, #2a5298);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .icon-shape {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-danger-soft {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    .bg-soft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        border-color: #ffeeba !important;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .border-dashed {
+        border: 2px dashed #dee2e6 !important;
+    }
+
+    .animate-pulse {
+        animation: pulse-green 2s infinite;
+    }
+
+    @keyframes pulse-green {
+        0% {
+            box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(25, 135, 84, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-layer-group text-primary me-2"></i> Condiciones de Pago Mixtas
+        </h2>
+        <button class="btn btn-primary" onclick="resetModal(); toggleModal('modalMixta')">
+            <i class="fas fa-plus me-2"></i> Nueva Condición Mixta
+        </button>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Configuración de Estructuras Mixtas</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Composición (%)</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in mixtas %}
+                        <tr>
+                            <td class="fw-bold">{{ m.nombre }}</td>
+                            <td>{{ m.descripcion }}</td>
+                            <td>
+                                {% for det in m.detalles %}
+                                <div class="small d-flex align-items-center mb-1">
+                                    <span class="badge bg-primary me-2" style="min-width: 50px;">{{ det.porcentaje
+                                        }}%</span>
+                                    <span class="text-dark fw-bold me-2">{{ det.condicion_nombre }}</span>
+                                    {% if det.descuento_pct > 0 %}
+                                    <span class="badge bg-success-subtle text-success border-success ms-1 small"
+                                        style="font-size: 0.7rem;">-{{ det.descuento_pct }}% Desc</span>
+                                    {% endif %}
+                                    {% if det.recargo_pct > 0 %}
+                                    <span class="badge bg-danger-subtle text-danger border-danger ms-1 small"
+                                        style="font-size: 0.7rem;">+{{ det.recargo_pct }}% Rec</span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if m.activo %}
+                                <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info edit-mixta-btn" data-mixta='{{ m | tojson | safe }}'
+                                    onclick="editMixta(JSON.parse(this.getAttribute('data-mixta')))">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <form action="{{ url_for('fondos.condiciones_mixtas') }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('¿Seguro desea eliminar esta condición mixta?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="{{ m.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No hay condiciones mixtas configuradas.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ABM Mixed (usando sistema modal-premium del proyecto) -->
+<div id="modalMixta" class="modal-premium modal-animate" style="display:none; max-width: 750px;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Nueva Condición Mixta</h5>
+            <button type="button" class="btn" onclick="toggleModal('modalMixta')"
+                style="background:none; color:white; border:none;"><i class="fas fa-times"></i></button>
+        </div>
+        <form action="{{ url_for('fondos.condiciones_mixtas') }}" method="POST" id="formMixta">
+            <div class="modal-body" style="overflow-y: auto; max-height: 65vh;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="action" id="formAction" value="create">
+                <input type="hidden" name="id" id="mixtaId">
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nombre de la Estructura</label>
+                        <input type="text" class="form-control" name="nombre" id="nombre" required
+                            placeholder="Ej: 50% Contado / 50% 30 días">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Estado</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="activo" id="activo" checked>
+                            <label class="form-check-label" for="activo">Activo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-control" name="descripcion" id="descripcion" rows="2"></textarea>
+                </div>
+
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 fw-bold">Composición Detallada</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addDetailRow()">
+                        <i class="fas fa-plus"></i> Agregar tramo
+                    </button>
+                </div>
+
+                <div id="detailsContainer">
+                    <!-- Filas de detalle se insertan aquí -->
+                </div>
+
+                <div class="mt-3 p-2 bg-light rounded d-flex justify-content-between">
+                    <span class="fw-bold">Total porcentaje:</span>
+                    <span id="totalPct" class="fw-bold fs-5">0%</span>
+                </div>
+                <div id="alertCobertura" class="alert alert-warning mt-2 py-2 px-3 d-none">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Cobertura incompleta.</strong> La suma de porcentajes debe ser exactamente
+                    <strong>100%</strong> para poder guardar.
+                    Los tramos actuales cubren solo <span id="alertPctValor">0%</span> de la condición.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="toggleModal('modalMixta')">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSave" disabled>Guardar Composición</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Template para filas de detalle -->
+<template id="detailRowTemplate">
+    <div class="row mb-2 detail-row align-items-end p-2 bg-white border rounded shadow-sm">
+        <div class="col-md-5">
+            <label class="small text-muted fw-bold">Condición Base</label>
+            <select class="form-select form-select-sm" name="condicion_pago_id[]" required onchange="validateTotal()">
+                <option value="">-- Seleccionar --</option>
+                {% for c in condiciones_simples %}
+                <option value="{{ c.id }}">{{ c.nombre }} (Vto: {{ c.dias_vencimiento }} d.)</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="small text-muted fw-bold">% Total</label>
+            <input type="number" step="0.01" class="form-control form-control-sm pct-input" name="porcentaje[]" required
+                min="0.01" max="100" oninput="validateTotal()" placeholder="0.00">
+        </div>
+        <div class="col-md-2">
+            <label class="small text-muted fw-bold">% Desc.</label>
+            <input type="number" step="0.01" class="form-control form-control-sm" name="descuento_pct_det[]"
+                value="0.00">
+        </div>
+        <div class="col-md-2">
+            <label class="small text-muted fw-bold">% Rec.</label>
+            <input type="number" step="0.01" class="form-control form-control-sm" name="recargo_pct_det[]" value="0.00">
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="removeRow(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
+</template>
+
+<script>
+    function resetModal() {
+        document.getElementById('modalTitle').innerText = 'Nueva Condición Mixta';
+        document.getElementById('formAction').value = 'create';
+        document.getElementById('mixtaId').value = '';
+        document.getElementById('nombre').value = '';
+        document.getElementById('descripcion').value = '';
+        document.getElementById('activo').checked = true;
+        document.getElementById('detailsContainer').innerHTML = '';
+        addDetailRow();
+        validateTotal();
+    }
+
+    function addDetailRow(data = null) {
+        const container = document.getElementById('detailsContainer');
+        const template = document.getElementById('detailRowTemplate').content.cloneNode(true);
+        const row = template.querySelector('.detail-row');
+
+        if (data) {
+            row.querySelector('select').value = data.condicion_pago_id;
+            row.querySelector('.pct-input').value = data.porcentaje;
+            row.querySelectorAll('input[type="number"]')[1].value = data.descuento_pct || '0.00';
+            row.querySelectorAll('input[type="number"]')[2].value = data.recargo_pct || '0.00';
+        } else {
+            row.querySelector('.pct-input').value = container.children.length === 0 ? 100 : 0;
+        }
+
+        container.appendChild(row);
+        validateTotal();
+    }
+
+    function removeRow(btn) {
+        btn.closest('.detail-row').remove();
+        validateTotal();
+    }
+
+    function validateTotal() {
+        const inputs = document.querySelectorAll('.pct-input');
+        let total = 0;
+        inputs.forEach(i => total += parseFloat(i.value || 0));
+
+        const totalSpan = document.getElementById('totalPct');
+        totalSpan.innerText = total.toFixed(2) + '%';
+
+        const btnSave = document.getElementById('btnSave');
+        const alerta = document.getElementById('alertCobertura');
+        const alertaValor = document.getElementById('alertPctValor');
+
+        if (Math.abs(total - 100) < 0.01) {
+            totalSpan.className = 'fw-bold fs-5 text-success';
+            btnSave.disabled = false;
+            alerta.classList.add('d-none');
+        } else {
+            totalSpan.className = 'fw-bold fs-5 text-danger';
+            btnSave.disabled = true;
+            alertaValor.innerText = total.toFixed(2) + '%';
+            alerta.classList.remove('d-none');
+        }
+    }
+
+    function editMixta(data) {
+        resetModal();
+        document.getElementById('modalTitle').innerText = 'Editar Condición Mixta';
+        document.getElementById('formAction').value = 'edit';
+        document.getElementById('mixtaId').value = data.id;
+        document.getElementById('nombre').value = data.nombre;
+        document.getElementById('descripcion').value = data.descripcion || '';
+        document.getElementById('activo').checked = data.activo == 1;
+
+        document.getElementById('detailsContainer').innerHTML = '';
+        data.detalles.forEach(d => addDetailRow(d));
+
+        toggleModal('modalMixta');
+    }
+</script>
+{% endblock %}

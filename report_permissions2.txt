@@ -1,0 +1,7 @@
+=== REPORTE AUDITORIA DE PERMISOS FANTASMAS (CODIGO VS DB) ===
+| COMPRAS         | Rutas con Permiso Explicíto: 1   | Huérfanos: 0  | Estado General: 🟢 Seguro                            | Criticidad C/R: Baja  |
+| STOCK           | Rutas con Permiso Explicíto: 4   | Huérfanos: 0  | Estado General: 🟢 Seguro                            | Criticidad C/R: Baja  |
+| BIBLIOTECA      | Rutas con Permiso Explicíto: 9   | Huérfanos: 0  | Estado General: 🟢 Seguro                            | Criticidad C/R: Baja  |
+| CORE            | Rutas con Permiso Explicíto: 33  | Huérfanos: 0  | Estado General: 🟢 Seguro                            | Criticidad C/R: Baja  |
+
+=== DETALLE DE PERMISOS HUERFANOS (Bloquean Pantallas) ===

@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div
+                class="d-flex justify-content-between align-items-center bg-dark p-3 rounded shadow-sm border-start border-4 border-primary">
+                <div>
+                    <h2 class="text-light mb-0"><i class="fas fa-file-invoice text-primary me-3"></i>Notas de Pedido e
+                        Internas</h2>
+                    <p class="text-muted mb-0">Gestión de requisiciones generadas por el sistema o manualmente.</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('compras.reposicion_dashboard') }}" class="btn btn-outline-info">
+                        <i class="fas fa-plus me-1"></i> Ir al Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-dark border-secondary shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle">
+                    <thead class="bg-secondary bg-opacity-10 text-muted small">
+                        <tr>
+                            <th class="ps-4">ID / FECHA</th>
+                            <th>SOLICITANTE</th>
+                            <th class="text-center">ITEMS</th>
+                            <th>ESTADO</th>
+                            <th>OBSERVACIONES</th>
+                            <th class="text-end pe-4">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in solicitudes %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="fw-bold text-info">#{{ s.id }}</span><br>
+                                <small class="text-muted">{{ s.fecha }}</small>
+                            </td>
+                            <td>{{ s.solicitante_nombre }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">{{ s.items_cnt }}</span>
+                            </td>
+                            <td>
+                                {% if s.estado == 'PENDIENTE_AJUSTE' %}
+                                <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pte.
+                                    Ajuste</span>
+                                {% elif s.estado == 'COTIZANDO' %}
+                                <span class="badge bg-info text-dark"><i class="fas fa-envelope me-1"></i>En
+                                    Cotización</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">{{ s.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ s.observaciones or '-' }}</td>
+                            <td class="text-end pe-4">
+                                {% if s.estado == 'PENDIENTE_AJUSTE' %}
+                                <button class="btn btn-sm btn-primary" onclick="abrirModalCotizar({{ s.id }})">
+                                    <i class="fas fa-paper-plane me-1"></i> Solicitar Cotización
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center p-5 text-muted">No hay solicitudes pendientes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cotizar -->
+<div class="modal fade" id="modalCotizar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-primary shadow-lg">
+            <div class="modal-header border-primary bg-primary bg-opacity-10 text-primary">
+                <h5 class="modal-title"><i class="fas fa-envelope-open-text me-2"></i>Generar Solicitud de Cotización
+                    (RFQ)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small text-muted uppercase">Proveedor a Consultar</label>
+                    <select id="cot_proveedor_id"
+                        class="form-select bg-dark text-light border-secondary select2-proveedores">
+                        <option value="">Seleccione un proveedor...</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small text-muted uppercase font-weight-bold text-info">
+                        <i class="fas fa-calendar-times me-1"></i> FECHA LÍMITE DE PRESENTACIÓN
+                    </label>
+                    <input type="date" id="cot_fecha_vencimiento" class="form-control bg-dark text-light border-info">
+                    <small class="text-muted">El proveedor verá esta fecha en el Excel y el Email.</small>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <input type="hidden" id="cot_solicitud_id">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarCotizacion()">Generar RFQ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalCotizar(solicitud_id) {
+        document.getElementById('cot_solicitud_id').value = solicitud_id;
+
+        // Cargar proveedores si no están cargados (simulado o via select2)
+        // Por simplificación usaremos un fetch rápido aquí o select2 remoto
+
+        new bootstrap.Modal(document.getElementById('modalCotizar')).show();
+    }
+
+    async function confirmarCotizacion() {
+        const sid = document.getElementById('cot_solicitud_id').value;
+        const pid = document.getElementById('cot_proveedor_id').value;
+        const fv = document.getElementById('cot_fecha_vencimiento').value;
+
+        if (!pid || !fv) {
+            alert("Debe seleccionar un proveedor y una fecha límite.");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/compras/solicitud/${sid}/cotizar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ proveedor_id: pid, fecha_vencimiento: fv })
+            });
+
+            const r = await resp.json();
+            if (r.success) {
+                alert(r.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + r.message);
+            }
+        } catch (e) {
+            alert('Error de conexión.');
+        }
+    }
+
+    // Inicializar Select2 para proveedores
+    $(document).ready(function () {
+        $('.select2-proveedores').select2({
+            dropdownParent: $('#modalCotizar'),
+            width: '100%',
+            ajax: {
+                url: '/compras/api/buscar-proveedores',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return {
+                        results: $.map(data, function (item) {
+                            return { id: item.id, text: item.codigo + ' - ' + item.nombre };
+                        })
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 2
+        });
+    });
+</script>
+
+<style>
+    .bg-dark {
+        background-color: #1a1d20 !important;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .select2-container--default .select2-selection--single {
+        background-color: #1a1d20 !important;
+        border-color: #495057 !important;
+        color: white !important;
+        height: 38px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: white !important;
+        line-height: 36px;
+    }
+</style>
+{% endblock %}

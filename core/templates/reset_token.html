@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Contraseña | Colosal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-main);
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .flash-msg {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>Nueva Contraseña</h1>
+        <p style="color: rgba(255,255,255,0.7); margin-bottom: 2rem;">
+            Hola <strong>{{ username }}</strong>, ingresa tu nueva clave a continuación.
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for cat, message in messages %}
+        <div class="flash-msg" style="border-left: 3px solid {{ '#10b981' if cat == 'success' else '#ef4444' }};">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('core.reset_confirm') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
+            <input type="hidden" name="ent_id" value="{{ ent_id }}">
+            <input type="hidden" name="user_id" value="{{ user_id }}">
+            <input type="hidden" name="token" value="{{ token }}">
+
+            <div class="input-group">
+                <label>Nueva Contraseña</label>
+                <input type="password" name="new_password" required placeholder="••••••••">
+            </div>
+
+            <div class="input-group">
+                <label>Confirmar Contraseña</label>
+                <input type="password" name="confirm_password" required placeholder="••••••••">
+            </div>
+
+            <button type="submit">Restablecer Ahora</button>
+        </form>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,810 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .row-expand-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 5px;
+        transition: transform 0.3s ease, color 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .row-expand-btn.active {
+        transform: rotate(90deg);
+        color: var(--primary);
+    }
+
+    .detail-row {
+        background: rgba(0, 0, 0, 0.1);
+        display: none;
+    }
+
+    .detail-row.visible {
+        display: table-row;
+    }
+
+    .expansion-container {
+        padding: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .expansion-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+    }
+
+    .expansion-section h4 {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--primary);
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+        border-left: 3px solid var(--primary);
+        padding-left: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .expansion-data-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        font-size: 0.8rem;
+    }
+
+    .expansion-label {
+        color: var(--text-muted);
+    }
+
+    .expansion-value {
+        font-weight: 600;
+        color: var(--text-main);
+    }
+</style>
+<div class="header-action">
+    <h1>Administración de Préstamos Activos</h1>
+    <div style="display: flex; gap: 0.5rem;">
+        <button class="btn" style="background: rgba(255,255,255,0.1);" onclick="toggleModal('modal-buscar-prestamo')">
+            <i class="fas fa-search"></i> <span>Buscar Préstamo</span>
+        </button>
+        <button class="btn" style="background: rgba(255,193,7,0.1); color: var(--accent);"
+            onclick="toggleModal('modal-reservas'); loadReservas();">
+            <i class="fas fa-bookmark"></i> <span>Ver Reservas</span>
+        </button>
+        {% if 'loans_manage' in permissions %}
+        <button class="btn btn-primary" onclick="toggleModal('modal-prestamo')">
+            <i class="fas fa-plus"></i> <span>Nuevo Préstamo</span>
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal para registrar préstamo -->
+<div id="modal-prestamo" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 800px; z-index: 5001; border: 1px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <h3>Registrar Nuevo Préstamo</h3>
+    <form action="/prestamos/registrar" method="POST" style="margin-top: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label>Usuario / Cliente</label>
+                <select name="usuario_id" required>
+                    <option value="">-- Seleccionar Usuario --</option>
+                    {% for u in usuarios %}
+                    <option value="{{ u[0] }}">{{ u[2] }} {{ u[3] }} ({{ u[1] }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Artículo a Prestar</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="search-libro-input" placeholder="Haga clic para buscar..." required readonly
+                        style="cursor: pointer; background: rgba(255,255,255,0.05);" onclick="openSelectBookModal()">
+                    <button type="button" class="btn" onclick="openSelectBookModal()"
+                        style="background: var(--accent); padding: 0 1rem;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <input type="hidden" name="libro_id" id="search-libro-id" required>
+            </div>
+            <div class="form-group">
+                <label>Periodo (Días)</label>
+                <input type="number" name="dias" value="7" min="1">
+            </div>
+        </div>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">Confirmar Préstamo</button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                onclick="toggleModal('modal-prestamo')">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal para búsqueda avanzada de libro (Selección) -->
+<div id="modal-select-book" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 1100px; z-index: 5002; border: 2px solid var(--accent); box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3>Seleccionar Artículo</h3>
+        <button class="btn" onclick="toggleModal('modal-select-book')" style="background:none;"><i
+                class="fas fa-times"></i></button>
+    </div>
+
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="form-group"
+            style="grid-column: 1 / -1; background: rgba(99, 102, 241, 0.05); padding: 1rem; border-radius: var(--radius); border: 1px solid rgba(99, 102, 241, 0.2);">
+            <label style="color: var(--primary); font-weight: 800;"><i class="fas fa-bolt"></i> Búsqueda Rápida
+                (Cualquier campo)</label>
+            <input type="text" id="p-search-global" placeholder="Escriba título, autor, editorial o ISBN libremente..."
+                onkeyup="if(event.key === 'Enter') buscarArticulosParaPrestamo()">
+        </div>
+        <div class="form-group">
+            <label>Título</label>
+            <input type="text" id="p-search-nombre" placeholder="Título del artículo...">
+        </div>
+        <div class="form-group">
+            <label>Autor</label>
+            <input type="text" id="p-search-autor" placeholder="Nombre del autor...">
+        </div>
+        <div class="form-group">
+            <label>ISBN</label>
+            <input type="text" id="p-search-isbn" placeholder="ISBN...">
+        </div>
+        <div class="form-group">
+            <label>Género</label>
+            <input type="text" id="p-search-genero" placeholder="Género...">
+        </div>
+        <div class="form-group">
+            <label>Editorial</label>
+            <input type="text" id="p-search-editorial" placeholder="Editorial...">
+        </div>
+        <div class="form-group">
+            <label>Precio Mínimo</label>
+            <input type="number" step="0.01" id="p-search-precio-min" placeholder="0.00">
+        </div>
+        <div class="form-group">
+            <label>Precio Máximo</label>
+            <input type="number" step="0.01" id="p-search-precio-max" placeholder="999999.99">
+        </div>
+        <div class="form-group">
+            <label>Fecha Publicación (Desde)</label>
+            <input type="date" id="p-search-fecha-desde">
+        </div>
+        <div class="form-group">
+            <label>Fecha Publicación (Hasta)</label>
+            <input type="date" id="p-search-fecha-hasta">
+        </div>
+        <div class="form-group">
+            <label>Páginas Mínimas</label>
+            <input type="number" id="p-search-paginas-min" placeholder="0">
+        </div>
+        <div class="form-group">
+            <label>Páginas Máximas</label>
+            <input type="number" id="p-search-paginas-max" placeholder="9999">
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 0.5rem; grid-column: 1 / -1;">
+            <button class="btn btn-primary" onclick="buscarArticulosParaPrestamo()" style="flex: 1;">
+                <i class="fas fa-search"></i> Filtrar
+            </button>
+            <button class="btn" onclick="resetSearchFiltersPrestamo()" style="background: rgba(255,255,255,0.05);">
+                <i class="fas fa-sync-alt"></i> Limpiar
+            </button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ISBN / ID</th>
+                    <th>Título / Autor</th>
+                    <th>Editorial / Género</th>
+                    <th>Stock</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="select-book-body">
+                <tr>
+                    <td colspan="5" style="text-align:center;" class="text-muted">Utilice los filtros arriba para buscar
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para ver reservas -->
+<div id="modal-reservas" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 800px; max-height: 80vh; overflow-y: auto; z-index: 5001; border: 1px solid var(--accent); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <h3><i class="fas fa-bookmark"></i> Reservas Activas</h3>
+    <p class="text-muted" style="margin-bottom: 1rem;">Listado de artículos reservados pendientes de entrega.</p>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="text-end">ID</th>
+                    <th>Artículo</th>
+                    <th>Usuario (Solicitante)</th>
+                    <th>Fecha Reserva</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-reservas">
+                <tr>
+                    <td colspan="5" style="text-align: center;">Cargando...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 1rem; text-align: right;">
+        <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+            onclick="toggleModal('modal-reservas')">Cerrar</button>
+    </div>
+</div>
+
+<!-- Modal para anular reserva -->
+<div id="modal-anular" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; z-index: 5002; border: 2px solid var(--danger); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <h3>Anular Reserva</h3>
+    <form id="form-anular" method="POST" style="margin-top: 1rem;">
+        <div class="form-group">
+            <label>Motivo de Anulación</label>
+            <textarea name="motivo_anulacion" required rows="3"
+                placeholder="Ej: Usuario canceló, libro extraviado..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Fecha de Anulación</label>
+            <input type="date" name="fecha_anulacion" id="anular-fecha" required>
+        </div>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" style="background: var(--danger);">Confirmar
+                Anulación</button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                onclick="toggleModal('modal-anular')">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal para buscar préstamos -->
+<div id="modal-buscar-prestamo" class="card modal-animate"
+    style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 900px; max-height: 90vh; overflow-y: auto; z-index: 5001; border: 1px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <h3><i class="fas fa-search"></i> Búsqueda Avanzada de Préstamos</h3>
+
+    <!-- (Existing search form content) ... -->
+    <div style="margin-top: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label>Título del Artículo</label>
+                <input type="text" id="search-titulo" placeholder="Ej: Cien años...">
+            </div>
+            <div class="form-group">
+                <label>Autor</label>
+                <input type="text" id="search-autor" placeholder="Ej: García Márquez">
+            </div>
+            <div class="form-group">
+                <label>ISBN</label>
+                <input type="text" id="search-isbn" placeholder="Ej: 978-...">
+            </div>
+            <div class="form-group">
+                <label>Editorial</label>
+                <input type="text" id="search-editorial" placeholder="Ej: Planeta">
+            </div>
+            <div class="form-group">
+                <label>Nombre Usuario</label>
+                <input type="text" id="search-usuario" placeholder="Ej: Juan Pérez">
+            </div>
+            <div class="form-group">
+                <label>Email Usuario</label>
+                <input type="text" id="search-email" placeholder="Ej: juan@email.com">
+            </div>
+            <div class="form-group">
+                <label>Teléfono Usuario</label>
+                <input type="text" id="search-telefono" placeholder="Ej: 1234567">
+            </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button class="btn btn-primary" onclick="buscarPrestamos()">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+            <button class="btn" style="background: rgba(255,255,255,0.1);" onclick="limpiarBusquedaPrestamos()">
+                <i class="fas fa-eraser"></i> Limpiar
+            </button>
+            <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                onclick="toggleModal('modal-buscar-prestamo')">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultados-busqueda" style="margin-top: 2rem; display: none;">
+        <h4 style="margin-bottom: 1rem; color: var(--primary);">
+            <i class="fas fa-list"></i> Resultados de Búsqueda
+        </h4>
+        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th class="text-end">ID</th>
+                        <th>Usuario</th>
+                        <th>Artículo</th>
+                        <th>F. Préstamo</th>
+                        <th>F. Devolución</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-resultados">
+                    <!-- Results will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Permission flag injected from Jinja2
+    // eslint-disable-next-line
+    const CAN_MANAGE_LOANS = {% if 'loans_manage' in permissions %}true{% else %} false{% endif %};
+
+    // Utility function to toggle modal visibility
+    function toggleModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            if (modal.style.display === 'none' || modal.style.display === '') {
+                modal.style.display = 'block';
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+    }
+
+    function toggleRowDetails(id) {
+        const detailRow = document.getElementById('details-' + id);
+        const expandBtn = document.querySelector(`#row-${id} .row-expand-btn`);
+
+        if (detailRow) {
+            detailRow.classList.toggle('visible');
+            if (expandBtn) expandBtn.classList.toggle('active');
+        }
+    }
+
+    function loadReservas() {
+        const tbody = document.getElementById('tbody-reservas');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Cargando...</td></tr>';
+
+        const sid = window.SID || '';
+        fetch(`/api/prestamos/reservas?sid=${window.SID || ''}`)
+            .then(res => res.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                if (data.reservas && data.reservas.length > 0) {
+                    data.reservas.forEach(r => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="text-end">#${r.id}</td>
+                            <td style="font-weight: 600; color: var(--primary);">${r.libro}</td>
+                            <td>${r.usuario}</td>
+                            <td>${r.fecha}</td>
+                            <td>
+                                {% if 'loans_manage' in permissions %}
+                                <button class="btn" style="background: var(--danger); font-size: 0.8rem; padding: 0.2rem 0.6rem;"
+                                    onclick="promptAnular(${r.id})">
+                                    <i class="fas fa-ban"></i> Anular
+                                </button>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">No hay reservas activas.</td></tr>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--danger);">Error al cargar reservas.</td></tr>';
+            });
+    }
+
+    // --- SELECCIÓN DE LIBRO AVANZADA ---
+    function openSelectBookModal() {
+        toggleModal('modal-select-book');
+    }
+
+    function resetSearchFiltersPrestamo() {
+        document.getElementById('p-search-global').value = '';
+        document.getElementById('p-search-nombre').value = '';
+        document.getElementById('p-search-autor').value = '';
+        document.getElementById('p-search-isbn').value = '';
+        document.getElementById('p-search-genero').value = '';
+        document.getElementById('p-search-editorial').value = '';
+        document.getElementById('p-search-precio-min').value = '';
+        document.getElementById('p-search-precio-max').value = '';
+        document.getElementById('p-search-fecha-desde').value = '';
+        document.getElementById('p-search-fecha-hasta').value = '';
+        document.getElementById('p-search-paginas-min').value = '';
+        document.getElementById('p-search-paginas-max').value = '';
+        document.getElementById('select-book-body').innerHTML = '<tr><td colspan="5" style="text-align:center;" class="text-muted">Utilice los filtros arriba para buscar</td></tr>';
+    }
+
+    async function buscarArticulosParaPrestamo() {
+        const q = document.getElementById('p-search-global').value;
+        const nombre = document.getElementById('p-search-nombre').value;
+        const autor = document.getElementById('p-search-autor').value;
+        const genero = document.getElementById('p-search-genero').value;
+        const isbn = document.getElementById('p-search-isbn').value;
+        const editorial = document.getElementById('p-search-editorial').value;
+        const precio_min = document.getElementById('p-search-precio-min').value;
+        const precio_max = document.getElementById('p-search-precio-max').value;
+        const fecha_desde = document.getElementById('p-search-fecha-desde').value;
+        const fecha_hasta = document.getElementById('p-search-fecha-hasta').value;
+        const paginas_min = document.getElementById('p-search-paginas-min').value;
+        const paginas_max = document.getElementById('p-search-paginas-max').value;
+
+        const params = new URLSearchParams({
+            q, nombre, autor, genero, isbn, editorial,
+            precio_min, precio_max, fecha_desde, fecha_hasta,
+            paginas_min, paginas_max
+        });
+        const tbody = document.getElementById('select-book-body');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Buscando...</td></tr>';
+
+        try {
+            const response = await fetch(`/stock/api/articulos/search?${params.toString()}&sid=${window.SID || ''}`);
+            const data = await response.json();
+
+            if (data.libros && data.libros.length > 0) {
+                tbody.innerHTML = data.libros.map(l => {
+                    // Check availability logic if needed, but for now just show stock
+                    const stockClass = l.numero_ejemplares > 0 ? 'badge-success' : 'badge-danger';
+                    return `
+                    <tr>
+                        <td><code style="color: var(--accent);">${l.isbn}</code><br><small class="text-muted">#${l.id}</small></td>
+                        <td><div style="font-weight: 600;">${l.nombre}</div><div class="text-muted" style="font-size: 0.8rem;">${l.autor}</div></td>
+                        <td><div>${l.editorial || '-'}</div><div class="text-muted" style="font-size: 0.8rem;">${l.genero || '-'}</div></td>
+                        <td style="text-align: center;"><span class="badge ${stockClass}">${l.numero_ejemplares}</span></td>
+                        <td>
+                            ${l.numero_ejemplares > 0 ?
+                            `<button class="btn" style="padding: 0.3rem 0.8rem; background: var(--primary); color: white;" 
+                                    onclick="seleccionarArticuloParaPrestamo('${l.id}', '${l.nombre.replace(/'/g, "\\'")}', '${l.isbn}')">
+                                    <i class="fas fa-check"></i> Seleccionar
+                                </button>` :
+                            `<button class="btn" style="padding: 0.3rem 0.8rem; background: #f59e0b; color: white;" 
+                                    onclick="seleccionarArticuloParaPrestamo('${l.id}', '${l.nombre.replace(/'/g, "\\'")}', '${l.isbn}')">
+                                    <i class="fas fa-bookmark"></i> Reservar
+                                </button>`
+                        }
+                        </td>
+                    </tr>`;
+                }).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No se encontraron resultados.</td></tr>';
+            }
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--danger);">Error al buscar.</td></tr>';
+        }
+    }
+
+    function seleccionarArticuloParaPrestamo(id, nombre, isbn) {
+        // Function to populate the main loan form
+        document.getElementById('search-libro-input').value = `${nombre} (ISBN: ${isbn})`;
+        document.getElementById('search-libro-id').value = id;
+        toggleModal('modal-select-book');
+    }
+
+    function promptAnular(id) {
+        document.getElementById('form-anular').action = `/prestamos/reservas/anular/${id}`;
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('anular-fecha').value = today;
+        toggleModal('modal-anular');
+    }
+
+    function buscarPrestamos() {
+        const titulo = document.getElementById('search-titulo').value.trim();
+        const autor = document.getElementById('search-autor').value.trim();
+        const isbn = document.getElementById('search-isbn').value.trim();
+        const editorial = document.getElementById('search-editorial').value.trim();
+        const usuario = document.getElementById('search-usuario').value.trim();
+        const email = document.getElementById('search-email').value.trim();
+        const telefono = document.getElementById('search-telefono').value.trim();
+
+        const params = new URLSearchParams();
+        if (titulo) params.append('titulo', titulo);
+        if (autor) params.append('autor', autor);
+        if (isbn) params.append('isbn', isbn);
+        if (editorial) params.append('editorial', editorial);
+        if (usuario) params.append('usuario', usuario);
+        if (email) params.append('email', email);
+        if (telefono) params.append('telefono', telefono);
+        params.append('sid', window.SID || '');
+
+        fetch(`/prestamos/buscar?${params.toString()}`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('tbody-resultados');
+                const resultsDiv = document.getElementById('resultados-busqueda');
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                tbody.innerHTML = '';
+
+                if (data.prestamos && data.prestamos.length > 0) {
+                    data.prestamos.forEach(p => {
+                        let actionHtml = '';
+                        if (CAN_MANAGE_LOANS) {
+                            actionHtml = `
+                                <td>
+                                    <form action="/prestamos/devolver/${p.id}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn"
+                                            style="padding: 0.25rem 0.5rem; background: var(--accent); color: white; font-size: 0.8rem;"
+                                            onclick="return confirm('¿Confirmar la devolución de este ejemplar?')">
+                                            <i class="fas fa-undo"></i> Devolver
+                                        </button>
+                                    </form>
+                                </td>
+                            `;
+                        } else {
+                            actionHtml = '<td><span class="text-muted">-</span></td>';
+                        }
+
+                        tbody.innerHTML += `
+                                <td style="text-align: center;">
+                                    <button class="row-expand-btn" onclick="toggleRowDetails('s-${p.id}')">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </td>
+                                <td class="text-end">#${p.id}</td>
+                                <td>
+                                    <div style="font-weight:600;">${p.usuario_nombre} ${p.usuario_apellido}</div>
+                                    <small class="text-muted" style="display:block;"><i class="fas fa-envelope"></i> ${p.usuario_email}</small>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: var(--primary);">${p.libro_titulo}</div>
+                                    <small class="text-muted" style="display:block;">ISBN: ${p.libro_isbn}</small>
+                                </td>
+                                <td>${p.fecha_prestamo}</td>
+                                <td style="font-weight: 600;">${p.fecha_devolucion}</td>
+                                <td><span class="badge badge-success">ACTIVO</span></td>
+                                ${actionHtml}
+                            </tr>
+                            <tr id="details-s-${p.id}" class="detail-row">
+                                <td colspan="8" style="padding: 0;">
+                                    <div class="expansion-container">
+                                        <div class="expansion-grid">
+                                            <div class="expansion-section">
+                                                <h4><i class="fas fa-user"></i> Datos del Usuario</h4>
+                                                <div class="expansion-data-item">
+                                                    <span class="expansion-label">Email</span>
+                                                    <span class="expansion-value">${p.usuario_email}</span>
+                                                </div>
+                                                <div class="expansion-data-item">
+                                                    <span class="expansion-label">Teléfono</span>
+                                                    <span class="expansion-value">${p.usuario_telefono || '-'}</span>
+                                                </div>
+                                            </div>
+                                            <div class="expansion-section">
+                                                <h4><i class="fas fa-book"></i> Datos del Artículo</h4>
+                                                <div class="expansion-data-item">
+                                                    <span class="expansion-label">Autor</span>
+                                                    <span class="expansion-value">${p.libro_autor}</span>
+                                                </div>
+                                                <div class="expansion-data-item">
+                                                    <span class="expansion-label">Editorial</span>
+                                                    <span class="expansion-value">${p.libro_editorial || '-'}</span>
+                                                </div>
+                                            </div>
+                                            <div class="expansion-section" style="grid-column: span 1.5;">
+                                                <h4><i class="fas fa-info-circle"></i> Estado del Préstamo</h4>
+                                                <div class="expansion-data-item">
+                                                    <span class="expansion-label">ID de Préstamo</span>
+                                                    <span class="expansion-value">#${p.id}</span>
+                                                </div>
+                                                <div class="expansion-data-item">
+                                                    <span class="expansion-label">Vencimiento</span>
+                                                    <span class="expansion-value text-danger" style="font-weight: 700;">${p.fecha_devolucion}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    resultsDiv.style.display = 'block';
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">No se encontraron préstamos con los criterios especificados.</td></tr>`;
+                    resultsDiv.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                console.error('Error searching loans:', err);
+                alert('Error al buscar préstamos');
+            });
+    }
+
+    function limpiarBusquedaPrestamos() {
+        document.getElementById('search-titulo').value = '';
+        document.getElementById('search-autor').value = '';
+        document.getElementById('search-isbn').value = '';
+        document.getElementById('search-editorial').value = '';
+        document.getElementById('search-usuario').value = '';
+        document.getElementById('search-email').value = '';
+        document.getElementById('search-telefono').value = '';
+        document.getElementById('resultados-busqueda').style.display = 'none';
+    }
+
+    // Auto-suggest reservation if params present
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const reserveBookId = urlParams.get('reservar_libro');
+        const reserveUserId = urlParams.get('reservar_usuario');
+
+        if (reserveBookId && reserveUserId) {
+            // Wait slightly for flash message to be seen
+            setTimeout(() => {
+                if (confirm("¿Desea registrar una RESERVA para este artículo y usuario? Se le notificará al devolverlo.")) {
+                    fetch(`/prestamos/reservar?sid=${window.SID || ''}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            libro_id: reserveBookId,
+                            usuario_id: reserveUserId
+                        })
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert("Reserva creada exitosamente. Puede verla en 'Ver Reservas'.");
+                                // Clean URL
+                                const newUrl = window.location.pathname;
+                                window.history.replaceState({}, document.title, newUrl);
+                                window.location.reload();
+                            } else {
+                                alert("Error al reservar: " + (data.error || 'Desconocido'));
+                            }
+                        })
+                        .catch(e => alert("Error de conexión"));
+                }
+            }, 500);
+        }
+    });
+</script>
+
+<div class="table-container card">
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 40px;"></th>
+                <th class="text-end">ID</th>
+                <th>Usuario / Contacto</th>
+                <th>Artículo / ISBN</th>
+                <th>F. Préstamo</th>
+                <th>F. Devolución</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in prestamos %}
+            <tr id="row-{{ p[0] }}">
+                <td style="text-align: center;">
+                    <button class="row-expand-btn" onclick="toggleRowDetails('{{ p[0] }}')">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </td>
+                <td class="text-end">#{{ p[0] }}</td>
+                <td>
+                    <div style="font-weight:600;">{{ p[1] }} {{ p[2] }}</div>
+                    <small class="text-muted" style="display:block;"><i class="fas fa-envelope"></i> {{ p[7] }}</small>
+                </td>
+                <td>
+                    <div style="font-weight: 600; color: var(--primary);">{{ p[3] }}</div>
+                    <small class="text-muted">ISBN: {{ p[8] }}</small>
+                </td>
+                <td>{{ p[4] }}</td>
+                <td style="font-weight: 600;">{{ p[5] }}</td>
+                <td>
+                    <span class="badge badge-success">ACTIVO</span>
+                </td>
+                <td>
+                    {% if 'loans_manage' in permissions %}
+                    <form action="/prestamos/devolver/{{ p[0] }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn"
+                            style="padding: 0.5rem 1rem; background: var(--accent); color: white;"
+                            onclick="return confirm('¿Confirmar la devolución de este ejemplar?')">
+                            <i class="fas fa-undo"></i> Devolver
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr id="details-{{ p[0] }}" class="detail-row">
+                <td colspan="8" style="padding: 0;">
+                    <div class="expansion-container">
+                        <div class="expansion-grid">
+                            <div class="expansion-section">
+                                <h4><i class="fas fa-user"></i> Datos del Usuario</h4>
+                                <div class="expansion-data-item">
+                                    <span class="expansion-label">Nombre Completo</span>
+                                    <span class="expansion-value">{{ p[1] }} {{ p[2] }}</span>
+                                </div>
+                                <div class="expansion-data-item">
+                                    <span class="expansion-label">Email</span>
+                                    <span class="expansion-value">{{ p[7] }}</span>
+                                </div>
+                                <div class="expansion-data-item">
+                                    <span class="expansion-label">Teléfono</span>
+                                    <span class="expansion-value">{{ p[10] or '-' }}</span>
+                                </div>
+                            </div>
+                            <div class="expansion-section">
+                                <h4><i class="fas fa-book"></i> Datos del Artículo</h4>
+                                <div class="expansion-data-item">
+                                    <span class="expansion-label">ISBN / Código</span>
+                                    <span class="expansion-value">{{ p[8] }}</span>
+                                </div>
+                                <div class="expansion-data-item">
+                                    <span class="expansion-label">Autor</span>
+                                    <span class="expansion-value">{{ p[9] }}</span>
+                                </div>
+                            </div>
+                            <div class="expansion-section" style="grid-column: span 1.5;">
+                                <h4><i class="fas fa-info-circle"></i> Detalles del Préstamo</h4>
+                                <div class="expansion-data-item">
+                                    <span class="expansion-label">Fecha de Salida</span>
+                                    <span class="expansion-value">{{ p[4] }}</span>
+                                </div>
+                                <div class="expansion-data-item">
+                                    <span class="expansion-label">Vencimiento</span>
+                                    <span class="expansion-value text-danger" style="font-weight: 700;">{{ p[5]
+                                        }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    No hay préstamos activos en este momento.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

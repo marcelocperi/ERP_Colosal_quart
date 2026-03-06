@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-lg border-0 bg-dark text-light">
+                <div
+                    class="card-header bg-gradient-success text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-money-check-alt me-2"></i>Emitir Orden de Pago</h4>
+                    <span class="badge bg-light text-success">Tesorería</span>
+                </div>
+                <div class="card-body p-4">
+                    <form id="opForm">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small uppercase fw-bold">Proveedor</label>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text bg-dark border-secondary text-success"><i
+                                            class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control bg-dark text-light border-secondary"
+                                        id="buscar_proveedor_pagar"
+                                        placeholder="Buscar por Código, Nombre, CUIT, Email o Localidad..."
+                                        autocomplete="off">
+                                    <span class="input-group-text bg-dark border-secondary text-muted"
+                                        id="buscar_spinner_pagar" style="display:none">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </span>
+                                </div>
+                                <select class="form-select bg-dark text-light border-secondary" id="proveedor_id"
+                                    required onchange="cargarFacturasPendientes()">
+                                    <option value="">-- Escriba para buscar --</option>
+                                </select>
+                                <div class="form-text text-muted" style="font-size:0.75rem">
+                                    <i class="fas fa-info-circle me-1"></i>Escriba al menos 2 caracteres para buscar.
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Fecha de Pago</label>
+                                <input type="date" class="form-control bg-dark text-light border-secondary" id="fecha"
+                                    value="{{ now }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small uppercase fw-bold">Nro Orden de Pago</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary" id="numero"
+                                    placeholder="OP-000001" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Columna Izquierda: Facturas Pendientes -->
+                            <div class="col-md-7">
+                                <div class="card bg-secondary bg-opacity-10 border-secondary mb-4">
+                                    <div class="card-header border-secondary d-flex justify-content-between">
+                                        <h6 class="mb-0">Facturas Pendientes de Pago</h6>
+                                        <span class="text-info small" id="totalSeleccionado">Seleccionado: $ 0.00</span>
+                                    </div>
+                                    <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                                        <table class="table table-dark table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th width="40"><input type="checkbox" id="selectAll"
+                                                            onclick="toggleAll()"></th>
+                                                    <th>Fecha</th>
+                                                    <th>Comprobante</th>
+                                                    <th class="text-end">Saldo</th>
+                                                    <th class="text-end" width="120">A Pagar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="listaFacturas">
+                                                <tr>
+                                                    <td colspan="5" class="text-center p-4 text-muted small">Seleccione
+                                                        un proveedor para ver sus facturas pendientes</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Columna Derecha: Retenciones y Medios de Pago -->
+                            <div class="col-md-5">
+                                <!-- Sección Retenciones -->
+                                <div class="card bg-danger bg-opacity-10 border-danger mb-4">
+                                    <div class="card-header border-danger">
+                                        <h6 class="mb-0 text-danger"><i class="fas fa-cut me-2"></i>Retenciones a
+                                            Aplicar</h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="small">Retención IIBB (Padrón):</span>
+                                                <span class="fw-bold" id="retIibbImporte">$ 0.00</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="small">Retención Ganancias:</span>
+                                                <span class="fw-bold" id="retGananciasImporte">$ 0.00</span>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger w-100"
+                                            onclick="recalcularRetenciones()">
+                                            Recalcular Retenciones <i class="fas fa-sync-alt ms-1"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Sección Medios de Pago -->
+                                <div class="card bg-success bg-opacity-10 border-success">
+                                    <div class="card-header border-success">
+                                        <h6 class="mb-0 text-success"><i class="fas fa-wallet me-2"></i>Medios de Pago
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div id="listaMedios">
+                                            <!-- Aquí se agregan los pagos -->
+                                        </div>
+                                        <div class="row g-2 mt-2">
+                                            <div class="col-6">
+                                                <select class="form-select form-select-sm bg-dark text-light"
+                                                    id="medio_id_nuevo">
+                                                    {% for m in medios_pago %}
+                                                    <option value="{{ m.id }}" data-tipo="{{ m.tipo }}">{{ m.nombre }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <input type="number" step="0.01"
+                                                    class="form-control form-control-sm bg-dark text-light"
+                                                    id="monto_nuevo" placeholder="Monto">
+                                            </div>
+                                            <div class="col-2">
+                                                <button type="button" class="btn btn-sm btn-success w-100"
+                                                    onclick="agregarMedio()"><i class="fas fa-plus"></i></button>
+                                            </div>
+                                        </div>
+                                        <hr class="border-success opacity-25">
+                                        <div class="d-flex justify-content-between h5 mt-2">
+                                            <span>Neto a Pagar:</span>
+                                            <span class="text-success fw-bold" id="netoAPagar">$ 0.00</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small text-muted">
+                                            <span>Cubierto:</span>
+                                            <span id="totalCubierto">$ 0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-end">
+                            <button type="button" class="btn btn-outline-secondary me-2"
+                                onclick="window.history.back()">Cancelar</button>
+                            <button type="button" class="btn btn-success btn-lg px-5 shadow" onclick="finalizarOP()">
+                                Finalizar Orden de Pago <i class="fas fa-check-circle ms-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Detalle Medio de Pago (Echeck / Debin) -->
+<div class="modal fade" id="modalDetalleMedio" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="detalleMedioTitulo">Detalle del Pago</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="form-echeck" class="d-none">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="es_echeck">
+                            <label class="form-check-label" for="es_echeck">¿Es E-Check?</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Número de Cheque</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="nro_cheque">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Banco</label>
+                        <select class="form-select bg-dark text-light border-secondary" id="banco_id">
+                            <option value="">Seleccione banco...</option>
+                            <option value="1">Banco Nación</option>
+                            <option value="2">Banco Santander</option>
+                            <option value="3">Banco Galicia</option>
+                            <option value="4">BBVA</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Fecha de Pago/Cobro</label>
+                        <input type="date" class="form-control bg-dark text-light border-secondary" id="fecha_cheque">
+                    </div>
+                </div>
+
+                <div id="form-debin" class="d-none">
+                    <div class="mb-3">
+                        <label class="form-label small">ID de DEBIN / Transferencia</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="debin_id"
+                            placeholder="Ej: DBT-123456789">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">CBU / Alias Origen/Destino</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="cbu_alias"
+                            placeholder="22 dígitos o alias">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="confirmarDetalleMedio()">Confirmar
+                    Detalle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let facturasProv = [];
+    let mediosPago = [];
+    let retIibbRel = 0;
+    let retGanRel = 0;
+
+    // ===== BUSCADOR DINÁMICO DE PROVEEDORES =====
+    let _buscarTimerPagar = null;
+
+    function poblarSelectProveedorPagar(proveedores, seleccionarUnico = false) {
+        const sel = document.getElementById('proveedor_id');
+        const valorActual = sel.value;
+        sel.innerHTML = '<option value="">-- Seleccione un proveedor --</option>';
+        proveedores.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.dataset.cuit = p.cuit || '';
+            opt.dataset.codigo = p.codigo || '';
+            opt.dataset.localidad = p.localidad || '';
+            const localidad = p.localidad ? ` (${p.localidad})` : '';
+            opt.textContent = (p.codigo ? `[${p.codigo}] ` : '') + p.nombre + localidad + ' - CUIT: ' + (p.cuit || '');
+            sel.appendChild(opt);
+        });
+        if (valorActual) sel.value = valorActual;
+        if (seleccionarUnico && proveedores.length === 1) {
+            sel.value = proveedores[0].id;
+            cargarFacturasPendientes();
+        }
+    }
+
+    document.getElementById('buscar_proveedor_pagar').addEventListener('input', function () {
+        const q = this.value.trim();
+        clearTimeout(_buscarTimerPagar);
+        if (q.length > 0 && q.length < 2) return;
+        const spinner = document.getElementById('buscar_spinner_pagar');
+        _buscarTimerPagar = setTimeout(async () => {
+            spinner.style.display = '';
+            try {
+                const url = `/compras/api/buscar-proveedores?q=${encodeURIComponent(q)}&sid=${window.SID || ''}`;
+                const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                if (resp.status === 401) { window.location.href = '/'; return; }
+                if (!resp.ok) return;
+                const proveedores = await resp.json();
+                poblarSelectProveedorPagar(proveedores, q.length >= 2);
+            } catch (e) {
+                console.error('Error buscando proveedores:', e);
+            } finally {
+                spinner.style.display = 'none';
+            }
+        }, 300);
+    });
+
+    // Cargar primeros 30 al inicializar
+    (async () => {
+        try {
+            const resp = await fetch(`/compras/api/buscar-proveedores?q=&sid=${window.SID || ''}`, { headers: { 'Accept': 'application/json' } });
+            if (resp.status === 401) { window.location.href = '/'; return; }
+            if (!resp.ok) return;
+            const proveedores = await resp.json();
+            poblarSelectProveedorPagar(proveedores);
+        } catch (e) { console.error(e); }
+    })();
+    // =============================================
+
+    async function cargarFacturasPendientes() {
+        const provId = document.getElementById('proveedor_id').value;
+        if (!provId) {
+            document.getElementById('listaFacturas').innerHTML = '<tr><td colspan="5" class="text-center p-4 text-muted small">Seleccione un proveedor</td></tr>';
+            return;
+        }
+
+        const resp = await fetch(`/compras/api/facturas-pendientes-proveedor/${provId}?sid=${window.SID || ''}`);
+        facturasProv = await resp.json();
+
+        const tbody = document.getElementById('listaFacturas');
+        tbody.innerHTML = '';
+
+        facturasProv.forEach(f => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><input type="checkbox" class="chk-factura" data-id="${f.id}" onchange="actualizarSeleccion()"></td>
+                    <td>${new Date(f.fecha_emision).toLocaleDateString()}</td>
+                    <td>${f.tipo_nombre} ${f.punto_venta}-${f.numero}</td>
+                    <td class="text-end">$ ${f.saldo.toFixed(2)}</td>
+                    <td class="text-end">
+                        <input type="number" step="0.01" value="${f.saldo}" class="form-control form-control-sm text-end input-pago" data-id="${f.id}" onchange="actualizarSeleccion()">
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Cargar alícuotas del padrón para sugerir retención
+        consultarPadronesProveedor(provId);
+    }
+
+    async function consultarPadronesProveedor(provId) {
+        const cuit = document.querySelector(`#proveedor_id option[value="${provId}"]`).dataset.cuit;
+        const resp = await fetch(`/contabilidad/api/consultar-padron/${cuit}?sid=${window.SID || ''}`);
+        const rates = await resp.json();
+
+        // Guardamos la alícuota de retención (no percepción)
+        retIibbRel = (rates.ARBA && rates.ARBA.alicuota_retencion) ? rates.ARBA.alicuota_retencion : 0;
+        recalculateAll();
+    }
+
+    function actualizarSeleccion() {
+        recalculateAll();
+    }
+
+    function recalculateAll() {
+        let subtotal = 0;
+        document.querySelectorAll('.chk-factura:checked').forEach(chk => {
+            const id = chk.dataset.id;
+            const input = document.querySelector(`.input-pago[data-id="${id}"]`);
+            subtotal += parseFloat(input.value) || 0;
+        });
+
+        const retIibb = subtotal * (retIibbRel / 100);
+        // Simulación Ganancias (simplificado)
+        const retGan = subtotal > 100000 ? (subtotal - 100000) * 0.02 : 0;
+
+        document.getElementById('totalSeleccionado').textContent = `Seleccionado: $ ${subtotal.toFixed(2)}`;
+        document.getElementById('retIibbImporte').textContent = `$ ${retIibb.toFixed(2)}`;
+        document.getElementById('retGananciasImporte').textContent = `$ ${retGan.toFixed(2)}`;
+
+        const neto = subtotal - retIibb - retGan;
+        document.getElementById('netoAPagar').textContent = `$ ${neto.toFixed(2)}`;
+
+        actualizarInfoPagos();
+    }
+
+    let pendingMedio = null;
+
+    function agregarMedio() {
+        const id = document.getElementById('medio_id_nuevo').value;
+        const opt = document.getElementById('medio_id_nuevo').options[document.getElementById('medio_id_nuevo').selectedIndex];
+        const nombre = opt.text;
+        const monto = parseFloat(document.getElementById('monto_nuevo').value) || 0;
+        const tipo = opt.dataset.tipo || '';
+
+        if (monto <= 0) return;
+
+        if (tipo === 'CHEQUE' || tipo === 'TRANSFERENCIA') {
+            pendingMedio = { id, nombre, monto, tipo };
+            document.getElementById('detalleMedioTitulo').textContent = `Detalle de ${nombre}`;
+            document.getElementById('form-echeck').classList.toggle('d-none', tipo !== 'CHEQUE');
+            document.getElementById('form-debin').classList.toggle('d-none', tipo !== 'TRANSFERENCIA');
+
+            // Reset modal fields
+            document.getElementById('es_echeck').checked = false;
+            document.getElementById('nro_cheque').value = '';
+            document.getElementById('debin_id').value = '';
+
+            new bootstrap.Modal(document.getElementById('modalDetalleMedio')).show();
+        } else {
+            mediosPago.push({ id, nombre, monto, tipo });
+            document.getElementById('monto_nuevo').value = '';
+            showToast("Medio de pago agregado", "success");
+            actualizarInfoPagos();
+        }
+    }
+
+    function confirmarDetalleMedio() {
+        if (!pendingMedio) return;
+
+        const extra = {};
+        if (pendingMedio.tipo === 'CHEQUE') {
+            extra.es_echeck = document.getElementById('es_echeck').checked;
+            extra.nro_cheque = document.getElementById('nro_cheque').value;
+            extra.banco_id = document.getElementById('banco_id').value;
+            extra.fecha_pago = document.getElementById('fecha_cheque').value;
+        } else if (pendingMedio.tipo === 'TRANSFERENCIA') {
+            extra.debin_id = document.getElementById('debin_id').value;
+            extra.cbu_alias = document.getElementById('cbu_alias').value;
+        }
+
+        mediosPago.push({ ...pendingMedio, ...extra });
+        document.getElementById('monto_nuevo').value = '';
+        pendingMedio = null;
+
+        bootstrap.Modal.getInstance(document.getElementById('modalDetalleMedio')).hide();
+        showToast("Medio de pago con detalle agregado", "success");
+        actualizarInfoPagos();
+    }
+
+    function actualizarInfoPagos() {
+        const div = document.getElementById('listaMedios');
+        div.innerHTML = '';
+        let total = 0;
+        mediosPago.forEach((m, idx) => {
+            total += m.monto;
+            div.innerHTML += `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small">${m.nombre}</span>
+                    <div class="d-flex align-items-center">
+                        <span class="fw-bold me-2">$ ${m.monto.toFixed(2)}</span>
+                        <button type="button" class="btn btn-link text-danger p-0" onclick="quitarMedio(${idx})"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('totalCubierto').textContent = `$ ${total.toFixed(2)}`;
+    }
+
+    function quitarMedio(idx) {
+        mediosPago.splice(idx, 1);
+        actualizarInfoPagos();
+    }
+
+    async function finalizarOP() {
+        const subtotal = parseFloat(document.getElementById('totalSeleccionado').textContent.replace('Seleccionado: $ ', ''));
+        const neto = parseFloat(document.getElementById('netoAPagar').textContent.replace('$ ', ''));
+        const cubierto = parseFloat(document.getElementById('totalCubierto').textContent.replace('$ ', ''));
+
+        if (Math.abs(neto - cubierto) > 0.05) {
+            if (!confirm(`El total cubierto ($${cubierto}) no coincide con el neto a pagar ($${neto}). ¿Desea continuar igual?`)) return;
+        }
+
+        const payload = {
+            proveedor_id: document.getElementById('proveedor_id').value,
+            fecha: document.getElementById('fecha').value,
+            facturas: [],
+            medios: mediosPago,
+            retenciones: [
+                { tipo: 'IIBB', importe: parseFloat(document.getElementById('retIibbImporte').textContent.replace('$ ', '')) },
+                { tipo: 'GANANCIAS', importe: parseFloat(document.getElementById('retGananciasImporte').textContent.replace('$ ', '')) }
+            ],
+            sid: "{{ sid }}"
+        };
+
+        document.querySelectorAll('.chk-factura:checked').forEach(chk => {
+            const id = chk.dataset.id;
+            const input = document.querySelector(`.input-pago[data-id="${id}"]`);
+            payload.facturas.push({ id: id, importe: parseFloat(input.value) });
+        });
+
+        if (payload.facturas.length === 0) {
+            alert("Seleccione al menos una factura para pagar.");
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/compras/api/procesar-orden-pago?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            });
+            const res = await resp.json();
+            if (res.success) {
+                alert("Orden de Pago generada con éxito.");
+                window.location.href = "{{ url_for('compras.ordenes_pago') }}";
+            } else {
+                alert("Error: " + res.message);
+            }
+        } catch (e) {
+            alert("Error de conexión.");
+        }
+    }
+</script>
+
+<style>
+    .bg-gradient-success {
+        background: linear-gradient(45deg, #1cc88a 0%, #13855c 100%);
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .table-dark {
+        --bs-table-bg: #1a1e21;
+    }
+
+    .input-pago {
+        background-color: #2c3034 !important;
+        border-color: #495057;
+        color: white;
+    }
+</style>
+{% endblock %}

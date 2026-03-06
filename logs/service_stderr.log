@@ -1,0 +1,1282 @@
+FATAL: Error al lanzar el subproceso: module 'win32event' has no attribute 'GetTickCount'
+2026-02-23 13:53:56,680 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5005...
+2026-02-23 13:53:56,686 - waitress - INFO - Serving on http://0.0.0.0:5005
+2026-02-23 13:54:13,679 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 13:54:24,327 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 16:24:35,945 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5005...
+2026-02-23 16:24:35,957 - waitress - INFO - Serving on http://0.0.0.0:5005
+2026-02-23 16:24:40,836 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 16:24:49,719 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 16:29:42,529 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5005...
+2026-02-23 16:29:42,534 - waitress - INFO - Serving on http://0.0.0.0:5005
+2026-02-23 16:29:59,843 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 16:35:06,657 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 16:46:45,248 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5005...
+2026-02-23 16:46:45,254 - waitress - INFO - Serving on http://0.0.0.0:5005
+2026-02-23 16:46:52,409 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 16:46:58,012 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 16:56:07,566 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5005...
+2026-02-23 16:56:07,574 - waitress - INFO - Serving on http://0.0.0.0:5005
+2026-02-23 16:56:09,979 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 16:56:16,015 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 17:00:01,873 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-23 17:02:11,742 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 01:07:19,903 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+Traceback (most recent call last):
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 3, in <module>
+    from core.routes import core_bp
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\routes.py", line 3, in <module>
+    from database import get_db_cursor, atomic_transaction
+ImportError: cannot import name 'atomic_transaction' from 'database' (c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\database.py)
+Traceback (most recent call last):
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 3, in <module>
+    from core.routes import core_bp
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\routes.py", line 3, in <module>
+    from database import get_db_cursor, atomic_transaction
+ImportError: cannot import name 'atomic_transaction' from 'database' (c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\database.py)
+Traceback (most recent call last):
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 3, in <module>
+    from core.routes import core_bp
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\routes.py", line 3, in <module>
+    from database import get_db_cursor, atomic_transaction
+ImportError: cannot import name 'atomic_transaction' from 'database' (c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\database.py)
+2026-02-24 01:33:20,676 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 01:33:20,685 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 01:42:31,052 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 01:42:31,059 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 01:47:13,709 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 01:47:13,717 - waitress - INFO - Serving on http://0.0.0.0:5000
+Traceback (most recent call last):
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 6, in <module>
+    from compras.routes import compras_bp
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\compras\routes.py", line 4, in <module>
+    from services.georef_service import GeorefService
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\georef_service.py", line 351
+    @staticmethod
+                 ^
+IndentationError: unexpected unindent
+Traceback (most recent call last):
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 6, in <module>
+    from compras.routes import compras_bp
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\compras\routes.py", line 4, in <module>
+    from services.georef_service import GeorefService
+  File "c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\georef_service.py", line 351
+    @staticmethod
+                 ^
+IndentationError: unexpected unindent
+2026-02-24 01:58:01,031 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 01:58:01,046 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 01:58:02,873 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 01:58:08,720 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 01:58:20,165 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-02-24 01:58:20,186 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-02-24 01:58:21,552 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-02-24 01:58:21,590 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-02-24 01:58:26,440 - app - ERROR - Exception on /api/georef/calles [GET]
+Traceback (most recent call last):
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 939, in finalize_request
+    response = self.make_response(rv)
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 1249, in make_response
+    raise TypeError(
+    ...<5 lines>...
+    )
+TypeError: The view function did not return a valid response. The return type must be a string, dict, list, tuple with headers or status, Response instance, or WSGI callable, but it was a coroutine.
+2026-02-24 01:58:34,131 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-02-24 01:58:34,151 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-02-24 01:58:45,227 - app - ERROR - Exception on /api/georef/calles [GET]
+Traceback (most recent call last):
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 939, in finalize_request
+    response = self.make_response(rv)
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 1249, in make_response
+    raise TypeError(
+    ...<5 lines>...
+    )
+TypeError: The view function did not return a valid response. The return type must be a string, dict, list, tuple with headers or status, Response instance, or WSGI callable, but it was a coroutine.
+2026-02-24 01:59:17,022 - app - ERROR - Exception on /api/georef/calles [GET]
+Traceback (most recent call last):
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 939, in finalize_request
+    response = self.make_response(rv)
+  File "C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py", line 1249, in make_response
+    raise TypeError(
+    ...<5 lines>...
+    )
+TypeError: The view function did not return a valid response. The return type must be a string, dict, list, tuple with headers or status, Response instance, or WSGI callable, but it was a coroutine.
+C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\PIL\ImageText.py:3: RuntimeWarning: coroutine 'api_get_calles' was never awaited
+  from . import ImageFont
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+2026-02-24 10:15:33,516 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 10:15:41,364 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 10:15:42,050 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'ventas.cuenta_corriente_global' with values ['sid']. Did you mean 'ventas.api_cuenta_corriente' instead?
+2026-02-24 10:16:18,070 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 10:16:18,085 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 10:16:20,334 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 10:16:26,776 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 10:30:40,870 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 10:30:40,886 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 10:33:02,001 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 10:33:30,022 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 10:46:34,732 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 10:46:56,755 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 10:46:56,768 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 10:50:21,210 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 10:50:21,228 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 10:51:26,020 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 10:51:32,914 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 11:00:43,209 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 11:00:43,221 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 11:00:43,549 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 11:00:49,398 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 12:34:58,527 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 12:35:03,073 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 12:35:08,960 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 12:35:21,132 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 12:35:32,040 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 12:42:33,654 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 12:51:40,468 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 12:52:17,778 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 15:57:20,052 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 15:57:22,712 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 15:57:28,742 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 16:11:35,611 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 16:11:43,113 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 16:16:52,803 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'compras.comprobantes' with values ['sid']. Did you mean 'compras.aprobaciones' instead?
+2026-02-24 16:16:55,844 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 16:17:01,907 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 16:17:04,408 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 16:17:47,777 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 16:17:47,789 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 16:17:52,245 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 16:17:58,854 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 17:42:04,372 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 17:42:10,167 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 2
+2026-02-24 17:42:11,053 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'core.admin_numeracion' with values ['sid']. Did you mean 'core.admin_users' instead?
+2026-02-24 18:45:41,073 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 18:45:41,084 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 19:45:06,506 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 19:45:22,718 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 19:45:22,729 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 19:45:25,934 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 19:45:31,743 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 20:29:05,993 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 20:29:10,471 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 20:29:24,476 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 20:29:24,486 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 20:29:27,481 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 20:29:37,882 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 20:29:44,048 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 20:29:50,533 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py:919: RuntimeWarning: coroutine 'AfipService.consultar_padron' was never awaited
+  rv = self.handle_user_exception(e)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+2026-02-24 22:47:58,645 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 22:47:58,665 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 22:47:58,887 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 22:48:05,417 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:06:31,467 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 23:06:31,475 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 23:06:32,155 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:06:42,839 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:08:10,280 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:08:21,092 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:20:25,858 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 23:20:25,869 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 23:20:29,856 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:20:38,044 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:22:10,034 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 23:22:10,043 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 23:22:10,271 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:22:15,879 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:30:21,912 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 23:30:21,923 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-24 23:30:22,289 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:30:29,963 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:30:38,356 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-24 23:32:57,853 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-24 23:32:57,866 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 00:46:58,732 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 00:46:58,737 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 00:49:58,592 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 00:49:58,597 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 04:09:47,916 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 04:09:47,922 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 04:10:28,699 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 04:10:35,749 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 04:25:58,735 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 04:26:04,895 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 04:26:11,264 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 04:32:00,503 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 04:32:19,761 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+C:\Users\marce\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\flask\app.py:919: RuntimeWarning: coroutine 'AfipService.consultar_padron' was never awaited
+  rv = self.handle_user_exception(e)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+2026-02-25 05:09:09,283 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 05:09:09,298 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 05:09:13,050 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 05:09:19,473 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 05:19:24,442 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 05:19:24,449 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 05:20:39,579 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 05:20:47,447 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 08:35:19,948 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 08:35:19,952 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 08:35:23,335 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 08:35:26,255 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 08:35:32,670 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 14:30:37,987 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 14:30:38,011 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 14:30:42,441 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 14:30:44,681 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 14:42:48,650 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 14:42:56,006 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:29:15,502 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:29:33,695 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:31:30,798 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:31:30,807 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:31:30,811 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:31:46,321 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:31:50,783 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:33:00,048 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:33:11,392 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:33:51,837 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:34:19,770 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:38:49,543 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:41:58,463 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 17:42:04,147 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:01:20,618 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 18:01:20,627 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 18:11:35,346 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 18:11:35,355 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 18:28:02,713 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 18:28:02,718 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 18:30:31,208 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:30:36,985 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:30:57,982 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-02-25 18:30:57,993 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-02-25 18:36:35,078 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-25 18:36:35,082 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-25 18:37:34,969 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:37:40,968 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:46:18,328 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:46:22,027 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:46:23,336 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:46:30,259 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:54:14,055 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:54:16,299 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:54:38,859 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-25 18:54:44,351 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 10:37:51,018 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 10:37:51,029 - waitress - INFO - Serving on http://0.0.0.0:5000
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 3, in <module>
+    from core.routes import core_bp
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\core\routes.py", line 3, in <module>
+    from database import get_db_cursor, atomic_transaction
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\database.py", line 42, in <module>
+    raise ValueError("\u26a0\ufe0f SECURITY: DB_PASSWORD no puede estar vacía. Configurar en archivo .env")
+ValueError: \u26a0\ufe0f SECURITY: DB_PASSWORD no puede estar vacía. Configurar en archivo .env
+2026-02-27 11:03:41,561 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 11:03:41,569 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 11:13:41,470 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 11:13:41,475 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 11:52:36,972 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 11:52:36,982 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 11:52:50,286 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 11:52:56,374 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:09:44,619 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 12:09:44,627 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 12:09:49,079 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:10:03,375 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:10:09,577 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:10:22,073 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:21:59,165 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 12:21:59,171 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 12:22:18,492 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:22:20,259 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:22:26,349 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:58:07,214 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 12:58:07,220 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 12:58:17,031 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:58:19,262 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 12:58:25,278 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 13:04:40,140 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 13:04:40,146 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 13:05:16,941 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 13:05:18,921 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 13:05:24,138 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:10:04,989 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:12:30,326 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:12:46,868 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:13:02,967 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:13:24,618 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:13:50,238 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:13:50,584 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:15:22,874 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:15:23,155 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:16:38,271 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:16:44,634 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:20:29,870 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:20:43,317 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:20:43,666 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:22:19,069 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 15:22:19,076 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 15:22:19,455 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:22:22,401 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:22:31,891 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:27:47,942 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:28:12,618 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:31:57,135 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 15:31:57,141 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 15:32:03,796 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:32:09,471 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:33:03,263 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:34:41,771 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 15:34:41,777 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 15:34:47,399 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 15:34:47,404 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 15:35:17,728 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:35:34,279 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:35:46,145 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:35:51,664 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:42:26,971 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:42:34,855 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:42:54,749 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:43:01,682 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:43:15,999 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 15:43:16,003 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 15:43:22,999 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:43:43,175 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:51:49,559 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 15:51:49,565 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 15:51:51,307 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:51:53,739 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 15:52:04,123 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 16:47:07,975 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 16:47:21,661 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 16:47:21,676 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 16:47:22,707 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 16:47:28,534 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 17:09:06,019 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 17:09:06,023 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 17:09:27,904 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 17:09:30,755 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 17:09:36,069 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 17:14:27,354 - services.sod_service - INFO - Implementando SoD para enterprise_id=0
+2026-02-27 17:14:27,680 - services.sod_service - INFO - Creando usuarios SoD...
+2026-02-27 17:14:27,683 - services.sod_service - INFO - Inicialización SoD completada correctamente.
+2026-02-27 17:16:40,097 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 17:16:40,105 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 17:16:42,262 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 17:16:48,319 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 17:18:00,837 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 17:18:05,974 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 17:39:07,853 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'core.audit_integrity' with values ['sid']. Did you mean 'core.audit_permissions' instead?
+2026-02-27 17:39:14,507 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'core.audit_integrity' with values ['sid']. Did you mean 'core.audit_permissions' instead?
+2026-02-27 17:39:16,976 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'core.audit_integrity' with values ['sid']. Did you mean 'core.audit_permissions' instead?
+2026-02-27 17:39:18,066 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'core.audit_integrity' with values ['sid']. Did you mean 'core.audit_permissions' instead?
+2026-02-27 17:52:39,538 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'core.audit_integrity' with values ['sid']. Did you mean 'core.audit_permissions' instead?
+2026-02-27 17:53:11,490 - biblioteca.routes - ERROR - Dashboard Error: Could not build url for endpoint 'core.audit_integrity' with values ['sid']. Did you mean 'core.audit_permissions' instead?
+2026-02-27 18:23:59,928 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 18:23:59,943 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 18:24:25,289 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:24:33,406 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:31:18,491 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:32:02,018 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:32:16,706 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:32:20,565 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:32:31,870 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:32:35,871 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:33:13,309 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 18:33:41,405 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 19:18:33,579 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 19:18:33,628 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 20:16:51,961 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 20:16:51,978 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 20:50:19,688 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 20:50:19,693 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 21:03:09,586 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 21:03:09,595 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 21:17:03,399 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 21:17:03,418 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 21:19:05,740 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 21:19:11,793 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 21:40:48,238 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 21:41:12,838 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 21:41:12,844 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 21:41:15,782 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 21:41:22,284 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 21:50:30,405 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 21:50:30,412 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 21:50:36,878 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 21:50:46,864 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 21:57:33,267 - services.sod_service - INFO - Implementando SoD para enterprise_id=0
+2026-02-27 21:57:33,560 - services.sod_service - INFO - Creando usuarios SoD...
+2026-02-27 21:57:33,564 - services.sod_service - INFO - Inicialización SoD completada correctamente.
+2026-02-27 22:00:00,625 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-27 22:00:00,630 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-27 22:00:30,011 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 22:00:35,727 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-27 22:02:04,256 - services.sod_service - INFO - Implementando SoD para enterprise_id=0
+2026-02-27 22:02:04,513 - services.sod_service - INFO - Creando usuarios SoD...
+2026-02-27 22:02:04,517 - services.sod_service - INFO - Inicialización SoD completada correctamente.
+2026-02-28 00:25:35,388 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-28 00:25:35,392 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-28 00:25:55,677 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-02-28 00:25:55,681 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-02-28 00:26:53,591 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-02-28 00:26:53,598 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-02-28 00:41:17,977 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-02-28 00:41:17,982 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-02-28 00:49:01,546 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-28 01:14:00,422 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-02-28 01:14:00,427 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-02-28 01:20:33,742 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-02-28 01:20:33,748 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-02-28 08:43:07,665 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-02-28 08:43:07,673 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-02-28 08:44:33,630 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-28 17:10:51,337 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-28 17:10:56,386 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-28 17:11:10,080 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-28 17:51:18,145 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-28 17:51:24,020 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-02-28 19:18:38,816 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 6, in <module>
+    from compras.routes import compras_bp
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\compras\routes.py", line 8, in <module>
+    from services.budget_service import BudgetService
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\budget_service.py", line 2, in <module>
+    from multiMCP.database import get_db_cursor
+ModuleNotFoundError: No module named 'multiMCP'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 6, in <module>
+    from compras.routes import compras_bp
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\compras\routes.py", line 8, in <module>
+    from services.budget_service import BudgetService
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\budget_service.py", line 2, in <module>
+    from multiMCP.database import get_db_cursor
+ModuleNotFoundError: No module named 'multiMCP'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 6, in <module>
+    from compras.routes import compras_bp
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\compras\routes.py", line 8, in <module>
+    from services.budget_service import BudgetService
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\budget_service.py", line 2, in <module>
+    from multiMCP.database import get_db_cursor
+ModuleNotFoundError: No module named 'multiMCP'
+2026-03-01 01:21:35,652 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 01:21:35,657 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 01:22:15,705 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:22:24,988 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:23:12,992 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 01:23:13,001 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 01:23:14,523 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:23:20,765 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:33:34,015 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 01:33:34,021 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 01:41:26,402 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 01:41:26,663 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 01:45:56,778 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:46:16,109 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 01:46:16,113 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 01:46:20,047 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:46:23,859 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:46:32,043 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:46:38,448 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:48:20,352 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:48:26,140 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:54:08,152 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:56:04,686 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 01:56:04,691 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 01:56:16,169 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 01:56:41,640 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 02:32:00,277 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 02:32:02,907 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 02:32:16,556 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 02:35:09,893 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 02:35:09,901 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 02:35:25,608 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 02:35:30,668 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 11:59:23,983 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 11:59:24,833 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 12:05:21,686 - app - WARNING - CSRF Failure on /admin/roles/update_permissions/23. Form Token: fec1a..., Session Token: 0c0ac...
+2026-03-01 13:23:45,795 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 13:23:45,801 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 13:23:55,532 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:24:00,033 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:24:06,523 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:50:37,831 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 13:50:37,839 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 13:50:38,215 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:50:41,897 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:50:55,029 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:54:25,474 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:54:35,146 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 13:54:35,153 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 13:54:37,978 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:54:44,028 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 13:54:50,412 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:01:33,921 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 14:01:33,933 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 14:01:35,535 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:01:49,089 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:10:41,266 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 14:10:41,275 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 14:10:42,791 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:10:46,601 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:11:18,264 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:11:35,067 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 14:11:35,073 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 14:11:54,047 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:11:59,308 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:21:11,003 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 14:21:11,008 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 14:21:14,508 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:21:16,940 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:21:22,802 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:46:32,417 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:46:34,340 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:46:44,740 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 14:46:44,746 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 14:46:47,589 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 14:46:54,488 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 15:19:32,717 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 15:19:32,726 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 15:19:33,164 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 15:19:38,806 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-01 15:25:16,882 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 15:25:16,889 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-01 19:10:06,545 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-01 19:10:06,553 - waitress - INFO - Serving on http://0.0.0.0:80
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1950: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-02 02:39:43,114 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 02:39:43,123 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 02:39:47,293 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 02:39:55,152 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 02:55:21,774 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 02:55:21,780 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 02:55:24,677 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 02:55:28,803 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 02:55:34,557 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 02:56:36,985 - services.sod_service - INFO - Implementando SoD para enterprise_id=0
+2026-03-02 02:56:37,232 - services.sod_service - INFO - Creando usuarios SoD...
+2026-03-02 02:56:37,236 - services.sod_service - INFO - Inicialización SoD completada correctamente.
+2026-03-02 02:57:43,470 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 02:57:49,719 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 8, in <module>
+    from stock.routes import stock_bp
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py", line 19, in <module>
+    from stock.fazon_routes import register_fazon_routes
+ModuleNotFoundError: No module named 'stock.fazon_routes'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\run_production.py", line 6, in <module>
+    from app import app
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\app.py", line 8, in <module>
+    from stock.routes import stock_bp
+  File "C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py", line 19, in <module>
+    from stock.fazon_routes import register_fazon_routes
+ModuleNotFoundError: No module named 'stock.fazon_routes'
+2026-03-02 10:55:20,954 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 10:55:20,961 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 12:17:40,033 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 12:17:40,041 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 13:07:41,688 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 13:07:41,726 - waitress - INFO - Serving on http://0.0.0.0:80
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1950: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-02 18:15:16,170 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 18:15:16,231 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 18:25:49,351 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 18:25:49,356 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 19:15:52,588 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 19:15:52,597 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 19:15:55,799 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 19:16:01,316 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 19:18:28,798 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 19:18:37,692 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 19:18:37,922 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 19:58:55,397 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 19:59:06,483 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 19:59:06,491 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 19:59:07,062 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 19:59:09,532 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 19:59:15,084 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:09:31,577 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:09:31,807 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:09:39,775 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:09:48,098 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:09:48,350 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:20:09,780 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:20:16,635 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:20:16,858 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:20:27,429 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:20:36,309 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-02 20:20:36,316 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-02 20:20:38,280 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:20:42,540 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:20:46,008 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-02 20:20:52,913 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 08:47:50,916 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 08:47:58,640 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 08:48:44,418 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 08:48:44,429 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 08:48:46,321 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 08:57:22,700 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 08:59:44,303 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 08:59:44,311 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 08:59:44,804 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 09:00:28,965 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 09:10:09,388 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 09:10:26,221 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:5000...
+2026-03-03 09:10:26,228 - waitress - INFO - Serving on http://0.0.0.0:5000
+2026-03-03 09:50:44,239 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 09:50:44,248 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 10:25:34,582 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 10:26:37,919 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 10:30:14,517 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 10:30:24,918 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 14:50:12,669 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 14:50:12,677 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 14:50:14,086 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 14:50:21,591 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 15:54:05,175 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 15:54:05,182 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 15:54:05,370 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 15:54:21,131 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:08:01,416 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:08:06,251 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:17:24,120 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 16:17:24,128 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 16:17:29,492 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:17:31,625 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:17:37,313 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1957: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-03 16:40:10,186 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 16:40:10,191 - waitress - INFO - Serving on http://0.0.0.0:80
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1964: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-03 16:54:10,579 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 16:54:10,584 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 16:54:14,018 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:54:16,498 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 16:54:21,808 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 17:52:34,701 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 17:52:34,707 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 17:52:38,657 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 17:52:47,883 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:16:32,234 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:16:34,651 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:17:01,418 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:17:25,726 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 18:17:25,730 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 18:37:49,699 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 18:37:55,259 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:45:12,800 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 19:45:12,806 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 19:45:40,403 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:45:47,521 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:51:04,945 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:51:12,827 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:57:29,610 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 19:57:29,617 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 19:57:33,996 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:57:35,787 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 19:57:40,847 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 20:06:32,567 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 20:06:37,663 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 20:06:43,212 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 20:21:41,898 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 22:20:52,383 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 22:20:52,390 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 22:21:01,455 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 22:21:11,718 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:53:03,693 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 23:53:03,700 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 23:53:14,821 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:53:20,422 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:54:48,597 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:55:38,068 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:55:54,052 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 23:55:54,058 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 23:55:55,134 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:55:58,754 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:57:30,667 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-03 23:57:30,674 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-03 23:57:31,715 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-03 23:57:33,486 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:57:36,598 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:57:42,608 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-03 23:57:48,762 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 00:00:13,444 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 00:00:13,448 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 00:00:14,495 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 00:00:16,088 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 00:00:23,584 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 08:06:26,364 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 08:06:26,380 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 08:06:26,672 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 08:06:27,327 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 08:06:32,726 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1966: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-04 08:33:23,322 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 08:33:23,331 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 08:33:24,374 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 09:41:52,034 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 09:41:54,288 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 09:42:00,535 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1967: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-04 10:27:34,938 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 10:27:34,962 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 10:27:34,976 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 10:27:42,842 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 10:27:51,854 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 10:54:02,137 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 10:54:10,805 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\venv\Lib\site-packages\flask\app.py:919: RuntimeWarning: coroutine 'AfipService.consultar_padron' was never awaited
+  rv = self.handle_user_exception(e)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1967: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-04 13:08:27,436 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 13:08:27,440 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 13:08:28,476 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 13:08:42,495 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 13:08:48,702 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:38:32,008 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:38:42,599 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:38:43,411 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:38:53,614 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:41:51,605 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:41:55,117 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:41:55,725 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:41:55,793 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 15:41:58,578 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:42:01,812 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:42:05,322 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:42:05,926 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:42:06,046 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 15:42:49,255 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:43:19,978 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 15:43:19,988 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 15:43:20,291 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:43:20,964 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 15:43:23,841 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:43:29,627 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:43:36,586 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:44:06,377 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 15:44:13,429 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:00:51,091 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:01:49,791 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:07:22,807 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:07:33,143 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:07:33,797 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:07:41,207 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:07:44,025 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:07:51,440 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:07:52,081 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:08:02,305 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:10:18,327 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:10:24,367 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:10:31,829 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 16:35:12,980 - app - ERROR - Falla de conexion directa en DB logger: 'Connection' object has no attribute '_ConnectionPool__last_used'
+2026-03-04 16:42:27,065 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 16:42:27,071 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 16:42:28,154 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 16:42:45,387 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:42:55,637 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:53:48,952 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:53:59,170 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 16:53:59,889 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 16:54:10,102 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:54:37,165 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:54:47,383 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:54:48,045 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:54:58,244 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:56:15,276 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 17:56:15,280 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 17:56:16,311 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 17:56:24,877 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 17:56:29,806 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 17:56:38,844 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 17:56:48,432 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:56:50,539 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:56:58,715 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:56:59,569 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:57:00,755 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:57:09,804 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 17:57:20,741 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 17:57:20,959 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 200 OK"
+2026-03-04 17:57:22,076 - httpx - INFO - HTTP Request: GET https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL "HTTP/1.1 200 OK"
+2026-03-04 17:57:22,298 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-04 17:57:22,559 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-04 18:05:11,546 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:13,868 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:21,765 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:05:22,466 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:24,094 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:05:32,672 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:05:34,656 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:41,860 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 18:05:44,891 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:05:52,082 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 18:21:18,517 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 18:54:40,481 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 18:54:45,611 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:14:26,778 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 19:14:26,789 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 19:14:26,916 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:14:27,743 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 19:14:32,195 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:14:47,144 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:14:57,313 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:14:57,698 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:14:58,591 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:15:07,556 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:15:08,809 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:21:45,837 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 19:21:45,843 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 19:21:46,936 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 19:21:49,441 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:21:51,926 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:22:02,216 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 19:22:10,356 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:22:20,622 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:22:21,418 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:22:31,685 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:23:02,045 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:23:11,103 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:23:12,257 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:23:21,390 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:25:47,666 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:25:57,880 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:25:58,730 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:26:08,968 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:27:12,580 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:27:22,786 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 19:27:23,666 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 19:27:33,885 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:01:06,899 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 20:01:06,905 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 20:01:07,089 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:01:07,890 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 20:01:12,199 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:06:01,925 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 20:06:01,929 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 20:06:02,980 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 20:06:07,312 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:06:15,533 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:09:35,511 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:09:45,803 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:09:46,486 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:09:56,702 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:19,196 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:22,915 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:23,012 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:29,410 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:30,326 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:33,141 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:33,197 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:40,547 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:19:41,207 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:19:47,894 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 20:19:47,899 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 20:19:48,940 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 20:19:53,106 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:20:01,070 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 20:20:08,727 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:20:18,975 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:20:19,642 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:20:29,857 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:26:15,723 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:26:25,959 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 20:26:26,645 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 20:26:36,838 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:34:31,095 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:34:31,498 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:34:31,649 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:34:41,268 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:34:41,313 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:34:41,713 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:34:41,881 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:34:51,487 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:46:54,651 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:46:54,753 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:46:58,754 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:47:02,820 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:47:03,420 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:47:04,863 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:04,959 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:08,974 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:13,035 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:13,630 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:47:47,830 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 22:47:47,840 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 22:47:48,819 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 22:47:49,431 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:47:59,837 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:48:00,696 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:48:10,908 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:48:29,544 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:48:33,254 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:48:39,800 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:48:40,730 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 22:48:43,458 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 22:48:50,948 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:02:41,761 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:02:51,975 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:02:52,677 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:03:02,886 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:10,555 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:13,148 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:13,441 - waitress.queue - WARNING - Task queue depth is 1
+2026-03-04 23:06:13,964 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:14,299 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:14,491 - waitress.queue - WARNING - Task queue depth is 1
+2026-03-04 23:06:14,494 - waitress.queue - WARNING - Task queue depth is 2
+2026-03-04 23:06:14,708 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:15,502 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:20,772 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:23,437 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:24,159 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:24,504 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:24,916 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:25,784 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:26,306 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:28,094 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:28,253 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:38,654 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 23:06:38,659 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 23:06:39,727 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 23:06:44,804 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:46,525 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:46,804 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:46,883 - waitress.queue - WARNING - Task queue depth is 1
+2026-03-04 23:06:47,600 - waitress.queue - WARNING - Task queue depth is 1
+2026-03-04 23:06:47,607 - waitress.queue - WARNING - Task queue depth is 2
+2026-03-04 23:06:47,607 - waitress.queue - WARNING - Task queue depth is 3
+2026-03-04 23:06:47,823 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:47,941 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:48,452 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:48,621 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:06:55,057 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:56,768 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:57,022 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:58,039 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:58,140 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:58,721 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:58,839 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:06:59,574 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:07:09,786 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:10:10,463 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:10:20,670 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:10:25,094 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 23:10:25,100 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 23:10:26,173 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 23:10:31,808 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:10:38,209 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:10:45,280 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:12:43,543 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-04 23:12:43,548 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-04 23:12:44,588 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-04 23:12:47,754 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:12:47,757 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:12:52,913 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:12:58,095 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:12:58,101 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:13:03,156 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:13:03,971 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:13:14,211 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:13:14,545 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:13:14,927 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:13:17,162 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:13:22,168 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-04 23:13:25,148 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-04 23:13:25,947 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-04 23:13:36,155 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:36:27,507 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 01:36:36,946 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:36:44,063 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:36:47,155 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:36:54,279 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:41,051 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:47,352 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:47,538 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:47,995 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:51,270 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:55,531 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:37:57,567 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:57,745 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:58,222 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:37:59,035 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:05,751 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:09,263 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:10,070 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:15,573 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:20,278 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:25,794 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:31,510 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:41,764 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:38:42,639 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:38:52,845 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 01:40:44,651 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:40:44,871 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 200 OK"
+2026-03-05 01:40:45,996 - httpx - INFO - HTTP Request: GET https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL "HTTP/1.1 200 OK"
+2026-03-05 01:40:46,309 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-05 01:40:47,150 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-05 01:40:49,431 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 01:40:59,645 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 02:56:13,070 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:13,676 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:21,810 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:25,568 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:30,919 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:37,092 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:56:41,204 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:57:36,404 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:57:42,049 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:57:58,861 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:58:12,730 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:58:19,124 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:59:05,299 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 02:59:12,770 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:00:44,356 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:02:34,751 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:02:39,902 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:03:42,391 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:03:48,908 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:04:09,676 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:04:43,534 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1967: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-05 03:16:12,143 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:16:12,151 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:16:13,185 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:16:13,207 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:16:18,570 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:33:28,127 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:33:28,136 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:33:29,113 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:37:41,618 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:37:41,623 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:37:42,690 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:37:49,982 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:37:56,124 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:40:38,948 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:40:38,952 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:40:40,014 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:40:41,501 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:40:46,639 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:59:29,871 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 03:59:29,876 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 03:59:30,942 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 03:59:41,079 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:59:47,126 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 03:59:54,378 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 03:59:58,499 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 04:00:04,945 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 04:00:08,764 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:05:05,286 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:05:15,594 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:05:16,436 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:05:26,761 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:05:42,590 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:05:52,837 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:05:55,806 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:06:06,068 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:06:06,925 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:06:17,186 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 05:07:31,853 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:07:32,102 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 200 OK"
+2026-03-05 05:07:33,289 - httpx - INFO - HTTP Request: GET https://wswhomo.afip.gov.ar/wsfev1/service.asmx?WSDL "HTTP/1.1 200 OK"
+2026-03-05 05:07:33,547 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-05 05:07:34,232 - httpx - INFO - HTTP Request: POST https://wswhomo.afip.gov.ar/wsfev1/service.asmx "HTTP/1.1 200 OK"
+2026-03-05 05:07:35,599 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 05:07:45,843 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 11:40:45,078 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 11:40:55,419 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 11:40:55,494 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 11:40:56,193 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 11:41:05,715 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 11:41:06,420 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 15:18:48,905 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 15:18:54,014 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 15:20:19,523 - httpx - INFO - HTTP Request: GET https://wsaahomo.afip.gov.ar/ws/services/LoginCms?wsdl "HTTP/1.1 200 OK"
+2026-03-05 15:20:29,870 - httpx - INFO - HTTP Request: POST https://wsaahomo.afip.gov.ar/ws/services/LoginCms "HTTP/1.1 500 Internal Server Error"
+2026-03-05 15:30:25,941 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Provincia'
+2026-03-05 15:30:25,983 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:30:31,198 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:30:31,207 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:30:32,798 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:30:32,820 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:30:55,068 - core.routes - INFO - GEOREF: Buscando calle 'None' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:30:59,856 - core.routes - INFO - GEOREF: Buscando calle 'BONI' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:30:59,883 - services.georef_service - INFO - GeorefService.get_calles: Iniciando búsqueda de 'BONI' (Loc: Caballito, Mun: None, Prov: Ciudad Autónoma de Buenos Aires)
+2026-03-05 15:31:00,322 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:31:00,337 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:31:00,369 - core.routes - INFO - GEOREF: Buscando calle 'BONIF' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:31:00,371 - services.georef_service - INFO - GeorefService.get_calles: Iniciando búsqueda de 'BONIF' (Loc: Caballito, Mun: None, Prov: Ciudad Autónoma de Buenos Aires)
+2026-03-05 15:31:00,917 - httpx - INFO - HTTP Request: GET https://apis.datos.gob.ar/georef/api/v2.0/calles?nombre=BONI&provincia=Ciudad+Aut%C3%B3noma+de+Buenos+Aires&localidad=Caballito&max=50 "HTTP/1.1 200 OK"
+2026-03-05 15:31:00,923 - services.georef_service - INFO - GeorefService: 1 calles halladas en Localidad: Caballito
+2026-03-05 15:31:00,933 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 15:31:01,235 - httpx - INFO - HTTP Request: GET https://apis.datos.gob.ar/georef/api/v2.0/calles?nombre=BONIF&provincia=Ciudad+Aut%C3%B3noma+de+Buenos+Aires&localidad=Caballito&max=50 "HTTP/1.1 200 OK"
+2026-03-05 15:31:01,238 - services.georef_service - INFO - GeorefService: 1 calles halladas en Localidad: Caballito
+2026-03-05 15:31:01,241 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 15:31:13,736 - core.routes - INFO - GEOREF: Buscando calle 'JOSE' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:31:13,739 - services.georef_service - INFO - GeorefService.get_calles: Iniciando búsqueda de 'JOSE' (Loc: Caballito, Mun: None, Prov: Ciudad Autónoma de Buenos Aires)
+2026-03-05 15:31:14,766 - httpx - INFO - HTTP Request: GET https://apis.datos.gob.ar/georef/api/v2.0/calles?nombre=JOSE&provincia=Ciudad+Aut%C3%B3noma+de+Buenos+Aires&localidad=Caballito&max=50 "HTTP/1.1 200 OK"
+2026-03-05 15:31:14,771 - services.georef_service - INFO - GeorefService: 5 calles halladas en Localidad: Caballito
+2026-03-05 15:31:14,779 - core.routes - INFO - GEOREF: Encontradas 5 calles
+2026-03-05 15:31:16,871 - core.routes - INFO - GEOREF: Buscando calle 'JOSE BONIFACIO' en Prov:Ciudad Autónoma de Buenos Aires, Mun:None, Loc:Caballito
+2026-03-05 15:31:16,873 - services.georef_service - INFO - GeorefService.get_calles: Iniciando búsqueda de 'JOSE BONIFACIO' (Loc: Caballito, Mun: None, Prov: Ciudad Autónoma de Buenos Aires)
+2026-03-05 15:31:17,717 - httpx - INFO - HTTP Request: GET https://apis.datos.gob.ar/georef/api/v2.0/calles?nombre=JOSE+BONIFACIO&provincia=Ciudad+Aut%C3%B3noma+de+Buenos+Aires&localidad=Caballito&max=50 "HTTP/1.1 200 OK"
+2026-03-05 15:31:17,725 - services.georef_service - INFO - GeorefService: 1 calles halladas en Localidad: Caballito
+2026-03-05 15:31:17,734 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 15:31:34,844 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:31:34,870 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:31:44,481 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:31:44,503 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:32:01,460 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:32:01,478 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:32:06,345 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Córdoba'
+2026-03-05 15:32:06,366 - core.routes - INFO - GEOREF: Encontrados 260 municipios
+2026-03-05 15:32:08,546 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:32:08,557 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:32:09,119 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:32:09,135 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:32:31,064 - core.routes - INFO - GEOREF: Solicitando municipios para provincia: 'Ciudad Autónoma de Buenos Aires'
+2026-03-05 15:32:31,086 - core.routes - INFO - GEOREF: Encontrados 0 municipios
+2026-03-05 15:50:20,637 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 15:50:20,650 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 15:50:21,078 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 15:50:21,606 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 15:50:36,410 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:11:38,392 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 16:11:38,400 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 16:11:39,503 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 16:12:14,402 - core.routes - INFO - GEOREF: Buscando calle 'car' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:12:14,405 - services.georef_service - ERROR - Local search error (calles): Illegal mix of collations (utf8mb4_unicode_ci,IMPLICIT) and (utf8mb4_uca1400_ai_ci,IMPLICIT) for operation '='
+2026-03-05 16:12:14,405 - core.routes - INFO - GEOREF: Encontradas 0 calles
+2026-03-05 16:34:38,945 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 16:34:38,964 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 16:34:40,228 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 16:34:40,242 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:35:25,590 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:35:30,931 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:35:57,120 - core.routes - INFO - GEOREF: Buscando calle 'cara' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:35:57,229 - core.routes - INFO - GEOREF: Encontradas 5 calles
+2026-03-05 16:35:59,875 - core.routes - INFO - GEOREF: Buscando calle 'AV CARABOBO' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:35:59,964 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 16:46:20,622 - core.routes - INFO - GEOREF: Buscando calle 'AV CA' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:46:20,703 - core.routes - INFO - GEOREF: Encontradas 2 calles
+2026-03-05 16:46:23,654 - core.routes - INFO - GEOREF: Buscando calle 'AV CARABOBO' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:46:23,734 - core.routes - INFO - GEOREF: Encontradas 1 calles
+C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\stock\routes.py:1964: SyntaxWarning: "\^" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\^"? A raw string is also an option.
+  try:
+2026-03-05 16:46:39,659 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 16:46:39,665 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 16:46:40,706 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 16:46:44,757 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:46:50,034 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 16:47:06,487 - core.routes - INFO - GEOREF: Buscando calle 'acc' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:47:06,569 - core.routes - INFO - GEOREF: Encontradas 0 calles
+2026-03-05 16:47:08,629 - core.routes - INFO - GEOREF: Buscando calle 'CARA' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:47:08,710 - core.routes - INFO - GEOREF: Encontradas 5 calles
+2026-03-05 16:47:11,407 - core.routes - INFO - GEOREF: Buscando calle 'AV CARABOBO' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Flores
+2026-03-05 16:47:11,492 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 17:29:24,585 - core.routes - INFO - GEOREF: Buscando calle 'None' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Caballito
+2026-03-05 17:29:29,502 - core.routes - INFO - GEOREF: Buscando calle 'BON' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Caballito
+2026-03-05 17:29:29,587 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 17:29:31,136 - core.routes - INFO - GEOREF: Buscando calle 'JOSE BONIFACIO' en Prov:Ciudad Autónoma de Buenos Aires, Loc:Caballito
+2026-03-05 17:29:31,196 - core.routes - INFO - GEOREF: Encontradas 1 calles
+2026-03-05 20:33:52,259 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 20:33:52,276 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 20:33:53,433 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:38:57,970 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 20:38:57,975 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 20:38:59,259 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:39:10,452 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:39:15,883 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:41:39,469 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 20:41:39,474 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 20:41:40,538 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:42:00,700 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-05 20:42:00,705 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-05 20:42:01,842 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-05 20:42:05,390 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:42:10,426 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:55:57,964 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 20:56:10,083 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-05 21:55:26,299 - app - INFO - \u2705 Email de alerta enviado exitosamente (Error #693)
+2026-03-06 00:33:03,891 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-06 00:33:03,902 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-06 00:33:04,092 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:33:04,876 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-06 00:33:10,809 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:33:16,200 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:35:39,583 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:35:46,607 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:36:17,332 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-06 00:36:17,336 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-06 00:36:18,329 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-06 00:38:23,440 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-06 00:38:23,445 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-06 00:38:23,681 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:38:24,438 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-06 00:38:32,320 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:41:03,487 - app - WARNING - CSRF Failure on /utilitarios/crons/run/1. Form Token: None..., Session Token: 41839...
+2026-03-06 00:48:23,436 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:48:36,128 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-06 00:48:36,133 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-06 00:48:37,184 - app - INFO - \u2705 DB Pool pre-inicializado correctamente en background.
+2026-03-06 00:49:09,552 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 00:49:15,145 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 09:50:55,563 - app - INFO - \u2705 Email de alerta enviado exitosamente (Error #694)
+2026-03-06 09:57:49,883 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:00:19,694 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:02:18,980 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:02:24,145 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:04:32,852 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:04:44,217 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:04:49,098 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:04:55,921 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 10:09:33,790 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1

@@ -1,0 +1,10 @@
+[
+  {
+    "id": 2,
+    "enterprise_id": 1,
+    "tipo_articulo_id": 1,
+    "servicio_id": 4,
+    "config_overwrite_json": null,
+    "es_primario": 1
+  }
+]

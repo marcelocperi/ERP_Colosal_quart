@@ -1,0 +1,1365 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #vessel-map {
+        height: 280px;
+        border-radius: 12px;
+        margin-top: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .leaflet-container {
+        background: #0f172a !important;
+    }
+</style>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 1.5rem; color: #e2e8f0; font-family: 'Inter', sans-serif; max-width: 1100px;">
+
+    <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
+    <div
+        style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.75rem;">
+        <div>
+            <a href="{{ url_for('compras.importaciones_dashboard') }}"
+                style="color:#60a5fa; font-size:0.82rem; text-decoration:none;">
+                <i class="fas fa-arrow-left me-1"></i>Importaciones
+            </a>
+            <h1 style="font-size:1.5rem; font-weight:700; color:#f1f5f9; margin:0.5rem 0 0.2rem;">
+                <i class="fas fa-ship" style="color:#38bdf8; margin-right:0.5rem;"></i>
+                OC #{{ orden.id }} — Importación
+            </h1>
+            <p style="color:#64748b; margin:0; font-size:0.85rem;">
+                {{ orden.proveedor_nombre }} &nbsp;·&nbsp;
+                <span style="color:#38bdf8;">{{ orden.pais_origen or '?' }}</span> &nbsp;·&nbsp;
+                {{ orden.moneda or 'ARS' }} &nbsp;·&nbsp;
+                Incoterm: <strong>{{ orden.incoterm or '—' }}</strong>
+            </p>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+            <!-- Estado importacion badge -->
+            {% set est = orden.estado_importacion or 'DOCUMENTACION' %}
+            {% set est_bg_map =
+            {'DOCUMENTACION':'251,191,36','DESPACHO':'96,165,250','LIBERADO':'167,139,250','INGRESADO':'52,211,153'} %}
+            {% set est_fg_map =
+            {'DOCUMENTACION':'#fbbf24','DESPACHO':'#60a5fa','LIBERADO':'#a78bfa','INGRESADO':'#34d399'} %}
+            {% set current_bg = est_bg_map.get(est, '148,163,184') %}
+            {% set current_fg = est_fg_map.get(est, '#94a3b8') %}
+
+            <span style="font-size:0.78rem; padding:0.3rem 0.9rem; border-radius:20px;
+                   background:rgba({{ current_bg }},0.15);
+                   color:{{ current_fg }}; border:1px solid currentColor;">
+                {{ est }}
+            </span>
+            <a href="{{ url_for('compras.aprobar_po_detalle', id=orden.id) }}"
+                style="font-size:0.82rem; color:#94a3b8; text-decoration:none; padding:0.3rem 0.75rem; border:1px solid rgba(255,255,255,0.1); border-radius:6px;">
+                <i class="fas fa-external-link-alt me-1"></i>Ver OC completa
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ TABS ════════════════════════════════════════════════════════════ -->
+    <div style="display:flex; gap:0; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:1.5rem;">
+        {% for tab_id, tab_label, tab_icon in [
+        ('cargos','Cargos','fa-coins'),
+        ('desvios','Desvíos','fa-chart-pie'),
+        ('cui','CUI Calculator','fa-calculator'),
+        ('logistica','Logística','fa-truck-loading'),
+        ('despacho','Aduana','fa-stamp'),
+        ('ingresar','Ingresar al Stock','fa-boxes'),
+        ('pagos','Pagos','fa-money-bill-wave'),
+        ('documentos','Documentos','fa-folder-open')
+        ] %}
+
+
+        <button onclick="showTab('{{ tab_id }}')" id="tab-{{ tab_id }}"
+            style="background:none; border:none; color:#64748b; padding:0.6rem 1.1rem; font-size:0.85rem; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;">
+            <i class="fas {{ tab_icon }} me-1"></i>{{ tab_label }}
+        </button>
+        {% endfor %}
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 1 — CARGOS DE IMPORTACIÓN
+  ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="panel-cargos">
+
+        <!-- Resumen -->
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+            {% set total_ars = cargos | sum(attribute='monto_ars') %}
+            {% set total_usd = cargos | selectattr('moneda_orig','ne','ARS') | sum(attribute='monto_orig') %}
+            <div
+                style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:8px; padding:0.75rem 1.25rem; min-width:200px;">
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase;">Total Cargos USD</div>
+                <div style="font-size:1.4rem; font-weight:700; color:#38bdf8;">U$S {{ "%.2f"|format(total_usd) }}</div>
+            </div>
+            <div
+                style="background:rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.2); border-radius:8px; padding:0.75rem 1.25rem; min-width:200px;">
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase;">Total Cargos ARS</div>
+                <div style="font-size:1.4rem; font-weight:700; color:#a78bfa;">$ {{ "%.2f"|format(total_ars) }}</div>
+            </div>
+            <div
+                style="background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.2); border-radius:8px; padding:0.75rem 1.25rem; min-width:200px;">
+                <div style="font-size:0.72rem; color:#64748b; text-transform:uppercase;">Cantidad de Cargos</div>
+                <div style="font-size:1.4rem; font-weight:700; color:#34d399;">{{ cargos | length }}</div>
+            </div>
+        </div>
+
+        <!-- Formulario nuevo cargo -->
+        <details open style="margin-bottom:1.25rem;">
+            <summary style="cursor:pointer; color:#60a5fa; font-size:0.88rem; padding:0.5rem 0; font-weight:600;">
+                <i class="fas fa-plus-circle me-1"></i>Agregar Cargo
+            </summary>
+            <form method="POST" action="{{ url_for('compras.importacion_agregar_cargo', orden_id=orden.id) }}"
+                style="background:rgba(0,0,0,0.2); border-radius:8px; padding:1rem; margin-top:0.5rem;">
+                <div
+                    style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:0.75rem; margin-bottom:0.75rem;">
+
+                    <div style="grid-column:span 2;">
+                        <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">TIPO DE
+                            CARGO</label>
+                        <select name="tipo_cargo" id="sel-tipo-cargo" onchange="updateDescCargo()"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                            {% for code, label, _ in tipos_cargo %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="grid-column:span 2;">
+                        <label
+                            style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">DESCRIPCIÓN</label>
+                        <input type="text" name="descripcion" id="inp-descripcion"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                    </div>
+
+                    <div>
+                        <label
+                            style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">MONTO</label>
+                        <input type="number" step="0.01" name="monto_orig" placeholder="0.00"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#f1f5f9; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                    </div>
+
+                    <div>
+                        <label
+                            style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">MONEDA</label>
+                        <select name="moneda_orig"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                            <option value="ARS">ARS (Peso)</option>
+                            <option value="USD">USD (Dólar)</option>
+                            <option value="EUR">EUR (Euro)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">TIPO DE
+                            CAMBIO</label>
+                        <input type="number" step="0.01" name="tipo_cambio" placeholder="Auto (BCRA)"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#fbbf24; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                    </div>
+
+                    <div>
+                        <label
+                            style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">FECHA</label>
+                        <input type="date" name="fecha"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">PROVEEDOR
+                            (opcional)</label>
+                        <select name="proveedor_id"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                            <option value="">— ninguno —</option>
+                            {% for p in proveedores %}
+                            <option value="{{ p.id }}">{{ p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:1.25rem; padding-top:1.4rem;">
+                        <div style="display:flex; align-items:center; gap:0.4rem;">
+                            <input type="checkbox" name="aplica_a_cui" value="1" id="chk-cui" checked>
+                            <label for="chk-cui" style="font-size:0.78rem; color:#94a3b8; cursor:pointer;">CUI</label>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.4rem;">
+                            <input type="checkbox" name="es_estimado" value="1" id="chk-estimado">
+                            <label for="chk-estimado"
+                                style="font-size:0.78rem; color:#fbbf24; cursor:pointer; font-weight:600;">¿Es
+                                Estimado?</label>
+                        </div>
+                        <div id="ref-cargo-div" style="display:none; flex:1;">
+                            <select name="cargo_referencia_id"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#34d399; border:1px solid rgba(52,211,153,0.3); border-radius:4px; padding:0.35rem; font-size:0.75rem;">
+                                <option value="">— Ref. Estimado —</option>
+                                {% for c in cargos if c.es_estimado %}
+                                <option value="{{ c.id }}">{{ c.tipo_cargo }} ({{ c.moneda_orig }} {{ c.monto_orig }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+
+                </div>
+                <button type="submit" class="btn btn-sm"
+                    style="background:linear-gradient(135deg,#38bdf8,#0284c7); color:white; border:none; padding:0.45rem 1.25rem; border-radius:5px;">
+                    <i class="fas fa-plus me-1"></i>Registrar Cargo
+                </button>
+            </form>
+        </details>
+
+        <!-- Lista de cargos -->
+        {% if cargos %}
+        <table style="width:100%; border-collapse:collapse; font-size:0.84rem;">
+            <thead>
+                <tr style="background:rgba(255,255,255,0.04); color:#64748b;">
+                    <th style="padding:0.45rem; text-align:left;">Tipo</th>
+                    <th style="padding:0.45rem; text-align:left;">Descripción</th>
+                    <th style="padding:0.45rem; text-align:right;">Monto Orig.</th>
+                    <th style="padding:0.45rem; text-align:right;">TC</th>
+                    <th style="padding:0.45rem; text-align:right;">En ARS</th>
+                    <th style="padding:0.45rem; text-align:center;">CUI</th>
+                    <th style="padding:0.45rem;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cargos %}
+                <tr style="border-top:1px solid rgba(255,255,255,0.04);">
+                    <td style="padding:0.45rem;">
+                        <span
+                            style="font-size:0.7rem; background:rgba(56,189,248,0.1); color:#38bdf8; padding:0.15rem 0.4rem; border-radius:3px;">
+                            {{ c.tipo_cargo.replace('_',' ') }}
+                        </span>
+                        {% if c.es_estimado %}
+                        <span title="Este costo es una estimación"
+                            style="font-size:0.65rem; background:rgba(251,191,36,0.15); color:#fbbf24; padding:0.1rem 0.35rem; border-radius:10px; margin-left:0.3rem; border:1px solid rgba(251,191,36,0.3);">
+                            <i class="fas fa-clock me-1"></i>ESTIMADO
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding:0.45rem; color:#cbd5e1;">{{ c.descripcion or '—' }}</td>
+                    <td style="padding:0.45rem; text-align:right; font-weight:600;">
+                        {{ c.moneda_orig }} {{ "%.2f"|format(c.monto_orig or 0) }}
+                    </td>
+                    <td style="padding:0.45rem; text-align:right; color:#fbbf24; font-size:0.8rem;">
+                        {{ "%.2f"|format(c.tipo_cambio or 1) }}
+                    </td>
+                    <td style="padding:0.45rem; text-align:right; color:#a78bfa;">$ {{ "%.2f"|format(c.monto_ars or 0)
+                        }}</td>
+                    <td style="padding:0.45rem; text-align:center;">
+                        {% if c.aplica_a_cui %}<i class="fas fa-check-circle" style="color:#34d399;"></i>
+                        {% else %}<i class="fas fa-times-circle" style="color:#ef4444;"></i>{% endif %}
+                    </td>
+                    <td style="padding:0.45rem;">
+                        <button onclick="eliminarCargo({{ c.id }})" title="Eliminar"
+                            style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.85rem;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center; padding:2rem; color:#475569; font-size:0.85rem;">
+            <i class="fas fa-coins" style="font-size:1.5rem; opacity:0.3; display:block; margin-bottom:0.5rem;"></i>
+            Sin cargos registrados. Agregue flete, derechos y otros gastos arriba.
+        </div>
+        {% endif %}
+    </div>
+    <!-- ══════════════════════════════════════════════════════════════════════
+       PANEL — ANÁLISIS DE DESVÍOS (STAGE 5.2)
+  ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="panel-desvios" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <div>
+                <h5 style="margin:0; color:#f1f5f9;">Análisis de Desvíos de Costos</h5>
+                <small style="color:#64748b;">Estimado vs Real por categoría de cargo</small>
+            </div>
+            <div
+                style="background:rgba(255,255,255,0.05); padding:0.5rem 1rem; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                <span style="font-size:0.75rem; color:#94a3b8; display:block;">Desvío Total</span>
+                <span
+                    style="font-size:1.1rem; font-weight:700; color:{% if desvios.desvio_total_ars > 0 %}#ef4444{% else %}#34d399{% endif %};">
+                    $ {{ "%.2f"|format(desvios.desvio_total_ars) }}
+                    <small>({{ "%.1f"|format(desvios.desvio_total_pct) }}%)</small>
+                </span>
+            </div>
+        </div>
+
+        <div
+            style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+            <div
+                style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                <div style="font-size:0.75rem; color:#64748b; text-transform:uppercase;">Costo Estimado Total</div>
+                <div style="font-size:1.25rem; font-weight:700; color:#cbd5e1; margin-top:0.25rem;">$ {{
+                    "%.2f"|format(desvios.total_estimado_ars) }}</div>
+            </div>
+            <div
+                style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                <div style="font-size:0.75rem; color:#64748b; text-transform:uppercase;">Costo Real Ejecutado</div>
+                <div style="font-size:1.25rem; font-weight:700; color:#cbd5e1; margin-top:0.25rem;">$ {{
+                    "%.2f"|format(desvios.total_real_ars) }}</div>
+            </div>
+        </div>
+
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+            <thead>
+                <tr style="background:rgba(255,255,255,0.04); color:#64748b;">
+                    <th style="padding:0.6rem; text-align:left;">Categoría</th>
+                    <th style="padding:0.6rem; text-align:right;">Estimado (ARS)</th>
+                    <th style="padding:0.6rem; text-align:right;">Real (ARS)</th>
+                    <th style="padding:0.6rem; text-align:right;">Desvío $</th>
+                    <th style="padding:0.6rem; text-align:center;">Desvío %</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat, data in desvios.por_categoria.items() %}
+                <tr style="border-top:1px solid rgba(255,255,255,0.04);">
+                    <td style="padding:0.6rem; color:#cbd5e1; font-weight:500;">{{ data.label }}</td>
+                    <td style="padding:0.6rem; text-align:right;">$ {{ "%.2f"|format(data.estimado_ars) }}</td>
+                    <td style="padding:0.6rem; text-align:right; font-weight:600;">$ {{ "%.2f"|format(data.real_ars) }}
+                    </td>
+                    <td
+                        style="padding:0.6rem; text-align:right; color:{% if data.desvio_ars > 0 %}#ef4444{% else %}#34d399{% endif %};">
+                        {{ "+" if data.desvio_ars > 0 }}$ {{ "%.2f"|format(data.desvio_ars) }}
+                    </td>
+                    <td style="padding:0.6rem; text-align:center;">
+                        <span style="background:{% if data.desvio_pct > 0 %}rgba(239,68,68,0.15){% elif data.desvio_pct < 0 %}rgba(52,211,153,0.15){% else %}rgba(148,163,184,0.1){% endif %};
+                                     color:{% if data.desvio_pct > 0 %}#f87171{% elif data.desvio_pct < 0 %}#34d399{% else %}#94a3b8{% endif %};
+                                     padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">
+                            {{ "%.1f"|format(data.desvio_pct) }}%
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 2 — CUI CALCULATOR
+  ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="panel-cui" style="display:none;">
+        <div
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+                <h5 style="margin:0; color:#f1f5f9;">Calculadora de CUI</h5>
+                <small style="color:#64748b;">Distribución proporcional por valor FOB del embarque</small>
+            </div>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+                <input type="number" step="0.01" id="cui-tc" placeholder="TC (auto BCRA)"
+                    style="width:130px; background:rgba(0,0,0,0.3); color:#fbbf24; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.35rem 0.6rem; font-size:0.85rem;">
+                <button onclick="calcularCUI()" class="btn btn-sm"
+                    style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:white; border:none; padding:0.4rem 1rem; border-radius:5px;">
+                    <i class="fas fa-calculator me-1"></i>Calcular
+                </button>
+            </div>
+        </div>
+
+        <div id="cui-loading" style="display:none; text-align:center; padding:2rem; color:#64748b;">
+            <i class="fas fa-spinner fa-spin me-2"></i>Calculando CUI...
+        </div>
+        <div id="cui-result"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 3 — LOGÍSTICA (STAGE 4)
+  ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="panel-logistica" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 380px; gap:1.5rem;">
+
+            <!-- Tracking Form -->
+            <div>
+                <form method="POST" action="{{ url_for('compras.importacion_guardar_despacho', orden_id=orden.id) }}"
+                    style="background:rgba(0,0,0,0.15); border-radius:10px; padding:1.25rem; border:1px solid rgba(255,255,255,0.03);">
+                    <h6 style="color:#94a3b8; font-size:0.8rem; margin:0 0 1.25rem; text-transform:uppercase;">
+                        Seguimiento del Embarque</h6>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+                        <div>
+                            <label
+                                style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">TRANSPORTISTA
+                                / FORWARDER</label>
+                            <input type="text" name="transportista" value="{{ despacho.transportista or '' }}"
+                                placeholder="Ej: DHL, Maersk, etc."
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        </div>
+                        <div>
+                            <label
+                                style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">TRACKING /
+                                CONTENEDOR / BL</label>
+                            <input type="text" name="guia_bl_tracking" value="{{ despacho.guia_bl_tracking or '' }}"
+                                placeholder="Nro de Guía o Contenedor"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#38bdf8; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem; font-family:monospace;">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.75rem; margin-bottom:1rem;">
+                        <div>
+                            <label style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">FECHA
+                                EMBARQUE (ETD)</label>
+                            <input type="date" name="fecha_embarque" value="{{ despacho.fecha_embarque or '' }}"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#fbbf24; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.4rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">EST.
+                                ARRIBO (ETA)</label>
+                            <input type="date" name="fecha_arribo_estimada"
+                                value="{{ despacho.fecha_arribo_estimada or '' }}"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#60a5fa; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.4rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">ARRIBO
+                                REAL (ATA)</label>
+                            <input type="date" name="fecha_arribo_real" value="{{ despacho.fecha_arribo_real or '' }}"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#34d399; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.4rem;">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1rem;">
+                        <div>
+                            <label
+                                style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">ORIGEN</label>
+                            <input type="text" name="puerto_embarque" value="{{ despacho.puerto_embarque or '' }}"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        </div>
+                        <div>
+                            <label
+                                style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">DESTINO</label>
+                            <input type="text" name="puerto_destino" value="{{ despacho.puerto_destino or '' }}"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:1.5rem;">
+                        <div>
+                            <label
+                                style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">BULTOS</label>
+                            <input type="number" name="bultos" value="{{ despacho.bultos or 0 }}"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">PESO
+                                TOTAL (KG)</label>
+                            <input type="number" step="0.01" name="peso_kg" value="{{ despacho.peso_kg or 0 }}"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields for Stage 2 (Aduana) compatibility -->
+                    <input type="hidden" name="numero_despacho" value="{{ despacho.numero_despacho or '' }}">
+                    <input type="hidden" name="despachante_id" value="{{ despacho.despachante_id or '' }}">
+                    <input type="hidden" name="fecha_oficializacion" value="{{ despacho.fecha_oficializacion or '' }}">
+                    <input type="hidden" name="canal" value="{{ despacho.canal or 'VERDE' }}">
+                    <input type="hidden" name="estado" value="{{ despacho.estado or 'PENDIENTE' }}">
+                    <input type="hidden" name="valor_fob_usd" value="{{ despacho.valor_fob_usd or 0 }}">
+                    <input type="hidden" name="valor_cif_usd" value="{{ despacho.valor_cif_usd or 0 }}">
+                    <input type="hidden" name="derechos_ars" value="{{ despacho.derechos_ars or 0 }}">
+                    <input type="hidden" name="tasa_estadistica_ars" value="{{ despacho.tasa_estadistica_ars or 0 }}">
+                    <input type="hidden" name="otros_tributos_ars" value="{{ despacho.otros_tributos_ars or 0 }}">
+                    <input type="hidden" name="tipo_cambio_oficializacion"
+                        value="{{ despacho.tipo_cambio_oficializacion or 0 }}">
+                    <input type="hidden" name="observaciones" value="{{ despacho.observaciones or '' }}">
+
+                    <button type="submit" class="btn"
+                        style="background:linear-gradient(135deg,#38bdf8,#0284c7); color:white; border:none; padding:0.5rem 1.5rem; border-radius:6px; font-weight:600;">
+                        <i class="fas fa-save me-2"></i>Actualizar Logística
+                    </button>
+
+                </form>
+
+                <!-- ══════════════════════════════════════════════════════════════════════
+                   STAGE 5.3: live vessel tracking
+                ══════════════════════════════════════════════════════════════════════ -->
+                <div
+                    style="margin-top:2rem; padding:1.25rem; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h6 style="color:#f1f5f9; margin:0; display:flex; align-items:center;">
+                            <i class="fas fa-satellite-dish me-2" style="color:#38bdf8;"></i>
+                            Rastreo Satelital AIS (Live)
+                        </h6>
+                        <span
+                            style="font-size:0.65rem; color:#475569; background:rgba(0,0,0,0.3); padding:0.15rem 0.4rem; border-radius:4px;">
+                            POWERED BY VESSELFINDER
+                        </span>
+                    </div>
+
+                    <div style="display:flex; gap:0.75rem; align-items:flex-end; margin-bottom:1.5rem;">
+                        <div style="flex:1;">
+                            <label
+                                style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">IDENTIFICADOR
+                                MMSI DEL BUQUE</label>
+                            <input type="text" id="vessel-mmsi" value="{{ vessel_track.vessel_mmsi or '' }}"
+                                placeholder="Ej: 211281720"
+                                style="width:100%; background:rgba(0,0,0,0.3); color:#38bdf8; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem; font-family:monospace;">
+                        </div>
+                        <button onclick="trackVessel()" id="btn-track-vessel" class="btn"
+                            style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); padding:0.45rem 1.25rem; border-radius:4px; font-weight:700; font-size:0.85rem;">
+                            <i class="fas fa-sync-alt me-1"></i>Sincronizar
+                        </button>
+                    </div>
+
+                    <div id="vessel-track-result">
+                        {% if vessel_track %}
+                        <div
+                            style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap:0.75rem;">
+                            <div
+                                style="background:rgba(0,0,0,0.2); padding:0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
+                                <small
+                                    style="color:#64748b; font-size:0.65rem; display:block; margin-bottom:0.2rem;">BUQUE</small>
+                                <span style="color:#f1f5f9; font-weight:700; font-size:0.9rem;">{{
+                                    vessel_track.vessel_name }}</span>
+                            </div>
+                            <div
+                                style="background:rgba(0,0,0,0.2); padding:0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
+                                <small
+                                    style="color:#64748b; font-size:0.65rem; display:block; margin-bottom:0.2rem;">ESTADO
+                                    AIS</small>
+                                <span style="color:#34d399; font-weight:700; font-size:0.9rem;">{{
+                                    vessel_track.vessel_status }}</span>
+                            </div>
+                            <div
+                                style="background:rgba(0,0,0,0.2); padding:0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
+                                <small
+                                    style="color:#64748b; font-size:0.65rem; display:block; margin-bottom:0.2rem;">POSICIÓN</small>
+                                <span style="color:#cbd5e1; font-size:0.8rem; font-family:monospace;">{{
+                                    vessel_track.last_lat }}, {{ vessel_track.last_lon }}</span>
+                            </div>
+                            <div
+                                style="background:rgba(0,0,0,0.2); padding:0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
+                                <small
+                                    style="color:#64748b; font-size:0.65rem; display:block; margin-bottom:0.2rem;">ETA
+                                    PREVISTO</small>
+                                <span style="color:#fbbf24; font-weight:700; font-size:0.9rem;">{{
+                                    (vessel_track.eta_predicted|string)[:16] if vessel_track.eta_predicted else '—'
+                                    }}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top:0.75rem; text-align:right;">
+                            <small style="color:#475569; font-size:0.65rem;">Último reporte AIS: {{
+                                vessel_track.last_data_received or '—' }}</small>
+                        </div>
+                        {% else %}
+                        <div
+                            style="text-align:center; padding:1.5rem; color:#475569; background:rgba(0,0,0,0.1); border-radius:8px;">
+                            <i class="fas fa-info-circle me-2"></i>Ingrese el MMSI del buque para iniciar el rastreo.
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div id="vessel-map" style="display:{% if vessel_track %}block{% else %}none{% endif %};"></div>
+                </div>
+
+            </div>
+
+            <!-- Timeline and KPI -->
+            <div>
+                <div
+                    style="background:rgba(255,255,255,0.03); border-radius:10px; padding:1.25rem; height:100%; border:1px solid rgba(255,255,255,0.05);">
+                    <h6 style="color:#94a3b8; font-size:0.8rem; margin:0 0 1.5rem; text-transform:uppercase;">Estado
+                        Logístico</h6>
+
+                    {% if logistica_stats %}
+                    <div
+                        style="text-align:center; padding:1.5rem; background:rgba(0,0,0,0.2); border-radius:12px; margin-bottom:1.5rem;">
+                        <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.3rem;">OPERACIÓN EN CURSO</div>
+                        <div
+                            style="font-size:1.8rem; font-weight:800; color:{% if logistica_stats.estado_logistico == 'DEMORADO' %}#f87171{% elif logistica_stats.estado_logistico == 'EN DESTINO' %}#34d399{% else %}#38bdf8{% endif %};">
+                            {{ logistica_stats.estado_logistico }}
+                        </div>
+                    </div>
+
+                    <div
+                        style="position:relative; margin-left:1.5rem; border-left:2px dashed rgba(255,255,255,0.1); padding-left:1.5rem; padding-bottom:1rem;">
+                        <div style="position:relative; margin-bottom:1.5rem;">
+                            <div
+                                style="position:absolute; left:-2.1rem; top:0; width:1rem; height:1rem; border-radius:50%; background:#fbbf24; border:2px solid #1e293b;">
+                            </div>
+                            <div style="font-size:0.85rem; color:#f1f5f9; font-weight:600;">Embarque (ETD)</div>
+                            <div style="font-size:0.75rem; color:#64748b;">{{ despacho.fecha_embarque or '—' }}</div>
+                        </div>
+                        <div style="position:relative; margin-bottom:1.5rem;">
+                            <div
+                                style="position:absolute; left:-2.1rem; top:0; width:1rem; height:1rem; border-radius:50%; background:#60a5fa; border:2px solid #1e293b;">
+                            </div>
+                            <div style="font-size:0.85rem; color:#f1f5f9; font-weight:600;">Tránsito Previsto</div>
+                            <div style="font-size:0.75rem; color:#64748b;">{{ logistica_stats.transit_time_est }} días
+                            </div>
+                        </div>
+                        <div style="position:relative;">
+                            <div
+                                style="position:absolute; left:-2.1rem; top:0; width:1rem; height:1rem; border-radius:50%; background:{% if despacho.fecha_arribo_real %}#34d399{% else %}rgba(255,255,255,0.2){% endif %}; border:2px solid #1e293b;">
+                            </div>
+                            <div style="font-size:0.85rem; color:#f1f5f9; font-weight:600;">Arribo (ETA/ATA)</div>
+                            <div style="font-size:0.75rem; color:#64748b;">ETA: {{ despacho.fecha_arribo_estimada or '—'
+                                }}</div>
+                            {% if despacho.fecha_arribo_real %}
+                            <div style="font-size:0.7rem; color:#34d399; margin-top:0.2rem;">Llegada Real: {{
+                                despacho.fecha_arribo_real }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-top:2rem;">
+                        <div style="background:rgba(255,255,255,0.03); padding:0.75rem; border-radius:8px;">
+                            <div style="font-size:0.65rem; color:#64748b;">TRANSIT TIME</div>
+                            <div style="font-size:1.1rem; font-weight:700; color:#f1f5f9;">{{
+                                logistica_stats.transit_time_real }} días</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.03); padding:0.75rem; border-radius:8px;">
+                            <div style="font-size:0.65rem; color:#64748b;">DIAS P/ ARRIBO</div>
+                            <div style="font-size:1.1rem; font-weight:700; color:#38bdf8;">{{
+                                logistica_stats.dias_para_arribo }}</div>
+                        </div>
+                    </div>
+
+                    {% if logistica_stats.dias_demora > 0 %}
+                    <div
+                        style="background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.2); padding:1rem; border-radius:8px; margin-top:1rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-size:0.65rem; color:#f87171; font-weight:700;">DEMORAS DE CONTENEDOR
+                                </div>
+                                <div style="font-size:1.2rem; font-weight:800; color:#f1f5f9;">{{
+                                    logistica_stats.dias_demora }} días excedidos</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:0.65rem; color:#f87171;">COSTO ESTIMADO</div>
+                                <div style="font-size:1.2rem; font-weight:800; color:#38bdf8;">U$S {{
+                                    "{:,.2f}".format(logistica_stats.costo_demora_usd) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div style="text-align:center; padding:3rem 1rem; color:#475569;">
+                        <i class="fas fa-ship"
+                            style="font-size:2.5rem; opacity:0.2; display:block; margin-bottom:1rem;"></i>
+                        <p style="font-size:0.85rem;">Complete las fechas de seguimiento para visualizar el timeline y
+                            lead times.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+       TAB 4 — DESPACHO ADUANERO
+  ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="panel-despacho" style="display:none;">
+
+        {% if despacho %}
+        <!-- Resumen estado actual -->
+        <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+            {% set canal_color = {'VERDE':'#34d399','AMARILLO':'#fbbf24','ROJO':'#ef4444'} %}
+            <div
+                style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem 1.25rem; border:1px solid rgba(255,255,255,0.07);">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; margin-bottom:0.2rem;">Número de
+                    Despacho</div>
+                <div style="font-size:1.1rem; font-weight:700; color:#f1f5f9; font-family:monospace;">{{
+                    despacho.numero_despacho or '—' }}</div>
+            </div>
+            <div
+                style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem 1.25rem; border:1px solid rgba(255,255,255,0.07);">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; margin-bottom:0.2rem;">Canal
+                </div>
+                <div style="font-size:1.1rem; font-weight:700; color:{{ canal_color.get(despacho.canal,'#94a3b8') }};">
+                    ● {{ despacho.canal }}
+                </div>
+            </div>
+            <div
+                style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem 1.25rem; border:1px solid rgba(255,255,255,0.07);">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; margin-bottom:0.2rem;">Estado
+                </div>
+                <div style="font-size:1.1rem; font-weight:700; color:#60a5fa;">{{ despacho.estado }}</div>
+            </div>
+            <div
+                style="background:rgba(0,0,0,0.2); border-radius:8px; padding:0.75rem 1.25rem; border:1px solid rgba(255,255,255,0.07);">
+                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; margin-bottom:0.2rem;">Derechos
+                    ARS</div>
+                <div style="font-size:1.1rem; font-weight:700; color:#a78bfa;">$ {{ "%.2f"|format(despacho.derechos_ars
+                    or 0) }}</div>
+            </div>
+        </div>
+
+        {% if despacho.estado == 'LIBERADO' %}
+        <div
+            style="background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.3); border-radius:8px; padding:0.85rem 1.25rem; margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between;">
+            <div style="color:#34d399; font-weight:600;">
+                <i class="fas fa-check-circle me-2"></i>Despacho LIBERADO — Listo para ingresar al stock
+            </div>
+            <button onclick="showTab('ingresar')"
+                style="background:linear-gradient(135deg,#34d399,#059669); color:white; border:none; padding:0.4rem 1rem; border-radius:5px; cursor:pointer; font-size:0.85rem;">
+                <i class="fas fa-boxes me-1"></i>Ingresar Stock →
+            </button>
+        </div>
+        {% elif despacho.estado not in ('INGRESADO',) %}
+        <button onclick="liberarDespacho({{ despacho.id }})"
+            style="background:rgba(52,211,153,0.1); color:#34d399; border:1px solid rgba(52,211,153,0.3); padding:0.4rem 1rem; border-radius:5px; cursor:pointer; font-size:0.85rem; margin-bottom:1rem;">
+            <i class="fas fa-unlock me-1"></i>Marcar como LIBERADO
+        </button>
+        {% endif %}
+        {% endif %}
+
+        <!-- Formulario despacho -->
+        <form method="POST" action="{{ url_for('compras.importacion_guardar_despacho', orden_id=orden.id) }}"
+            style="background:rgba(0,0,0,0.15); border-radius:10px; padding:1.25rem;">
+            <h6 style="color:#94a3b8; margin:0 0 1rem; font-size:0.85rem; text-transform:uppercase;">
+                {{ 'Actualizar' if despacho else 'Registrar' }} Despacho Aduanero
+            </h6>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0.75rem;">
+
+                {% macro field(name, label, type='text', placeholder='') %}
+                <div>
+                    <label
+                        style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem; text-transform:uppercase;">{{
+                        label }}</label>
+                    <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}"
+                        value="{% if despacho %}{{ despacho.get(name,'') or '' }}{% endif %}"
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem; font-size:0.87rem;">
+                </div>
+                {% endmacro %}
+
+                <div style="grid-column:span 2;">{{ field('numero_despacho','Número de Despacho','text','26 001 IC06
+                    0001234/A') }}</div>
+
+                <div>
+                    <label
+                        style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem; text-transform:uppercase;">DESPACHANTE</label>
+                    <select name="despachante_id"
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        <option value="">— ninguno —</option>
+                        {% for p in proveedores %}
+                        <option value="{{ p.id }}" {% if despacho and despacho.despachante_id==p.id %}selected{% endif
+                            %}>{{ p.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label
+                        style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem; text-transform:uppercase;">CANAL</label>
+                    <select name="canal"
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        {% for canal, col in [('VERDE','🟢'),('AMARILLO','🟡'),('ROJO','🔴')] %}
+                        <option value="{{ canal }}" {% if despacho and despacho.canal==canal %}selected{% endif %}>{{
+                            col }} {{ canal }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label
+                        style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem; text-transform:uppercase;">ESTADO</label>
+                    <select name="estado"
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        {% for s in ['PENDIENTE','PRESENTADO','EN_REVISION','OBSERVADO','LIBERADO','INGRESADO'] %}
+                        <option value="{{ s }}" {% if despacho and despacho.estado==s %}selected{% endif %}>{{ s }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {{ field('fecha_oficializacion','Fecha Oficialización','date') }}
+                {{ field('valor_fob_usd','FOB Total USD','number') }}
+                {{ field('valor_cif_usd','CIF Total USD','number') }}
+                {{ field('derechos_ars','Derechos ARS','number') }}
+                {{ field('tasa_estadistica_ars','Tasa Estadística ARS','number') }}
+                {{ field('otros_tributos_ars','Otros Tributos ARS','number') }}
+                {{ field('tipo_cambio_oficializacion','TC Oficialización','number') }}
+
+                <div style="grid-column:span 2;">
+                    <label
+                        style="font-size:0.72rem; color:#94a3b8; display:block; margin-bottom:0.2rem; text-transform:uppercase;">OBSERVACIONES
+                        / NOTAS</label>
+                    <textarea name="observaciones" rows="2"
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem; resize:vertical;">{% if despacho %}{{ despacho.observaciones or '' }}{% endif %}</textarea>
+                </div>
+
+            </div>
+
+            <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.05);">
+                <h6 style="color:#38bdf8; font-size:0.85rem; margin:0 0 1.25rem; font-weight:700;">
+                    <i class="fas fa-warehouse me-2"></i>GESTIÓN DE PUERTO Y DEMORAS
+                </h6>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem;">
+                    {{ field('dias_libres_puerto','Días Libres Puerto','number','Ej: 7') }}
+                    {{ field('costo_demora_diario_usd','Costo Demora (USD/Día)','number','Ej: 150') }}
+                    {{ field('fecha_devolucion_contenedor','Fecha Devolución Contenedor','date') }}
+                </div>
+            </div>
+
+    </div>
+
+    <!-- Hidden fields for Stage 4 (Logística) compatibility -->
+    <input type="hidden" name="transportista" value="{{ despacho.transportista or '' }}">
+    <input type="hidden" name="guia_bl_tracking" value="{{ despacho.guia_bl_tracking or '' }}">
+    <input type="hidden" name="fecha_embarque" value="{{ despacho.fecha_embarque or '' }}">
+    <input type="hidden" name="fecha_arribo_estimada" value="{{ despacho.fecha_arribo_estimada or '' }}">
+    <input type="hidden" name="fecha_arribo_real" value="{{ despacho.fecha_arribo_real or '' }}">
+    <input type="hidden" name="puerto_embarque" value="{{ despacho.puerto_embarque or '' }}">
+    <input type="hidden" name="puerto_destino" value="{{ despacho.puerto_destino or '' }}">
+    <input type="hidden" name="bultos" value="{{ despacho.bultos or 0 }}">
+    <input type="hidden" name="peso_kg" value="{{ despacho.peso_kg or 0 }}">
+    <input type="hidden" name="dias_libres_puerto" value="{{ despacho.dias_libres_puerto or 0 }}">
+    <input type="hidden" name="costo_demora_diario_usd" value="{{ despacho.costo_demora_diario_usd or 0 }}">
+    <input type="hidden" name="fecha_devolucion_contenedor" value="{{ despacho.fecha_devolucion_contenedor or '' }}">
+
+    <div style="margin-top:0.75rem;">
+        <button type="submit" class="btn btn-sm"
+            style="background:linear-gradient(135deg,#60a5fa,#2563eb); color:white; border:none; padding:0.45rem 1.25rem; border-radius:5px;">
+            <i class="fas fa-save me-1"></i>Guardar Despacho
+        </button>
+    </div>
+
+    </form>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+       TAB 4 — INGRESAR AL STOCK
+  ══════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-ingresar" style="display:none;">
+    {% if not despacho or despacho.estado not in ('LIBERADO',) %}
+    <div
+        style="background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.25); border-radius:10px; padding:1.5rem; text-align:center;">
+        <i class="fas fa-exclamation-triangle"
+            style="color:#fbbf24; font-size:2rem; display:block; margin-bottom:0.75rem;"></i>
+        <div style="color:#fbbf24; font-weight:600; margin-bottom:0.5rem;">Despacho no disponible para ingreso</div>
+        <div style="color:#64748b; font-size:0.85rem;">
+            El despacho debe existir y estar en estado <strong>LIBERADO</strong> para poder ingresar al stock.<br>
+            Estado actual: <strong>{{ despacho.estado if despacho else 'SIN DESPACHO' }}</strong>
+        </div>
+        <button onclick="showTab('despacho')"
+            style="margin-top:1rem; background:rgba(251,191,36,0.1); color:#fbbf24; border:1px solid rgba(251,191,36,0.3); padding:0.4rem 1rem; border-radius:5px; cursor:pointer;">
+            <i class="fas fa-stamp me-1"></i>Ir al Despacho →
+        </button>
+    </div>
+    {% else %}
+    <div
+        style="background:rgba(52,211,153,0.05); border:1px solid rgba(52,211,153,0.2); border-radius:10px; padding:1.5rem;">
+        <h5 style="color:#34d399; margin:0 0 0.5rem;"><i class="fas fa-boxes me-2"></i>Ingreso Definitivo al Stock
+        </h5>
+        <p style="color:#64748b; font-size:0.85rem; margin:0 0 1rem;">
+            Esta acción ingresará los artículos de la importación al inventario usando el CUI calculado como costo
+            unitario.<br>
+            La operación es <strong>irreversible</strong> una vez confirmada.
+        </p>
+
+        <form method="POST" action="{{ url_for('compras.importacion_ingresar_stock', orden_id=orden.id) }}"
+            onsubmit="return confirm('¿Confirmar el ingreso al stock? Esta acción no se puede deshacer.')">
+            <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+                <div>
+                    <label
+                        style="font-size:0.78rem; color:#94a3b8; display:block; margin-bottom:0.3rem; text-transform:uppercase;">Depósito
+                        de Destino *</label>
+                    <select name="deposito_id" required
+                        style="background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.5rem 0.75rem; min-width:220px;">
+                        {% for d in depositos %}
+                        <option value="{{ d.id }}">{{ d.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label
+                        style="font-size:0.78rem; color:#94a3b8; display:block; margin-bottom:0.3rem; text-transform:uppercase;">TC
+                        USD (Blanco si auto-BCRA)</label>
+                    <input type="number" step="0.01" name="tipo_cambio" placeholder="Automático"
+                        style="background:rgba(0,0,0,0.3); color:#fbbf24; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.5rem 0.75rem; width:150px;">
+                </div>
+                <div>
+                    <button type="button" onclick="calcularCUI(); showTab('cui')"
+                        style="background:rgba(167,139,250,0.15); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); padding:0.5rem 0.9rem; border-radius:5px; cursor:pointer; font-size:0.85rem;">
+                        <i class="fas fa-calculator me-1"></i>Ver CUI previo
+                    </button>
+                </div>
+                <div>
+                    <button type="submit"
+                        style="background:linear-gradient(135deg,#34d399,#059669); color:white; border:none; padding:0.5rem 1.5rem; border-radius:5px; cursor:pointer; font-size:0.9rem; font-weight:600;">
+                        <i class="fas fa-check-double me-2"></i>CONFIRMAR INGRESO AL STOCK
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+       TAB 5 — PAGOS INTERNACIONALES (PHASE 3)
+  ══════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-pagos" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h5 style="color:#f1f5f9; margin:0;"><i class="fas fa-money-bill-wave me-2"></i>Gestión de Pagos Externos
+        </h5>
+        <div
+            style="background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.2); border-radius:12px; padding:0.25rem 0.75rem; font-size:0.8rem; color:#38bdf8;">
+            Moneda de Operación: <strong>{{ orden.moneda }}</strong>
+        </div>
+    </div>
+
+    <!-- Resumen Financiero -->
+    <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+        <div
+            style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:0.75rem 1.25rem; flex:1; min-width:200px;">
+            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">Saldo Pendiente (FOB)</div>
+            <div id="fin-saldo-pendiente" style="font-size:1.4rem; font-weight:700; color:#f87171;">U$S --</div>
+        </div>
+        <div
+            style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:0.75rem 1.25rem; flex:1; min-width:200px;">
+            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">Total Pagado</div>
+            <div id="fin-total-pagado" style="font-size:1.4rem; font-weight:700; color:#34d399;">U$S --</div>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 350px 1fr; gap:1.5rem;">
+        <!-- Formulario Pago -->
+        <div
+            style="background:rgba(0,0,0,0.15); border-radius:10px; padding:1.25rem; border:1px solid rgba(255,255,255,0.03);">
+            <h6 style="color:#94a3b8; font-size:0.8rem; margin:0 0 1rem; text-transform:uppercase;">Registrar Nuevo
+                Pago (SWIFT)</h6>
+            <form id="form-pago" method="POST"
+                action="{{ url_for('compras.importacion_agregar_pago', orden_id=orden.id) }}">
+                <input type="hidden" name="moneda" value="{{ orden.moneda }}">
+                <input type="hidden" name="proveedor_id" value="{{ orden.proveedor_id }}">
+
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">MONTO ({{
+                        orden.moneda }})</label>
+                    <input type="number" step="0.01" name="monto_orig" required
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#38bdf8; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem; font-size:1.1rem; font-weight:700;">
+                </div>
+
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">TIPO DE
+                        CAMBIO (ARS/{{ orden.moneda }})</label>
+                    <input type="number" step="0.01" name="tipo_cambio" id="pago-tc" required
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#fbbf24; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                </div>
+
+                <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">BANCO
+                        ORIGEN</label>
+                    <select name="banco_id" required
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.45rem;">
+                        <option value="">— Seleccionar Banco —</option>
+                        {% for b in bancos %}
+                        <option value="{{ b.id }}">{{ b.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.75rem;">
+                    <div>
+                        <label
+                            style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">FECHA</label>
+                        <input type="date" name="fecha" required value="{{ hoy }}"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.4rem;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">REF.
+                            SWIFT</label>
+                        <input type="text" name="referencia_swift" placeholder="Código Operación"
+                            style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.4rem;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <label
+                        style="font-size:0.7rem; color:#94a3b8; display:block; margin-bottom:0.2rem;">OBSERVACIONES</label>
+                    <textarea name="observaciones" rows="2"
+                        style="width:100%; background:rgba(0,0,0,0.3); color:#cbd5e1; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:0.4rem; font-size:0.8rem;"></textarea>
+                </div>
+
+                <button type="submit" class="btn"
+                    style="width:100%; background:linear-gradient(135deg,#6366f1,#4f46e5); color:white; border:none; padding:0.6rem; border-radius:6px; font-weight:600;">
+                    <i class="fas fa-paper-plane me-2"></i>Registrar Pago
+                </button>
+            </form>
+        </div>
+
+        <!-- Listado de Pagos Realizados -->
+        <div style="background:rgba(0,0,0,0.1); border-radius:10px; padding:1.25rem;">
+            <h6 style="color:#94a3b8; font-size:0.8rem; margin:0 0 1rem; text-transform:uppercase;">Historial de
+                Pagos</h6>
+            <div id="pagos-lista-container">
+                <p style="color:#475569; text-align:center; padding:2rem;">Cargando pagos...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+       TAB 6 — DOCUMENTOS
+  ══════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-documentos" style="display:none;">
+    {% if documentos %}
+    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+        <thead>
+            <tr style="background:rgba(255,255,255,0.04); color:#64748b;">
+                <th style="padding:0.45rem; text-align:left;">Tipo</th>
+                <th style="padding:0.45rem; text-align:left;">Número</th>
+                <th style="padding:0.45rem; text-align:right;">Monto</th>
+                <th style="padding:0.45rem; text-align:left;">Fecha</th>
+                <th style="padding:0.45rem; text-align:left;">Estado</th>
+                <th style="padding:0.45rem;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in documentos %}
+            <tr style="border-top:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:0.45rem;">
+                    <span
+                        style="font-size:0.7rem; background:rgba(251,146,60,0.1); color:#fb923c; padding:0.15rem 0.4rem; border-radius:3px;">
+                        {{ d.tipo_documento.replace('_',' ') }}
+                    </span>
+                </td>
+                <td style="padding:0.45rem; color:#cbd5e1; font-family:monospace;">{{ d.numero_documento or '—' }}
+                </td>
+                <td style="padding:0.45rem; text-align:right; font-weight:600;">
+                    {% if d.monto %}{{ d.moneda }} {{ "%.2f"|format(d.monto) }}{% else %}—{% endif %}
+                </td>
+                <td style="padding:0.45rem; color:#64748b;">{{ d.fecha_documento or '—' }}</td>
+                <td style="padding:0.45rem;">
+                    <span
+                        style="font-size:0.7rem; padding:0.15rem 0.4rem; border-radius:3px;
+                  background:{% if d.estado=='VERIFICADO' %}rgba(52,211,153,0.1){% elif d.estado=='OBSERVADO' %}rgba(239,68,68,0.1){% else %}rgba(251,191,36,0.1){% endif %};
+                  color:{% if d.estado=='VERIFICADO' %}#34d399{% elif d.estado=='OBSERVADO' %}#ef4444{% else %}#fbbf24{% endif %};">
+                        {{ d.estado }}
+                    </span>
+                </td>
+                <td style="padding:0.45rem;">
+                    {% if d.archivo_path %}
+                    <a href="/static/{{ d.archivo_path }}" target="_blank" style="color:#60a5fa;">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center; padding:2rem; color:#475569; font-size:0.85rem;">
+        <i class="fas fa-folder-open" style="opacity:0.3; font-size:2rem; display:block; margin-bottom:0.5rem;"></i>
+        Sin documentos asociados. Cárguelos desde el Dashboard de Importaciones.
+    </div>
+    {% endif %}
+</div>
+
+</div><!-- /container -->
+
+<script>
+    // ── Tabs ──────────────────────────────────────────────────────────────────
+    const TABS = ['cargos', 'desvios', 'cui', 'logistica', 'despacho', 'ingresar', 'pagos', 'documentos'];
+
+    function showTab(name) {
+        if (name === 'pagos') loadPagos();
+        TABS.forEach(t => {
+            const panel = document.getElementById('panel-' + t);
+            if (panel) panel.style.display = (t === name) ? '' : 'none';
+            const btn = document.getElementById('tab-' + t);
+            if (btn) {
+                btn.style.color = (t === name) ? '#f1f5f9' : '#64748b';
+                btn.style.borderBottomColor = (t === name) ? '#38bdf8' : 'transparent';
+                btn.style.borderBottomWidth = '2px';
+            }
+        });
+    }
+    showTab('cargos');
+
+    // ── Descripción auto del cargo ─────────────────────────────────────────────
+    const cargoLabels = {
+    {% for code, label, _ in tipos_cargo %}
+    "{{ code }}": "{{ label }}"{% if not loop.last %}, {% endif %}
+    {% endfor %}
+    };
+
+    function updateDescCargo() {
+        const code = document.getElementById('sel-tipo-cargo').value;
+        const inp = document.getElementById('inp-descripcion');
+        if (inp) inp.value = cargoLabels[code] || code;
+    }
+    updateDescCargo();
+
+    // -- Toggle referencia a estimado --
+    const chkEstimado = document.getElementById('chk-estimado');
+    if (chkEstimado) {
+        chkEstimado.addEventListener('change', function () {
+            const refDiv = document.getElementById('ref-cargo-div');
+            const chkCui = document.getElementById('chk-cui');
+            if (this.checked) {
+                refDiv.style.display = 'none';
+                if (chkCui) chkCui.checked = true; // Estimados suelen ir al CUI
+            } else {
+                refDiv.style.display = 'block';
+            }
+        });
+    }
+
+    // ── Calcular CUI ───────────────────────────────────────────────────────────
+    async function calcularCUI() {
+        const tc = document.getElementById('cui-tc').value;
+        const url = `{{ url_for('compras.api_calcular_cui', orden_id=orden.id) }}${tc ? '?tipo_cambio=' + tc : ''}`;
+        const loading = document.getElementById('cui-loading');
+        const res = document.getElementById('cui-result');
+        if (loading) loading.style.display = '';
+        if (res) res.innerHTML = '';
+        try {
+            const resp = await fetch(url);
+            const r = await resp.json();
+            if (loading) loading.style.display = 'none';
+            if (!r.success) { if (res) res.innerHTML = `<div style="color:#ef4444; padding:1rem;">${r.message}</div>`; return; }
+            const d = r.data;
+            let html = `
+      <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.2); border-radius:8px; padding:0.7rem 1rem; min-width:160px;">
+          <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">FOB Total</div>
+          <div style="font-size:1.1rem; font-weight:700; color:#38bdf8;">U$S ${d.total_fob_usd.toFixed(2)}</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:8px; padding:0.7rem 1rem; min-width:160px;">
+          <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">Tributos Aduaneros</div>
+          <div style="font-size:1.1rem; font-weight:700; color:#f87171;">$ ${d.total_tributos_ars.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</div>
+        </div>
+        <div style="background:rgba(167,139,250,0.08); border:1px solid rgba(167,139,250,0.2); border-radius:8px; padding:0.7rem 1rem; min-width:160px;">
+          <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">Gastos Operativos</div>
+          <div style="font-size:1.1rem; font-weight:700; color:#a78bfa;">$ ${d.total_operativos_ars.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</div>
+        </div>
+        <div style="background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.2); border-radius:8px; padding:0.7rem 1rem; min-width:160px;">
+          <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase;">CUI Total ARS</div>
+          <div style="font-size:1.1rem; font-weight:700; color:#34d399;">$ ${d.total_cui_ars.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</div>
+        </div>
+      </div>
+      <table style="width:100%; border-collapse:collapse; font-size:0.83rem;">
+        <thead>
+          <tr style="background:rgba(255,255,255,0.04); color:#64748b;">
+            <th style="padding:0.45rem; text-align:left;">Artículo</th>
+            <th style="padding:0.45rem; text-align:right;">Cantidad</th>
+            <th style="padding:0.45rem; text-align:right;">FOB Unit. USD</th>
+            <th style="padding:0.45rem; text-align:right;">Peso %</th>
+            <th style="padding:0.45rem; text-align:right;">Cargos Unit. ARS</th>
+            <th style="padding:0.45rem; text-align:right; color:#34d399;">CUI Unitario ARS</th>
+            <th style="padding:0.45rem; text-align:right; color:#34d399;">CUI Total ARS</th>
+          </tr>
+        </thead>
+        <tbody>`;
+            for (const item of d.items) {
+                html += `
+          <tr style="border-top:1px solid rgba(255,255,255,0.04);">
+            <td style="padding:0.45rem; color:#cbd5e1;">${item.articulo_nombre}<br>
+                <small style="color:#475569; font-family:monospace;">${item.articulo_codigo || ''}</small></td>
+            <td style="padding:0.45rem; text-align:right;">${item.cantidad}</td>
+            <td style="padding:0.45rem; text-align:right; color:#38bdf8;">U$S ${item.precio_fob_usd.toFixed(4)}</td>
+            <td style="padding:0.45rem; text-align:right; color:#94a3b8;">${item.peso_relativo_pct}%</td>
+            <td style="padding:0.45rem; text-align:right; color:#a78bfa;">$ ${(item.cargos_usd_unitario * d.tipo_cambio + item.cargos_ars_unitario).toFixed(2)}</td>
+            <td style="padding:0.45rem; text-align:right; color:#34d399; font-weight:700;">$ ${item.cui_ars.toFixed(2)}</td>
+            <td style="padding:0.45rem; text-align:right; color:#34d399;">$ ${item.cui_total_ars.toFixed(2)}</td>
+          </tr>`;
+            }
+            html += `</tbody></table>`;
+            if (res) res.innerHTML = html;
+        } catch (e) {
+            if (loading) loading.style.display = 'none';
+            if (res) res.innerHTML = `<div style="color:#ef4444; padding:1rem;">Error: ${e.message}</div>`;
+        }
+    }
+
+    // ── Eliminar cargo ─────────────────────────────────────────────────────────
+    async function eliminarCargo(cargoId) {
+        if (!confirm('¿Eliminar este cargo?')) return;
+        const resp = await fetch(`/compras/importaciones/cargo/${cargoId}/eliminar`, {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': '{{ csrf_token }}' }
+        });
+        const r = await resp.json();
+        if (r.success) { showToast('Cargo eliminado', 'success'); setTimeout(() => location.reload(), 800); }
+        else showToast(r.message, 'error');
+    }
+
+    // ── Liberar despacho ───────────────────────────────────────────────────────
+    async function liberarDespacho(despachoId) {
+        if (!confirm('¿Marcar el despacho como LIBERADO?')) return;
+        const resp = await fetch(`/compras/api/importaciones/despacho/${despachoId}/liberar`, {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': '{{ csrf_token }}' }
+        });
+        const r = await resp.json();
+        if (r.success) { showToast('Despacho liberado ✓', 'success'); setTimeout(() => location.reload(), 1000); }
+        else showToast(r.message, 'error');
+    }
+
+    // ── Rastreo de Buque (Live AIS) ─────────────────────────────────────────────
+    let map = null;
+    let marker = null;
+
+    function initVesselMap(lat, lon, name) {
+        if (!lat || !lon) return;
+        const container = document.getElementById('vessel-map');
+        container.style.display = 'block';
+
+        if (!map) {
+            map = L.map('vessel-map').setView([lat, lon], 8);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        } else {
+            map.setView([lat, lon], 8);
+        }
+
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lon]).addTo(map)
+            .bindPopup(`<b>${name}</b><br>Última posición AIS`)
+            .openPopup();
+    }
+
+    async function trackVessel() {
+        const mmsi = document.getElementById('vessel-mmsi').value;
+        if (!mmsi) { showToast('Ingrese un MMSI válido', 'error'); return; }
+
+        const btn = document.getElementById('btn-track-vessel');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sincronizando...';
+
+        try {
+            const resp = await fetch(`/compras/api/importaciones/orden/{{ orden.id }}/track-vessel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ mmsi: mmsi })
+            });
+            const r = await resp.json();
+
+            if (r.success) {
+                showToast('Rastreo sincronizado ✓', 'success');
+                // Actualizar el panel de resultado
+                const resDiv = document.getElementById('vessel-track-result');
+                const d = r.data;
+                resDiv.innerHTML = `
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap:0.75rem;">
+                        <div style="background:rgba(0,0,0,0.2); padding:0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
+                            <small style="color:#64748b; font-size:0.65rem; display:block; margin-bottom:0.2rem;">BUQUE</small>
+                            <span style="color:#f1f5f9; font-weight:700; font-size:0.9rem;">${d.name}</span>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.2); padding:0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
+                            <small style="color:#64748b; font-size:0.65rem; display:block; margin-bottom:0.2rem;">ESTADO AIS</small>
+                            <span style="color:#34d399; font-weight:700; font-size:0.9rem;">${d.status}</span>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.2); padding:0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
+                            <small style="color:#64748b; font-size:0.65rem; display:block; margin-bottom:0.2rem;">POSICIÓN</small>
+                            <span style="color:#cbd5e1; font-size:0.8rem; font-family:monospace;">${d.lat}, ${d.lon}</span>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.2); padding:0.75rem; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
+                            <small style="color:#64748b; font-size:0.65rem; display:block; margin-bottom:0.2rem;">ETA PREVISTO</small>
+                            <span style="color:#fbbf24; font-weight:700; font-size:0.9rem;">${d.eta ? d.eta.substring(0, 16) : '—'}</span>
+                        </div>
+                    </div>
+                    <div style="margin-top:0.75rem; text-align:right;">
+                        <small style="color:#475569; font-size:0.65rem;">Último reporte AIS: ${d.tstamp}</small>
+                    </div>
+                `;
+                // Actualizar Mapa
+                initVesselMap(d.lat, d.lon, d.name);
+            } else {
+                showToast(r.message, 'error');
+            }
+        } catch (e) {
+            showToast('Error de conexión', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    // ── Gestión de Pagos (PHASE 3) ──────────────────────────────────────────────
+    let totalPaidUSD = 0;
+    async function loadPagos() {
+        const container = document.getElementById('pagos-lista-container');
+        if (!container) return;
+        try {
+            const resp = await fetch(`{{ url_for('compras.api_get_pagos_orden', orden_id=orden.id) }}`);
+            const r = await resp.json();
+            if (!r.success) { container.innerHTML = `<p style="color:#ef4444;">${r.message}</p>`; return; }
+
+            const pagos = r.data;
+            totalPaidUSD = pagos.reduce((acc, p) => acc + parseFloat(p.monto_orig), 0);
+
+            // Actualizar Saldo (FOB total se saca de cui si está calculado, o de orden si viniera)
+            const resResp = await fetch(`{{ url_for('compras.api_resumen_importacion', orden_id=orden.id) }}`);
+            const resData = await resResp.json();
+            const totalFob = resData.success ? resData.cui_resultado.total_fob_usd : 0;
+
+            const paidEl = document.getElementById('fin-total-pagado');
+            const pendEl = document.getElementById('fin-saldo-pendiente');
+            if (paidEl) paidEl.innerText = `U$S ${totalPaidUSD.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            if (pendEl) pendEl.innerText = `U$S ${(totalFob - totalPaidUSD).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+
+            if (pagos.length === 0) {
+                container.innerHTML = `<p style="color:#475569; text-align:center; padding:2rem;">No se han registrado pagos para esta orden.</p>`;
+                return;
+            }
+
+            let html = `
+                <table style="width:100%; border-collapse:collapse; font-size:0.83rem;">
+                    <thead>
+                        <tr style="color:#64748b; border-bottom:1px solid rgba(255,255,255,0.05);">
+                            <th style="padding:0.5rem; text-align:left;">Fecha</th>
+                            <th style="padding:0.5rem; text-align:left;">Banco / SWIFT</th>
+                            <th style="padding:0.5rem; text-align:right;">Monto</th>
+                            <th style="padding:0.5rem; text-align:right;">TC</th>
+                            <th style="padding:0.5rem; text-align:right;">Monto ARS</th>
+                            <th style="padding:0.5rem; text-align:center;">Asiento</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            for (const p of pagos) {
+                html += `
+                    <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                        <td style="padding:0.5rem; color:#cbd5e1;">${p.fecha}</td>
+                        <td style="padding:0.5rem; color:#94a3b8;">
+                            <div style="color:#cbd5e1; font-weight:600;">${p.banco_nombre || '—'}</div>
+                            <small style="font-family:monospace;">${p.referencia_swift || 'N/A'}</small></td>
+                        <td style="padding:0.5rem; text-align:right; color:#38bdf8; font-weight:700;">${p.moneda} ${parseFloat(p.monto_orig).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:0.5rem; text-align:right; color:#fbbf24;">${parseFloat(p.tipo_cambio).toFixed(2)}</td>
+                        <td style="padding:0.5rem; text-align:right; color:#a78bfa;">$ ${parseFloat(p.monto_ars).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                        <td style="padding:0.5rem; text-align:center;">
+                            ${p.asiento_id ? `<span class="badge" style="background:rgba(99,102,241,0.1); color:#818cf8; font-family:monospace;">#${p.asiento_id}</span>` : '—'}
+                        </td>
+                    </tr>`;
+            }
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+
+        } catch (e) {
+            container.innerHTML = `<p style="color:#ef4444;">Error al cargar pagos: ${e.message}</p>`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Inicializar TC
+        try {
+            const resp = await fetch(`/compras/api/importaciones/tipos-cambio`);
+            const data = await resp.json();
+            const tcInput = document.getElementById('pago-tc');
+            if (data.success && data.rates.USD && tcInput) {
+                tcInput.value = data.rates.USD.venta;
+            }
+        } catch (e) { }
+
+        // Inicializar Mapa AIS si hay datos
+        {% if vessel_track and vessel_track.last_lat %}
+        initVesselMap({{ vessel_track.last_lat }}, {{ vessel_track.last_lon }}, "{{ vessel_track.vessel_name }}");
+    {% endif %}
+    });
+</script>
+{% endblock %}

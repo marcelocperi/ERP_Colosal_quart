@@ -1,0 +1,2 @@
+cont_asientos_detalle
+erp_comprobantes_detalle

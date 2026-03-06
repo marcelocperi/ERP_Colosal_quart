@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-percent text-danger me-2"></i> Maestro de Impuestos
+        </h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalImpuesto" onclick="resetModal()">
+            <i class="fas fa-plus me-2"></i> Nuevo Impuesto
+        </button>
+    </div>
+
+    <!-- Lista de Impuestos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Impuestos Disponibles (Globales y Propios)</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Origen</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for imp in impuestos %}
+                        <tr>
+                            <td class="fw-bold">{{ imp.nombre }}</td>
+                            <td>{{ imp.descripcion or '-' }}</td>
+                            <td>
+                                {% if imp.enterprise_id == 0 %}
+                                <span class="badge bg-dark">Global</span>
+                                {% else %}
+                                <span class="badge bg-primary">Propio</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if imp.activo %}
+                                <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick='editImpuesto({{ imp | tojson }})'>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% if imp.enterprise_id != 0 %}
+                                <form action="{{ url_for('fondos.impuestos') }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('¿Seguro desea eliminar este impuesto?');">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="{{ imp.id }}">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <button class="btn btn-sm btn-secondary" title="Impuesto global no editable" disabled>
+                                    <i class="fas fa-lock"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No hay impuestos configurados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ABM -->
+<div class="modal fade" id="modalImpuesto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Nuevo Impuesto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('fondos.impuestos') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="action" id="formAction" value="create">
+                    <input type="hidden" name="id" id="impuestoId">
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" name="nombre" id="imp_nombre" required
+                            placeholder="Ej: Tasa Municipal X">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" name="descripcion" id="imp_descripcion" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-check form-switch mb-3" id="divActivo" style="display: none;">
+                        <input class="form-check-input" type="checkbox" name="activo" id="imp_activo" value="1" checked>
+                        <label class="form-check-label">Activo</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function resetModal() {
+        document.getElementById('modalTitle').innerText = 'Nuevo Impuesto';
+        document.getElementById('formAction').value = 'create';
+        document.getElementById('impuestoId').value = '';
+        document.getElementById('imp_nombre').value = '';
+        document.getElementById('imp_descripcion').value = '';
+        document.getElementById('divActivo').style.display = 'none';
+        document.getElementById('imp_activo').checked = true;
+        document.getElementById('imp_nombre').readOnly = false;
+    }
+
+    function editImpuesto(imp) {
+        document.getElementById('modalTitle').innerText = 'Editar Impuesto';
+        document.getElementById('formAction').value = 'edit';
+        document.getElementById('impuestoId').value = imp.id;
+        document.getElementById('imp_nombre').value = imp.nombre;
+        document.getElementById('imp_descripcion').value = imp.descripcion || '';
+        document.getElementById('divActivo').style.display = 'block';
+        document.getElementById('imp_activo').checked = imp.activo == 1;
+
+        // Si es global (enterprise_id=0), solo permitimos cambiar estado/desc si es el enterprise owner o algo asi
+        // Por ahora lo dejamos editar nombre solo si es local
+        if (imp.enterprise_id == 0) {
+            document.getElementById('imp_nombre').readOnly = true;
+        } else {
+            document.getElementById('imp_nombre').readOnly = false;
+        }
+
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalImpuesto'));
+        modal.show();
+    }
+</script>
+{% endblock %}

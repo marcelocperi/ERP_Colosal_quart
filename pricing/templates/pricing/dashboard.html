@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-hand-holding-usd"></i> Centro de Estrategia de Precios</h1>
+        <p class="text-muted">Gestione sus listas de precios, márgenes y reglas de costeo por naturaleza.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openListaModal()">
+        <i class="fas fa-plus"></i> Nueva Lista de Precios
+    </button>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <!-- Listas de Precios -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div
+            style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.2rem; color: var(--primary);">Listas Activas</h3>
+        </div>
+        <div style="padding: 1rem;">
+            {% for lista in listas %}
+            <div class="price-list-item"
+                style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid rgba(255,255,255,0.05); transition: transform 0.2s;">
+                <div>
+                    <div style="font-weight: 700; font-size: 1.1rem; color: #fff;">{{ lista.nombre }}</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;">{{ lista.descripcion or 'Sin descripción' }}</div>
+                    <span class="badge"
+                        style="background: rgba(99,102,241,0.1); color: var(--primary); font-size: 0.7rem; margin-top: 5px;">{{
+                        lista.moneda }}</span>
+                    {% if lista.pending_count > 0 %}
+                    <span class="badge"
+                        style="background: #fef2f2; color: #ef4444; font-size: 0.75rem; margin-left: 0.5rem; border: 1px solid #fee2e2;">
+                        <i class="fas fa-exclamation-circle"></i> {{ lista.pending_count }} pendientes
+                    </span>
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    {% if lista.pending_count > 0 %}
+                    <a href="{{ url_for('pricing.lista_pendientes', id=lista.id) }}" class="btn btn-sm"
+                        style="background: #10b981; color: white;">
+                        <i class="fas fa-check-double"></i> Revisar Costeo
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('pricing.lista_detalle', lista_id=lista.id) }}" class="btn btn-sm btn-outline"
+                        style="border: 1px solid var(--primary); color: var(--primary);">
+                        <i class="fas fa-cog"></i> Configurar Reglas
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem; color: #64748b;">
+                <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                No hay listas de precios configuradas.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Actividad Reciente -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="margin: 0; font-size: 1.2rem; color: var(--primary);">Últimos Cambios</h3>
+        </div>
+        <div style="padding: 1rem;">
+            {% for p in ultimos_precios %}
+            <div style="display: flex; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
+                <div style="width: 4px; background: var(--primary); border-radius: 2px;"></div>
+                <div>
+                    <div style="font-size: 0.9rem; font-weight: 600;">{{ p.articulo_nombre }}</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">{{ p.lista_nombre }} → <span
+                            style="color: #10b981; font-weight: 700;">${{ p.precio_final }}</span></div>
+                    <div style="font-size: 0.7rem; color: #64748b;">{{ p.created_at.strftime('%d/%m %H:%M') }}</div>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.85rem;">Esperando
+                actualizaciones de precios...</div>
+            {% endfor %}
+        </div>
+        <div style="padding: 1rem; background: rgba(0,0,0,0.1); text-align: center;">
+            <button class="btn btn-sm btn-block"
+                style="width: 100%; background: var(--surface-light); color: var(--primary);">Ver Historial
+                Completo</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .price-list-item:hover {
+        transform: translateX(5px);
+        border-color: var(--primary) !important;
+        background: rgba(99, 102, 241, 0.05) !important;
+    }
+</style>
+
+{% endblock %}

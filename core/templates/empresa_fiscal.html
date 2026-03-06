@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}Datos Fiscales y Perfil de Empresa{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold text-gradient"><i class="fas fa-building me-2"></i>Perfil de Empresa</h2>
+                <p class="text-muted">Configure la información legal y visual que aparecerá en sus comprobantes.</p>
+            </div>
+            <div>
+                <a href="{{ url_for('ventas.comprobantes') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Comprobantes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form action="{{ url_for('core.admin_empresa_fiscal_save') }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="sid" value="{{ sid }}">
+        <fieldset {% if 'sysadmin' not in permissions and 'all' not in permissions %}disabled{% endif %}>
+            <div class="row">
+                <!-- COLUMNA IZQUIERDA: DATOS LEGALES -->
+                <div class="col-xl-7">
+                    <div class="card border-0 shadow-sm mb-4 overflow-hidden">
+                        <div class="card-header bg-primary text-white p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-file-invoice-dollar fa-2x me-3 opacity-75"></i>
+                                    <h5 class="mb-0 fw-bold">Identificación Fiscal (AFIP)</h5>
+                                </div>
+                                {% if 'sysadmin' not in permissions and 'all' not in permissions %}
+                                <span class="badge bg-white text-primary rounded-pill px-3">LECTURA</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body p-4 p-xl-5">
+                            <div class="row g-4">
+                                <div class="col-md-12">
+                                    <label for="nombre"
+                                        class="form-label fw-bold text-uppercase small text-muted">Nombre de la Empresa
+                                        / Razón Social</label>
+                                    <input type="text" name="nombre" id="nombre" class="form-control form-control-lg"
+                                        value="{{ empresa.nombre }}">
+                                    <small class="text-muted">Nombre que aparecerá en la barra lateral y
+                                        documentos.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cuit"
+                                        class="form-label fw-bold text-uppercase small text-muted">CUIT</label>
+                                    <input type="text" name="cuit" id="cuit" class="form-control form-control-lg"
+                                        value="{{ empresa.cuit or '' }}" placeholder="XX-XXXXXXXX-X">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="condicion_iva"
+                                        class="form-label fw-bold text-uppercase small text-muted">Condición IVA</label>
+                                    <select name="condicion_iva" id="condicion_iva" class="form-select form-select-lg">
+                                        <option value="Responsable Inscripto" {% if
+                                            empresa.condicion_iva=='Responsable Inscripto' %}selected{% endif %}>
+                                            Responsable
+                                            Inscripto</option>
+                                        <option value="Monotributista" {% if empresa.condicion_iva=='Monotributista'
+                                            %}selected{% endif %}>Monotributista</option>
+                                        <option value="Exento" {% if empresa.condicion_iva=='Exento' %}selected{% endif
+                                            %}>
+                                            Exento</option>
+                                        <option value="Consumidor Final" {% if empresa.condicion_iva=='Consumidor Final'
+                                            %}selected{% endif %}>Consumidor Final</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="ingresos_brutos"
+                                        class="form-label fw-bold text-uppercase small text-muted">Ingresos
+                                        Brutos</label>
+                                    <input type="number" name="ingresos_brutos" id="ingresos_brutos"
+                                        class="form-control form-control-lg" value="{{ empresa.ingresos_brutos or '' }}"
+                                        placeholder="Nro de Inscripción">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="iibb_condicion"
+                                        class="form-label fw-bold text-uppercase small text-muted">Condición
+                                        IIBB</label>
+                                    <select name="iibb_condicion" id="iibb_condicion"
+                                        class="form-select form-select-lg">
+                                        <option value="Responsable" {% if empresa.iibb_condicion=='Responsable'
+                                            %}selected{% endif %}>Responsable</option>
+                                        <option value="Exento" {% if empresa.iibb_condicion=='Exento' %}selected{% endif
+                                            %}>
+                                            Exento</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="inicio_actividades"
+                                        class="form-label fw-bold text-uppercase small text-muted">Inicio de
+                                        Actividades</label>
+                                    <input type="text" name="inicio_actividades" id="inicio_actividades"
+                                        class="form-control form-control-lg datepicker"
+                                        value="{{ empresa.inicio_actividades or '' }}" placeholder="DD/MM/AAAA">
+                                </div>
+                                <div class="col-12">
+                                    <label for="domicilio"
+                                        class="form-label fw-bold text-uppercase small text-muted">Domicilio
+                                        Legal/Comercial</label>
+                                    <textarea name="domicilio" id="domicilio" class="form-control form-control-lg"
+                                        rows="2"
+                                        placeholder="Calle, Nro, Localidad, Provincia">{{ empresa.domicilio or '' }}</textarea>
+                                </div>
+
+                                <!-- AFIP CERTIFICATES SECTION -->
+                                <div class="col-12 mt-4">
+                                    <div class="p-3 rounded-3"
+                                        style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.1);">
+                                        <h6 class="fw-bold text-indigo mb-3"><i class="fas fa-key me-2"></i>Credenciales
+                                            de Facturación AFIP</h6>
+
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold small text-muted">Certificado
+                                                    (.crt)</label>
+                                                {% if empresa.afip_crt %}
+                                                <div class="d-flex align-items-center mb-2 p-2 bg-white rounded border">
+                                                    <span class="badge bg-success me-2"><i
+                                                            class="fas fa-check"></i></span>
+                                                    <code class="x-small text-muted"
+                                                        style="opacity: 0.7;">{{ empresa.afip_crt[:15] }}...{{ empresa.afip_crt[-15:] }}</code>
+                                                </div>
+                                                {% endif %}
+                                                <input type="file" name="afip_crt_file"
+                                                    class="form-control form-control-sm" accept=".crt,.pem,.txt">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold small text-muted">Clave Privada
+                                                    (.key)</label>
+                                                {% if empresa.afip_key %}
+                                                <div class="d-flex align-items-center mb-2 p-2 bg-white rounded border">
+                                                    <span class="badge bg-danger me-2"><i
+                                                            class="fas fa-lock"></i></span>
+                                                    <code class="x-small text-muted"
+                                                        style="opacity: 0.7;">••••••••••••••••{{ empresa.afip_key[-15:] }}</code>
+                                                </div>
+                                                {% endif %}
+                                                <input type="file" name="afip_key_file"
+                                                    class="form-control form-control-sm" accept=".key,.pem,.txt">
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted italic"><i class="fas fa-info-circle me-1"></i>
+                                                Suba archivos nuevos solo si desea reemplazar los existentes.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white p-4">
+                            <div class="d-flex align-items-center text-primary">
+                                <i class="fas fa-id-card-alt me-2"></i>
+                                <h5 class="mb-0 fw-bold">Contacto Público para Comprobantes</h5>
+                            </div>
+                        </div>
+                        <div class="card-body p-4 p-xl-5">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label fw-bold text-uppercase small text-muted">Email
+                                        de
+                                        Contacto</label>
+                                    <input type="email" name="email" id="email" class="form-control form-control-lg"
+                                        value="{{ empresa.email or '' }}" placeholder="ventas@empresa.com">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="telefono"
+                                        class="form-label fw-bold text-uppercase small text-muted">Teléfono</label>
+                                    <input type="text" name="telefono" id="telefono"
+                                        class="form-control form-control-lg" value="{{ empresa.telefono or '' }}"
+                                        placeholder="+54 221 ...">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="website"
+                                        class="form-label fw-bold text-uppercase small text-muted">Sitio
+                                        Web</label>
+                                    <input type="text" name="website" id="website" class="form-control form-control-lg"
+                                        value="{{ empresa.website or '' }}" placeholder="www.empresa.com">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="lema" class="form-label fw-bold text-uppercase small text-muted">Lema /
+                                        Slogan</label>
+                                    <input type="text" name="lema" id="lema" class="form-control form-control-lg"
+                                        value="{{ empresa.lema or '' }}" placeholder="El lema de su empresa">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: IDENTIDAD VISUAL -->
+                <div class="col-xl-5">
+                    <div class="card border-0 shadow-sm mb-4 overflow-hidden">
+                        <div class="card-header bg-dark text-white p-4 text-center">
+                            <h5 class="mb-0 fw-bold">Identidad Visual</h5>
+                        </div>
+                        <div class="card-body p-4 p-xl-5 text-center">
+                            <p class="text-muted small mb-4">El logo aparecerá en el margen superior derecho de sus
+                                facturas.</p>
+
+                            <div class="logo-preview-container mb-4">
+                                {% if empresa.logo_path %}
+                                <img id="preview-logo" src="{{ empresa.logo_path }}" alt="Logo Empresa"
+                                    class="img-fluid rounded shadow-sm p-3 bg-white"
+                                    style="max-height: 180px; object-fit: contain; border: 1px solid #eee;">
+                                {% else %}
+                                <div id="preview-logo-placeholder"
+                                    class="bg-light rounded p-5 d-flex flex-column align-items-center justify-content-center border-dashed"
+                                    style="min-height: 180px;">
+                                    <i class="fas fa-image fa-3x text-muted opacity-25 mb-3"></i>
+                                    <span class="text-muted">Sin Logotipo Configurado</span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-4 text-start">
+                                <label for="logo_file" class="form-label fw-bold text-uppercase small text-muted">Subir
+                                    Logotipo (Archivo)</label>
+                                <input type="file" name="logo_file" id="logo_file" class="form-control mb-2"
+                                    accept="image/*" onchange="previewFile(this)">
+                                <small class="text-muted d-block mb-3">Recomendado: PNG fondo transparente, relación 3:1
+                                    (ej: 300x100px).</small>
+
+                                <div class="accordion" id="accordionLogo">
+                                    <div class="accordion-item border-0">
+                                        <h2 class="accordion-header">
+                                            <button
+                                                class="accordion-button collapsed p-0 bg-transparent shadow-none x-small text-primary"
+                                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseURL">
+                                                <i class="fas fa-link me-1"></i> O usar una URL externa
+                                            </button>
+                                        </h2>
+                                        <div id="collapseURL" class="accordion-collapse collapse"
+                                            data-bs-parent="#accordionLogo">
+                                            <div class="accordion-body p-0 pt-2">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white border-end-0"><i
+                                                            class="fas fa-globe text-muted"></i></span>
+                                                    <input type="text" name="logo_path" id="logo_path"
+                                                        class="form-control border-start-0"
+                                                        value="{{ empresa.logo_path or '' }}"
+                                                        placeholder="https://miweb.com/logo.png"
+                                                        onchange="updatePreview(this.value)">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="preview-card-invoice text-start bg-light p-4 rounded mt-4 border">
+                                <small class="text-uppercase fw-bold text-muted" style="font-size: 0.6rem;">Vista
+                                    Previa
+                                    de
+                                    Cabecera</small>
+                                <div class="mt-3 bg-white p-3 shadow-sm d-flex justify-content-between align-items-center"
+                                    style="border: 1px solid #ddd;">
+                                    <div style="width: 50%;">
+                                        <div class="fw-bold" style="font-size: 0.8rem;">FACTURA A</div>
+                                        <div style="font-size: 0.6rem;">Nro: 00001-00004523</div>
+                                        <div style="font-size: 0.6rem; margin-top: 4px;"><b>{{ empresa.nombre }}</b>
+                                        </div>
+                                        <div style="font-size: 0.55rem; color: #666;">CUIT: <span id="preview-cuit">{{
+                                                empresa.cuit or '—' }}</span></div>
+                                    </div>
+                                    <div class="text-end" style="width: 50%;">
+                                        <img id="preview-logo-small" src="{{ empresa.logo_path or '' }}"
+                                            class="{% if not empresa.logo_path %}d-none{% endif %}"
+                                            style="max-height: 35px; max-width: 100px;">
+                                        <div style="font-size: 0.55rem; color: #666; margin-top: 5px;">{{
+                                            empresa.domicilio[:40] if empresa.domicilio else 'Domicilio no
+                                            configurado'
+                                            }}{%
+                                            if empresa.domicilio and empresa.domicilio|length > 40 %}...{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm bg-primary text-white mb-4">
+                        <div class="card-body p-4 text-center">
+                            <i class="fas fa-shield-alt fa-2x mb-3 opacity-50"></i>
+                            <h5 class="fw-bold">Guardar Cambios</h5>
+                            <p class="small opacity-75">Los cambios son instantáneos y afectarán a todos los
+                                comprobantes
+                                que se emitan a partir de ahora.</p>
+
+                            {% if 'sysadmin' in permissions or 'all' in permissions %}
+                            <button type="submit"
+                                class="btn btn-light btn-lg w-100 rounded-pill fw-bold shadow-sm mt-3">
+                                <i class="fas fa-save me-2 text-primary"></i>Actualizar Perfil
+                            </button>
+                            {% else %}
+                            <div
+                                class="bg-white text-dark rounded-3 p-3 mt-3 shadow-sm border-start border-warning border-4">
+                                <i class="fas fa-lock me-2 text-warning"></i>
+                                <span class="small fw-bold">Acceso de solo lectura para empresas.</span>
+                                <p class="x-small text-muted mb-0 mt-1">Solo el administrador puede modificar estos
+                                    datos
+                                    maestro.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<script>
+    function updatePreview(url) {
+        const preview = document.getElementById('preview-logo');
+        const small = document.getElementById('preview-logo-small');
+        const placeholder = document.getElementById('preview-logo-placeholder');
+
+        if (url) {
+            // Reemplazar placeholder si existe
+            if (placeholder) {
+                placeholder.classList.add('d-none');
+            }
+
+            if (preview) {
+                preview.src = url;
+                preview.classList.remove('d-none');
+                preview.style.display = 'inline-block';
+            } else {
+                const container = document.querySelector('.logo-preview-container');
+                container.innerHTML = `<img id="preview-logo" src="${url}" alt="Logo Empresa" class="img-fluid rounded shadow-sm p-3 bg-white" style="max-height: 180px; object-fit: contain; border: 1px solid #eee;">`;
+            }
+
+            if (small) {
+                small.src = url;
+                small.classList.remove('d-none');
+                small.style.display = 'inline-block';
+            }
+        } else {
+            if (preview) preview.classList.add('d-none');
+            if (small) small.classList.add('d-none');
+            if (placeholder) placeholder.classList.remove('d-none');
+        }
+    }
+
+    function previewFile(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                updatePreview(e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Sync real-time (optional)
+    document.getElementById('cuit').addEventListener('input', function () {
+        document.getElementById('preview-cuit').innerText = this.value || '—';
+    });
+    // Initialize datepickers
+    flatpickr(".datepicker", {
+        locale: "es",
+        altInput: true,
+        altFormat: "d/m/Y",
+        dateFormat: "Y-m-d",
+        allowInput: true
+    });
+</script>
+
+<style>
+    .text-gradient {
+        background: linear-gradient(45deg, #1e3c72, #2a5298);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .border-dashed {
+        border: 2px dashed #dee2e6 !important;
+    }
+
+    .preview-card-invoice {
+        transition: all 0.3s ease;
+    }
+
+    .form-control-lg,
+    .form-select-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .btn-lg {
+        padding: 0.8rem 2rem;
+    }
+</style>
+{% endblock %}

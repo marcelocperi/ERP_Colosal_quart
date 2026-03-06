@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1>Gestión de Usuarios del Sistema</h1>
+    <button class="btn btn-primary" onclick="openNewUserModal()">
+        <i class="fas fa-user-plus"></i> Nuevo Usuario de Sistema
+    </button>
+</div>
+
+<div class="table-container card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Fecha Creación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in system_users %}
+            <tr>
+                <td>#{{ user.id }}</td>
+                <td style="font-weight: 600;">{{ user.username }}</td>
+                <td>{{ user.email or '-' }}</td>
+                <td>
+                    {% set role_color = '#6366f1' %}
+                    {% if user.role_name == 'Admin' %}
+                    {% set role_color = '#f59e0b' %}
+                    {% elif user.role_name == 'Librarian' %}
+                    {% set role_color = '#3b82f6' %}
+                    {% elif user.role_name == 'Viewer' %}
+                    {% set role_color = '#10b981' %}
+                    {% endif %}
+                    <span class="badge"
+                        style="background: {{ role_color }}1a; color: {{ role_color }}; border: 1px solid {{ role_color }}33;">
+                        {{ user.role_name or 'Sin Rol' }}
+                    </span>
+                </td>
+                <td style="font-size: 0.8rem; color: #94a3b8;">{{ user.created_at }}</td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-edit-sysuser" data-id="{{ user.id }}"
+                            data-username="{{ user.username|addslashes }}" data-email="{{ user.email or '' }}"
+                            data-role="{{ user.role_id }}" data-must-change="{{ user.must_change_password }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <form action="{{ url_for('core.reset_user_attempts', user_id=user.id) }}" method="POST"
+                            style="display: inline;">
+                            <button type="submit" class="btn"
+                                style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b;"
+                                title="Resetear Intentos de Acceso">
+                                <i class="fas fa-unlock"></i>
+                            </button>
+                        </form>
+                        <form action="{{ url_for('core.admin_reset_password', user_id=user.id) }}" method="POST"
+                            style="display: inline;" onsubmit="return confirm('¿Restablecer contraseña a temporal?');">
+                            <button type="submit" class="btn"
+                                style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444;"
+                                title="Reset clave a temporal">
+                                <i class="fas fa-key"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Usuario Sistema -->
+<div id="userSystemModal" class="modal-premium"
+    style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; z-index: 5001;">
+    <div class="card" style="padding: 2rem;">
+        <h2 id="modalTitle">Nuevo Usuario de Sistema</h2>
+        <form id="userSystemForm" action="{{ url_for('core.create_system_user') }}" method="POST">
+            <div class="form-group">
+                <label>Nombre de Usuario</label>
+                <input type="text" name="username" id="sys-username" required placeholder="ej: jdoe">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" id="sys-email" placeholder="usuario@biblioteca.com">
+            </div>
+            <div class="form-group">
+                <label id="pwdLabel">Contraseña</label>
+                <input type="password" name="password" id="sys-password" placeholder="••••••••">
+                <small class="text-muted" id="pwdHelp">Dejar en blanco para no cambiar.</small>
+            </div>
+            <div class="form-group">
+                <label>Rol</label>
+                <select name="role_id" id="sys-role-id" required>
+                    <option value="">-- Seleccionar Rol --</option>
+                    {% for role in roles %}
+                    <option value="{{ role.id }}">{{ role.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <input type="checkbox" name="must_change_password" id="sys-must-change" style="width: auto; margin: 0;">
+                <label for="sys-must-change" style="margin: 0; cursor: pointer;">Forzar cambio de contraseña al
+                    ingresar</label>
+            </div>
+            <div style="text-align: right; margin-top: 2rem;">
+                <button type="button" class="btn" onclick="closeUserModal()"
+                    style="margin-right: 0.5rem; background: transparent; border: 1px solid #334155;">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmit">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Event delegation for Edit buttons
+        document.body.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-edit-sysuser');
+            if (btn) {
+                const id = btn.dataset.id;
+                const username = btn.dataset.username;
+                const email = btn.dataset.email;
+                const roleId = btn.dataset.role;
+                const mustChange = btn.dataset.mustChange === '1';
+                openEditUserModal(id, username, email, roleId, mustChange);
+            }
+        });
+    });
+
+    function openNewUserModal() {
+        const form = document.getElementById('userSystemForm');
+        form.reset();
+        document.getElementById('modalTitle').innerText = 'Nuevo Usuario de Sistema';
+        form.action = "{{ url_for('core.create_system_user') }}";
+        document.getElementById('pwdLabel').innerText = 'Contraseña';
+        document.getElementById('sys-password').required = true;
+        document.getElementById('pwdHelp').style.display = 'none';
+        document.getElementById('sys-must-change').checked = false;
+
+        // Ensure role select is reset
+        document.getElementById('sys-role-id').value = "";
+
+        toggleModal('userSystemModal');
+    }
+
+    function openEditUserModal(id, username, email, roleId, mustChange) {
+        const form = document.getElementById('userSystemForm');
+        form.reset();
+        document.getElementById('modalTitle').innerText = 'Editar Usuario: ' + username;
+        // Updating to safe url_for isn't easily possible in JS string concat without data attribute, 
+        // but assuming we change the backend route to match the blueprint prefix or handle it there.
+        // For now, let's keep the hardcoded path but aware it might need prefixing if we change route URLs.
+        // Actually, let's assume route remains /admin/users/update/... but handled by core blueprint.
+        form.action = "/admin/users/update/" + id;
+        document.getElementById('sys-username').value = username;
+        document.getElementById('sys-email').value = email;
+
+        // Handle roleId correctly (force string comparison for select value)
+        const roleSelect = document.getElementById('sys-role-id');
+        if (roleId && roleId !== 'None' && roleId !== 'null') {
+            roleSelect.value = roleId.toString();
+        } else {
+            roleSelect.value = "";
+        }
+
+        document.getElementById('sys-must-change').checked = mustChange;
+
+        document.getElementById('pwdLabel').innerText = 'Contraseña (Nueva)';
+        document.getElementById('sys-password').required = false;
+        document.getElementById('pwdHelp').style.display = 'block';
+        toggleModal('userSystemModal');
+    }
+
+    function closeUserModal() {
+        toggleModal('userSystemModal');
+    }
+</script>
+{% endblock %}

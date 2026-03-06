@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title"><i class="fas fa-exchange-alt me-2 text-info"></i>Transferencias de Stock</h1>
+        <p class="text-muted">Movimientos entre depósitos internos, satélites y consignaciones</p>
+    </div>
+    <a href="{{ url_for('stock.transferencia_nueva') }}" class="btn btn-info btn-lg">
+        <i class="fas fa-plus me-2"></i> Nueva Transferencia
+    </a>
+</div>
+
+<div class="card bg-dark border-secondary shadow-lg">
+    <div class="card-body p-0">
+        <table class="table table-dark table-hover mb-0">
+            <thead class="bg-secondary bg-opacity-10">
+                <tr>
+                    <th class="ps-4">ID / FECHA</th>
+                    <th>ORIGEN</th>
+                    <th>DESTINO</th>
+                    <th>ESTADO</th>
+                    <th>COT (ARBA/AGIP)</th>
+                    <th class="text-end pe-4">ACCIONES</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transferencias %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold text-info">#{{ t.id }}</div>
+                        <small class="text-muted">{{ t.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
+                    </td>
+                    <td>
+                        <i class="fas fa-warehouse small me-1 text-muted"></i> {{ t.origen_nombre }}
+                    </td>
+                    <td>
+                        <i class="fas fa-truck-loading small me-1 text-muted"></i> {{ t.destino_nombre }}
+                        {% if t.destino_tipo == 'SATELITE' or t.destino_tipo == 'CONSIGNACION_PROPIA' %}
+                        <span class="badge bg-warning text-dark ms-1" style="font-size: 0.6rem;">EXTERNO</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t.estado == 'PENDIENTE' %}
+                        <span class="badge bg-secondary">PENDIENTE</span>
+                        {% elif t.estado == 'EN_TRANSITO' %}
+                        <span class="badge bg-info text-dark">EN TRÁNSITO</span>
+                        {% elif t.estado == 'RECIBIDO' %}
+                        <span class="badge bg-success">RECIBIDO</span>
+                        {% else %}
+                        <span class="badge bg-danger">{{ t.estado }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t.cot_numero %}
+                        <div class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i>{{ t.cot_numero
+                            }}</div>
+                        <small class="text-muted">{{ t.cot_estado }}</small>
+                        {% elif t.destino_tipo != 'INTERNO' %}
+                        <button class="btn btn-sm btn-outline-warning" onclick="solicitarCOT({{ t.id }})">
+                            <i class="fas fa-id-card me-1"></i> Solicitar COT
+                        </button>
+                        {% else %}
+                        <span class="text-muted small">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{{ url_for('stock.transferencia_detalle', id=t.id) }}"
+                            class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% if t.estado == 'PENDIENTE' %}
+                        <button class="btn btn-sm btn-outline-success ms-1" onclick="procesarTransferencia({{ t.id }})">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <i class="fas fa-exchange-alt fa-3x text-secondary opacity-25 mb-3 d-block"></i>
+                        <p class="text-muted">No se registran transferencias.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    async function solicitarCOT(id) {
+        if (!confirm("¿Desea solicitar el Código de Operación de Traslado (COT) a ARBA/AGIP para esta transferencia externa?")) return;
+
+        try {
+            const resp = await fetch(`/stock/api/transferencia/${id}/solicitar-cot?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                alert("COT obtenido con éxito: " + data.cot_numero);
+                location.reload();
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch (e) {
+            alert("Error de conexión con la API de COT.");
+        }
+    }
+
+    async function procesarTransferencia(id) {
+        if (!confirm("¿Desea marcar esta transferencia como EN TRANSITO? (Se descontará el stock del origen)")) return;
+
+        try {
+            const resp = await fetch(`/stock/api/transferencia/${id}/despachar?sid=${window.SID || ''}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                }
+            });
+            const data = await resp.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch (e) {
+            alert("Error al procesar despacho.");
+        }
+    }
+</script>
+{% endblock %}

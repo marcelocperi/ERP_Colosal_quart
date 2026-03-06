@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Libro Diario</h1>
+        <div>
+            <a href="{{ url_for('contabilidad.centralizacion') }}" class="btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-magic fa-sm text-white-50"></i> Centralizar Subdiarios
+            </a>
+            <button class="btn btn-sm btn-success shadow-sm ms-2" disabled>
+                <i class="fas fa-plus fa-sm text-white-50"></i> Nuevo Asiento Manual
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Asientos del Ejercicio</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Nro / ID</th>
+                            <th>Concepto</th>
+                            <th>Origen</th>
+                            <th class="text-end">Debe</th>
+                            <th class="text-end">Haber</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in asientos %}
+                        <tr>
+                            <td>{{ a.fecha }}</td>
+                            <td class="fw-bold">#{{ a.id }}</td>
+                            <td>{{ a.concepto }}</td>
+                            <td><span class="badge bg-info">{{ a.modulo_origen }}</span></td>
+                            <td class="text-end">{{ a.total_debe | format_currency }}</td>
+                            <td class="text-end">{{ a.total_haber | format_currency }}</td>
+                            <td class="text-center">
+                                <a href="{{ url_for('contabilidad.ver_asiento', id=a.id) }}"
+                                    class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No hay asientos registrados para el
+                                periodo.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0 fw-bold"><i class="fas fa-flask text-primary me-2"></i>Proyectos de I+D (Industrial)</h2>
+            <p class="text-muted mb-0">Gestión del Ciclo de Vida del Producto Industrial (BOM Desarrollo, Homologación).
+            </p>
+        </div>
+        <button class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalNuevoProyecto">
+            <i class="fas fa-plus me-1"></i> Iniciar Proyecto
+        </button>
+    </div>
+
+    <!-- Filtros por Fase -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body p-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <select id="filtroFase" class="form-select bg-light border-0">
+                        <option value="">Todas las Fases</option>
+                        <option value="EVALUACION">Evaluación Comercial</option>
+                        <option value="I_D">Ingeniería & Desarrollo (I+D)</option>
+                        <option value="HOMOLOGACION_LEGAL">Homologación Legal (Bromatología)</option>
+                        <option value="APROBADO">Listo para Producción (Go-Live)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for p in proyectos %}
+        <div class="col-md-6 mb-4 proyecto-card" data-fase="{{ p.estado }}">
+            <div class="card h-100 border-0 shadow-sm transition-hover" style="border-radius: 15px;">
+                <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-start">
+                    <div>
+                        <span
+                            class="badge {% if p.estado == 'EVALUACION' %}bg-secondary{% elif p.estado == 'I_D' %}bg-info{% elif p.estado == 'HOMOLOGACION_LEGAL' %}bg-warning{% elif p.estado == 'APROBADO' %}bg-success{% else %}bg-dark{% endif %} mb-2">
+                            {{ p.estado.replace('_', ' ') }}
+                        </span>
+                        <h4 class="fw-bold mb-1">{{ p.nombre }}</h4>
+                        <small class="text-muted fw-bold">PROYECTO #{{ p.codigo_proyecto }}</small>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-3">{{ p.descripcion }}</p>
+
+                    {% if p.producto_nombre %}
+                    <div class="mb-3">
+                        <label class="text-muted d-block small mb-1">Producto Objetivo:</label>
+                        <span class="fw-bold text-dark">{{ p.producto_nombre }}</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- Progress Bar Industrial -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted smaller fw-bold">Progreso de Homologación</span>
+                            <span class="text-primary smaller fw-bold">{{ '25%' if p.estado == 'EVALUACION' else '50%'
+                                if p.estado == 'I_D' else '75%' if p.estado == 'HOMOLOGACION_LEGAL' else '100%' if
+                                p.estado == 'APROBADO' else '0%' }}</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar {% if p.estado == 'APROBADO' %}bg-success{% else %}bg-primary{% endif %}"
+                                role="progressbar"
+                                style="width: {{ '25%' if p.estado == 'EVALUACION' else '50%' if p.estado == 'I_D' else '75%' if p.estado == 'HOMOLOGACION_LEGAL' else '100%' if p.estado == 'APROBADO' else '0%' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-4">
+                        <div>
+                            <small class="text-muted d-block">Fecha Inicio</small>
+                            <span class="fw-bold">{{ p.fecha_inicio.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                        <div class="text-end border-start ps-4">
+                            <small class="text-muted d-block">Presupuesto</small>
+                            <span class="fw-bold text-success">${{ '{:,.0f}'.format(p.presupuesto_estimado) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 pb-4 pt-0">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary btn-sm flex-grow-1 fw-bold rounded-pill">
+                            <i class="fas fa-search me-1"></i> Legajo Proyecto
+                        </button>
+                        <button class="btn btn-outline-dark btn-sm fw-bold rounded-circle"
+                            style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="opacity-25 mb-4">
+                <i class="fas fa-vial fa-5x"></i>
+            </div>
+            <h4 class="text-muted fw-bold">No hay proyectos de I+D registrados</h4>
+            <p class="text-muted">Inicie procesos de investigación para nuevos productos o reformulaciones (Phase 1.6).
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .smaller {
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}

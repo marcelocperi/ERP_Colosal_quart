@@ -1,0 +1,5 @@
+cmp_ordenes_compra:
+id, enterprise_id, proveedor_id, cotizacion_id, fecha, fecha_emision, estado, aprobador_compras_id, fecha_aprobacion_compras, aprobador_tesoreria_id, fecha_aprobacion_tesoreria, fecha_pago_estimada, observaciones_rechazo, security_hash, observaciones, total, total_estimado, created_at, updated_at, es_importacion, moneda, tipo_cambio_valor, incoterm, pais_origen, puerto_embarque, puerto_destino, total_estimado_usd, estado_importacion
+
+cmp_detalles_orden:
+enterprise_id, id, orden_id, articulo_id, cantidad_solicitada, cantidad_recibida, precio_unitario, subtotal

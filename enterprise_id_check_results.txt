@@ -1,0 +1,23 @@
+VERIFICACION DE ENTERPRISE_ID
+============================================================
+
+Tabla: stk_logisticas
+  Tiene enterprise_id: SI
+  Total columnas: 13
+
+Tabla: stk_transferencias
+  Tiene enterprise_id: SI
+  Total columnas: 12
+
+Tabla: stk_items_transferencia
+  Tiene enterprise_id: SI
+  Total columnas: 5
+
+Tabla: stk_inventarios
+  Tiene enterprise_id: SI
+  Total columnas: 10
+
+Tabla: stk_items_inventario
+  Tiene enterprise_id: SI
+  Total columnas: 8
+

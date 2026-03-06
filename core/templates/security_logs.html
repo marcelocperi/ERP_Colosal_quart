@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Logs de Seguridad | Colosal{% endblock %}
+
+{% block content %}
+<div class="content-header" style="margin-bottom: 2rem;">
+    <div>
+        <h1
+            style="font-size: 2rem; font-weight: 800; background: linear-gradient(to right, #f43f5e, #fb7185); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+            <i class="fas fa-shield-alt"></i> Auditoría de Seguridad
+        </h1>
+        <p style="color: var(--text-muted);">Registro técnico de acciones críticas y cambios de privilegios.</p>
+    </div>
+</div>
+
+<!-- Filtros de Auditoría -->
+<div class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--primary);">
+    <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;"><i class="fas fa-filter"></i> Filtrar Registros</h3>
+    <form method="GET" action="{{ url_for('core.security_logs') }}"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: end;">
+
+        <div class="form-group" style="margin-bottom:0">
+            <label style="font-size: 0.8rem; opacity: 0.7;">Acción</label>
+            <select name="action" class="form-control" style="width: 100%; background: var(--bg-main);">
+                <option value="">Todas las Acciones</option>
+                {% for act in actions %}
+                <option value="{{ act }}" {% if filters.action==act %}selected{% endif %}>{{ act }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+            <label style="font-size: 0.8rem; opacity: 0.7;">Estado</label>
+            <select name="status" class="form-control" style="width: 100%; background: var(--bg-main);">
+                <option value="">Todos los Estados</option>
+                {% for st in statuses %}
+                <option value="{{ st }}" {% if filters.status==st %}selected{% endif %}>{{ st }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+            <label style="font-size: 0.8rem; opacity: 0.7;">Actor (Quién)</label>
+            <select name="actor" class="form-control" style="width: 100%; background: var(--bg-main);">
+                <option value="">Todos los Actores</option>
+                {% for user in actors %}
+                <option value="{{ user }}" {% if filters.actor==user %}selected{% endif %}>{{ user }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+            <label style="font-size: 0.8rem; opacity: 0.7;">Destino (A quién)</label>
+            <select name="target" class="form-control" style="width: 100%; background: var(--bg-main);">
+                <option value="">Todos los Destinos</option>
+                {% for user in targets %}
+                <option value="{{ user }}" {% if filters.target==user %}selected{% endif %}>{{ user }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+            <label style="font-size: 0.8rem; opacity: 0.7;">Dirección IP</label>
+            <select name="ip" class="form-control" style="width: 100%; background: var(--bg-main);">
+                <option value="">Todas las IPs</option>
+                {% for ip_addr in ips %}
+                <option value="{{ ip_addr }}" {% if filters.ip==ip_addr %}selected{% endif %}>{{ ip_addr }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+            <label style="font-size: 0.8rem; opacity: 0.7;">Sesión (SID)</label>
+            <select name="f_sid" class="form-control" style="width: 100%; background: var(--bg-main);">
+                <option value="">Todas las Sesiones</option>
+                {% for s in sids %}
+                <option value="{{ s }}" {% if filters.sid==s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                <i class="fas fa-search"></i>
+            </button>
+            <a href="{{ url_for('core.security_logs') }}" class="btn"
+                style="background: rgba(255,255,255,0.1); flex: 0.5; display: flex; align-items: center; justify-content: center; text-decoration: none; color: white;">
+                <i class="fas fa-undo"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Tabla de Resultados -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead style="background: rgba(255,255,255,0.03);">
+                <tr>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        Fecha/Hora</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">Actor
+                    </th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">Evento
+                    </th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        Afectado</th>
+                    <th style="padding: 1rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        Estado</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        Detalles</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">IP</th>
+                    <th style="padding: 1rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1);">SID
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.02)'"
+                    onmouseout="this.style.background='transparent'">
+                    <td style="padding: 1rem; color: var(--text-muted); white-space: nowrap;">
+                        {{ log[1].strftime('%d/%m/%Y %H:%M:%S') if log[1] else '-' }}
+                    </td>
+                    <td style="padding: 1rem;">
+                        <span style="font-weight: 600; color: #60a5fa;">{{ log[2] or 'Sistema' }}</span>
+                    </td>
+                    <td style="padding: 1rem; font-weight: 500;">
+                        <code>{{ log[4] }}</code>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <span style="color: #f472b6;">{{ log[3] or '-' }}</span>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        {% if log[5] == 'SUCCESS' %}
+                        <span
+                            style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 800;">ÉXITO</span>
+                        {% elif log[5] == 'FAILURE' %}
+                        <span
+                            style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 800;">FALLO</span>
+                        {% else %}
+                        <span
+                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 800;">ERROR</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                        title="{{ log[6] }}">
+                        {{ log[6] or '-' }}
+                    </td>
+                    <td style="padding: 1rem; color: var(--text-muted); font-family: monospace;">
+                        {{ log[7] or '-' }}
+                    </td>
+                    <td style="padding: 1rem; color: #818cf8; font-family: monospace; font-size: 0.8rem;">
+                        {{ log[8] or '-' }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                        <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        No se encontraron registros que coincidan con los filtros.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

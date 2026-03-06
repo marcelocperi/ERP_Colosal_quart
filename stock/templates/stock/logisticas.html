@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title"><i class="fas fa-truck me-2 text-primary"></i>Empresas Logísticas</h1>
+        <p class="text-muted">Configure sus operadores logísticos para el traslado de mercadería.</p>
+    </div>
+    <a href="{{ url_for('stock.logistica_nueva') }}" class="btn btn-primary btn-lg rounded-pill px-4">
+        <i class="fas fa-plus-circle me-2"></i>Nueva Logística
+    </a>
+</div>
+
+<div class="row">
+    {% for l in logisticas %}
+    <div class="col-md-4 mb-4">
+        <div class="card bg-dark border-secondary h-100 hover-elevate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="text-white mb-0">{{ l.nombre }}</h5>
+                    <span class="badge bg-{{ 'success' if l.activo else 'secondary' }}">
+                        {{ 'ACTIVO' if l.activo else 'INACTIVO' }}
+                    </span>
+                </div>
+                <div class="text-muted small mb-3">
+                    <p class="mb-1"><i class="fas fa-id-card me-2"></i>CUIT: {{ l.cuit or 'N/A' }}</p>
+                    <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>{{ l.direccion }}</p>
+                    <p class="mb-1"><i class="fas fa-city me-2"></i>{{ l.localidad }}, {{ l.provincia }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('stock.logistica_editar', id=l.id) }}"
+                        class="btn btn-outline-light btn-sm flex-grow-1">
+                        <i class="fas fa-edit me-1"></i>Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="opacity-50 mb-3">
+            <i class="fas fa-truck-loading fa-4x"></i>
+        </div>
+        <h4 class="text-muted">No hay empresas logísticas configuradas</h4>
+        <p class="text-muted small">Añada sus transportistas habituales para automatizar el cálculo de rutas y COT.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

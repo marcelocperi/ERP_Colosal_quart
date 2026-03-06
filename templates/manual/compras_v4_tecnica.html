@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-11">
+            <div class="card shadow-lg border-0 mb-4 bg-dark text-white overflow-hidden" style="border-radius: 20px;">
+                <div class="card-body p-5 position-relative">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="display-4 fw-bold mb-2">
+                                <i class="fas fa-microchip me-3 text-primary"></i>Colosal Compras MSAC v4.0
+                            </h1>
+                            <p class="lead opacity-75">Motor de Inteligencia Industrial y Sourcing Multi-Origen de Alta
+                                Fidelidad.</p>
+                            <div class="d-flex gap-3 mt-4">
+                                <span class="badge bg-primary px-3 py-2"><i class="fas fa-check-circle me-1"></i>
+                                    Audit-Ready CISA</span>
+                                <span class="badge bg-info px-3 py-2"><i class="fas fa-project-diagram me-1"></i> BOM
+                                    Recursivo</span>
+                                <span class="badge bg-success px-3 py-2"><i class="fas fa-robot me-1"></i> IA
+                                    Integrada</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end d-none d-md-block opacity-25">
+                            <i class="fas fa-shopping-cart" style="font-size: 10rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Columna Técnica -->
+                <div class="col-lg-7">
+                    <div class="card h-100 border-0 shadow-sm" style="border-radius: 15px;">
+                        <div
+                            class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0 fw-bold"><i
+                                    class="fas fa-code-branch text-primary me-2"></i>Especificaciones Técnicas</h3>
+                            <span class="text-muted small">v4.0.2517ec6</span>
+                        </div>
+                        <div class="card-body px-4 pb-4">
+                            <div class="tech-section mb-4">
+                                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Lógica del Algoritmo Roll-up</h5>
+                                <div class="bg-light p-3 rounded-3 mb-3"
+                                    style="font-family: 'Courier New', Courier, monospace; font-size: 0.9rem;">
+                                    <p class="mb-1 text-primary"># Algoritmo de Explosión Recursiva de Costos</p>
+                                    <p class="mb-0 text-dark">
+                                        1. Buscar receta activa en <strong>cmp_recetas_bom</strong>.<br>
+                                        2. Si componente es Producido -> Llamar <code>get_industrial_cost()</code>.<br>
+                                        3. Si componente es Insumo -> Buscar Sourcing <code>HABITUAL</code>.<br>
+                                        4. Sumar Gastos en <strong>cmp_articulos_costos_indirectos</strong>.<br>
+                                        5. Aplicar Margen Proyectado -> <code>precio_sugerido</code>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="tech-section">
+                                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Esquema de Base de Datos (Core)
+                                </h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Tabla</th>
+                                                <th>Propósito Crítico</th>
+                                                <th>Fase</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><code>cmp_articulos_proveedores</code></td>
+                                                <td>Maestro de Precios y Sourcing</td>
+                                                <td>1.1</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>cmp_recetas_bom</code></td>
+                                                <td>Cabecera de Recetas Industriales</td>
+                                                <td>1.2</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>cmp_consignaciones</code></td>
+                                                <td>Control de Stock en Poder de Terceros</td>
+                                                <td>1.5</td>
+                                            </tr>
+                                            <tr>
+                                                <td><code>cmp_liquidaciones_consignacion</code></td>
+                                                <td>Liquidación y Facturación Automatizada</td>
+                                                <td>1.6</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Standalone y LLM -->
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm mb-4"
+                        style="border-radius: 15px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white;">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold mb-3"><i class="fas fa-terminal me-2"></i>Consultor Standalone</h4>
+                            <p class="opacity-90">Ejecute el utilitario técnico directamente desde PowerShell para
+                                auditoría en tiempo real sin abrir la interfaz web.</p>
+                            <div class="bg-black bg-opacity-25 p-3 rounded-3 mb-4"
+                                style="font-family: 'Consolas', monospace; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2);">
+                                <span class="text-info">PS C:\Colosal></span> python utils/colosal_compras_consultant.py
+                            </div>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Auditoría de Stock CISA</li>
+                                <li class="mb-2"><i class="fas fa-check-circle me-2"></i> Simulador de Costo Producido
+                                </li>
+                                <li class="mb-0"><i class="fas fa-check-circle me-2"></i> Acceso a Manual Técnico
+                                    Offline</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm"
+                        style="border-radius: 15px; background: #f8fafc; border: 1px dashed #cbd5e1 !important;">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold text-dark mb-3"><i class="fas fa-brain me-2 text-primary"></i>Colosal LLM
+                                (Ollama)</h4>
+                            <p class="text-muted">Instrucciones para integrar el conocimiento de compras en su motor de
+                                IA local.</p>
+                            <ol class="small text-muted ps-3">
+                                <li class="mb-2">Navegue a <code>backoffice/Modelfile-Colosal-Compras.txt</code>.</li>
+                                <li class="mb-2">Ejecute:
+                                    <code>ollama create colosal-compras -f backoffice/Modelfile-Colosal-Compras.txt</code>.
+                                </li>
+                                <li class="mb-0">Consulte: <i>"¿Cuál es el impacto del aviso de venta en el stock
+                                        consignado?"</i></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tech-section {
+        background: white;
+    }
+
+    .hover-card {
+        transition: all 0.3s ease;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Nueva Orden de Compra</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('compras.orden_nueva') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                    <div class="mb-4">
+                        <label for="proveedor_id" class="form-label fw-bold">Proveedor <span
+                                class="text-danger">*</span></label>
+
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-light text-primary"><i class="fas fa-search"></i></span>
+                            <input type="text" id="buscar_proveedor_orden" class="form-control"
+                                placeholder="Buscar por Código, Nombre, CUIT, Email o Localidad..." autocomplete="off">
+                            <span class="input-group-text" id="buscar_spinner_orden" style="display:none">
+                                <i class="fas fa-spinner fa-spin text-muted"></i>
+                            </span>
+                        </div>
+
+                        <select class="form-select" id="proveedor_id" name="proveedor_id" required>
+                            <option value="" disabled selected>-- Escriba para buscar --</option>
+                        </select>
+                        <div id="proveedor_info" class="mt-2 d-none">
+                            <div class="alert alert-info py-2 px-3 mb-0 small border-0 shadow-sm">
+                                <i class="fas fa-info-circle me-1"></i>
+                                <span id="info_text"></span>
+                            </div>
+                        </div>
+                        <div class="form-text mt-2">Puede buscar por Código Interno, Razón Social, CUIT o Localidad.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="centro_costo_id" class="form-label fw-bold">Centro de Costo (Presupuesto) <span
+                                class="text-danger">*</span></label>
+                        <select class="form-select" id="centro_costo_id" name="centro_costo_id" required>
+                            <option value="" disabled selected>-- Seleccione Responsable --</option>
+                            {% for cc in centros_costo %}
+                            <option value="{{ cc.id }}">{{ cc.code }} - {{ cc.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text mt-1 text-muted x-small"><i class="fas fa-wallet me-1"></i> Asigna los
+                            fondos comprometidos al presupuesto de este departamento.</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="fecha_emision" class="form-label fw-bold">Fecha Emisión</label>
+                            <input type="date" class="form-control" id="fecha_emision" name="fecha_emision"
+                                value="{{ hoy }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fecha_entrega" class="form-label fw-bold">Fecha Entrega Estimada</label>
+                            <input type="date" class="form-control" id="fecha_entrega" name="fecha_entrega">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="observaciones" class="form-label fw-bold">Observaciones / Notas Internas</label>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3"
+                            placeholder="Ej: Pedido urgente para reposición de stock..."></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('compras.ordenes') }}"
+                            class="btn btn-outline-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-5">
+                            <i class="fas fa-check me-2"></i> Crear Orden y Agregar Items
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const selectProv = document.getElementById('proveedor_id');
+        const infoDiv = document.getElementById('proveedor_info');
+        const infoText = document.getElementById('info_text');
+        const spinner = document.getElementById('buscar_spinner_orden');
+        let _buscarTimerOrden = null;
+
+        // Mostrar info al cambiar seleccion
+        selectProv.addEventListener('change', function () {
+            const opt = this.options[this.selectedIndex];
+            if (opt && opt.value) {
+                const cuit = opt.dataset.cuit || '';
+                const codigo = opt.dataset.codigo || '';
+                const nombre = opt.text.split('-')[0].trim();
+                infoText.innerHTML = `Proveedor: <strong>${nombre}</strong> | CUIT: <strong>${cuit}</strong>` + (codigo ? ` | Código: <strong>${codigo}</strong>` : '');
+                infoDiv.classList.remove('d-none');
+            } else {
+                infoDiv.classList.add('d-none');
+            }
+        });
+
+        function poblarSelectProveedorOrden(proveedores, seleccionarUnico = false) {
+            const valorActual = selectProv.value;
+            selectProv.innerHTML = '<option value="" disabled>-- Escriba para buscar --</option>';
+            proveedores.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.dataset.cuit = p.cuit || '';
+                opt.dataset.codigo = p.codigo || '';
+                opt.dataset.localidad = p.localidad || '';
+                const localidad = p.localidad ? ` (${p.localidad})` : '';
+                opt.textContent = (p.codigo ? `[${p.codigo}] ` : '') + p.nombre + localidad + ' - CUIT: ' + (p.cuit || '');
+                selectProv.appendChild(opt);
+            });
+            if (valorActual) selectProv.value = valorActual;
+            if (seleccionarUnico && proveedores.length === 1) {
+                selectProv.value = proveedores[0].id;
+                selectProv.dispatchEvent(new Event('change'));
+            }
+        }
+
+        document.getElementById('buscar_proveedor_orden').addEventListener('input', function () {
+            const q = this.value.trim();
+            clearTimeout(_buscarTimerOrden);
+            if (q.length > 0 && q.length < 2) return;
+            _buscarTimerOrden = setTimeout(async () => {
+                spinner.style.display = '';
+                try {
+                    const url = `/compras/api/buscar-proveedores?q=${encodeURIComponent(q)}&sid=${window.SID || ''}`;
+                    const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    if (resp.status === 401) { window.location.href = '/'; return; }
+                    if (!resp.ok) return;
+                    const proveedores = await resp.json();
+                    poblarSelectProveedorOrden(proveedores, q.length >= 2);
+                } catch (e) {
+                    console.error('Error buscando proveedores:', e);
+                } finally {
+                    spinner.style.display = 'none';
+                }
+            }, 300);
+        });
+
+        // Cargar primeros 30 al inicializar
+        (async () => {
+            try {
+                const resp = await fetch(`/compras/api/buscar-proveedores?q=&sid=${window.SID || ''}`, { headers: { 'Accept': 'application/json' } });
+                if (resp.status === 401) { window.location.href = '/'; return; }
+                if (!resp.ok) return;
+                const proveedores = await resp.json();
+                poblarSelectProveedorOrden(proveedores);
+            } catch (e) { console.error(e); }
+        })();
+    });
+</script>
+{% endblock %}

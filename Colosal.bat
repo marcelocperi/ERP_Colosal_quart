@@ -1,0 +1,1 @@
+cd c:\users\marce\Documents\GitHub\bibliotecaweb\multiMCP .\env\Scripts\activate python app.py

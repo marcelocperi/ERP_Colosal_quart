@@ -1,0 +1,21 @@
+CREATE TABLE `movimientos_pendientes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `libro_id` int(11) DEFAULT NULL,
+  `tipo` enum('compra','egreso') NOT NULL,
+  `cantidad` int(11) NOT NULL,
+  `fecha_estimada` date DEFAULT NULL,
+  `fecha_registro` datetime DEFAULT current_timestamp(),
+  `comentario` text DEFAULT NULL,
+  `estado` enum('pendiente','completado','cancelado') DEFAULT 'pendiente',
+  `motivo_id` int(11) DEFAULT NULL,
+  `enterprise_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`enterprise_id`),
+  KEY `libro_id` (`libro_id`),
+  KEY `fk_motivo` (`motivo_id`),
+  KEY `id` (`id`),
+  KEY `fk_movimientos_pendientes_ent` (`enterprise_id`),
+  CONSTRAINT `1` FOREIGN KEY (`libro_id`) REFERENCES `libros` (`id`),
+  CONSTRAINT `fk_motivo` FOREIGN KEY (`motivo_id`) REFERENCES `stock_motivos` (`id`),
+  CONSTRAINT `fk_movimientos_pendientes_ent` FOREIGN KEY (`enterprise_id`) REFERENCES `sys_enterprises` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_movimientos_pendientes_enterprise` FOREIGN KEY (`enterprise_id`) REFERENCES `sys_enterprises` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci

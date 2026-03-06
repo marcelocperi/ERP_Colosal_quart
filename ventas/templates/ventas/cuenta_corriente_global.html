@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- ── ENCABEZADO ─────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1 fw-bold">
+            <i class="fas fa-file-invoice-dollar text-primary me-2"></i>Cuenta Corriente de Clientes
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small text-muted">
+                <li class="breadcrumb-item"><a href="{{ url_for('ventas.dashboard') }}">Ventas</a></li>
+                <li class="breadcrumb-item active">Cuenta Corriente</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('ventas.facturar') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Nueva Factura
+        </a>
+        <a href="{{ url_for('ventas.clientes') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-users me-1"></i> Clientes
+        </a>
+    </div>
+</div>
+
+<!-- ── PANEL DE FILTROS ──────────────────────────────────────── -->
+<div class="card shadow-sm mb-4 border-0 bg-dark">
+    <div class="card-body p-4">
+        <form method="GET" id="formFiltros" action="{{ url_for('ventas.cuenta_corriente_global') }}">
+            <div class="row g-3 align-items-end">
+
+                <!-- Cliente -->
+                <div class="col-xl-3 col-md-6">
+                    <label class="form-label text-white-50 small fw-semibold text-uppercase">
+                        <i class="fas fa-user me-1"></i> Cliente
+                    </label>
+                    <select name="cliente_id" id="sel_cliente" class="form-select bg-secondary text-white border-0"
+                        onchange="this.form.submit()">
+                        <option value="">— Todos los clientes —</option>
+                        {% for c in clientes %}
+                        <option value="{{ c.id }}" {% if filtros.cliente_id==c.id %}selected{% endif %}>
+                            {{ c.nombre }}{% if c.cuit %} · {{ c.cuit }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Fecha desde -->
+                <div class="col-xl-2 col-md-3">
+                    <label class="form-label text-white-50 small fw-semibold text-uppercase">
+                        <i class="fas fa-calendar me-1"></i> Desde
+                    </label>
+                    <input type="date" name="fecha_desde" class="form-control bg-secondary text-white border-0"
+                        value="{{ filtros.fecha_desde or '' }}">
+                </div>
+
+                <!-- Fecha hasta -->
+                <div class="col-xl-2 col-md-3">
+                    <label class="form-label text-white-50 small fw-semibold text-uppercase">
+                        <i class="fas fa-calendar-check me-1"></i> Hasta
+                    </label>
+                    <input type="date" name="fecha_hasta" class="form-control bg-secondary text-white border-0"
+                        value="{{ filtros.fecha_hasta or '' }}">
+                </div>
+
+                <!-- Tipo de documento -->
+                <div class="col-xl-2 col-md-4">
+                    <label class="form-label text-white-50 small fw-semibold text-uppercase">
+                        <i class="fas fa-file-alt me-1"></i> Tipo Doc.
+                    </label>
+                    <select name="tipo_doc" class="form-select bg-secondary text-white border-0">
+                        <option value="TODOS" {% if not filtros.tipo_doc or filtros.tipo_doc=='TODOS' %}selected{% endif
+                            %}>Todos</option>
+                        <option value="FACTURA" {% if filtros.tipo_doc=='FACTURA' %}selected{% endif %}>Facturas
+                        </option>
+                        <option value="NC" {% if filtros.tipo_doc=='NC' %}selected{% endif %}>Notas de Crédito</option>
+                        <option value="ND" {% if filtros.tipo_doc=='ND' %}selected{% endif %}>Notas de Débito</option>
+                        <option value="REC" {% if filtros.tipo_doc=='REC' %}selected{% endif %}>Recibos</option>
+                    </select>
+                </div>
+
+                <!-- Búsqueda libre -->
+                <div class="col-xl-2 col-md-5">
+                    <label class="form-label text-white-50 small fw-semibold text-uppercase">
+                        <i class="fas fa-search me-1"></i> Búsqueda general
+                    </label>
+                    <input type="text" name="q" class="form-control bg-secondary text-white border-0"
+                        placeholder="Nombre, nro. doc..." value="{{ filtros.q or '' }}">
+                </div>
+
+                <!-- Botones -->
+                <div class="col-xl-1 col-md-3 d-flex gap-2 align-items-end">
+                    <button type="submit" class="btn btn-primary flex-fill" title="Aplicar filtros">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <a href="{{ url_for('ventas.cuenta_corriente_global') }}" class="btn btn-outline-light"
+                        title="Limpiar filtros">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── KPIs ───────────────────────────────────────────────────── -->
+{% if movimientos %}
+{% set total_debe = movimientos | sum(attribute='debe') %}
+{% set total_haber = movimientos | sum(attribute='haber') %}
+{% set saldo_neto = total_debe - total_haber %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm border-left-primary py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Movimientos</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ movimientos|length }}</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-list-ul fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm border-left-info py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Facturado (Debe)</div>
+                        <div class="h5 mb-0 font-weight-bold">${{ "%.2f"|format(total_debe) }}</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-arrow-up fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm border-left-success py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Cobrado (Haber)
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold">${{ "%.2f"|format(total_haber) }}</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-arrow-down fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm border-left-warning py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Saldo Neto</div>
+                        <div
+                            class="h5 mb-0 font-weight-bold {% if saldo_neto > 0.005 %}text-danger{% elif saldo_neto < -0.005 %}text-success{% endif %}">
+                            ${{ "%.2f"|format(saldo_neto) }}
+                        </div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-balance-scale fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ── TABLA ──────────────────────────────────────────────────── -->
+<div class="card shadow border-0">
+    <div class="card-header d-flex justify-content-between align-items-center py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-table me-2"></i>
+            {% if filtros.cliente_id %}Movimientos del cliente{% else %}Todos los movimientos{% endif %}
+            {% if movimientos %}<span class="badge bg-primary ms-2">{{ movimientos|length }}</span>{% endif %}
+        </h6>
+        {% if movimientos %}
+        <div class="input-group" style="max-width:280px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" id="filtroRapido" class="form-control" placeholder="Filtrar tabla..."
+                oninput="filtrarTabla(this.value)">
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        {% if not movimientos %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-search fa-4x mb-3 opacity-25"></i>
+            <p class="fs-5">No se encontraron movimientos con los filtros aplicados.</p>
+            <a href="{{ url_for('ventas.cuenta_corriente_global') }}" class="btn btn-outline-primary mt-2">
+                <i class="fas fa-times me-1"></i> Limpiar Filtros
+            </a>
+        </div>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small" id="tablaCC">
+                <thead class="table-dark">
+                    <tr class="text-uppercase" style="font-size:0.72rem; letter-spacing:.03em;">
+                        <th class="ps-3 py-3">Cliente</th>
+                        <th class="py-3">Fecha</th>
+                        <th class="py-3">Tipo</th>
+                        <th class="py-3">Documento</th>
+                        <th class="py-3">Recibo / Aplicado</th>
+                        <th class="text-end py-3">Debe</th>
+                        <th class="text-end py-3">Haber</th>
+                        <th class="text-end py-3">Percepciones</th>
+                        <th class="text-end py-3">Retenciones</th>
+                        <th class="text-end py-3 fw-bold">Saldo</th>
+                        <th class="text-center pe-3 py-3">Ver Doc.</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyCC">
+                    {% for mov in movimientos %}
+                    <tr
+                        data-search="{{ mov.cliente_nombre }} {{ mov.nro_documento or '' }} {{ mov.nro_recibo or '' }} {{ mov.nro_doc_aplicado or '' }}">
+                        <td class="ps-3 py-2">
+                            <a href="{{ url_for('ventas.perfil_cliente', id=mov.cliente_id) }}"
+                                class="text-decoration-none fw-semibold text-primary" target="_blank">
+                                {{ mov.cliente_nombre }}
+                            </a>
+                        </td>
+                        <td class="py-2 text-muted text-nowrap">
+                            {{ mov.fecha.strftime('%d/%m/%Y') if mov.fecha else '-' }}
+                        </td>
+                        <td class="py-2">
+                            {% if mov.tipo_doc == 'REC' %}
+                            <span class="badge rounded-pill bg-success-subtle text-success border border-success">
+                                <i class="fas fa-receipt me-1"></i>RECIBO
+                            </span>
+                            {% elif mov.tipo_doc in ['003','008','013'] %}
+                            <span class="badge rounded-pill bg-info-subtle text-info border border-info">
+                                <i class="fas fa-minus-circle me-1"></i>N.CRÉD
+                            </span>
+                            {% elif mov.tipo_doc in ['005','010','015'] %}
+                            <span class="badge rounded-pill bg-warning-subtle text-warning border border-warning">
+                                <i class="fas fa-plus-circle me-1"></i>N.DÉB
+                            </span>
+                            {% else %}
+                            <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary">
+                                <i class="fas fa-file-invoice me-1"></i>FACTURA
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-2 fw-semibold">
+                            {% if mov.nro_documento and mov.comprobante_id %}
+                            <a href="{{ url_for('ventas.ver_comprobante', id=mov.comprobante_id) }}" target="_blank"
+                                class="text-decoration-none fw-bold" title="Ver / Imprimir documento">
+                                <i class="fas fa-external-link-alt fa-xs me-1 opacity-50"></i>{{ mov.nro_documento }}
+                            </a>
+                            {% elif mov.nro_documento %}
+                            {{ mov.nro_documento }}
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-2">
+                            {% if mov.nro_recibo %}
+                            <span class="text-muted">{{ mov.nro_recibo }}</span>
+                            {% endif %}
+                            {% if mov.nro_doc_aplicado %}
+                            <div class="mt-1">
+                                {% if mov.comprobante_asociado_id %}
+                                {# NC/ND → link a la factura original #}
+                                <a href="{{ url_for('ventas.ver_comprobante', id=mov.comprobante_asociado_id) }}"
+                                    target="_blank"
+                                    class="badge bg-primary-subtle text-primary border border-primary text-decoration-none"
+                                    title="Ver factura asociada">
+                                    <i class="fas fa-file-invoice fa-xs me-1"></i>Fact: {{ mov.nro_doc_aplicado }}
+                                </a>
+                                {% else %}
+                                {# Recibo → facturas cobradas (sin link individual, son múltiples) #}
+                                <small class="text-muted">Fact: {{ mov.nro_doc_aplicado }}</small>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% if not mov.nro_recibo and not mov.nro_doc_aplicado %}<span class="text-muted">-</span>{%
+                            endif %}
+                        </td>
+                        <td class="text-end py-2 text-nowrap">
+                            {% if mov.debe > 0 %}
+                            <span class="text-danger fw-semibold">${{ "%.2f"|format(mov.debe) }}</span>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td class="text-end py-2 text-nowrap">
+                            {% if mov.haber > 0 %}
+                            <span class="text-success fw-semibold">${{ "%.2f"|format(mov.haber) }}</span>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td class="text-end py-2 text-nowrap text-muted">
+                            {% if mov.total_percepciones > 0 %}
+                            <span title="Percepciones (informativo, ya incluidas en el importe)">
+                                ${{ "%.2f"|format(mov.total_percepciones) }}
+                            </span>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="text-end py-2 text-nowrap text-muted">
+                            {% if mov.total_retenciones > 0 %}
+                            <span title="Retenciones sufridas (informativo)">
+                                ${{ "%.2f"|format(mov.total_retenciones) }}
+                            </span>
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="text-end py-2 fw-bold text-nowrap
+                            {% if mov.saldo > 0.005 %}text-danger
+                            {% elif mov.saldo < -0.005 %}text-success
+                            {% else %}text-muted{% endif %}">
+                            ${{ "%.2f"|format(mov.saldo) }}
+                        </td>
+                        <td class="text-center pe-3 py-2">
+                            <div class="d-flex gap-1 justify-content-center">
+                                {% if mov.comprobante_id %}
+                                <a href="{{ url_for('ventas.ver_comprobante', id=mov.comprobante_id) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-info px-2 py-1"
+                                    title="Ver / Imprimir comprobante en nueva pestaña">
+                                    <i class="fas fa-print fa-sm"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{{ url_for('ventas.perfil_cliente', id=mov.cliente_id) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-secondary px-2 py-1" title="Ir al perfil del cliente">
+                                    <i class="fas fa-id-card fa-sm"></i>
+                                </a>
+                                {% if mov.asiento_id %}
+                                <a href="{{ url_for('contabilidad.ver_asiento', id=mov.asiento_id) }}" target="_blank"
+                                    class="btn btn-sm btn-outline-secondary px-2 py-1"
+                                    title="Ver asiento contable #{{ mov.asiento_id }}">
+                                    <i class="fas fa-book fa-sm"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-secondary fw-bold">
+                    <tr>
+                        <td colspan="5" class="ps-3 py-2 text-uppercase small">TOTALES</td>
+                        <td class="text-end text-danger py-2">${{ "%.2f"|format(movimientos | sum(attribute='debe')) }}
+                        </td>
+                        <td class="text-end text-success py-2">${{ "%.2f"|format(movimientos | sum(attribute='haber'))
+                            }}</td>
+                        <td class="text-end text-muted py-2">${{ "%.2f"|format(movimientos |
+                            sum(attribute='total_percepciones')) }}</td>
+                        <td class="text-end text-muted py-2">${{ "%.2f"|format(movimientos |
+                            sum(attribute='total_retenciones')) }}</td>
+                        <td class="text-end py-2">
+                            {% set saldo_fin = (movimientos | sum(attribute='debe')) - (movimientos |
+                            sum(attribute='haber')) %}
+                            <span
+                                class="{% if saldo_fin > 0.005 %}text-danger{% elif saldo_fin < -0.005 %}text-success{% endif %}">
+                                ${{ "%.2f"|format(saldo_fin) }}
+                            </span>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="p-3 border-top">
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1 text-primary"></i>
+                <strong>Percepciones y Retenciones</strong> son informativas — ya están incluidas en los importes de
+                Debe/Haber.
+                El botón <i class="fas fa-print fa-sm"></i> abre el comprobante imprimible en nueva pestaña.
+            </small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function filtrarTabla(term) {
+        const rows = document.querySelectorAll('#tbodyCC tr');
+        const q = term.toLowerCase().trim();
+        rows.forEach(row => {
+            const text = (row.dataset.search || '').toLowerCase();
+            row.style.display = (!q || text.includes(q)) ? '' : 'none';
+        });
+    }
+
+    // Auto-submit al cambiar fecha
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        input.addEventListener('change', () => document.getElementById('formFiltros').submit());
+    });
+
+    // Auto-submit al cambiar tipo_doc
+    document.querySelector('select[name="tipo_doc"]').addEventListener('change', function () {
+        document.getElementById('formFiltros').submit();
+    });
+</script>
+{% endblock %}

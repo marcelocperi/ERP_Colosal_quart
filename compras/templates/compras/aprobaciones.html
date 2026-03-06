@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-check-double text-primary mr-2"></i>Aprobación de Compras
+            </h1>
+            <p class="text-muted">Revisión y corrección de Ordenes de Compra generadas.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4">PO #</th>
+                            <th>Fecha Emisión</th>
+                            <th>Proveedor</th>
+                            <th class="text-right">Total Estimado</th>
+                            <th>Estado</th>
+                            <th class="text-center px-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for po in ordenes %}
+                        <tr>
+                            <td class="px-4"><strong>#{{ po.id }}</strong></td>
+                            <td>{{ po.fecha_emision.strftime('%d/%m/%Y %H:%M') if po.fecha_emision else '-' }}</td>
+                            <td>
+                                {% if po.proveedor_codigo %}<span class="text-muted small">[{{ po.proveedor_codigo
+                                    }}]</span> {% endif %}
+                                {{ po.proveedor_nombre }}
+                            </td>
+                            <td class="text-right font-weight-bold text-dark">${{ "{:,.2f}".format(po.total_estimado or
+                                0) }}
+                            </td>
+                            <td>
+                                <span class="badge badge-warning px-3 py-2">PENDIENTE GERENCIA</span>
+                            </td>
+                            <td class="text-center px-4">
+                                <a href="{{ url_for('compras.aprobar_po_detalle', id=po.id) }}"
+                                    class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                                    <i class="fas fa-edit mr-1"></i> Revisar y Aprobar
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-clipboard-check fa-3x mb-3 d-block opacity-25"></i>
+                                No hay órdenes pendientes de aprobación.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.05);
+        transition: background-color 0.2s ease;
+    }
+
+    .badge-warning {
+        background-color: #f39c12;
+        color: white;
+    }
+
+    .opacity-25 {
+        opacity: 0.25;
+    }
+</style>
+{% endblock %}

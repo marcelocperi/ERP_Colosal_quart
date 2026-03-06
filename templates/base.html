@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Cache Control for Authenticated Pages -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{{ enterprise.nombre if enterprise else 'Bienvenido' }} | Colosal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/utilities.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/premium_ux.css') }}">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Flatpickr for better date inputs -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+    <link rel="icon" type="image/png"
+        href="{{ enterprise.logo_path if enterprise and enterprise.logo_path else url_for('static', filename='img/logo.png') }}">
+
+    <!-- SweetAlert2 - NECESARIO PARA NOTIFICACIONES Y SOD -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- jQuery and Select2 for searchable dropdowns -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+    <!-- CSRF token accesible para fetch/AJAX sin necesidad de embeber Jinja2 en scripts -->
+    <meta name="csrf-token" content="{{ session['csrf_token'] or '' }}">
+
+    <!-- SEGURIDAD: Tab-Binding (Independencia de Pestañas) -->
+    <script>
+        (function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sid = urlParams.get('sid');
+            if (!sid) return;
+
+            const storageKey = 'tab_bind_' + sid;
+            let tabSecret = sessionStorage.getItem(storageKey);
+
+            if (!tabSecret) {
+                // No hay afinidad en esta pestaña. Buscamos la "venda" (cookie de primer uso)
+                const cookieName = 'bind_' + sid + '=';
+                const cookies = document.cookie.split(';');
+                let bindCookie = null;
+                for (let i = 0; i < cookies.length; i++) {
+                    let c = cookies[i].trim();
+                    if (c.indexOf(cookieName) === 0) {
+                        bindCookie = c.substring(cookieName.length, c.length);
+                        break;
+                    }
+                }
+
+                if (bindCookie) {
+                    // Handshake exitoso: Fijamos la sesión a ESTA pestaña
+                    sessionStorage.setItem(storageKey, bindCookie);
+                    // Borramos la cookie para que ninguna otra pestaña pueda usar este SID
+                    document.cookie = cookieName + "; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    console.log("[Security] Tab bound to SID: " + sid);
+                } else {
+                    // Intento de acceso sin afinidad (URL copiada o cookie consumida)
+                    console.error("[Security] Acceso denegado: Esta pestaña no posee afinidad con el SID proporcionado.");
+                    // Redirigir a logout para limpiar estado
+                    window.location.href = "/logout?sid=" + sid + "&reason=tab_violation";
+                }
+            }
+        })();
+    </script>
+
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-title" style="text-align: center; margin-bottom: 0.5rem;">
+            <img src="{{ enterprise.logo_path if enterprise and enterprise.logo_path else url_for('static', filename='img/logo.png') }}"
+                alt="Logo" style="width: 45px; height: auto; margin-bottom: 2px;">
+            <div style="font-size: 1rem; letter-spacing: 1px; font-weight: 800; color: white;">COLOSAL</div>
+            <div
+                style="font-size: 0.55rem; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-top: -3px;">
+                {{ enterprise.nombre if enterprise else 'ERP' }}</div>
+        </div>
+
+        {% if current_user %}
+        <div class="user-profile-mini"
+            style="padding: 0.5rem 0.75rem; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 0.5rem;">
+            <div
+                style="width: 28px; height: 28px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.75rem; flex-shrink: 0;">
+                {{ current_user.username[0].upper() }}
+            </div>
+            <div style="flex: 1; overflow: hidden;">
+                <div
+                    style="font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    {{ current_user.username }}</div>
+                <div style="font-size: 0.65rem; color: #94a3b8;">
+                    <span class="badge"
+                        style="background: rgba(99,102,241,0.1); color: var(--primary); padding: 0.05rem 0.3rem; font-size: 0.55rem;">{{
+                        current_user.role_name }}</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.4rem; font-size: 0.8rem;">
+                <a href="javascript:void(0)" onclick="toggleModal('modal-password')" title="Cambiar Contraseña"
+                    style="color: #64748b; transition: 0.2s;"><i class="fas fa-key"></i></a>
+                <a href="{{ url_for('core.logout') }}" title="Cerrar Sesión"
+                    style="color: #64748b; transition: 0.2s;"><i class="fas fa-sign-out-alt"></i></a>
+            </div>
+        </div>
+        {% endif %}
+
+        <nav>
+            {% if current_user %}
+            <a href="{{ url_for('core.manual_index') }}" class="nav-link {{ 'active' if '/manual' in request.path }}">
+                <i class="fas fa-question-circle"></i> <span>Ayuda / Manual</span>
+            </a>
+
+            {# MENU JERÁRQUICO DINÁMICO (Consolidado) #}
+            {% if menu_structure %}
+            {% for category, data in menu_structure.items() %}
+            <div class="sidebar-separator collapsed" id="sep-{{ category|lower }}"
+                onclick="toggleNavGroup('{{ category|lower }}')">
+                <span><i class="{{ data.icon }} me-2"></i> <span>{{ category }}</span></span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="nav-group collapsed" id="group-{{ category|lower }}">
+                {% for module in data.modules %}
+                {% if module.has_access and module.url %}
+                <a href="{{ module.url }}" class="nav-link {{ 'active' if module.route in request.endpoint }}">
+                    <i class="{{ module.icon }}"></i> <span>{{ module.name }}</span>
+                </a>
+                {% else %}
+                <a class="nav-link disabled" style="opacity: 0.4; cursor: not-allowed;"
+                    title="Sin nivel de acceso operativo">
+                    <i class="{{ module.icon }}"></i> <span>{{ module.name }}</span> <i class="fas fa-lock"
+                        style="font-size: 0.7rem; margin-left: auto;"></i>
+                </a>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endif %}
+        </nav>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="top-nav">
+            <div class="breadcrumb-container" style="gap: 0.3rem;">
+                <button onclick="goBack()" class="btn-volver" title="Volver atrás" style="padding: 0.3rem 0.6rem;">
+                    <i class="fas fa-arrow-left fa-sm"></i>
+                </button>
+                <div class="breadcrumb-item"><a href="/">Inicio</a></div>
+                {% set current_path = request.path %}
+                {% set parts = current_path.split('/') %}
+                {% for part in parts if part %}
+                <div class="breadcrumb-item {{ 'active' if loop.last }}">
+                    {% set build_url = '/' ~ parts[1:loop.index+1]|join('/') %}
+                    {% if loop.last %}
+                    {{ part|capitalize }}
+                    {% else %}
+                    {# Safe roots #}
+                    {% if build_url in ['/compras', '/ventas', '/stock', '/fondos', '/contabilidad', '/biblioteca'] %}
+                    <a href="{{ build_url }}/dashboard">{{ part|capitalize }}</a>
+                    {% elif build_url == '/admin/error-log' %}
+                    <a href="{{ build_url }}">{{ part|capitalize }}</a>
+                    {% else %}
+                    {# Irregular or intermediate paths get no link to prevent 404s #}
+                    <span class="text-muted">{{ part|capitalize }}</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="header-tools" style="display: flex; gap: 0.6rem; align-items: center;">
+                <div id="afip-global-status" style="font-size: 0.65rem; color: #10b981;">
+                    <i class="fas fa-check-circle"></i> AFIP
+                </div>
+                <div class="enterprise-badge"
+                    style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600;">
+                    <i class="fas fa-building me-1"></i> {{ enterprise.nombre if enterprise else 'Colosal' }}
+                </div>
+            </div>
+        </header>
+
+        <div class="content-container" style="padding: 0;">
+            <!-- Flash Messages using Toasts -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Modal: Cambiar Contraseña Interno -->
+    <div id="modal-password" class="card modal-animate"
+        style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; z-index: 5001; border: 2px solid var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <h3>Actualizar Contraseña</h3>
+        <form action="{{ url_for('core.change_password') }}" method="POST" style="margin-top: 1rem;">
+            <div class="form-group">
+                <label>Contraseña Actual</label>
+                <input type="password" name="current_password" required>
+            </div>
+            <div class="form-group">
+                <label>Nueva Contraseña</label>
+                <input type="password" name="new_password" id="modal_new_password" required onpaste="return false"
+                    oncopy="return false">
+            </div>
+            <div class="form-group">
+                <label>Confirmar Nueva Contraseña</label>
+                <input type="password" name="confirm_password" id="modal_confirm_password" required
+                    onpaste="return false" oncopy="return false">
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                {% if not force_password_modal %}
+                <button type="button" class="btn" style="background: rgba(255,255,255,0.1);"
+                    onclick="toggleModal('modal-password')">Cancelar</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <!-- Backdrop global para modales -->
+    <div id="modal-backdrop" class="modal-backdrop"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script>
+        // ===== FLATPICKR GLOBAL — Calendario dd/mm/yyyy en español para todo el sistema =====
+        document.addEventListener('DOMContentLoaded', function () {
+            flatpickr.localize(flatpickr.l10ns.es);
+
+            document.querySelectorAll('input[type="date"]').forEach(function (input) {
+                // Guardar el valor ISO original (aaaa-mm-dd) si ya tiene uno
+                const isoValue = input.value;
+
+                // Crear un hidden input que guarda el valor ISO para el form
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = input.name;
+                hiddenInput.value = isoValue;
+
+                // El input visible NO debe tener name, para que el form use solo el hidden
+                const originalName = input.name;
+                input.removeAttribute('name');
+
+                // Insertar hidden antes del input visible
+                input.parentNode.insertBefore(hiddenInput, input);
+
+                // Inicializar Flatpickr
+                flatpickr(input, {
+                    locale: 'es',
+                    dateFormat: 'd/m/Y',           // Formato visible: 27/02/2026
+                    altInput: false,                // Usamos el input directamente
+                    defaultDate: isoValue || null,  // Prellenar si tiene valor
+                    allowInput: true,               // Permitir tipear la fecha
+                    disableMobile: false,
+                    weekNumbers: false,
+                    // Al cambiar fecha, actualizar el hidden con formato ISO
+                    onChange: function (selectedDates, dateStr, instance) {
+                        if (selectedDates.length > 0) {
+                            const d = selectedDates[0];
+                            const iso = d.getFullYear() + '-' +
+                                String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                                String(d.getDate()).padStart(2, '0');
+                            hiddenInput.value = iso;
+                        } else {
+                            hiddenInput.value = '';
+                        }
+                    }
+                });
+
+                // Si el campo era required, trasladarlo al hidden
+                if (input.required) {
+                    input.removeAttribute('required');
+                    hiddenInput.required = true;
+                }
+            });
+        });
+    </script>
+
+
+    <script>
+        // Interceptor global: protege TODAS las llamadas fetch contra respuestas HTML inesperadas
+        (function () {
+            const originalFetch = window.fetch;
+            window.fetch = function (...args) {
+                // Implementación opcional de timeout con AbortController si args no trae signal
+                return originalFetch.apply(this, args).then(response => {
+                    // Si la respuesta es 401 (sesión expirada explícita), redirigir al login
+                    if (response.status === 401) {
+                        const loginUrl = new URL("{{ url_for('core.login') }}", window.location.origin);
+                        if (window.SID) loginUrl.searchParams.set('sid', window.SID);
+
+                        // Solo alertar y redirigir si no es una respuesta controlada de error
+                        response.clone().json().then(data => {
+                            if (data && data.redirect) {
+                                alert('Su sesión ha expirado o es inválida. Será redirigido al login.');
+                                window.location.href = data.redirect;
+                            }
+                        }).catch(() => {
+                            // Si no es JSON pero es 401, redirigir igual
+                            window.location.href = loginUrl.toString();
+                        });
+                        return response;
+                    }
+
+                    // Manejo genérico para evitar fallas silenciosas de servidor o Timeouts (ej. gateway timeout)
+                    if (response.status === 504 || response.status === 502) {
+                        alert('El servidor está tardando demasiado en responder o experimenta alta latencia. Sus datos no se han borrado. Por favor, vuelva a presionar el botón de guardar en unos instantes.');
+                        return Promise.reject(new Error('Timeout o Error de Gateway. Red experimentando alta latencia.'));
+                    }
+
+                    // Detectar si recibimos HTML cuando esperábamos JSON (redirección silenciosaseguida por el navegador)
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('text/html') && response.ok) {
+                        const urlStr = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
+                        // Solo interceptar si parece ser una llamada API interna (buscando JSON)
+                        const isApiCall = urlStr.includes('/api/') ||
+                            (args[1] && args[1].headers &&
+                                (args[1].headers['Accept'] === 'application/json' ||
+                                    args[1].headers['Content-Type'] === 'application/json'));
+
+                        if (isApiCall) {
+                            console.warn('Fetch recibió HTML en una llamada API (posible error 500 del lado del servidor):', urlStr);
+                        }
+                    }
+                    return response;
+                }).catch(err => {
+                    // Capturar y mostrar errores puros de conectividad: Timeouts reales, rechazos de red
+                    if (err.name === 'AbortError' || err.message.includes('fetch') || err.message.includes('NetworkError')) {
+                        console.error('Fetch interceptado: Falla de red o Timeout.', err);
+                        alert('Problema de conectividad. Sus datos se mantienen en pantalla. Verifique su conexión de internet y vuelva a intentar guardar.');
+                    }
+                    throw err; // Burbujear el error para que la ventana individual maneje la animación de carga.
+                });
+            };
+        })();
+    </script>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <script>
+        function toggleNavGroup(id) {
+            const group = document.getElementById('group-' + id);
+            const separator = document.getElementById('sep-' + id);
+            if (!group || !separator) return;
+
+            const isOpening = group.classList.contains('collapsed');
+
+            if (isOpening) {
+                // FORCE Accordion: Collapse every other group first
+                document.querySelectorAll('.nav-group').forEach(otherGroup => {
+                    if (otherGroup.id !== 'group-' + id) {
+                        otherGroup.classList.add('collapsed');
+                        const otherId = otherGroup.id.replace('group-', '');
+                        const otherSep = document.getElementById('sep-' + otherId);
+                        if (otherSep) otherSep.classList.add('collapsed');
+                    }
+                });
+
+                // Open the selected group
+                group.classList.remove('collapsed');
+                separator.classList.remove('collapsed');
+            } else {
+                // Simply close if clicking on an already open group
+                group.classList.add('collapsed');
+                separator.classList.add('collapsed');
+            }
+        }
+
+        function toggleSubGroup(id) {
+            const body = document.getElementById('subgroup-' + id);
+            const header = body.previousElementSibling;
+            if (body) {
+                body.classList.toggle('collapsed');
+                if (header) header.classList.toggle('expanded');
+
+                // Persist
+                const isCollapsed = body.classList.contains('collapsed');
+                localStorage.setItem('sub-collapsed-' + id, isCollapsed);
+            }
+        }
+
+        // Multi-session propagation
+        window.SID = "{{ sid or '' }}";
+        document.addEventListener('DOMContentLoaded', function () {
+            // Ensure everything starts collapsed regardless of session/state
+            document.querySelectorAll('.nav-group').forEach(group => {
+                const id = group.id.replace('group-', '');
+                const sep = document.getElementById('sep-' + id);
+                group.classList.add('collapsed');
+                if (sep) sep.classList.add('collapsed');
+            });
+
+            // Force all sub-groups to be collapsed on load
+            document.querySelectorAll('.nav-subgroup-body').forEach(body => {
+                body.classList.add('collapsed');
+                if (body.previousElementSibling) {
+                    body.previousElementSibling.classList.remove('expanded');
+                }
+            });
+
+            // Fix all links to maintain session context
+            document.querySelectorAll('a').forEach(a => {
+                const href = a.getAttribute('href');
+                if (href && (href.startsWith('/') || href.startsWith(window.location.origin))) {
+                    try {
+                        const url = new URL(a.href);
+                        if (!url.searchParams.has('sid') && window.SID) {
+                            url.searchParams.set('sid', window.SID);
+                            a.href = url.pathname + url.search + url.hash;
+                        }
+                    } catch (e) { }
+                }
+            });
+
+            // Fix all forms to maintain session context and CSRF
+            const csrfToken = "{{ session['csrf_token'] or '' }}";
+            document.querySelectorAll('form').forEach(f => {
+                const action = f.getAttribute('action') || '';
+                // Only for internal forms
+                if (!action.startsWith('http') || action.startsWith(window.location.origin)) {
+                    // Inject SID
+                    if (window.SID && !f.querySelector('input[name="sid"]')) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'sid';
+                        input.value = window.SID;
+                        f.appendChild(input);
+                    }
+                    // Inject or UPDATE CSRF for POST forms
+                    if (f.method.toUpperCase() === 'POST' && csrfToken) {
+                        const existingCsrf = f.querySelector('input[name="csrf_token"]');
+                        if (existingCsrf) {
+                            // Always update existing token to ensure it's current
+                            existingCsrf.value = csrfToken;
+                        } else {
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = 'csrf_token';
+                            csrfInput.value = csrfToken;
+                            f.appendChild(csrfInput);
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+    {% if force_password_modal %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Use the global toggle function for consistency
+            if (typeof toggleModal === 'function') {
+                document.body.classList.add('force-modal');
+                toggleModal('modal-password');
+            } else {
+                // Fallback if main.js is not yet loaded (shouldn't happen with DOMContentLoaded)
+                const modal = document.getElementById('modal-password');
+                const backdrop = document.getElementById('modal-backdrop');
+                if (modal && backdrop) {
+                    modal.style.display = 'block';
+                    backdrop.style.display = 'block';
+                    backdrop.style.opacity = '1';
+                }
+            }
+            // Block Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+    {% endif %}
+    <script>
+        $(document).ready(function () {
+            // Matcher personalizado para Select2 que busca en el texto y en los atributos data-*
+            function customMatcher(params, data) {
+                // Si no hay término de búsqueda, retornar todos los datos
+                if (!params.term || $.trim(params.term) === '') {
+                    return data;
+                }
+
+                // Si no es un elemento (optgroup o item), no hacer nada
+                if (!data.text) {
+                    return null;
+                }
+
+                // Si tiene hijos (optgroup), filtrar los hijos recursivamente
+                if (data.children && data.children.length > 0) {
+                    var match = $.extend(true, {}, data);
+                    for (var c = data.children.length - 1; c >= 0; c--) {
+                        var child = data.children[c];
+                        var matches = customMatcher(params, child);
+                        if (!matches) {
+                            match.children.splice(c, 1);
+                        }
+                    }
+                    if (match.children.length > 0) {
+                        return match;
+                    }
+                    return null;
+                }
+
+                const term = params.term.toLowerCase();
+                const text = data.text.toLowerCase();
+
+                // 1. Buscar en el texto visible
+                if (text.indexOf(term) > -1) {
+                    return data;
+                }
+
+                // 2. Buscar en los atributos data del elemento original
+                if (data.element) {
+                    const el = $(data.element);
+                    const cuit = (el.data('cuit') || '').toString().toLowerCase();
+                    const codigo = (el.data('codigo') || '').toString().toLowerCase();
+                    const localidad = (el.data('localidad') || '').toString().toLowerCase();
+
+                    if (cuit.indexOf(term) > -1 ||
+                        codigo.indexOf(term) > -1 ||
+                        localidad.indexOf(term) > -1) {
+                        return data;
+                    }
+                }
+
+                return null;
+            }
+
+            $('.select2, .select2-ajax').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                language: 'es',
+                placeholder: 'Seleccione una opción...',
+                allowClear: true,
+                matcher: customMatcher
+            });
+
+            // Forzar mensajes de validación en español para selects requeridos
+            $('select[required]').on('invalid', function () {
+                this.setCustomValidity('Por favor, seleccione un elemento de la lista.');
+                this.setCustomValidity('');
+            });
+        });
+    </script>
+    <div id="toast-container" class="toast-container"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% with messages = get_flashed_messages(with_categories = true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            (function () {
+                const cat = '{{ category }}';
+                const msg = {{ message | tojson | safe
+            }};
+
+        if (cat === 'sod_danger' || cat === 'sys_danger') {
+            try {
+                let sodData = msg;
+                if (typeof msg === 'string') {
+                    sodData = JSON.parse(msg);
+                }
+
+                const mainTitle = sodData.main_title || 'CONTROL DE SEGURIDAD (SOX)';
+                const subTitle = sodData.sub_title || 'Alerta de Separación de Funciones:';
+                const icon = sodData.icon || 'fa-shield-halved';
+                const mainColor = sodData.main_color || '#eab308';
+                const bgWarning = sodData.bg_warning || 'rgba(234, 179, 8, 0.1)';
+                const textWarning = sodData.text_warning || '#fef08a';
+
+                let errorHtml = `<div style="text-align: left; font-size: 0.95rem; user-select: text;">
+                                        <p style="color: ${mainColor}; font-weight: bold; font-size: 1.1rem; border-bottom: 2px solid ${mainColor}; padding-bottom: 8px; margin-bottom: 15px;">
+                                            <i class="fas ${icon}"></i> ${subTitle}
+                                        </p>`;
+
+                if (sodData.legend) {
+                    errorHtml += `<div style="background: ${bgWarning}; border: 1px solid ${mainColor}; padding: 10px; border-radius: 5px; margin-bottom: 15px; color: ${textWarning}; font-weight: 500; font-size: 0.9rem;">
+                                            <i class="fas fa-info-circle"></i> ${sodData.legend}
+                                          </div>`;
+                }
+
+                errorHtml += `<div style="max-height: 400px; overflow-y: auto; padding-right: 10px; color: #e2e8f0;">`;
+
+                if (sodData && sodData.conflictos) {
+                    sodData.conflictos.forEach(c => {
+                        errorHtml += `<div style="margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border-left: 5px solid ${mainColor};">
+                                                <div style="color: ${textWarning}; font-weight: bold; text-transform: uppercase; font-size: 0.75rem; margin-bottom: 8px;">
+                                                    <i class="fas fa-radiation"></i> ${sodData.conflict_prefix || 'Error Al'} ${c.tipo || 'Conflicto'}:
+                                                </div>`;
+                        if (c.perms) {
+                            c.perms.forEach(p => {
+                                errorHtml += `<div style="margin-left: 8px; margin-bottom: 6px; font-size: 0.85rem;">
+                                                        <span style="color: #94a3b8;">${p.label_mod || 'Módulo'}:</span> <span style="color: #fff;">${p.cat || 'General'}</span> 
+                                                        <span style="color: #94a3b8; margin-left:8px;">${p.label_obj || 'Objeto'}:</span> <span style="color: #fff;">${p.desc}</span> 
+                                                    </div>`;
+                            });
+                        }
+                        errorHtml += `<div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); color: #fff;">
+                                                <strong>${sodData.detail_label || 'INFRACCIÓN'}:</strong> ${c.detalle}
+                                                <div style="font-size: 0.75rem; color: ${mainColor}; margin-top: 2px;">Nota: ${c.regla}</div>
+                                            </div></div>`;
+                    });
+                }
+                errorHtml += `</div></div>`;
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: sodData.swal_icon || 'warning',
+                        title: mainTitle,
+                        html: errorHtml,
+                        width: '700px',
+                        background: '#111827',
+                        color: '#fff',
+                        showDenyButton: true,
+                        denyButtonText: '<i class="fas fa-print"></i> IMPRIMIR REPORTE',
+                        denyButtonColor: '#4b5563',
+                        confirmButtonText: 'CERRAR',
+                        confirmButtonColor: mainColor,
+                        allowOutsideClick: false,
+                        showCloseButton: true,
+                        customClass: { popup: 'sox-modal-popup' }
+                    }).then((result) => {
+                        if (result.isDenied) {
+                            const printWindow = window.open('', '_blank', 'width=800,height=900');
+                            const now = new Date().toLocaleString();
+                            printWindow.document.write(`
+                                <html>
+                                    <head>
+                                        <title>Reporte de Incidente - Auditoría</title>
+                                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                                        <style>
+                                            body { font-family: sans-serif; padding: 40px; color: #000; }
+                                            .header { border-bottom: 2px solid #000; margin-bottom: 20px; padding-bottom: 10px; }
+                                            .footer { margin-top: 40px; font-size: 0.8rem; border-top: 1px solid #ccc; padding-top: 10px; text-align: center; }
+                                            /* Forzar visibilidad de textos */
+                                            strong { color: #000 !important; }
+                                            div { color: #000 !important; border-left-color: #000 !important; }
+                                            p { color: #000 !important; border-bottom-color: #000 !important; }
+                                        </style>
+                                    </head>
+                                    <body>
+                                        <div class="header">
+                                            <h2>${mainTitle}</h2>
+                                            <p>Sistema: ERP Colosal | Auditoría Interna<br>Generado: ${now}</p>
+                                        </div>
+                                        <div>${errorHtml}</div>
+                                        <div class="footer">Documento generado para fines de control SOX/Audit.</div>
+                                        <script>window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };<\/script>
+                                    </body>
+                                </html>
+                            `);
+                            printWindow.document.close();
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Error SOX:", e);
+            }
+        } else {
+            // Estilo Premium Universal (Modales no truncables para todas las categorías)
+            const isPremium = true; // Forzamos premium para TODOS los mensajes por pedido del usuario
+            const status = (cat === 'danger' || cat === 'error' ? 'error' : (cat.includes('success') ? 'success' : (cat === 'warning' ? 'warning' : 'info')));
+            const title = (cat === 'danger' || cat === 'error' ? 'ERROR DE OPERACIÓN' : (cat.includes('success') ? 'OPERACIÓN EXITOSA' : (cat === 'warning' ? 'ADVERTENCIA' : 'INFORMACIÓN DEL SISTEMA')));
+            const color = (cat === 'danger' || cat === 'error' ? '#ef4444' : (cat.includes('success') ? '#10b981' : (cat === 'warning' ? '#f59e0b' : '#3b82f6')));
+            const icon_fa = (cat === 'danger' || cat === 'error' ? 'fa-circle-xmark' : (cat.includes('success') ? 'fa-circle-check' : (cat === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info')));
+
+            if (typeof Swal !== 'undefined' && isPremium) {
+                Swal.fire({
+                    icon: status,
+                    title: `<span style="color: ${color}; font-weight: 800; font-size: 1.1rem; text-transform: uppercase;">
+                                <i class="fas ${icon_fa}"></i> ${title}
+                            </span>`,
+                    html: `
+                        <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 15px; text-align: left;">
+                            <div style="background: rgba(0,0,0,0.2); border-left: 4px solid ${color}; padding: 15px; border-radius: 5px; color: #f8fafc; font-size: 0.95rem; user-select: text; line-height: 1.6; word-break: break-word;">
+                                ${msg}
+                            </div>
+                            <div style="margin-top: 10px; font-size: 0.75rem; color: #94a3b8; text-align: right;">
+                                <i class="fas fa-copy"></i> Puede seleccionar y copiar este mensaje para soporte técnico.
+                            </div>
+                        </div>`,
+                    background: '#111827',
+                    color: '#fff',
+                    confirmButtonColor: color,
+                    confirmButtonText: (cat.includes('success') ? 'EXCELENTE' : (cat === 'info' ? 'ENTENDIDO' : 'CERRAR')),
+                    width: '600px',
+                    allowOutsideClick: true,
+                    showCloseButton: true,
+                    customClass: {
+                        popup: 'premium-swal-popup',
+                        title: 'premium-swal-title'
+                    }
+                });
+            } else if (typeof showToast === 'function') {
+                showToast(msg, status);
+            } else if (typeof Swal !== 'undefined') {
+                // Toast persistente de éxito (premium)
+                Swal.fire({
+                    icon: status,
+                    title: `<span style="font-size: 0.9rem;">${msg}</span>`,
+                    timer: 5000,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    background: '#111827',
+                    color: '#fff'
+                });
+            }
+        }
+            }) ();
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        });
+    </script>
+    <script>
+        // --- Protección Básica Anti-View Source ---
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            // F12 (DevTools)
+            if (e.key === 'F12') {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+I (DevTools)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+J (Console)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+                e.preventDefault();
+            }
+            // Ctrl+Shift+C (Inspect Element)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+                e.preventDefault();
+            }
+            // Ctrl+U (View Source)
+            if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+
+</html>

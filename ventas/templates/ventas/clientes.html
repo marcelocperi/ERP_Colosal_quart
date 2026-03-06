@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .table-fixed-header {
+        max-height: 75vh;
+        overflow-y: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .table-fixed-header thead th {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: #0f172a !important;
+        border-bottom: 2px solid var(--primary) !important;
+        color: white;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+    }
+
+    .filter-row th {
+        position: sticky;
+        top: 38px;
+        z-index: 19;
+        background: #1e293b !important;
+        padding: 5px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .filter-select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+        font-size: 0.7rem;
+        padding: 2px 5px;
+        border-radius: 4px;
+        outline: none;
+    }
+
+    .filter-select:focus {
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .filter-select option {
+        background: #0f172a;
+        color: white;
+    }
+
+    .role-row:hover,
+    .customer-row:hover,
+    .provider-row:hover {
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .badge-code {
+        background: rgba(99, 102, 241, 0.2);
+        color: #818cf8;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .actions-column {
+        position: relative;
+        z-index: 5;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h1 class="h3 mb-0 text-white font-weight-bold">
+                <i class="fas fa-users mr-2 text-primary"></i>Gestión de Clientes
+            </h1>
+            <p class="text-muted small mb-0">Administración de la cartera de clientes y cuentas corrientes.</p>
+        </div>
+        <div class="col-auto">
+            <div class="d-flex align-items-center gap-2">
+                <div class="position-relative">
+                    <i class="fas fa-search position-absolute text-muted"
+                        style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem;"></i>
+                    <input type="text" id="globalSearch"
+                        class="form-control form-control-sm bg-dark border-secondary text-white pl-4"
+                        placeholder="Buscar en todos los campos..." style="width: 250px; font-size: 0.8rem;">
+                </div>
+                <button class="btn btn-outline-light btn-sm ml-2" onclick="resetFilters()">
+                    <i class="fas fa-sync-alt mr-1"></i> Limpiar Filtros
+                </button>
+                <a href="{{ url_for('ventas.cuenta_corriente_global') }}" class="btn btn-outline-success btn-sm ml-2">
+                    <i class="fas fa-file-invoice-dollar mr-1"></i> Cuenta Corriente
+                </a>
+                <a href="{{ url_for('ventas.nuevo_cliente') }}" class="btn btn-primary btn-sm ml-2">
+                    <i class="fas fa-plus mr-1"></i> Nuevo Cliente
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-dark border-0 shadow-lg">
+        <div class="card-body p-0">
+            <div class="table-fixed-header overflow-visible">
+                <table class="table table-hover mb-0" id="clientesTable">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 100px;">Código</th>
+                            <th>Razón Social</th>
+                            <th>CUIT/DNI</th>
+                            <th>Provincia</th>
+                            <th>Localidad</th>
+
+                            <th class="text-center" style="width: 150px;">Acciones</th>
+                        </tr>
+                        <tr class="filter-row">
+                            <th><select class="filter-select" data-col="0">
+                                    <option value="">Todos</option>
+                                </select></th>
+                            <th><select class="filter-select" data-col="1">
+                                    <option value="">Todos</option>
+                                </select></th>
+                            <th><select class="filter-select" data-col="2">
+                                    <option value="">Todos</option>
+                                </select></th>
+                            <th><select class="filter-select" data-col="3">
+                                    <option value="">Todos</option>
+                                </select></th>
+                            <th><select class="filter-select" data-col="4">
+                                    <option value="">Todos</option>
+                                </select></th>
+
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-light">
+                        {% for c in clientes %}
+                        <tr class="customer-row">
+                            <td class="text-center">
+                                <a href="{{ url_for('ventas.cuenta_corriente_global') }}?cliente_id={{ c.id }}"
+                                    class="badge badge-code text-decoration-none"
+                                    title="Ver Cuenta Corriente de {{ c.nombre }}">{{ c.codigo or '-' }}</a>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary rounded-circle mr-2 d-flex align-items-center justify-content-center"
+                                        style="width: 24px; height: 24px; font-size: 0.6rem; font-weight: bold;">
+                                        {{ c.nombre[0].upper() }}
+                                    </div>
+                                    <span class="font-weight-600">{{ c.nombre }}</span>
+                                </div>
+                            </td>
+                            <td><code class="text-info">{{ c.cuit }}</code></td>
+                            <td><span class="text-muted">{{ c.provincia or '-' }}</span></td>
+                            <td><span class="text-muted">{{ c.localidad or '-' }}</span></td>
+
+                            <td class="text-center actions-column">
+                                <a href="{{ url_for('ventas.perfil_cliente', id=c.id) }}"
+                                    class="btn btn-sm btn-primary">
+                                    <i class="fas fa-id-card mr-1"></i> Ver Ficha
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-info-circle fa-2x text-muted mb-3 d-block"></i>
+                                <span class="text-muted">No se encontraron clientes.</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-dark border-0 py-2">
+            <div class="row align-items-center">
+                <div class="col">
+                    <span class="text-muted small" id="rowCount">Mostrando {{ clientes|length }} clientes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        populateFilters();
+
+        // Add event listeners to selects
+        document.querySelectorAll('.filter-select').forEach(select => {
+            select.addEventListener('change', applyFilters);
+        });
+
+        // Add listener to global search
+        document.getElementById('globalSearch').addEventListener('input', applyFilters);
+    });
+
+    function populateFilters() {
+        const table = document.getElementById('clientesTable');
+        const rows = table.querySelectorAll('tbody tr.customer-row');
+        const filters = table.querySelectorAll('.filter-select');
+
+        filters.forEach(filter => {
+            const colIdx = parseInt(filter.dataset.col);
+            const values = new Set();
+
+            rows.forEach(row => {
+                const cell = row.cells[colIdx];
+                if (cell) {
+                    const text = cell.textContent.trim();
+                    if (text && text !== '-') values.add(text);
+                }
+            });
+
+            // Sort values
+            const sortedValues = Array.from(values).sort((a, b) => a.localeCompare(b));
+
+            // Populate
+            sortedValues.forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                filter.appendChild(opt);
+            });
+        });
+    }
+
+    function applyFilters() {
+        const table = document.getElementById('clientesTable');
+        const rows = table.querySelectorAll('tbody tr.customer-row');
+        const filters = Array.from(table.querySelectorAll('.filter-select'));
+        const searchTerm = document.getElementById('globalSearch').value.toLowerCase().trim();
+
+        const activeFilters = filters
+            .filter(f => f.value !== "")
+            .map(f => ({ col: parseInt(f.dataset.col), val: f.value }));
+
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            let showByDropdown = true;
+            for (const f of activeFilters) {
+                const cellText = row.cells[f.col].textContent.trim();
+                if (cellText !== f.val) {
+                    showByDropdown = false;
+                    break;
+                }
+            }
+
+            let showBySearch = true;
+            if (searchTerm) {
+                const rowText = row.textContent.toLowerCase();
+                showBySearch = rowText.includes(searchTerm);
+            }
+
+            const show = showByDropdown && showBySearch;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        document.getElementById('rowCount').textContent = `Mostrando ${visibleCount} de ${rows.length} clientes`;
+    }
+
+    function resetFilters() {
+        document.querySelectorAll('.filter-select').forEach(f => f.value = "");
+        document.getElementById('globalSearch').value = "";
+        applyFilters();
+    }
+</script>
+
+
+{% endblock %}

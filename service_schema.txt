@@ -1,0 +1,1 @@
+['id', 'enterprise_id', 'nombre', 'tipo_servicio', 'clase_implementacion', 'config_json', 'activo', 'created_at', 'modo_captura', 'url_objetivo', 'system_code']

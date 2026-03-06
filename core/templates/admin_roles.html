@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .role-grid {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 2rem;
+        height: calc(100vh - 100px);
+    }
+
+    .role-list {
+        background: var(--bg-card);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .role-item {
+        padding: 1rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        transition: 0.2s;
+        border: 1px solid transparent;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .role-item:hover,
+    .role-item.active {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: var(--primary);
+    }
+
+    .role-item.active {
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+    }
+
+    .perm-container {
+        background: var(--bg-card);
+        border-radius: var(--radius);
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        overflow-y: auto;
+    }
+
+    .perm-category {
+        margin-bottom: 2rem;
+    }
+
+    .perm-category h3 {
+        color: var(--primary);
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .perm-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .perm-card {
+        background: rgba(15, 23, 42, 0.5);
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        transition: 0.2s;
+    }
+
+    .perm-card:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Checkbox styling */
+    input[type="checkbox"].perm-check {
+        width: 1.2rem;
+        height: 1.2rem;
+        accent-color: var(--primary);
+        margin-top: 0.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    /* Highlight for checked permissions (Indigo Premium) */
+    .perm-card.perm-checked {
+        border-color: rgba(99, 102, 241, 0.6) !important;
+        background: rgba(99, 102, 241, 0.1) !important;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+        transform: translateY(-2px);
+    }
+
+    /* SPECIFIC HIGHLIGHT FOR SOD INFRACTIONS (Strong Yellow / Hazard) */
+    .perm-card.sod-conflict-active {
+        border: 2px solid #facc15 !important;
+        background: rgba(250, 204, 21, 0.2) !important;
+        animation: pulse-yellow 2s infinite;
+        z-index: 20;
+    }
+
+    .sod-conflict-active .perm-text {
+        color: #facc15 !important;
+        /* Amarillo fuerte para el texto de la infracción */
+        font-weight: 800 !important;
+    }
+
+    .sod-conflict-active .fa-exclamation-triangle {
+        color: #facc15 !important;
+        filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.5));
+    }
+
+    @keyframes pulse-yellow {
+        0% {
+            box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7);
+        }
+
+        70% {
+            box-shadow: 0 0 0 15px rgba(250, 204, 21, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(250, 204, 21, 0);
+        }
+    }
+
+    .perm-card {
+        user-select: none;
+        cursor: pointer;
+    }
+</style>
+
+<div class="header-action">
+    <div>
+        <h1>Gestor de Roles y Permisos</h1>
+        <p class="text-muted">Define qué acciones puede realizar cada rol en el sistema.</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <form action="{{ url_for('core.admin_roles_init_sod') }}" method="POST"
+            onsubmit="return confirm('Esto creará los roles estándar (Comprador, Tesorero, etc) si no existen. ¿Continuar?');">
+            <button class="btn"
+                style="background: rgba(99, 102, 241, 0.1); color: var(--primary); border: 1px solid var(--primary);">
+                <i class="fas fa-sync-alt"></i> Inicializar Roles SoD
+            </button>
+        </form>
+        <button class="btn btn-primary" onclick="openNewRoleModal()">
+            <i class="fas fa-plus"></i> Nuevo Rol
+        </button>
+    </div>
+</div>
+
+<div class="role-grid">
+    <!-- Lista de Roles -->
+    <div class="role-list">
+        {% for role in roles %}
+        <a href="{{ url_for('core.admin_roles', role_id=role.id) }}"
+            class="role-item {% if selected_role and role.id == selected_role.id %}active{% endif %}"
+            style="text-decoration: none; color: inherit;">
+            <div>
+                <div style="font-weight: 600;">{{ role.name }}</div>
+                <div style="font-size: 0.8rem; color: #94a3b8;">{{ role.description }}</div>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size: 0.8rem; color: #64748b;"></i>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Panel de Permisos -->
+    <div class="perm-container">
+        {% if selected_role %}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+                <h2>Permisos para: <span style="color: var(--primary);">{{ selected_role.name }}</span></h2>
+                <p class="text-muted" style="font-size: 0.9rem;">Gestione el acceso granular para este rol.</p>
+            </div>
+            <div style="display: flex; gap: 0.8rem;">
+                <button type="button" class="btn" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);"
+                    onclick="openSodModal()">
+                    <i class="fas fa-shield-alt"></i> Análisis SoD
+                </button>
+                <form action="{{ url_for('core.delete_role', role_id=selected_role.id) }}" method="POST"
+                    onsubmit="return confirm('¿Eliminar este rol?');">
+                    <button class="btn"
+                        style="background: rgba(239,68,68,0.1); color: var(--danger); font-size: 0.9rem;">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filter permissions -->
+        <div style="margin-bottom: 2rem; position: relative;">
+            <i class="fas fa-search"
+                style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+            <input type="text" id="perm-search" placeholder="Buscar permisos..."
+                style="width: 100%; padding: 0.8rem 1rem 0.8rem 2.5rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white;"
+                onkeyup="filterPermissions()">
+        </div>
+
+        <form action="{{ url_for('core.update_role_permissions', role_id=selected_role.id) }}" method="POST">
+            {% for category, perms in permissions_by_category.items() %}
+            <div class="perm-category" data-category="{{ category|lower }}">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                    <h3
+                        style="color: var(--primary); font-size: 1.1rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-layer-group"></i> {{ category }}
+                    </h3>
+                    <label
+                        style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" onclick="toggleCategory(this, 'cat-{{ loop.index }}')"
+                            style="accent-color: var(--primary);">
+                        Seleccionar Todo
+                    </label>
+                </div>
+
+                <div class="perm-grid" id="cat-{{ loop.index }}">
+                    {% for perm in perms %}
+                    {% set is_conflict = perm.code in sod_errors %}
+                    {% set is_checked = perm.id in current_role_permissions %}
+                    <label
+                        class="perm-card {% if is_conflict %}sod-conflict-active{% endif %} {% if is_checked %}perm-checked{% endif %}"
+                        data-keywords="{{ perm.description|lower }} {{ perm.code|lower }}" {% if is_conflict %} {% set
+                        error_info=session.get('sod_errors_data', {}).get(perm.code) %} {% if error_info %}
+                        title="INFRACCIÓN: {{ error_info.detalle }}&#10;Nota: {{ error_info.norma }}" {% else %}
+                        title="Infracción de Segregación de Funciones detectada." {% endif %} {% endif %}>
+                        <input type="checkbox" class="perm-check" name="permissions" value="{{ perm.id }}" {% if
+                            is_checked %}checked{% endif %}
+                            onchange="this.closest('.perm-card').classList.toggle('perm-checked', this.checked)">
+                        <div style="width: 100%;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                                <div class="perm-text" style="font-weight: 600; font-size: 0.95rem;">
+                                    {{ perm.description }}
+                                </div>
+                                {% if is_conflict %}
+                                <i class="fas fa-exclamation-triangle" style="font-size: 0.9rem;"
+                                    title="Haga clic para más detalles en el Análisis SoD"></i>
+                                {% endif %}
+                            </div>
+                            <div
+                                style="font-size: 0.8rem; {% if is_conflict %}color: #facc15;{% else %}color: #94a3b8;{% endif %} font-family: monospace; display: flex; align-items: center; gap: 4px;">
+                                {% if is_conflict %}<code>[INFRACCIÓN SOD]</code>{% endif %} {{ perm.code }}
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div
+                style="position: sticky; bottom: 0; background: var(--bg-card); padding: 1.5rem 0; border-top: 1px solid rgba(255,255,255,0.1); text-align: right; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2rem;">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div style="text-align: center; margin-top: 5rem; color: var(--text-muted);">
+            <i class="fas fa-user-shield"
+                style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.5; color: var(--accent);"></i>
+            <h3 style="color: white; margin-bottom: 0.5rem;">Gestión de Permisos</h3>
+            <p>Seleccione un rol del menú lateral para configurar sus accesos o cree uno nuevo.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function toggleCategory(source, containerId) {
+        const checkboxes = document.querySelectorAll('#' + containerId + ' input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            // Only toggle visible checkboxes (respecting filter)
+            if (cb.closest('.perm-card').style.display !== 'none') {
+                cb.checked = source.checked;
+            }
+        });
+    }
+
+    function filterPermissions() {
+        const query = document.getElementById('perm-search').value.toLowerCase();
+        const cards = document.querySelectorAll('.perm-card');
+
+        cards.forEach(card => {
+            const keywords = card.getAttribute('data-keywords');
+            if (keywords.includes(query)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Hide empty categories
+        document.querySelectorAll('.perm-category').forEach(cat => {
+            const visibleCards = cat.querySelectorAll('.perm-card[style="display: flex;"]'); // Check explicitly for flex (default via script reset) or no style attribute
+            // Actually, better logic: check if ANY child is visible
+            let hasVisible = false;
+            cat.querySelectorAll('.perm-card').forEach(c => {
+                if (c.style.display !== 'none') hasVisible = true;
+            });
+            cat.style.display = hasVisible ? 'block' : 'none';
+        });
+    }
+</script>
+
+<!-- Modal Nuevo Rol -->
+<div id="newRoleModal" class="modal-premium" style="display: none;">
+    <div style="padding: 2rem;">
+        <h2 style="margin-bottom: 1.5rem;">Crear Nuevo Rol</h2>
+        <form action="{{ url_for('core.create_role') }}" method="POST">
+            <div class="form-group">
+                <label>Nombre del Rol</label>
+                <input type="text" name="name" required placeholder="Ej: Editor">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" name="description" placeholder="Puede editar contenidos...">
+            </div>
+            <div style="text-align: right; margin-top: 2rem;">
+                <button type="button" class="btn" onclick="closeNewRoleModal()"
+                    style="margin-right: 0.5rem; background: transparent; border: 1px solid #334155;">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Crear Rol</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openNewRoleModal() {
+        toggleModal('newRoleModal');
+    }
+    function closeNewRoleModal() {
+        toggleModal('newRoleModal');
+    }
+
+    function openSodModal() {
+        toggleModal('sodModal');
+    }
+    function closeSodModal() {
+        toggleModal('sodModal');
+    }
+</script>
+
+{% if sod_analysis %}
+<!-- Modal SoD -->
+<div id="sodModal" class="modal-premium" style="display: none; max-width: 1000px; width: 95%;">
+    <div style="padding: 2.5rem; max-height: 85vh; overflow-y: auto;">
+        <h2 style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.8rem;">
+            <i class="fas fa-user-shield" style="color: var(--primary);"></i>
+            Centro de Auditoría SoD (CISA)
+        </h2>
+        <p class="text-muted" style="margin-bottom: 2rem; font-size: 0.95rem;">
+            Operando sobre el Perfil: <strong style="color: var(--primary);">{{ selected_role.name }}</strong>.
+            Utilice los botones de acción para remediar hallazgos de seguridad.
+        </p>
+
+        <!-- SECCIÓN 1: HALLAZGOS CRÍTICOS (TABLA DE ELIMINACIÓN) -->
+        {% if sod_analysis.conflictos_detalle %}
+        <div
+            style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-left: 4px solid var(--danger); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <h4 style="color: var(--danger); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-radiation"></i> Hallazgos Críticos detectados por el Algoritmo
+            </h4>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                <thead>
+                    <tr
+                        style="border-bottom: 2px solid rgba(239, 68, 68, 0.3); color: #f87171; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <th style="text-align: left; padding: 0.7rem;">Conflicto Lógico</th>
+                        <th style="text-align: left; padding: 0.7rem;">Objeto (Permiso)</th>
+                        <th style="text-align: left; padding: 0.7rem;">Descripción Funcional</th>
+                        <th style="text-align: right; padding: 0.7rem;">Acción de Auditoría</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in sod_analysis.conflictos_detalle %}
+                    {% for p in c.perms %}
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.3s;"
+                        onmouseover="this.style.background='rgba(239,68,68,0.05)'"
+                        onmouseout="this.style.background='transparent'">
+                        <td style="padding: 1rem 0.7rem; font-weight: 600; color: #fca5a5;">
+                            <i class="fas fa-exclamation-circle"></i> {{ c.regla }}
+                            <div style="font-size: 0.7rem; font-weight: normal; color: #94a3b8; margin-top: 0.2rem;">
+                                Riesgo: {{ c.detalle }}</div>
+                        </td>
+                        <td
+                            style="padding: 1rem 0.7rem; font-family: 'Fira Code', monospace; font-weight: bold; color: #fff;">
+                            {{ p.code }}</td>
+                        <td style="padding: 1rem 0.7rem; color: #cbd5e1;" title="Propósito del objeto en el sistema">
+                            <span style="border-bottom: 1px dotted #475569;">{{ p.description }}</span>
+                        </td>
+                        <td style="padding: 1rem 0.7rem; text-align: right;">
+                            <form action="{{ url_for('core.revoke_role_permission') }}" method="POST"
+                                style="display:inline;">
+                                <input type="hidden" name="role_id" value="{{ selected_role.id }}">
+                                <input type="hidden" name="permission_id" value="{{ p.id }}">
+                                <input type="hidden" name="reason" value="Remediación SoD: Acceso conflictivo removido">
+                                <button type="submit" class="btn"
+                                    style="background: var(--danger); color: white; border: none; padding: 0.5rem 0.8rem; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;"
+                                    title="Eliminar este objeto del perfil inmediatamente"
+                                    onclick="return confirm('ALERTA DE SEGURIDAD: ¿Desea revocar este permiso crítico del rol?')">
+                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div
+            style="background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.2); border-left: 4px solid var(--success); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+            <i class="fas fa-check-double" style="color: var(--success); font-size: 1.8rem;"></i>
+            <div>
+                <h4 style="color: var(--success); margin: 0; text-transform: uppercase;">Estado de Seguridad: ÓPTIMO
+                </h4>
+                <p style="font-size: 0.85rem; color: #86efac; margin: 0.2rem 0 0 0;">No se detectaron violaciones a la
+                    matriz de Segregación de Funciones en este perfil.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SECCIÓN 2: OBJETOS OPERATIVOS (CORRECTOS) -->
+        <div
+            style="background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <h4 style="color: var(--primary); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-cog"></i> Atribuciones del Rol (Correctas)
+            </h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(99, 102, 241, 0.2); color: var(--primary);">
+                        <th style="text-align: left; padding: 0.7rem;">Código de Objeto</th>
+                        <th style="text-align: left; padding: 0.7rem;">Función Técnica</th>
+                        <th style="text-align: right; padding: 0.7rem;">Gestión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in sod_analysis.correctos %}
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.03);">
+                        <td
+                            style="padding: 0.8rem 0.7rem; font-family: monospace; color: var(--primary); font-weight: bold;">
+                            {{ p.code }}</td>
+                        <td style="padding: 0.8rem 0.7rem; color: #cbd5e1;">{{ p.description }}</td>
+                        <td style="padding: 0.8rem 0.7rem; text-align: right;">
+                            <form action="{{ url_for('core.revoke_role_permission') }}" method="POST"
+                                style="display:inline;">
+                                <input type="hidden" name="role_id" value="{{ selected_role.id }}">
+                                <input type="hidden" name="permission_id" value="{{ p.id }}">
+                                <input type="hidden" name="reason"
+                                    value="Ajuste fino de perfil: Objeto correcto pero excedente">
+                                <button type="submit" class="btn"
+                                    style="background: rgba(255,255,255,0.05); color: #94a3b8; border: 1px solid #334155; padding: 0.4rem 0.7rem; border-radius: 4px; font-size: 0.8rem;"
+                                    title="Eliminar si este permiso ya no es necesario para el trabajo diario"
+                                    onclick="return confirm('¿Quitar este objeto del perfil?')">
+                                    <i class="fas fa-minus-circle"></i> Quitar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECCIÓN 3: OBJETOS INOCUOS -->
+        <div
+            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <h4 style="color: var(--info); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-eye"></i> Permisos Inocuos (Solo Lectura/Consultas)
+            </h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(56, 189, 248, 0.2); color: var(--info);">
+                        <th style="text-align: left; padding: 0.7rem;">Código</th>
+                        <th style="text-align: left; padding: 0.7rem;">Uso Sugerido</th>
+                        <th style="text-align: right; padding: 0.7rem;">Limpieza</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in sod_analysis.inocuos %}
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.03);">
+                        <td style="padding: 0.7rem; font-family: monospace; color: #94a3b8;">{{ p.code }}</td>
+                        <td style="padding: 0.7rem; color: #64748b; font-style: italic;">{{ p.description }}</td>
+                        <td style="padding: 0.7rem; text-align: right;">
+                            <form action="{{ url_for('core.revoke_role_permission') }}" method="POST"
+                                style="display:inline;">
+                                <input type="hidden" name="role_id" value="{{ selected_role.id }}">
+                                <input type="hidden" name="permission_id" value="{{ p.id }}">
+                                <input type="hidden" name="reason" value="Limpieza de permisos inocuos">
+                                <button type="submit" class="btn"
+                                    style="background: transparent; color: #475569; border: 1px solid #1e293b; padding: 0.3rem 0.6rem; font-size: 0.75rem;"
+                                    title="Eliminar objeto inocuo para reducir ruido en el perfil"
+                                    onclick="return confirm('¿Eliminar permiso de solo lectura?')">
+                                    <i class="fas fa-eraser"></i> Borrar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div
+            style="text-align: right; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.8rem; color: #64748b;">
+                <i class="fas fa-info-circle"></i> Todas las eliminaciones se registran en el <a
+                    href="{{ url_for('core.security_logs') }}" style="color: var(--primary);">Log de Auditoría</a>.
+            </div>
+            <button type="button" class="btn btn-primary" onclick="closeSodModal()" style="padding: 0.7rem 2rem;">
+                Cerrar Centro de Auditoría
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

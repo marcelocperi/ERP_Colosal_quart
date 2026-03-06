@@ -1,0 +1,9 @@
+﻿
+=== cmp_ordenes_compra (28 cols) ===
+id, enterprise_id, proveedor_id, cotizacion_id, fecha, fecha_emision, estado, aprobador_compras_id, fecha_aprobacion_compras, aprobador_tesoreria_id, fecha_aprobacion_tesoreria, fecha_pago_estimada, observaciones_rechazo, security_hash, observaciones, total, total_estimado, created_at, updated_at, es_importacion, moneda, tipo_cambio_valor, incoterm, pais_origen, puerto_embarque, puerto_destino, total_estimado_usd, estado_importacion
+
+=== cmp_detalles_orden (8 cols) ===
+enterprise_id, id, orden_id, articulo_id, cantidad_solicitada, cantidad_recibida, precio_unitario, subtotal
+
+=== imp_despachos (34 cols) ===
+id, enterprise_id, orden_compra_id, numero_despacho, despachante_id, fecha_oficializacion, fecha_liberacion, canal, transportista, guia_bl_tracking, vessel_mmsi, vessel_name, fecha_embarque, fecha_arribo_estimada, fecha_arribo_real, puerto_embarque, puerto_destino, bultos, peso_kg, dias_libres_puerto, costo_demora_diario_usd, fecha_devolucion_contenedor, alerta_demora_enviada, estado, valor_fob_usd, valor_cif_usd, derechos_ars, tasa_estadistica_ars, otros_tributos_ars, tipo_cambio_oficializacion, observaciones, user_id, created_at, updated_at

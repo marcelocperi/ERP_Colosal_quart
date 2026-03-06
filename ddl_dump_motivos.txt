@@ -1,0 +1,13 @@
+CREATE TABLE `stock_motivos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `descripcion` varchar(100) NOT NULL,
+  `tipo` enum('alta','baja') NOT NULL,
+  `es_pendiente` tinyint(1) DEFAULT 0,
+  `enterprise_id` int(11) NOT NULL,
+  `system_code` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`,`enterprise_id`),
+  UNIQUE KEY `idx_ent_desc_tipo` (`enterprise_id`,`descripcion`,`tipo`),
+  KEY `id` (`id`),
+  CONSTRAINT `fk_stock_motivos_ent` FOREIGN KEY (`enterprise_id`) REFERENCES `sys_enterprises` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_stock_motivos_enterprise` FOREIGN KEY (`enterprise_id`) REFERENCES `sys_enterprises` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci

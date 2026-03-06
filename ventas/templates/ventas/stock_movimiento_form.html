@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1 class="page-title"><i class="fas fa-exchange-alt"></i> Nuevo Movimiento de Stock</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="margin-bottom: 20px;">
+        {% for cat, message in messages %}
+        <div class="flash-msg"
+            style="background: rgba(255,255,255,0.1); border-left: 4px solid {{ '#10b981' if cat == 'success' else '#ef4444' }}; padding: 10px;">
+            {{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <form action="{{ url_for('ventas.stock_movimiento_crear') }}" method="POST">
+            <input type="hidden" name="sid" value="{{ sid }}">
+            <div class="form-group">
+                <label>Tipo de Movimiento</label>
+                <select name="tipo_mov" id="tipo_mov" onchange="updateFields()">
+                    {% for m in motivos %}
+                    <option value="{{ m.id }}" data-tipo="{{ m.tipo }}">{{ m.nombre }} ({{ m.tipo }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="origen_group" class="form-group">
+                <label>Depósito Origen</label>
+                <select name="dep_origen">
+                    <option value="">Seleccione...</option>
+                    {% for d in depositos %}
+                    <option value="{{ d.id }}">{{ d.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="destino_group" class="form-group" style="display:none;">
+                <label>Depósito Destino</label>
+                <select name="dep_destino">
+                    <option value="">Seleccione...</option>
+                    {% for d in depositos %}
+                    <option value="{{ d.id }}">{{ d.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Artículo (Libro)</label>
+                <!-- In a real app, this should be an AJAX search -->
+                <select name="articulo_id" class="select2">
+                    {% for a in articulos %}
+                    <option value="{{ a.id }}">{{ a.titulo }} (ISBN: {{ a.isbn }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Cantidad</label>
+                <input type="number" name="cantidad" value="1" min="1" required>
+            </div>
+
+            <div class="form-group">
+                <label>Observaciones</label>
+                <textarea name="observaciones" rows="2"></textarea>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="submit" class="btn-action">Registrar Movimiento</button>
+                <a href="{{ url_for('ventas.stock_dashboard') }}" class="btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateFields() {
+        const selector = document.getElementById('tipo_mov');
+        const selectedOption = selector.options[selector.selectedIndex];
+        const tipo = selectedOption.getAttribute('data-tipo');
+
+        const origenGroup = document.getElementById('origen_group');
+        const destinoGroup = document.getElementById('destino_group');
+
+        if (tipo === 'SALIDA') {
+            origenGroup.style.display = 'block';
+            destinoGroup.style.display = 'none';
+        } else if (tipo === 'ENTRADA') {
+            origenGroup.style.display = 'none'; // Or allow selection if we want to specify source external? Usually just destination.
+            // But logic in backend maps dep_dest to form dep_dest.
+            // Let's hide origin and show destination.
+            destinoGroup.style.display = 'block';
+        } else if (tipo === 'TRANSFERENCIA') {
+            origenGroup.style.display = 'block';
+            destinoGroup.style.display = 'block';
+        }
+    }
+    // Init
+    updateFields();
+</script>
+{% endblock %}

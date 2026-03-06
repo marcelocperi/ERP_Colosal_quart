@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1>Panel de Inicio</h1>
+    <div class="text-muted">{{ now }}</div>
+</div>
+
+{% if 'dashboard_view' in g.permissions or 'all' in g.permissions %}
+<div class="grid-stats">
+    <div class="card card-stat text-end"
+        style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%); border: 1px solid rgba(99, 102, 241, 0.2); box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);">
+        <div class="stat-icon" style="background: var(--primary); margin-left: auto;"><i class="fas fa-book"></i></div>
+        <div class="text-muted" style="margin-top: 0.5rem; font-weight: 500;">Total Artículos</div>
+        <div
+            style="font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            {{ total_articulos }}</div>
+    </div>
+    <div class="card card-stat text-end"
+        style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.05) 100%); border: 1px solid rgba(16, 185, 129, 0.2); box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);">
+        <div class="stat-icon" style="background: var(--accent); margin-left: auto;"><i class="fas fa-users"></i></div>
+        <div class="text-muted" style="margin-top: 0.5rem; font-weight: 500;">Usuarios Activos</div>
+        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent);">{{ total_usuarios }}</div>
+    </div>
+    <div class="card card-stat text-end"
+        style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(185, 28, 28, 0.05) 100%); border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 8px 32px rgba(239, 68, 68, 0.1);">
+        <div class="stat-icon" style="background: #ef4444; margin-left: auto;"><i class="fas fa-hand-holding"></i></div>
+        <div class="text-muted" style="margin-top: 0.5rem; font-weight: 500;">Préstamos Hoy</div>
+        <div style="font-size: 2.5rem; font-weight: 800; color: #f87171;">{{ total_prestamos }}</div>
+    </div>
+    <div class="card card-stat text-end"
+        style="background: linear-gradient(135deg, rgba(250, 204, 21, 0.15) 0%, rgba(202, 138, 4, 0.05) 100%); border: 1px solid rgba(250, 204, 21, 0.2); box-shadow: 0 8px 32px rgba(250, 204, 21, 0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="stat-icon" style="background: #facc15; color: #000; margin-left: auto; order: 2;"><i
+                    class="fas fa-dollar-sign"></i></div>
+            <a href="/api/dolar/refresh" class="btn"
+                style="padding: 0.2rem 0.5rem; background: rgba(255,255,255,0.1); font-size: 0.7rem; border-radius: 20px; order: 1;">
+                <i class="fas fa-sync-alt"></i>
+            </a>
+        </div>
+        <div class="text-muted" style="margin-top: 0.5rem; font-weight: 500;">Dólar Hoy</div>
+        <div style="font-size: 2.5rem; font-weight: 800; color: #fde047;">${{ valor_dolar }}</div>
+        <small class="text-muted" style="font-size: 0.65rem; font-style: italic;">Actualizado: {{ fecha_dolar }}</small>
+    </div>
+</div>
+
+<style>
+    .card-stat {
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card-stat:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
+<div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+    <div class="card"
+        style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+                <h3 style="margin: 0;"><i class="fas fa-calendar-check"
+                        style="color: var(--primary); margin-right: 0.5rem;"></i> Próximas Devoluciones</h3>
+                <p class="text-muted" style="margin: 0.2rem 0 0 0; font-size: 0.9rem;">Préstamos que vencen en los
+                    próximos días.</p>
+            </div>
+            <a href="/prestamos" class="btn btn-sm"
+                style="background: rgba(99, 102, 241, 0.1); color: var(--primary); border-radius: 20px;">Ver todos</a>
+        </div>
+
+        <div class="table-container"
+            style="border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
+            <table style="background: transparent;">
+                <thead style="background: rgba(255,255,255,0.03);">
+                    <tr>
+                        <th style="padding: 1rem;">Artículo / ISBN</th>
+                        <th style="padding: 1rem;">Cliente / Usuario</th>
+                        <th style="padding: 1rem; text-align: center;">Vencimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in detalles_prestamos %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                        <td style="padding: 1rem;">
+                            <div style="font-weight: 600; color: #fff;">{{ p[0] }}</div>
+                            <small class="text-muted" style="font-family: monospace;">ISBN: {{ p[4] or '-' }}</small>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <div style="font-weight: 500;">{{ p[1] }} {{ p[2] }}</div>
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <span
+                                style="background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 0.2rem 0.8rem; border-radius: 20px; font-weight: 700; font-size: 0.8rem;">
+                                {{ p[3] }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            <i class="fas fa-check-circle"
+                                style="font-size: 2rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
+                            No hay préstamos activos pendientes de devolución.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Módulo de Salud del Sistema -->
+    <div class="card" style="border-left: 5px solid var(--{{ health.status_color }});">
+        <h3>Estado del Sistema</h3>
+        <p class="text-muted" style="margin-bottom: 1rem;">Monitoreo de almacenamiento y base de datos.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+            <div>
+                <div class="text-muted" style="font-size: 0.8rem;">Tamaño de Base de Datos</div>
+                <div style="font-size: 1.5rem; font-weight: 700;">{{ health.db_size_mb }} <span
+                        style="font-size: 0.9rem;">MB</span></div>
+            </div>
+            <div>
+                <div class="text-muted" style="font-size: 0.8rem;">Espacio Libre en Disco</div>
+                <div style="font-size: 1.5rem; font-weight: 700;">{{ health.disk_free_gb }} <span
+                        style="font-size: 0.9rem;">GB</span></div>
+                <div
+                    style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 0.5rem; overflow: hidden;">
+                    <div
+                        style="width: {{ health.disk_percent }}%; height: 100%; background: var(--{{ health.status_color }});">
+                    </div>
+                </div>
+                <small class="text-muted" style="font-size: 0.7rem;">{{ health.disk_percent }}% de ocupación</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Incident Management KPI (Soporte Técnico) -->
+    <div class="card" style="border-left: 5px solid #3b82f6;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+                <h3 style="margin: 0;"><i class="fas fa-headset" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+                    Soporte Técnico (Incidentes)</h3>
+                <p class="text-muted" style="margin: 0.2rem 0 0 0; font-size: 0.9rem;">Casos agrupados por estado y
+                    nivel de criticidad.</p>
+            </div>
+            <a href="/admin/error-log?profile=expert" class="btn btn-sm"
+                style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-radius: 20px;">Gestión Experta</a>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="p-3 bg-dark rounded border border-danger border-opacity-25"
+                    style="border-left: 4px solid #ef4444 !important;">
+                    <h6 class="text-danger fw-bold mb-3"><i class="fas fa-exclamation-circle me-2"></i>Abiertos ({{
+                        incident_kpi_total['OPEN'] }})</h6>
+                    <div class="d-flex justify-content-between text-muted small mb-1"><span>Severidad Alta:</span> <span
+                            class="text-white fw-bold">{{ incident_kpi['OPEN']['Alto'] }}</span></div>
+                    <div class="d-flex justify-content-between text-muted small mb-1"><span>Severidad Media:</span>
+                        <span class="text-white fw-bold">{{ incident_kpi['OPEN']['Medio'] }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small"><span>Severidad Baja:</span> <span
+                            class="text-white fw-bold">{{ incident_kpi['OPEN']['Bajo'] }}</span></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-dark rounded border border-warning border-opacity-25"
+                    style="border-left: 4px solid #f59e0b !important;">
+                    <h6 class="text-warning fw-bold mb-3"><i class="fas fa-tools me-2"></i>En Revisión ({{
+                        incident_kpi_total['IN_PROGRESS'] }})</h6>
+                    <div class="d-flex justify-content-between text-muted small mb-1"><span>Severidad Alta:</span> <span
+                            class="text-white fw-bold">{{ incident_kpi['IN_PROGRESS']['Alto'] }}</span></div>
+                    <div class="d-flex justify-content-between text-muted small mb-1"><span>Severidad Media:</span>
+                        <span class="text-white fw-bold">{{ incident_kpi['IN_PROGRESS']['Medio'] }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small"><span>Severidad Baja:</span> <span
+                            class="text-white fw-bold">{{ incident_kpi['IN_PROGRESS']['Bajo'] }}</span></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-dark rounded border border-success border-opacity-25"
+                    style="border-left: 4px solid #10b981 !important;">
+                    <h6 class="text-success fw-bold mb-3"><i class="fas fa-check-circle me-2"></i>Resueltos ({{
+                        incident_kpi_total['RESOLVED'] }})</h6>
+                    <div class="d-flex justify-content-between text-muted small mb-1"><span>Severidad Alta:</span> <span
+                            class="text-white fw-bold">{{ incident_kpi['RESOLVED']['Alto'] }}</span></div>
+                    <div class="d-flex justify-content-between text-muted small mb-1"><span>Severidad Media:</span>
+                        <span class="text-white fw-bold">{{ incident_kpi['RESOLVED']['Medio'] }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small"><span>Severidad Baja:</span> <span
+                            class="text-white fw-bold">{{ incident_kpi['RESOLVED']['Bajo'] }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card"
+    style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 4rem 2rem; text-align: center;">
+    <i class="fas fa-shield-alt" style="font-size: 4rem; color: var(--primary); margin-bottom: 1.5rem;"></i>
+    <h2 style="font-weight: 700; margin-bottom: 1rem;">Bienvenido al Sistema</h2>
+    <p class="text-muted" style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+        Usted ha iniciado sesión correctamente. Por favor, utilice el panel lateral a su izquierda para acceder a los
+        módulos y opciones específicas autorizadas para su perfil.
+    </p>
+</div>
+{% endif %}
+{% endblock %}

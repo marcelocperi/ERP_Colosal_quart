@@ -1,0 +1,160 @@
+{
+  "description": "Configuración de tablas maestras para inicialización de nuevas empresas",
+  "version": "1.1",
+  "created_by": "system",
+  "last_updated": "2026-02-18",
+  "master_data_tables": {
+    "description": "Tablas que deben copiarse de enterprise_id=0 a la nueva empresa",
+    "contabilidad": {
+      "cont_plan_cuentas": {
+        "description": "Plan de cuentas contable estándar",
+        "copy_from_global": true,
+        "required": true
+      }
+    },
+    "stock": {
+      "stk_tipos_articulo": {
+        "description": "Tipos de artículos (Libros, Repuestos, etc.)",
+        "copy_from_global": true,
+        "required": true
+      },
+      "stk_tipos_articulo_servicios": {
+        "description": "Servicios externos asociados a tipos de artículos",
+        "copy_from_global": true,
+        "required": false
+      },
+      "stk_motivos": {
+        "description": "Motivos de ajuste de stock",
+        "copy_from_global": true,
+        "required": true
+      },
+      "stock_motivos": {
+        "description": "Motivos de movimientos de stock (legacy)",
+        "copy_from_global": true,
+        "required": false,
+        "note": "Considerar deprecar en favor de stk_motivos"
+      }
+    },
+    "erp_general": {
+      "erp_puestos": {
+        "description": "Puestos/Funciones organizacionales",
+        "copy_from_global": true,
+        "required": true
+      },
+      "erp_contactos": {
+        "description": "Contactos genéricos",
+        "copy_from_global": true,
+        "required": false
+      },
+      "erp_cuentas_fondos": {
+        "description": "Tipos de cuentas de fondos",
+        "copy_from_global": true,
+        "required": true
+      },
+      "fin_medios_pago": {
+        "description": "Medios de pago (Efectivo, Tarjetas, etc.)",
+        "copy_from_global": true,
+        "required": true
+      },
+      "fin_condiciones_pago": {
+        "description": "Condiciones de pago (Contado, 30 días, etc.)",
+        "copy_from_global": true,
+        "required": true
+      }
+    },
+    "impuestos_fiscales": {
+      "_description": "Reglas del Tax Engine. Se copian desde enterprise_id=0 (plantilla global). El usuario puede customizar alícuotas y reglas desde Configuración > Impuestos.",
+      "tax_alicuotas": {
+        "description": "Alícuotas por impuesto y vigencia temporal (IVA 21%, IVA 10.5%, IIBB, etc.)",
+        "copy_from_global": true,
+        "required": true,
+        "customizable": true,
+        "note": "Cada empresa puede sobreescribir alícuotas. enterprise_id=0 es la plantilla base."
+      },
+      "tax_reglas": {
+        "description": "Reglas fiscales por operación (COMPRAS/VENTAS/COBRANZAS/PAGOS) y perfil del tercero",
+        "copy_from_global": true,
+        "required": true,
+        "customizable": true,
+        "note": "Define qué impuestos aplican según la operación de negocio y el tipo de proveedor/cliente."
+      },
+      "tax_reglas_iibb": {
+        "description": "Reglas de IIBB por condición (ARBA, AGIP, Convenio Multilateral) y jurisdicción",
+        "copy_from_global": true,
+        "required": true,
+        "customizable": true,
+        "note": "Incluye configuración para Convenio Multilateral: límite 50%, coeficiente mínimo."
+      }
+    },
+    "sistema": {
+      "sys_roles": {
+        "description": "Roles de usuario estándar",
+        "copy_from_global": true,
+        "required": true
+      },
+      "sys_permissions": {
+        "description": "Permisos del sistema",
+        "copy_from_global": true,
+        "required": true
+      },
+      "sys_role_permissions": {
+        "description": "Asignación de permisos a roles",
+        "copy_from_global": true,
+        "required": true
+      },
+      "sys_crons": {
+        "description": "Tareas programadas (Automatización)",
+        "copy_from_global": true,
+        "required": false
+      }
+    }
+  },
+  "transactional_tables": {
+    "description": "Tablas que NO deben copiarse (son datos transaccionales)",
+    "tables": [
+      "cotizacion_dolar",
+      "erp_comprobantes",
+      "erp_comprobantes_detalle",
+      "erp_datos_fiscales",
+      "historial_prestamos",
+      "legacy_libros",
+      "movimientos_pendientes",
+      "prestamos",
+      "stock_ajustes",
+      "stk_articulos",
+      "sys_security_logs",
+      "sys_users"
+    ]
+  },
+  "initialization_order": {
+    "description": "Orden en que deben copiarse las tablas al crear una empresa",
+    "order": [
+      "sys_roles",
+      "sys_permissions",
+      "sys_role_permissions",
+      "cont_plan_cuentas",
+      "stk_tipos_articulo",
+      "stk_tipos_articulo_servicios",
+      "stk_motivos",
+      "stock_motivos",
+      "erp_cuentas_fondos",
+      "fin_medios_pago",
+      "fin_condiciones_pago",
+      "erp_puestos",
+      "erp_contactos",
+      "tax_alicuotas",
+      "tax_reglas",
+      "tax_reglas_iibb",
+      "sys_crons"
+    ]
+  },
+  "notes": [
+    "Este archivo define qué datos maestros se copian automáticamente al crear una nueva empresa",
+    "Los datos se copian desde enterprise_id=0 (global) a la nueva empresa",
+    "Las tablas transaccionales NUNCA deben copiarse",
+    "El orden de inicialización respeta las dependencias entre tablas",
+    "tax_impuestos es global (sin enterprise_id), NO se copia. Es el catálogo compartido.",
+    "tax_alicuotas, tax_reglas y tax_reglas_iibb SÍ se copian: cada empresa tiene su propia configuración fiscal",
+    "El usuario puede customizar sus reglas fiscales desde Configuración > Impuestos tras la creación"
+  ]
+}

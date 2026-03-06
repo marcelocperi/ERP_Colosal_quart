@@ -1,0 +1,11 @@
+CREATE TABLE `sys_permissions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `code` varchar(100) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `category` varchar(50) DEFAULT NULL,
+  `enterprise_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`,`enterprise_id`),
+  UNIQUE KEY `idx_ent_code` (`enterprise_id`,`code`),
+  KEY `id` (`id`),
+  CONSTRAINT `fk_sys_permissions_enterprise` FOREIGN KEY (`enterprise_id`) REFERENCES `sys_enterprises` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci

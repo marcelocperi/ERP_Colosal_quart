@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Centralización Contable (Subdiarios)</h1>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Generar Asiento de Centralización</h6>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('contabilidad.centralizacion') }}" method="POST">
+                        <input type="hidden" name="sid" value="{{ sid }}">
+
+                        <div class="mb-3">
+                            <label class="form-label">Módulo / Subdiario</label>
+                            <select name="modulo" class="form-select" required>
+                                <option value="VENTAS">Ventas (Libro IVA Ventas)</option>
+                                <option value="COMPRAS">Compras (Libro IVA Compras)</option>
+                                <option value="FONDOS">Tesorería (Cobros y Pagos)</option>
+                            </select>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label">Mes</label>
+                                <select name="mes" class="form-select">
+                                    {% for m, nombre in meses_nombre.items() %}
+                                    <option value="{{ m }}" {% if m==today_mes %}selected{% endif %}>{{ nombre }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Año</label>
+                                <input type="number" name="anio" class="form-control" value="{{ today_anio }}">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Esta acción agrupa todos los comprobantes pendientes del
+                            periodo seleccionado y genera un asiento resumen en el Libro Diario.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-magic"></i> Procesar Centralización
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Resumen de Pendientes</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Módulo</th>
+                                <th class="text-center">Cant. Comprobantes</th>
+                                <th class="text-end">Total Periodo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in pendientes %}
+                            <tr>
+                                <td>{{ p.modulo }}</td>
+                                <td class="text-center">{{ p.cantidad }}</td>
+                                <td class="text-end text-primary font-weight-bold">${{ p.total or 0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

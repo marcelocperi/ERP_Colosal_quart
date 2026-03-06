@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div
+                class="d-flex justify-content-between align-items-center bg-dark p-4 rounded shadow-lg border-start border-4 border-info glass-morphism">
+                <div>
+                    <h2 class="text-light mb-0 display-6 fw-bold"><i
+                            class="fas fa-box-open text-info me-3 animate__animated animate__fadeInLeft"></i>Dashboard
+                        de Reposición</h2>
+                    <p class="text-muted mb-0 lead">Detección inteligente de faltantes basada en Punto de Pedido y Lead
+                        Time.</p>
+                </div>
+                <div class="text-end">
+                    <div class="badge-container mb-2">
+                        <span class="badge rounded-pill bg-danger shadow-sm px-3 py-2" id="badge_criticos">0
+                            Críticos</span>
+                        <span class="badge rounded-pill bg-warning text-dark shadow-sm px-3 py-2 ms-2"
+                            id="badge_lote_minimo">0 Lote Mín.</span>
+                    </div>
+                    <small class="text-muted d-block mt-2"><i class="far fa-clock me-1"></i>Última actualización: {{ now
+                        }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <form method="GET" action="/compras/reposicion" class="card bg-dark border-secondary p-3 shadow-sm">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-auto">
+                        <label class="text-info small mb-1"><i class="fas fa-filter me-1"></i>Filtrar por Origen</label>
+                        <select name="origen_id" class="form-select form-select-sm bg-dark text-light border-secondary">
+                            <option value="">-- Todos --</option>
+                            {% for o in origenes %}
+                            <option value="{{ o.id }}" {% if origen_id_filter|string==o.id|string %}selected{% endif %}>
+                                {{ o.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="text-info small mb-1"><i class="fas fa-building me-1"></i>Proveedor
+                            Habitual</label>
+                        <select name="proveedor_id"
+                            class="form-select form-select-sm bg-dark text-light border-secondary">
+                            <option value="">-- Todos --</option>
+                            {% for p in proveedores_dd %}
+                            <option value="{{ p.id }}" {% if proveedor_id_filter|string==p.id|string %}selected{% endif
+                                %}>{{ p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-auto mt-4">
+                        <button type="submit" class="btn btn-sm btn-info"><i class="fas fa-search"></i> Filtrar</button>
+                        <a href="/compras/reposicion" class="btn btn-sm btn-outline-secondary"><i
+                                class="fas fa-times"></i> Limpiar</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Grupos por Proveedor -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-info mb-0"><i class="fas fa-list me-2"></i>Artículos Sugeridos agrupados por Proveedor
+                </h5>
+                <button class="btn btn-sm btn-outline-info" onclick="window.location.reload()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+            </div>
+
+            {% for grupo in grupos %}
+            <div class="card bg-dark border-secondary shadow mb-4">
+                <div
+                    class="card-header border-secondary bg-secondary bg-opacity-10 d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-building text-info me-2"></i><strong class="text-light">{{ grupo.nombre
+                            }}</strong>
+                        {% if grupo.es_extranjero %}
+                        <span class="badge bg-info text-dark ms-2" style="font-size: 0.7rem;">IMPORTADO</span>
+                        {% endif %}
+                        {% if not grupo.email and grupo.id != 0 %}
+                        <span class="badge bg-danger text-white ms-2" style="font-size: 0.7rem;">
+                            <i class="fas fa-envelope-slash me-1"></i> SIN CORREO
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead class="bg-dark text-muted uppercase small">
+                                <tr>
+                                    <th class="ps-3 text-center" style="width: 40px;">
+                                        <input class="form-check-input" type="checkbox" data-grupo-id="{{ grupo.id }}"
+                                            onchange="toggleGroupChecks(this.getAttribute('data-grupo-id'), this)">
+                                    </th>
+                                    <th class="ps-2">Artículo</th>
+                                    <th class="text-center">Stock Actual</th>
+                                    <th class="text-center">Niveles (Pto / Mín)</th>
+                                    <th class="text-center">Faltante</th>
+                                    <th class="text-center">Cant. Sugerida</th>
+                                    <th class="text-center pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for f in grupo.faltantes %}
+                                <tr id="row_{{ f.id }}"
+                                    class="align-middle transition-all {% if f.sugerido > (f.punto_pedido - f.stock_actual) %}lote-minimo-row{% endif %}">
+                                    <td class="ps-3 text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input check-item-{{ grupo.id }}" type="checkbox"
+                                                value="{{ f.id }}" data-grupo-id="{{ grupo.id }}"
+                                                onchange="updateGroupSelected(this.getAttribute('data-grupo-id'))">
+                                        </div>
+                                    </td>
+                                    <td class="ps-2">
+                                        <div class="fw-bold text-light">{{ f.nombre }}</div>
+                                        <div class="d-flex align-items-center mt-1">
+                                            <small class="text-info font-monospace me-2">{{ f.codigo }}</small>
+                                            {% if f.lead_time_dias %}
+                                            <span class="badge bg-dark border border-secondary text-secondary"
+                                                style="font-size: 0.65rem; border-style: dashed !important;">
+                                                <i class="fas fa-truck-moving me-1"></i>{{ f.lead_time_dias }}d
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="stock-impact">
+                                            <span
+                                                class="fs-4 fw-bold font-monospace {% if f.stock_actual <= f.stock_minimo %}text-danger pulse-animation{% elif f.stock_actual <= f.punto_pedido %}text-warning{% else %}text-success{% endif %}">
+                                                {{ f.stock_actual }}
+                                            </span>
+                                            {% if f.stock_actual <= f.stock_minimo %} <div
+                                                class="text-danger bounce-small"
+                                                style="font-size: 0.65rem; font-weight: 800;">CRÍTICO
+                                        </div>
+                                        {% endif %}
+                    </div>
+                    </td>
+                    <td class="text-center">
+                        <div class="small fw-bold text-light">{{ f.punto_pedido }}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">Mín: {{ f.stock_minimo }}</div>
+                    </td>
+                    <td class="text-center">
+                        <div class="faltante-engine">
+                            <span class="text-info fw-bold fs-5">{{ f.punto_pedido - f.stock_actual }}</span>
+                            {% if f.sugerido > (f.punto_pedido - f.stock_actual) %}
+                            <div class="text-muted" style="font-size: 0.65rem;" title="Lote Mínimo de Compra">Mín: {{
+                                f.cant_min_pedido }}</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="position-relative">
+                                <input type="number"
+                                    class="form-control form-control-sm bg-dark text-center border-info text-info fw-bold input-cant-{{ f.id }}"
+                                    style="width: 85px; border-width: 2px; height: 38px; border-radius: 8px;"
+                                    value="{{ f.sugerido if f.sugerido > 0 else 1 }}" id="cant_{{ f.id }}">
+                                {% if f.sugerido > (f.punto_pedido - f.stock_actual) %}
+                                <div class="position-absolute top-0 start-100 translate-middle ms-2">
+                                    <i class="fas fa-lock text-warning"
+                                        title="Ajustado por Lote Mínimo ({{ f.cant_min_pedido }})"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center pe-4 text-nowrap">
+                        <button class="btn btn-sm btn-outline-danger border-0 action-btn" data-f-id="{{ f.id }}"
+                            data-f-nombre="{{ f.nombre }}"
+                            onclick="abrirModalRechazo(this.getAttribute('data-f-id'), this.getAttribute('data-f-nombre'))"
+                            title="Ignorar / Rechazar sugerencia">
+                            <i class="fas fa-times-circle fs-5"></i>
+                        </button>
+                    </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-dark border-secondary text-end p-3">
+                <span class="text-muted small me-3 fw-bold" id="counter_{{ grupo.id }}">0 artículos seleccionados</span>
+                {% if grupo.id != 0 %}
+                <div class="d-inline-flex align-items-center me-2">
+                    <label class="text-muted small mb-0 me-2">Fecha Límite Cotización:</label>
+                    <input type="date" class="form-control form-control-sm bg-dark text-light border-secondary"
+                        id="vencimiento_{{ grupo.id }}" style="width: 140px;">
+                </div>
+                <button
+                    class="btn btn-sm {% if not grupo.email and grupo.id != 0 %}btn-outline-danger{% else %}btn-success{% endif %}"
+                    data-grupo-id="{{ grupo.id }}" data-grupo-email="{{ grupo.email or '' }}"
+                    data-grupo-nombre="{{ grupo.nombre }}"
+                    onclick="generarCotizacionLote(this.getAttribute('data-grupo-id'), this.getAttribute('data-grupo-email'), this.getAttribute('data-grupo-nombre'))"
+                    id="btn_cot_{{ grupo.id }}" disabled>
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Generar Solicitud de Cotización
+                </button>
+                {% else %}
+                <div class="text-warning small d-inline-block">
+                    <i class="fas fa-exclamation-triangle me-1"></i>Asigne un proveedor a estos artículos primero.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not grupos %}
+        <div class="card bg-dark border-secondary shadow mb-4">
+            <div class="card-body text-center p-5">
+                <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                <h5 class="text-muted">¡Todo al día! No hay artículos por debajo del punto de pedido.</h5>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+
+<!-- Modal Rechazo -->
+<div class="modal fade" id="modalRechazo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-danger shadow-lg">
+            <div class="modal-header border-danger bg-danger bg-opacity-10 text-danger">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Rechazar Sugerencia de Compra
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Está por rechazar la sugerencia de compra para: <strong id="rechazo_art_nombre"
+                        class="text-info"></strong></p>
+                <div class="mb-3">
+                    <label class="form-label small uppercase text-muted">Motivo del Rechazo (Log para Auditoría)</label>
+                    <textarea class="form-control bg-dark text-light border-secondary" id="rechazo_motivo" rows="3"
+                        placeholder="Ej: Cambio de temporada, stock en tránsito, etc."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <input type="hidden" id="rechazo_art_id">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarRechazo()">Registrar Rechazo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleGroupChecks(grupoId, masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.check-item-' + grupoId);
+        checkboxes.forEach(chk => chk.checked = masterCheckbox.checked);
+        updateGroupSelected(grupoId);
+    }
+
+    function updateGroupSelected(grupoId) {
+        const checked = document.querySelectorAll('.check-item-' + grupoId + ':checked');
+        const count = checked.length;
+        document.getElementById('counter_' + grupoId).innerText = count + ' artículos seleccionados';
+
+        const btn = document.getElementById('btn_cot_' + grupoId);
+        if (btn) btn.disabled = (count === 0);
+    }
+
+    async function generarCotizacionLote(grupoId, email, nombreProveedor) {
+        if (!email && grupoId !== 0) {
+            Swal.fire({
+                icon: 'error',
+                title: '<span style="color: #ef4444;">EMISIÓN BLOQUEADA</span>',
+                html: `
+                    <div style="text-align: left; padding: 15px; border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.1); border-radius: 4px;">
+                        <p style="margin-bottom: 10px; font-weight: 600;">Complete direccion de correo del proveedor para poder generar RFQ </p>
+                        <p style="font-size: 0.9rem;">El sistema no permite procesar el envío sin una dirección válida de destino.</p>
+                        <p style="margin-top: 15px; font-size: 0.85rem; color: #94a3b8;">
+                            <i class="fas fa-tools me-1"></i> <strong>Solución:</strong> Vaya al maestro de proveedores, edite el registro y cargue un email válido.
+                        </p>
+                    </div>
+                `,
+                background: '#0f172a',
+                color: '#fff',
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'IR A PROVEEDORES',
+                showCancelButton: true,
+                cancelButtonText: 'CERRAR',
+                cancelButtonColor: '#334155'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/compras/proveedores';
+                }
+            });
+            return;
+        }
+
+        const checked = document.querySelectorAll('.check-item-' + grupoId + ':checked');
+        if (checked.length === 0) return;
+
+        const fecha_venc = document.getElementById('vencimiento_' + grupoId).value;
+        if (!fecha_venc) {
+            alert("Debe seleccionar una fecha límite para recibir ofertas.");
+            return;
+        }
+
+        const items = [];
+        Array.from(checked).forEach(chk => {
+            const art_id = chk.value;
+            const cant = document.getElementById('cant_' + art_id).value;
+            items.push({ articulo_id: art_id, cantidad: cant });
+        });
+
+        if (!(await Swal.fire({
+            title: '¿Generar Solicitud?',
+            html: `¿Desea generar una Solicitud de Cotización al proveedor <strong style="color: #f59e0b;">${nombreProveedor}</strong> con <strong>${items.length}</strong> artículos?`,
+            icon: 'question',
+            showCancelButton: true,
+            background: '#111827',
+            color: '#fff',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#374151',
+            confirmButtonText: 'Sí, generar',
+            cancelButtonText: 'Cancelar'
+        })).isConfirmed) return;
+
+        try {
+            document.getElementById('btn_cot_' + grupoId).disabled = true;
+            document.getElementById('btn_cot_' + grupoId).innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+
+            const resp = await fetch('/compras/api/reposicion/generar_cotizacion_lote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    proveedor_id: grupoId,
+                    items: items,
+                    fecha_vencimiento: fecha_venc
+                })
+            });
+
+            const r = await resp.json();
+            if (r.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '<span style="color: #10b981;">SOLICITUD GENERADA</span>',
+                    text: r.message,
+                    background: '#111827',
+                    color: '#fff',
+                    confirmButtonColor: '#10b981'
+                }).then(() => window.location.reload());
+            } else {
+                if (r.error_type === 'missing_email') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '<span style="color: #f59e0b;">DATOS FALTANTES</span>',
+                        html: `
+                            <div style="text-align: left; padding: 15px; border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.1); border-radius: 4px;">
+                                <p style="margin-bottom: 10px; font-weight: 600;">No se puede procesar el envío automático:</p>
+                                <p style="font-size: 0.9rem;">${r.message}</p>
+                                <p style="margin-top: 15px; font-size: 0.85rem; color: #94a3b8;">
+                                    <i class="fas fa-info-circle me-1"></i> Acción requerida: Vaya al maestro de <strong>Proveedores</strong> y configure un email para este tercero.
+                                </p>
+                            </div>
+                        `,
+                        background: '#111827',
+                        color: '#fff',
+                        confirmButtonColor: '#f59e0b',
+                        confirmButtonText: 'ENTENDIDO'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ERROR',
+                        text: r.message,
+                        background: '#111827',
+                        color: '#fff'
+                    });
+                }
+                document.getElementById('btn_cot_' + grupoId).disabled = false;
+                document.getElementById('btn_cot_' + grupoId).innerHTML = '<i class="fas fa-file-invoice-dollar me-1"></i> Generar Solicitud de Cotización';
+            }
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'ERROR DE CONEXIÓN',
+                text: 'No se pudo comunicar con el servidor para generar la Cotización.',
+                background: '#111827',
+                color: '#fff'
+            });
+            document.getElementById('btn_cot_' + grupoId).disabled = false;
+            document.getElementById('btn_cot_' + grupoId).innerHTML = '<i class="fas fa-file-invoice-dollar me-1"></i> Generar Solicitud de Cotización';
+        }
+    }
+
+    function abrirModalRechazo(id, nombre) {
+        document.getElementById('rechazo_art_id').value = id;
+        document.getElementById('rechazo_art_nombre').innerText = nombre;
+        document.getElementById('rechazo_motivo').value = "";
+        new bootstrap.Modal(document.getElementById('modalRechazo')).show();
+    }
+
+    async function confirmarRechazo() {
+        const id = document.getElementById('rechazo_art_id').value;
+        const motivo = document.getElementById('rechazo_motivo').value;
+
+        if (!motivo) {
+            alert("Debe ingresar un motivo para el rechazo.");
+            return;
+        }
+
+        try {
+            const resp = await fetch('/compras/api/reposicion/rechazar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ articulo_id: id, motivo: motivo })
+            });
+
+            const r = await resp.json();
+            if (r.success) {
+                bootstrap.Modal.getInstance(document.getElementById('modalRechazo')).hide();
+                document.getElementById('row_' + id).classList.add('animate__animated', 'animate__fadeOutLeft');
+                setTimeout(() => {
+                    document.getElementById('row_' + id).remove();
+                }, 800);
+            } else {
+                alert('Error: ' + r.message);
+            }
+        } catch (e) {
+            alert('Error de conexión.');
+        }
+    }
+
+    // Inicializar badge críticos y fechas
+    document.addEventListener('DOMContentLoaded', () => {
+        const rows = document.querySelectorAll('tbody tr[id^="row_"]');
+        let criticos = 0;
+        let loteMinimo = 0;
+
+        rows.forEach(r => {
+            if (r.innerText.includes('CRÍTICO')) criticos++;
+            if (r.classList.contains('lote-minimo-row')) loteMinimo++;
+        });
+
+        document.getElementById('badge_criticos').innerText = criticos + ' Críticos';
+        document.getElementById('badge_lote_minimo').innerText = loteMinimo + ' Lote Mín.';
+
+        if (criticos > 0) {
+            document.getElementById('badge_criticos').classList.replace('bg-secondary', 'bg-danger');
+            document.getElementById('badge_criticos').classList.add('animate__animated', 'animate__pulse', 'animate__infinite');
+        } else {
+            document.getElementById('badge_criticos').classList.replace('bg-danger', 'bg-secondary');
+        }
+
+        if (loteMinimo > 0) {
+            document.getElementById('badge_lote_minimo').classList.replace('bg-secondary', 'bg-warning');
+        }
+
+        // Poner fecha por defecto (hoy + 7 días)
+        const defDate = new Date();
+        defDate.setDate(defDate.getDate() + 7);
+        const dfStr = defDate.toISOString().split('T')[0];
+        document.querySelectorAll('input[type="date"]').forEach(inp => {
+            if (!inp.value) inp.value = dfStr;
+        });
+    });
+</script>
+
+<style>
+    .font-monospace {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', Courier, monospace;
+        letter-spacing: 0.5px;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .bg-dark {
+        background-color: #0f1113 !important;
+    }
+
+    .border-info {
+        border-color: #0dcaf0 !important;
+    }
+
+    .text-info {
+        color: #0dcaf0 !important;
+    }
+
+    .glass-morphism {
+        background: rgba(33, 37, 41, 0.8) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .lote-minimo-row {
+        background-color: rgba(255, 193, 7, 0.05) !important;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .transition-all:hover {
+        background-color: rgba(13, 202, 240, 0.05) !important;
+        transform: scale(1.002);
+    }
+
+    .pulse-animation {
+        animation: pulse-red 2s infinite;
+    }
+
+    @keyframes pulse-red {
+        0% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+    }
+
+    .bounce-small {
+        animation: bounce-small 2s infinite;
+    }
+
+    @keyframes bounce-small {
+
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+            transform: translateY(0);
+        }
+
+        40% {
+            transform: translateY(-3px);
+        }
+
+        60% {
+            transform: translateY(-2px);
+        }
+    }
+
+    .action-btn {
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+
+    .action-btn:hover {
+        opacity: 1;
+        color: #ff4d4d !important;
+    }
+
+    .table thead th {
+        border-bottom: 2px solid #2d3238;
+        padding-bottom: 15px;
+        padding-top: 15px;
+    }
+
+    .form-check-input {
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: #0dcaf0;
+        border-color: #0dcaf0;
+    }
+
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .stock-impact {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .faltante-engine {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+</style>
+{% endblock %}

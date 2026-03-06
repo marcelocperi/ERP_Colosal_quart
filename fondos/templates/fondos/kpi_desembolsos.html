@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-calendar-check text-success mr-2"></i>Calendario de
+                Desembolsos</h1>
+            <p class="text-muted">Proyección de compromisos financieros por fecha de pago estimada.</p>
+        </div>
+        <div class="bg-white p-3 rounded shadow-sm border-left border-success text-end">
+            <small class="text-muted d-block text-uppercase font-weight-bold" style="font-size: 0.65rem;">Total
+                Programado</small>
+            <h4 class="mb-0 text-success font-weight-bold">
+                $ {{ "{:,.2f}".format(calendario | map(attribute='monto_total') | sum) }}
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for dia in calendario %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100 overflow-hidden day-card">
+                <div class="card-body p-0">
+                    <div class="p-3 bg-light d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="date-box mr-3">
+                                <span class="month text-uppercase">{{ dia.fecha_pago_estimada.strftime('%b') }}</span>
+                                <span class="day">{{ dia.fecha_pago_estimada.strftime('%d') }}</span>
+                            </div>
+                            <span class="font-weight-bold text-dark">{{ dia.fecha_pago_estimada.strftime('%A') }}</span>
+                        </div>
+                        <span class="badge badge-pill badge-success px-3">{{ dia.po_count }} POs</span>
+                    </div>
+                    <div class="p-4 text-end">
+                        <h3 class="mb-1 font-weight-bold text-dark">${{ "{:,.2f}".format(dia.monto_total) }}</h3>
+                        <small class="text-muted">Monto total autorizado</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 text-center pb-3">
+                    <a href="#" class="btn btn-link text-success p-0 font-weight-bold small">Ver detalles <i
+                            class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm p-5 text-center bg-white">
+                <i class="fas fa-calendar-alt fa-4x text-light mb-4"></i>
+                <h5 class="text-muted">No hay desembolsos programados para el futuro.</h5>
+                <p class="text-light-muted">Las órdenes con fondos autorizados por Tesorería aparecerán aquí.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .day-card {
+        border-radius: 15px;
+        transition: transform 0.2s;
+    }
+
+    .day-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .date-box {
+        background: #2ecc71;
+        color: white;
+        padding: 5px;
+        border-radius: 8px;
+        text-align: center;
+        min-width: 50px;
+    }
+
+    .date-box .month {
+        display: block;
+        font-size: 0.6rem;
+        opacity: 0.8;
+        font-weight: bold;
+        line-height: 1;
+    }
+
+    .date-box .day {
+        display: block;
+        font-size: 1.2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .text-light-muted {
+        color: #d1d8e0;
+    }
+</style>
+{% endblock %}

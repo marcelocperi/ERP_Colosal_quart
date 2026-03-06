@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300" width="500" height="300">
+  <defs>
+    <style>
+      .bordeaux-stroke { fill: none; stroke: #8B1538; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+      .bordeaux-fill { fill: #8B1538; }
+      .text-coloso { 
+        font-family: 'Impact', 'Arial Black', sans-serif; 
+        font-size: 48px; 
+        font-weight: 900;
+        letter-spacing: 8px;
+        fill: #8B1538;
+      }
+    </style>
+  </defs>
+  
+  <!-- Cabeza estilizada (geometría simple y moderna) -->
+  <g transform="translate(250, 180)">
+    <!-- Contorno principal de la cabeza -->
+    <circle cx="0" cy="0" r="70" class="bordeaux-stroke"/>
+    
+    <!-- Detalles minimalistas -->
+    <circle cx="-20" cy="-10" r="8" class="bordeaux-stroke"/>
+    <circle cx="20" cy="-10" r="8" class="bordeaux-stroke"/>
+    <path d="M -25 15 Q 0 25, 25 15" class="bordeaux-stroke"/>
+  </g>
+  
+  <!-- Texto COLOSO curvado -->
+  <text class="text-coloso">
+    <textPath href="#arc" startOffset="50%" text-anchor="middle">
+      COLOSO
+    </textPath>
+  </text>
+  
+  <!-- Arco invisible para el texto -->
+  <defs>
+    <path id="arc" d="M 100 120 A 150 150 0 0 1 400 120" fill="none"/>
+  </defs>
+</svg>

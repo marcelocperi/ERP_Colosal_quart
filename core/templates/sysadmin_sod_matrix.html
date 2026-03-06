@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action" style="margin-bottom: 0.5rem;">
+    <div>
+        <h1 style="font-size: 1.2rem;">Matriz de Segregación de Funciones (Auditoría)</h1>
+        <p class="text-muted" style="font-size: 0.8rem;">Comparativa: Estándar vs Realidad (Empresa Actual)</p>
+    </div>
+</div>
+
+<!-- LEGEND MOVED HERE -->
+<div
+    style="margin-bottom: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 2rem; justify-content: flex-start; font-size: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div
+            style="width: 20px; height: 20px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-check" style="color: #22c55e; font-size: 0.7rem;"></i>
+        </div>
+        <div>
+            <strong style="color: #22c55e; display: block;">Permiso Correcto</strong>
+            <span class="text-muted" style="font-size: 0.65rem;">Tiene el permiso y corresponde.</span>
+        </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div
+            style="width: 20px; height: 20px; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-check" style="color: #ef4444; opacity: 0.7; font-size: 0.7rem;"></i>
+        </div>
+        <div>
+            <strong style="color: #ef4444; display: block;">Permiso Faltante</strong>
+            <span class="text-muted" style="font-size: 0.65rem;">NECESITA pero NO lo tiene.</span>
+        </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div
+            style="width: 20px; height: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-circle"
+                style="color: #ef4444; font-size: 0.5rem; box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);"></i>
+        </div>
+        <div>
+            <strong style="color: #ef4444; display: block;">Exceso (Riesgo SoD)</strong>
+            <span class="text-muted" style="font-size: 0.65rem;">TIENE pero NO corresponde.</span>
+        </div>
+    </div>
+</div>
+
+
+<div
+    style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+
+    <!-- Filter Roles -->
+    <div style="flex: 1;">
+        <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Filtrar por
+            Roles</label>
+        <div class="custom-select-wrapper" style="position: relative;">
+            <div id="role-select" class="custom-select" onclick="toggleSelect('role')"
+                style="padding: 0.4rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; background: #0f172a; cursor: pointer; font-size: 0.75rem; min-height: 28px; display: flex; flex-wrap: wrap; gap: 0.2rem;">
+                <span class="placeholder" style="color: #64748b;">Seleccionar roles...</span>
+            </div>
+            <div id="role-options" class="custom-options"
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; z-index: 100; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);">
+                <!-- Search Input -->
+                <div
+                    style="padding: 0.5rem; position: sticky; top: 0; background: #1e293b; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <input type="text" placeholder="Buscar rol..." onkeyup="filterOptions(this, 'role')"
+                        onclick="event.stopPropagation()"
+                        style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.3rem; border-radius: 4px; font-size: 0.7rem;">
+                </div>
+
+                <div class="option" onclick="toggleAll('role', true)"
+                    style="padding: 0.4rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: bold; background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                    Seleccionar Todos
+                </div>
+                <div class="option" onclick="toggleAll('role', false)"
+                    style="padding: 0.4rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1;">
+                    Deseleccionar Todos
+                </div>
+                {% for role in role_rows.keys() %}
+                <div class="option role-option-item" data-text="{{ role|lower }}"
+                    onclick="toggleItem('role', '{{ role }}')"
+                    style="padding: 0.4rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="chk-role-{{ role }}" checked style="pointer-events: none;">
+                    {{ role }}
+                </div>
+                {% endfor %}
+                <div class="option" onclick="toggleSelect('role')"
+                    style="padding: 0.6rem; text-align: center; background: rgba(99, 102, 241, 0.2); color: white; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.1); position: sticky; bottom: 0; z-index: 10;">
+                    Cerrar y Aplicar
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Processes (Columns) -->
+    <div style="flex: 1;">
+        <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Filtrar por Procesos
+            (Máximo Nivel)</label>
+        <div class="custom-select-wrapper" style="position: relative;">
+            <div id="cat-select" class="custom-select" onclick="toggleSelect('cat')"
+                style="padding: 0.4rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; background: #0f172a; cursor: pointer; font-size: 0.75rem; min-height: 28px; display: flex; flex-wrap: wrap; gap: 0.2rem;">
+                <span class="placeholder" style="color: #64748b;">Seleccionar procesos...</span>
+            </div>
+            <div id="cat-options" class="custom-options"
+                style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; z-index: 100; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);">
+                <!-- Search Input -->
+                <div
+                    style="padding: 0.5rem; position: sticky; top: 0; background: #1e293b; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <input type="text" placeholder="Buscar proceso..." onkeyup="filterOptions(this, 'cat')"
+                        onclick="event.stopPropagation()"
+                        style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.3rem; border-radius: 4px; font-size: 0.7rem;">
+                </div>
+
+                <div class="option" onclick="toggleAll('cat', true)"
+                    style="padding: 0.4rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: bold; background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                    Seleccionar Todos
+                </div>
+                <div class="option" onclick="toggleAll('cat', false)"
+                    style="padding: 0.4rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1;">
+                    Deseleccionar Todos
+                </div>
+                {% for cat in matrix_cols.keys() %}
+                {% set safe_cat = cat|replace(' ', '_') %}
+                <div class="option cat-option-item" data-text="{{ cat|lower }}"
+                    onclick="toggleItem('cat', '{{ safe_cat }}')"
+                    style="padding: 0.4rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="chk-cat-{{ safe_cat }}" checked style="pointer-events: none;">
+                    {{ cat }}
+                </div>
+                {% endfor %}
+                <div class="option" onclick="toggleSelect('cat')"
+                    style="padding: 0.6rem; text-align: center; background: rgba(99, 102, 241, 0.2); color: white; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.1); position: sticky; bottom: 0; z-index: 10;">
+                    Cerrar y Aplicar
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card"
+    style="padding: 0; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); background: var(--bg-card);">
+    <div style="overflow-x: auto; max-width: 100%;">
+        <table class="table"
+            style="width: auto; border-collapse: separate; border-spacing: 0; min-width: 100%; font-size: 0.7rem;">
+            <thead>
+                <!-- Row 1: Modules (Groups) -->
+                <tr>
+                    <th rowspan="2"
+                        style="padding: 0.5rem; position: sticky; left: 0; top: 0; z-index: 15; background: #0f172a; border-right: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid var(--primary); width: 100px; min-width: 100px; color: white;">
+                        Modulo
+                    </th>
+                    <th rowspan="2"
+                        style="padding: 0.5rem; position: sticky; left: 100px; top: 0; z-index: 15; background: #0f172a; border-right: 1px solid rgba(255,255,255,0.1); border-bottom: 2px solid var(--primary); width: 220px; min-width: 220px; color: white;">
+                        Rol Funcion
+                    </th>
+                    {% set module_desc = {
+                    'AUDITORIA': 'Revisión y trazabilidad de operaciones para asegurar integridad y cumplimiento.',
+                    'COBRANZAS': 'Gestión de ingresos, emisión de recibos y conciliación bancaria.',
+                    'COMPRA': 'Ciclo de compras: Solicitudes, OC, Recepción y Facturación.',
+                    'VENTA': 'Ciclo comercial: Presupuestos, Pedidos y Facturación.',
+                    'STOCK': 'Gestión física: Artículos, movimientos y depósitos.',
+                    'CONFIGURACION': 'Administración del sistema y gestión de permisos.',
+                    'FONDOS': 'Tesorería: Pagos, cobros y conciliación.',
+                    'CONTABILIDAD': 'Plan de cuentas, libro diario y asientos.'
+                    } %}
+                    {% for cat, perms in matrix_cols.items() %}
+                    {% set safe_cat = cat|replace(' ', '_') %}
+                    {% set desc = module_desc.get(cat|upper, 'Módulo funcional.') %}
+                    <th class="col-cat-{{ safe_cat }}" colspan="{{ perms|length }}"
+                        style="padding: 0.5rem; text-align: center; background: rgba(99, 102, 241, 0.1); border-left: 1px solid rgba(255,255,244,0.1); border-bottom: 1px solid rgba(255,255,255,0.2); position: sticky; top: 0; z-index: 11;">
+                        <span class="module-tooltip"
+                            style="font-weight: bold; color: var(--primary); cursor: help; font-size: 0.75rem; letter-spacing: 0.05rem;">
+                            {{ cat|upper }}
+                            <span class="tooltip-text">{{ desc }}</span>
+                        </span>
+                    </th>
+                    {% endfor %}
+                </tr>
+                <!-- Row 2: Specific Permissions (Functions) -->
+                <tr>
+                    {% for cat, perms in matrix_cols.items() %}
+                    {% set safe_cat = cat|replace(' ', '_') %}
+                    {% for perm in perms %}
+                    <th class="col-cat-{{ safe_cat }}"
+                        style="padding: 0.4rem; text-align: center; min-width: 90px; font-weight: normal; font-size: 0.6rem; border-left: 1px solid rgba(255,255,255,0.05); border-bottom: 2px solid var(--primary); background: #0f172a; color: #cbd5e1; line-height: 1.1;">
+                        {{ perm.desc }}
+                    </th>
+                    {% endfor %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% set role_modules = {
+                'SOLICITANTE_COMPRAS': 'COMPRAS',
+                'COMPRADOR': 'COMPRAS',
+                'APROBADOR_COMPRAS': 'COMPRAS',
+                'RECEPCIONISTA': 'COMPRAS',
+                'VENDEDOR': 'VENTAS',
+                'FACTURACION': 'VENTAS',
+                'ALMACENISTA': 'STOCK',
+                'CUENTAS_POR_PAGAR': 'FINANZAS',
+                'AUTORIZADOR_PAGOS': 'FINANZAS',
+                'TESORERO': 'FINANZAS',
+                'COBRANZAS': 'FINANZAS',
+                'CONTADOR': 'CONTABILIDAD',
+                'AUDITOR': 'AUDITORIA',
+                'CONFIGURADOR': 'SISTEMA'
+                } %}
+
+                {% for role, data in role_rows.items() %}
+                <tr class="role-row" data-role="{{ role }}"
+                    style="border-bottom: 1px solid rgba(255,255,255,0.1); transition: 0.2s;">
+                    <!-- Column 1: Modulo -->
+                    <td
+                        style="padding: 0.5rem; position: sticky; left: 0; z-index: 5; background: #0f172a; border-right: 1px solid rgba(255,255,255,0.2); color: #6366f1; font-weight: bold; font-size: 0.7rem; vertical-align: middle; text-align: center;">
+                        {{ role_modules.get(role, 'GENERAL') }}
+                    </td>
+                    <!-- Column 2: Rol / Funcion -->
+                    <td
+                        style="padding: 0.5rem; position: sticky; left: 100px; z-index: 5; background: #0f172a; border-right: 1px solid rgba(255,255,255,0.2); font-weight: 600; min-width: 220px;">
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="color: white; font-size: 0.75rem; text-transform: uppercase;">{{ role }}</span>
+                            <span style="font-size: 0.6rem; color: #94a3b8; font-weight: normal;">{{
+                                data.description[:45] }}...</span>
+                        </div>
+                    </td>
+
+                    <!-- Matrix Cells -->
+                    {% for cat, perms in matrix_cols.items() %}
+                    {% set safe_cat = cat|replace(' ', '_') %}
+                    {% for perm in perms %}
+                    <!-- Logic:
+                             is_std: Is it in the SoD definition?
+                             is_act: Is it in actual_permissions[role]?
+                        -->
+                    {% set is_std = perm.code in data.permisos %}
+                    {% set is_act = role in actual_permissions and perm.code in actual_permissions[role] %}
+
+                    <!-- Add class for column toggling -->
+                    {% set cell_class = "col-cat-" + safe_cat %}
+
+                    {% if is_std and is_act %}
+                    <!-- OK: Green Check -->
+                    <td class="{{ cell_class }}"
+                        style="padding: 0.2rem; text-align: center; border-left: 1px solid rgba(255,255,255,0.05); background: rgba(34, 197, 94, 0.05);">
+                        <i class="fas fa-check" style="color: #22c55e; font-size: 0.8rem;"></i>
+                    </td>
+                    {% elif is_std and not is_act %}
+                    <!-- MISSING: Red Check -->
+                    <td class="{{ cell_class }}"
+                        style="padding: 0.2rem; text-align: center; border-left: 1px solid rgba(255,255,255,0.05); background: rgba(239, 68, 68, 0.05);">
+                        <i class="fas fa-check" style="color: #ef4444; font-size: 0.8rem; opacity: 0.7;"></i>
+                    </td>
+                    {% elif not is_std and is_act %}
+                    <!-- EXCESS: Red Circle -->
+                    <td class="{{ cell_class }}"
+                        style="padding: 0.2rem; text-align: center; border-left: 1px solid rgba(255,255,255,0.05); background: rgba(239, 68, 68, 0.1);">
+                        <i class="fas fa-circle"
+                            style="color: #ef4444; font-size: 0.6rem; box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);"></i>
+                    </td>
+                    {% else %}
+                    <!-- CORRECTLY RESTRICTED: Empty/Faint X -->
+                    <td class="{{ cell_class }}"
+                        style="padding: 0.2rem; text-align: center; border-left: 1px solid rgba(255,255,255,0.05);">
+                        <!-- Optional: Faint X to show 'cell exists' but no permission -->
+                    </td>
+                    {% endif %}
+                    {% endfor %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Generate SAFE arrays using simple loops
+    const allRoles = [
+        {% for role in role_rows.keys() %}
+    "{{ role }}",
+        {% endfor %}
+    ];
+
+    // For categories, we need the SAFE version (replaced spaces) to match IDs
+    const allCats = [
+        {% for cat in matrix_cols.keys() %}
+    "{{ cat|replace(' ', '_') }}",
+        {% endfor %}
+    ];
+
+    let selected = {
+        'role': new Set(allRoles),
+        'cat': new Set(allCats)
+    };
+
+    // Total counts for placeholders
+    const totals = {
+        'role': allRoles.length,
+        'cat': allCats.length
+    };
+
+    // Initialize immediately
+    updatePlaceholder('role');
+    updatePlaceholder('cat');
+    updateView();
+
+    function filterOptions(input, type) {
+        const filter = input.value.toLowerCase();
+        const optionItems = document.querySelectorAll('#' + type + '-options .option.' + type + '-option-item'); // Assuming I added specific classes or use general option
+
+        // Actually I added classes 'role-option-item' and 'cat-option-item' in the HTML edit.
+        // Let's select them more generically to be safe or use the specific classes if my previous edit succeeded.
+        // The previous edit added classes: role-option-item and cat-option-item.
+
+        const items = document.querySelectorAll('#' + type + '-options .' + type + '-option-item');
+
+        items.forEach(item => {
+            const text = item.getAttribute('data-text');
+            if (text.includes(filter)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    function toggleSelect(type) {
+        const options = document.getElementById(type + '-options');
+        document.querySelectorAll('.custom-options').forEach(el => {
+            if (el.id !== type + '-options') el.style.display = 'none';
+        });
+        options.style.display = options.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Close select when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.custom-select-wrapper')) {
+            document.querySelectorAll('.custom-options').forEach(el => el.style.display = 'none');
+        }
+    });
+
+    function toggleItem(type, value) {
+        const checkbox = document.getElementById('chk-' + type + '-' + value);
+        // Prevent default if triggered by checking the box logic externally, 
+        // but here we are in onclick of the DIV.
+        // If user clicked the text, we toggle checkbox.
+        // If user clicked checkbox directly, it toggles itself.
+        // We need to sync state.
+
+        // Simplified: The onclick is on the CONTAINER. 
+        // If target is check, don't toggle again.
+
+        // Wait, the previous logic was: checkbox.checked = !checkbox.checked
+        // If I click the label, this toggles it.
+        // If I click the checkbox, it toggles natively, then this toggles it back?
+        // Actually pointer-events: none on the input prevents direct clicks!
+        // That was in my previous code: <input ... style="pointer-events: none;">
+        // So clicking anywhere on the div ALWAYS runs this function.
+
+        checkbox.checked = !checkbox.checked;
+
+        if (checkbox.checked) selected[type].add(value);
+        else selected[type].delete(value);
+
+        updateView();
+        updatePlaceholder(type);
+    }
+
+    function toggleAll(type, state) {
+        const checkboxes = document.querySelectorAll('#' + type + '-options .option input[type="checkbox"]');
+        checkboxes.forEach(chk => {
+            chk.checked = state;
+            const val = chk.id.replace('chk-' + type + '-', '');
+            if (state) selected[type].add(val);
+            else selected[type].delete(val);
+        });
+        updateView();
+        updatePlaceholder(type);
+    }
+
+    function updateView() {
+        // Toggle rows based on role selection
+        const rows = document.querySelectorAll('.role-row');
+        rows.forEach(row => {
+            const role = row.getAttribute('data-role');
+            if (selected.role.has(role)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Toggle columns based on cat (category) selection
+        allCats.forEach(cat => {
+            const display = selected['cat'].has(cat) ? '' : 'none';
+            document.querySelectorAll('.col-cat-' + cat).forEach(el => el.style.display = display);
+        });
+    }
+
+    function updatePlaceholder(type) {
+        const placeholder = document.querySelector('#' + type + '-select .placeholder');
+        const count = selected[type].size;
+        const total = totals[type];
+
+        if (count === 0) placeholder.textContent = 'Ninguno seleccionado';
+        else if (count === total) placeholder.textContent = 'Todos (' + count + ')';
+        else placeholder.textContent = count + ' seleccionados';
+    }
+</script>
+
+<style>
+    /* Tooltip styles */
+    .module-tooltip {
+        position: relative;
+    }
+
+    /* Tooltip logic to prevent overlapping */
+    .cat-header-cell:hover {
+        z-index: 1000 !important;
+    }
+
+    .module-tooltip .tooltip-text {
+        visibility: hidden;
+        width: 240px;
+        background-color: #facc15 !important;
+        /* Solid Yellow */
+        color: #000 !important;
+        /* Solid Black text */
+        text-align: left;
+        border: 2px solid #854d0e;
+        border-radius: 8px;
+        padding: 12px;
+        position: absolute;
+        z-index: 99999;
+
+        /* FORCE HORIZONTAL */
+        writing-mode: horizontal-tb;
+        transform: rotate(180deg);
+
+        /* Precise Positioning: Move it further out to avoid clipping */
+        bottom: 30px;
+        left: 50%;
+        margin-left: -120px;
+
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+        font-size: 0.85rem;
+        font-weight: 700;
+        pointer-events: none;
+        box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.8);
+        line-height: 1.4;
+        white-space: normal;
+    }
+
+    .module-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Hover effect for options */
+    .custom-options .option:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Hover effect for rows */
+    tbody tr:hover td {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    tbody tr:hover td:first-child {
+        background-color: #1e293b;
+        /* Maintain sticky bg on hover */
+    }
+
+    /* Scrollbar for the table container */
+    div::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+    }
+
+    div::-webkit-scrollbar-track {
+        background: #0f172a;
+    }
+
+    div::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+    }
+
+    div::-webkit-scrollbar-thumb:hover {
+        background: #475569;
+    }
+</style>
+{% endblock %}

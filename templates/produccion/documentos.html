@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0 fw-bold"><i class="fas fa-folder-open text-primary me-2"></i>Repositorio Técnico & Legal
+            </h2>
+            <p class="text-muted mb-0">Gestión de Fichas Técnicas, RNPA/RNE, MSDS, Planos y Contratos (Fazón).</p>
+        </div>
+        <button class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#modalNuevoDoc">
+            <i class="fas fa-upload me-1"></i> Subir Documento
+        </button>
+    </div>
+
+    <!-- Filtros y Alertas -->
+    <div class="row mb-4">
+        <div class="col-md-9">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-3">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <select id="filtroTipo" class="form-select bg-light border-0">
+                                <option value="">Todos los Tipos</option>
+                                <option value="CERTIFICADO">Certificados (RNE/RNPA)</option>
+                                <option value="PLANO">Planos de Ingeniería</option>
+                                <option value="CONTRATO">Contratos SCM/Fazón</option>
+                                <option value="MSDS">Fichas de Seguridad (MSDS)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" id="busqueda" class="form-control bg-light border-0"
+                                placeholder="Buscar por artículo, proveedor o notas...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div
+                class="card border-0 shadow-sm rounded-4 h-100 bg-warning bg-opacity-10 border-start border-warning border-4">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle text-warning fa-2x me-3"></i>
+                    <div>
+                        <h6 class="mb-0 fw-bold">Vencimientos Proximos</h6>
+                        <small class="text-muted">3 documentos vencen en 30 días.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado Documental -->
+    <div class="row">
+        {% for d in documentos %}
+        <div class="col-md-4 mb-4 doc-card">
+            <div class="card h-100 border-0 shadow-sm transition-hover" style="border-radius: 15px;">
+                <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="badge bg-light text-primary border border-primary border-opacity-25 mb-2">
+                            {{ d.tipo_documento }}
+                        </span>
+                        <h6 class="fw-bold mb-0 text-dark">{{ d.nombre_archivo }}</h6>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <li><a class="dropdown-item" href="{{ d.ruta_almacenamiento }}" target="_blank"><i
+                                        class="fas fa-download me-2 text-primary"></i> Descargar</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-history me-2 text-info"></i>
+                                    Versiones</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>
+                                    Archivar</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="fas fa-link me-1"></i> Asociado a:</small>
+                        <span class="fw-bold text-dark">{{ d.entidad_tipo }}: {{ d.entidad_nombre }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded-3 mb-2">
+                        <div class="small">
+                            <span class="text-muted d-block">Vigencia</span>
+                            <span
+                                class="fw-bold {% if d.estado == 'VENCIDO' %}text-danger{% else %}text-success{% endif %}">
+                                {{ d.estado }}
+                            </span>
+                        </div>
+                        <div class="text-end small border-start ps-3">
+                            <span class="text-muted d-block">Vence</span>
+                            <span class="fw-bold">{{ d.fecha_vencimiento.strftime('%d/%m/%Y') if d.fecha_vencimiento
+                                else 'N/A' }}</span>
+                        </div>
+                    </div>
+
+                    {% if d.notas %}
+                    <p class="text-muted smaller mb-0 mt-2"><i class="fas fa-sticky-note me-1"></i> {{ d.notas }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-0 pb-3 pt-0">
+                    <a href="{{ d.ruta_almacenamiento }}" target="_blank"
+                        class="btn btn-outline-dark btn-sm w-100 fw-bold border-2 rounded-pill">
+                        <i class="fas fa-external-link-alt me-1"></i> Visualizar Online
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="opacity-25 mb-3">
+                <i class="fas fa-file-contract fa-4x"></i>
+            </div>
+            <h5 class="text-muted fw-bold">El repositorio documental está vacío</h5>
+            <p class="text-muted">Suba protocolos de calidad o certificaciones para cumplir el Phase 1.6.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .smaller {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

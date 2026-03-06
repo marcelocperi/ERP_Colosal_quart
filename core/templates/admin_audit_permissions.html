@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 2rem; background: var(--bg-dark); min-height: 100vh;">
+    <!-- HEADER PREMIUM -->
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; background: var(--bg-card); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <div>
+            <h1
+                style="margin: 0; font-size: 2rem; background: linear-gradient(135deg, #fff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">
+                <i class="fas fa-history" style="color: var(--primary); margin-right: 0.8rem;"></i> Historial de Gestión
+                de Permisos
+            </h1>
+            <p class="text-muted" style="margin: 0.5rem 0 0 0; font-size: 1rem;">Módulo de Auditoría CISA: Seguimiento
+                de cambios en la matriz de acceso y remediación SoD.</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="window.location.reload()" class="btn btn-outline-primary"
+                style="display: flex; align-items: center; gap: 0.5rem; border-color: rgba(99, 102, 241, 0.3);">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+            <a href="{{ url_for('core.admin_roles') }}" class="btn btn-primary"
+                style="display: flex; align-items: center; gap: 0.5rem; background: var(--primary); border: none;">
+                <i class="fas fa-user-tag"></i> Gestión de Roles
+            </a>
+        </div>
+    </div>
+
+    <!-- TABLA DE AUDITORIA -->
+    <div
+        style="background: var(--bg-card); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <table style="width: 100%; border-collapse: collapse; color: #cbd5e1; font-size: 0.95rem;">
+            <thead>
+                <tr style="background: rgba(255,255,255,0.02); border-bottom: 2px solid rgba(255,255,255,0.05);">
+                    <th style="padding: 1.2rem; text-align: left; font-weight: 600; color: var(--primary);">Fecha y Hora
+                    </th>
+                    <th style="padding: 1.2rem; text-align: left; font-weight: 600; color: var(--primary);">Operador
+                    </th>
+                    <th style="padding: 1.2rem; text-align: left; font-weight: 600; color: var(--primary);">Acción</th>
+                    <th style="padding: 1.2rem; text-align: left; font-weight: 600; color: var(--primary);">Detalles de
+                        Gestión</th>
+                    <th style="padding: 1.2rem; text-align: center; font-weight: 600; color: var(--primary);">IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.02); transition: all 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.01)'"
+                    onmouseout="this.style.background='transparent'">
+                    <td style="padding: 1.2rem; white-space: nowrap;">
+                        <span style="color: #94a3b8; font-size: 0.85rem;"><i class="far fa-clock"></i> {{
+                            log.event_time.strftime('%d/%m/%Y %H:%M:%S') if log.event_time else 'N/A' }}</span>
+                    </td>
+                    <td style="padding: 1.2rem;">
+                        <span style="font-weight: 600; color: #f1f5f9;">{{ log.operator or 'Sistema' }}</span>
+                    </td>
+                    <td style="padding: 1.2rem;">
+                        {% if log.action == 'REVOKE_PERMISSION' %}
+                        <span class="badge"
+                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 0.4rem 0.8rem;">REVOCACIÓN</span>
+                        {% elif log.action == 'UPDATE_ROLE_PERMS' %}
+                        <span class="badge"
+                            style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); padding: 0.4rem 0.8rem;">ACTUALIZACIÓN</span>
+                        {% else %}
+                        <span class="badge"
+                            style="background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); padding: 0.4rem 0.8rem;">{{
+                            log.action }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1.2rem; line-height: 1.4;">
+                        <div style="color: #cbd5e1; font-family: 'Inter', sans-serif;">{{ log.details }}</div>
+                    </td>
+                    <td style="padding: 1.2rem; text-align: center;">
+                        <code
+                            style="color: #64748b; font-size: 0.8rem; background: rgba(0,0,0,0.2); padding: 0.2rem 0.5rem; border-radius: 4px;">{{ log.ip_address }}</code>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not logs %}
+                <tr>
+                    <td colspan="5" style="padding: 4rem; text-align: center; color: #64748b;">
+                        <i class="fas fa-search"
+                            style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; display: block;"></i>
+                        No se han encontrado registros de cambios en permisos para esta empresa.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- FOOTER INFO -->
+    <div style="margin-top: 2rem; display: flex; align-items: center; gap: 1rem; color: #64748b; font-size: 0.85rem;">
+        <i class="fas fa-info-circle"></i>
+        <span>Este reporte cumple con los estándares de control interno para la supervisión de privilegios de usuario y
+            segregación de funciones.</span>
+    </div>
+</div>
+{% endblock %}

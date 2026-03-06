@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-container"
+    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-warehouse"></i> Centros de Almacenamiento</h1>
+        <p class="text-muted">Gestión de depósitos, sucursales y puntos de stock</p>
+    </div>
+    <a href="{{ url_for('stock.deposito_nuevo') }}" class="btn-action">
+        <i class="fas fa-plus"></i> Nuevo Depósito
+    </a>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>DEPÓSITO</th>
+                <th>DIRECCIÓN / UBICACIÓN</th>
+                <th style="text-align: center;">TIPO</th>
+                <th style="text-align: center;">ESTADO</th>
+                <th style="text-align: right;">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in depositos %}
+            <tr>
+                <td>
+                    <div style="font-weight: 700;">{{ d.nombre }}</div>
+                    {% if d.es_principal %}
+                    <span class="badge"
+                        style="background: rgba(99,102,241,0.1); color: var(--primary); font-size: 0.7rem;">PRINCIPAL</span>
+                    {% endif %}
+                </td>
+                <td>{{ d.direccion or 'Sin dirección registrada' }}</td>
+                <td style="text-align: center;">
+                    <span class="badge {{ 'bg-info' if d.tipo == 'INTERNO' else 'bg-warning text-dark' }}"
+                        style="font-size: 0.7rem;">
+                        {{ d.tipo }}
+                    </span>
+                    {% if d.tercero_id %}
+                    <br><small class="text-muted">ID Tercero: {{ d.tercero_id }}</small>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    {% if d.activo %}
+                    <span class="badge" style="background: rgba(16,185,129,0.1); color: #10b981;">ACTIVO</span>
+                    {% else %}
+                    <span class="badge" style="background: rgba(255,255,255,0.05); color: #64748b;">INACTIVO</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <a href="{{ url_for('stock.deposito_editar', id=d.id) }}" class="btn-secondary"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 4rem;">No hay depósitos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

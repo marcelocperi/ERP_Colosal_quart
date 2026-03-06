@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+{% block content %}
+<input type="hidden" id="factura_id_val" value="{{factura.id}}">
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-11 mx-auto">
+            <div class="card shadow-lg border-0 bg-dark text-light overflow-hidden">
+                <div class="card-header bg-gradient-primary text-white p-4">
+                    <h3 class="mb-0"><i class="fas fa-undo-alt me-2"></i>Solicitud de Devolución</h3>
+                    <p class="mb-0 opacity-75 small uppercase">Referencia Venta: Factura #{{
+                        "%04d-%08d"|format(factura.punto_venta, factura.numero) }}</p>
+                </div>
+                <div class="card-body p-4">
+                    <form id="devolucionForm">
+                        <div class="col-md-4">
+                            <label class="form-label text-info small uppercase fw-bold">Cliente</label>
+                            <input type="text" class="form-control bg-dark text-muted border-secondary"
+                                value="{{ factura.tercero_nombre }}" readonly>
+                            <input type="hidden" id="cliente_id" value="{{ factura.tercero_id }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-info small uppercase fw-bold">Depósito de
+                                Recepción</label>
+                            <select class="form-select bg-dark text-light border-info" id="deposito_id">
+                                <option value="">Seleccione depósito...</option>
+                                {% for d in depositos %}
+                                <option value="{{ d.id }}" {{ 'selected' if d.id==deposito_sugerido }}>{{ d.nombre
+                                    }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-info small uppercase fw-bold">Logística</label>
+                            <select class="form-select bg-dark text-light border-info" id="logistica_id">
+                                <option value="">Consumidor Final / Propia</option>
+                                {% for t in transportistas %}
+                                <option value="{{ t.id }}">{{ t.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="table-responsive rounded border border-secondary shadow-sm mb-5">
+                            <table class="table table-dark table-hover mb-0" id="itemsTable">
+                                <thead class="bg-secondary bg-opacity-25 text-muted small uppercase">
+                                    <tr>
+                                        <th class="ps-4">Código / Descripción</th>
+                                        <th class="text-end">Original</th>
+                                        <th class="text-center">A Devolver</th>
+                                        <th class="text-end">Precio</th>
+                                        <th class="text-end">IVA %</th>
+                                        <th class="text-end">Monto IVA</th>
+                                        <th class="text-end pe-4">Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items_precargados %}
+                                    <tr data-id="{{ item.id }}" data-iva="{{ item.iva }}">
+                                        <td class="ps-4"><b>{{ item.nombre }}</b></td>
+                                        <td class="text-end">{{ item.cantidad }}</td>
+                                        <td class="text-center">
+                                            <input type="number"
+                                                class="form-control bg-dark text-light text-center border-primary cant-devolver max-limit"
+                                                value="{{ item.cantidad }}" min="0" max="{{ item.cantidad }}"
+                                                data-max="{{ item.cantidad }}" step="0.0001"
+                                                onchange="recalcularTotales()">
+                                        </td>
+                                        <td class="text-end p_unit">{{ item.precio }}</td>
+                                        <td class="text-end">{{ item.iva }}%</td>
+                                        <td class="text-end row_iva">$ 0.00</td>
+                                        <td class="text-end fw-bold text-info pe-4 row_subtotal">$ 0.00</td>
+                                        <td><button type="button" class="btn btn-sm text-danger"
+                                                onclick="this.closest('tr').remove(); recalcularTotales();"><i
+                                                    class="fas fa-times"></i></button></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- REFERENCIA: PAGOS ORIGINALES -->
+                        <div class="mb-4">
+                            <h6 class="text-muted small uppercase fw-bold mb-2"><i
+                                    class="fas fa-info-circle me-1"></i>Pagos Originales de la Factura</h6>
+                            <div class="table-responsive rounded border border-secondary shadow-sm"
+                                style="background: rgba(255,255,255,0.03);">
+                                <table class="table table-dark table-sm mb-0">
+                                    <thead class="bg-secondary bg-opacity-10 text-muted small uppercase">
+                                        <tr>
+                                            <th class="ps-3 py-2">Medio de Pago</th>
+                                            <th class="text-end pe-3 py-2">Importe Original</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for pago in pagos_originales %}
+                                        <tr class="border-secondary align-middle">
+                                            <td class="ps-3 py-2">{{ pago.medio_nombre }}</td>
+                                            <td class="text-end pe-3 py-2 fw-bold text-muted">$ {{
+                                                "%.2f"|format(pago.importe) }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN: REEMBOLSOS (IMPUTACIÓN MANUAL) -->
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-info small uppercase fw-bold mb-0">Imputación de Reembolso</h6>
+                            <button type="button" class="btn btn-sm btn-outline-info px-3" id="btnAddMedio">
+                                <i class="fas fa-plus me-1"></i> Agregar
+                            </button>
+                        </div>
+
+                        <div class="table-responsive rounded border border-secondary mb-2"
+                            style="background: rgba(255,255,255,0.05);">
+                            <table class="table table-dark table-sm mb-0">
+                                <thead class="bg-secondary bg-opacity-25 text-muted small uppercase">
+                                    <tr>
+                                        <th class="ps-3 py-2">Medio</th>
+                                        <th class="text-end pe-3 py-2">Monto</th>
+                                        <th style="width: 40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pagosBody">
+                                    <!-- Aquí se agregan manualmente -->
+                                </tbody>
+                                <tfoot class="border-top border-secondary">
+                                    <tr>
+                                        <td class="ps-3 py-2 small uppercase fw-bold text-muted">A Cubrir (Total NC)
+                                        </td>
+                                        <td class="text-end pe-3 py-2 fw-bold text-white fs-6" id="txtTotalObjetivo">$
+                                            0.00</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-3 py-2 small uppercase fw-bold text-info">Saldo Pendiente</td>
+                                        <td class="text-end pe-3 py-2 fw-bold text-info fs-5" id="txtTotalReembolso">$
+                                            0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div id="containerNuevoMedio"
+                            class="d-none bg-secondary bg-opacity-10 p-3 rounded border border-info border-dashed mb-3">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-6">
+                                    <select class="form-select bg-dark text-light border-info" id="selNuevoMedio">
+                                        <option value="">-- Seleccionar Medio --</option>
+                                        {% for m in medios_pago %}
+                                        <option value="{{ m.id }}">{{ m.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-dark border-info text-muted">$</span>
+                                        <input type="number"
+                                            class="form-control bg-dark text-light border-info text-end"
+                                            id="montoNuevoMedio" step="0.01" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-info w-100" id="btnConfirmAddMedio">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% if not pagos_originales %}
+                        <div class="alert alert-info py-2 px-3 border-0 bg-info bg-opacity-10 text-info mt-2"
+                            style="border-radius: 8px;">
+                            <i class="fas fa-info-circle me-1"></i> <small class="fw-bold">Factura en Cuenta
+                                corriente sin cancelaciones parciales ni totales.</small>
+                        </div>
+                        {% endif %}
+                </div>
+                <div class="col-md-5">
+                    <div class="bg-primary bg-opacity-10 p-4 rounded border border-primary h-100">
+                        <div class="d-flex justify-content-between"><span>Neto</span><span id="txtNeto">$
+                                0.00</span></div>
+                        <div class="d-flex justify-content-between"><span>IVA</span><span id="txtIva">$
+                                0.00</span></div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <h4>Total NC</h4>
+                            <h2 class="text-primary" id="txtTotal">$ 0.00</h2>
+                        </div>
+                        <textarea id="observaciones" class="form-control bg-dark text-light mt-3" rows="2"
+                            placeholder="Motivo..."></textarea>
+                        <button type="button" id="btnSubmitNC" class="btn btn-primary w-100 mt-3 py-2 fw-bold">
+                            <i class="fas fa-check-circle me-2"></i>Generar Nota de Crédito
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+<script>
+    function parseAmount(text) {
+        if (!text) return 0;
+        const clean = String(text).replace(/[^\d.-]/g, '');
+        return parseFloat(clean) || 0;
+    }
+
+    function recalcularTotales() {
+        let n = 0, ivaTot = 0, sumAsignado = 0;
+        document.querySelectorAll('#itemsTable tbody tr').forEach(tr_node => {
+            const cNode = tr_node.querySelector('.cant-devolver');
+            if (!cNode) return;
+            const c = parseFloat(cNode.value) || 0;
+            const pNode = tr_node.querySelector('.p_unit');
+            const p = pNode ? parseAmount(pNode.innerText) : 0;
+            const a = parseFloat(tr_node.dataset.iva) || 0;
+            const sub = c * p;
+            const tax = sub * (a / 100);
+            n += sub;
+            ivaTot += tax;
+
+            const rowIva = tr_node.querySelector('.row_iva');
+            if (rowIva) rowIva.innerText = '$ ' + tax.toFixed(2);
+
+            const rowSub = tr_node.querySelector('.row_subtotal');
+            if (rowSub) rowSub.innerText = '$ ' + (sub + tax).toFixed(2);
+        });
+        const totalNC = n + ivaTot;
+        document.getElementById('txtNeto').innerText = '$ ' + n.toFixed(2);
+        document.getElementById('txtIva').innerText = '$ ' + ivaTot.toFixed(2);
+        document.getElementById('txtTotal').innerText = '$ ' + totalNC.toFixed(2);
+
+        // El objetivo en la tabla de reembolsos
+        const targetFooter = document.getElementById('txtTotalObjetivo');
+        if (targetFooter) targetFooter.innerText = '$ ' + totalNC.toFixed(2);
+
+        document.querySelectorAll('.input-reembolso').forEach(inp => {
+            sumAsignado += parseFloat(inp.value) || 0;
+        });
+
+        const balance = totalNC - sumAsignado;
+        const txtRB = document.getElementById('txtTotalReembolso');
+
+        // Bloquear temporalmente el boton submit si hay desfasaje grave
+        const btnSubmitNC = document.getElementById('btnSubmitNC');
+        if (txtRB) {
+            txtRB.innerText = '$ ' + balance.toFixed(2);
+            if (balance < -0.01) {
+                txtRB.className = "text-end pe-3 py-2 fw-bold fs-5 text-danger animate__animated animate__headShake";
+                if (btnSubmitNC) {
+                    btnSubmitNC.disabled = true;
+                    btnSubmitNC.title = "No puedes asignar más dinero del total de la NC.";
+                }
+            } else {
+                txtRB.className = "text-end pe-3 py-2 fw-bold fs-5 " + (Math.abs(balance) < 0.01 ? "text-success" : "text-info");
+                if (btnSubmitNC) {
+                    btnSubmitNC.disabled = false;
+                    btnSubmitNC.title = "";
+                }
+            }
+        }
+
+        return totalNC;
+    }
+
+    function actualizarMontoSugerido() {
+        const totalNC = parseAmount(document.getElementById('txtTotal').innerText);
+        let totalAsignado = 0;
+        document.querySelectorAll('.input-reembolso').forEach(inp => {
+            totalAsignado += parseFloat(inp.value) || 0;
+        });
+        const pendiente = Math.max(0, totalNC - totalAsignado);
+        const montoInp = document.getElementById('montoNuevoMedio');
+        if (montoInp) montoInp.value = pendiente.toFixed(2);
+    }
+
+    // ---- Medios de pago ----
+    const _btnAdd = document.getElementById('btnAddMedio');
+    if (_btnAdd) _btnAdd.addEventListener('click', () => {
+        const c = document.getElementById('containerNuevoMedio');
+        if (c) c.classList.toggle('d-none');
+        actualizarMontoSugerido();
+    });
+
+    const _selMedio = document.getElementById('selNuevoMedio');
+    if (_selMedio) _selMedio.addEventListener('change', () => {
+        actualizarMontoSugerido();
+    });
+
+    const _btnConfirm = document.getElementById('btnConfirmAddMedio');
+    if (_btnConfirm) _btnConfirm.addEventListener('click', () => {
+        const sel = document.getElementById('selNuevoMedio');
+        const monto = document.getElementById('montoNuevoMedio');
+        if (!sel || !monto) return;
+        const id = sel.value;
+        const nombre = sel.options[sel.selectedIndex].text;
+        const val = parseFloat(monto.value) || 0;
+
+        if (!id || val <= 0) {
+            alert('Seleccione un medio y asigne un importe válido');
+            return;
+        }
+
+        const html = `
+            <tr class="align-middle" data-original="0">
+                <td class="ps-3 text-warning">
+                    <i class="fas fa-plus small me-1"></i><b>${nombre}</b>
+                </td>
+                <td class="text-end text-muted small">$ 0.00</td>
+                <td class="text-center" style="width: 180px;">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-dark border-secondary text-muted">$</span>
+                        <input type="number" class="form-control bg-dark text-light border-info text-end input-reembolso"
+                            data-medio="${id}" value="${val.toFixed(2)}" step="0.01">
+                        <button class="btn btn-outline-danger btn-sm px-2 border-secondary" type="button"
+                            onclick="this.closest('tr').remove(); recalcularTotales(); actualizarMontoSugerido();">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+        const pb = document.getElementById('pagosBody');
+        if (pb) pb.insertAdjacentHTML('beforeend', html);
+
+        sel.value = "";
+        monto.value = "";
+        const cont = document.getElementById('containerNuevoMedio');
+        if (cont) cont.classList.add('d-none');
+
+        document.querySelectorAll('.input-reembolso').forEach(inp => {
+            inp.removeEventListener('input', recalcularTotales);
+            inp.addEventListener('input', recalcularTotales);
+        });
+        recalcularTotales();
+    });
+
+    // ---- Prevenir submit nativo del form ----
+    const _form = document.getElementById('devolucionForm');
+    if (_form) _form.addEventListener('submit', e => e.preventDefault());
+
+    // ---- Botón principal ----
+    const btnSubmit = document.getElementById('btnSubmitNC');
+    if (btnSubmit) {
+        btnSubmit.addEventListener('click', async () => {
+            try {
+                const totalNC = recalcularTotales();
+                console.log("Total NC:", totalNC);
+
+                const depId = document.getElementById('deposito_id').value;
+                if (!depId) {
+                    alert('DETENCIÓN:\nDebe seleccionar un Depósito de Recepción para continuar.');
+                    return;
+                }
+
+                const items = [];
+                let cantidadError = false;
+
+                document.querySelectorAll('#itemsTable tbody tr').forEach(tr_node => {
+                    const cInput = tr_node.querySelector('.cant-devolver');
+                    if (!cInput) return;
+                    const c = parseFloat(cInput.value) || 0;
+                    const max = parseFloat(cInput.dataset.max) || 0;
+
+                    if (c > max) {
+                        cantidadError = true;
+                        cInput.classList.add('border-danger', 'text-danger');
+                    } else if (c > 0) {
+                        cInput.classList.remove('border-danger', 'text-danger');
+                        const pNode = tr_node.querySelector('.p_unit');
+                        items.push({
+                            articulo_id: tr_node.dataset.id,
+                            cantidad: c,
+                            precio: pNode ? parseAmount(pNode.innerText) : 0,
+                            iva: parseFloat(tr_node.dataset.iva) || 0
+                        });
+                    }
+                });
+
+                if (cantidadError) {
+                    alert('ERROR DE VALIDACIÓN:\nNo puede devolver una cantidad mayor a la facturada originalmente. Revise los casilleros en rojo en la tabla.');
+                    return;
+                }
+
+                console.log("Artículos:", items);
+
+                if (!items.length) {
+                    alert('DETENCIÓN:\nDebe haber al menos un artículo con cantidad mayor a 0 para devolver.');
+                    return;
+                }
+
+                const rb = [];
+                let totalReembolsado = 0;
+                document.querySelectorAll('.input-reembolso').forEach(inp => {
+                    const val = parseFloat(inp.value) || 0;
+                    if (val > 0) {
+                        rb.push({ medio_id: inp.dataset.medio, importe: val });
+                        totalReembolsado += val;
+                    }
+                });
+
+                if (totalReembolsado > totalNC + 0.01) {
+                    alert(`ERROR DE IMPUTACIÓN:\nEstás intentando devolver $ ${totalReembolsado.toFixed(2)} pero la NC es por apenas $ ${totalNC.toFixed(2)}.\nNo puedes reembolsar más de lo generado por la nota de crédito.`);
+                    return;
+                }
+
+                const payload = {
+                    factura_id: document.getElementById('factura_id_val').value,
+                    cliente_id: document.getElementById('cliente_id').value,
+                    deposito_id: depId,
+                    logistica_id: document.getElementById('logistica_id').value,
+                    observaciones: document.getElementById('observaciones').value,
+                    items: items,
+                    reembolsos: rb
+                };
+
+                console.log("Payload:", payload);
+
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrf = csrfMeta ? csrfMeta.content : '';
+                const sidParam = window.SID ? window.SID : (new URLSearchParams(window.location.search)).get('sid');
+                const url = "/ventas/devolucion-solicitar" + (sidParam ? "?sid=" + sidParam : "");
+
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+
+                const r = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-Token': csrf
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const text = await r.text();
+                console.log("Respuesta servidor:", text);
+
+                let d;
+                try {
+                    d = JSON.parse(text);
+                } catch (e) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i>Generar Nota de Crédito';
+                    alert('ERROR CRÍTICO:\nRespuesta inválida del servidor.\n\n' + text.substring(0, 300));
+                    return;
+                }
+
+                if (d.success) {
+                    localStorage.removeItem(DRAFT_KEY_DEV); // Limpiar draft al exito
+                    alert('¡ÉXITO!\nSolicitud de Nota de Crédito generada correctamente.');
+                    window.location.href = "{{url_for('ventas.comprobantes')}}" + (sidParam ? "?sid=" + sidParam : "");
+                } else {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i>Generar Nota de Crédito';
+                    alert('ERROR DEL SISTEMA:\n' + (d.message || 'Error desconocido.'));
+                }
+            } catch (err) {
+                console.error("Error en envío:", err);
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i>Generar Nota de Crédito';
+                alert('ERROR INESPERADO:\n' + err.message);
+            }
+        });
+    }
+
+    // ---- MANEJO DE BORRADOR LOCAL (AUTO-SAVE) ----
+    const DRAFT_KEY_DEV = 'devolucion_draft_' + document.getElementById('factura_id_val').value;
+
+    function guardarBorrador() {
+        const draftItems = [];
+        document.querySelectorAll('#itemsTable tbody tr').forEach(tr_node => {
+            const cNode = tr_node.querySelector('.cant-devolver');
+            if (cNode && parseFloat(cNode.value) > 0) {
+                draftItems.push({ id: tr_node.dataset.id, cant: cNode.value });
+            }
+        });
+
+        const reembolsos = [];
+        document.querySelectorAll('.input-reembolso').forEach(inp => {
+            if (parseFloat(inp.value) > 0) {
+                reembolsos.push({ medio: inp.dataset.medio, val: inp.value });
+            }
+        });
+
+        // Solo guardar si hay algo modificado
+        if (draftItems.length === 0 && reembolsos.length === 0 && !document.getElementById('observaciones').value) {
+            localStorage.removeItem(DRAFT_KEY_DEV);
+            return;
+        }
+
+        const draft = {
+            observaciones: document.getElementById('observaciones').value,
+            items: draftItems,
+            reembolsos: reembolsos,
+            logistica_id: document.getElementById('logistica_id') ? document.getElementById('logistica_id').value : ''
+        };
+        localStorage.setItem(DRAFT_KEY_DEV, JSON.stringify(draft));
+    }
+
+    // ---- INICIALIZACIÓN (corre directo — script al final del body, DOM ya disponible) ----
+    document.getElementById('observaciones').addEventListener('input', guardarBorrador);
+    if (document.getElementById('logistica_id')) document.getElementById('logistica_id').addEventListener('change', guardarBorrador);
+
+    document.querySelectorAll('.input-reembolso').forEach(inp => {
+        inp.addEventListener('input', () => { recalcularTotales(); guardarBorrador(); });
+    });
+    document.querySelectorAll('.cant-devolver').forEach(inp => {
+        inp.addEventListener('input', () => {
+            recalcularTotales();
+            actualizarMontoSugerido();
+            guardarBorrador();
+        });
+    });
+
+    // Cargar borrador si existe
+    try {
+        const draftJson = localStorage.getItem(DRAFT_KEY_DEV);
+        if (draftJson) {
+            const draft = JSON.parse(draftJson);
+            let hasRestored = false;
+
+            if (draft.observaciones) {
+                document.getElementById('observaciones').value = draft.observaciones;
+                hasRestored = true;
+            }
+            if (draft.logistica_id && document.getElementById('logistica_id')) {
+                document.getElementById('logistica_id').value = draft.logistica_id;
+            }
+            if (draft.items) {
+                draft.items.forEach(it => {
+                    const row = document.querySelector(`tr[data-id="${it.id}"]`);
+                    if (row) {
+                        const cantInp = row.querySelector('.cant-devolver');
+                        if (cantInp) cantInp.value = it.cant;
+                        hasRestored = true;
+                    }
+                });
+            }
+            if (draft.reembolsos) {
+                draft.reembolsos.forEach(rb => {
+                    const rInp = document.querySelector(`.input-reembolso[data-medio="${rb.medio}"]`);
+                    if (rInp) {
+                        rInp.value = rb.val;
+                        hasRestored = true;
+                    }
+                });
+            }
+
+            if (hasRestored) {
+                const toast = document.createElement('div');
+                toast.className = "alert alert-info py-2 px-3 position-fixed shadow-sm animate__animated animate__fadeInDown";
+                toast.style.cssText = "top: 20px; right: 20px; z-index: 9999;";
+                toast.innerHTML = `<i class="fas fa-undo me-2"></i>Borrador recuperado automáticamente.`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+            }
+        }
+    } catch (e) { console.error("Error al cargar borrador", e); }
+
+    recalcularTotales();  // calcular totales inmediatamente al cargar
+</script>
+<style>
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    }
+
+    .card {
+        border-radius: 15px;
+    }
+</style>
+{% endblock %}

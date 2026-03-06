@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="header-container"
+    style="display:flex; justify-content:space-between; align-items:start; margin-bottom:2rem;">
+    <div>
+        <h1 class="page-title"><i class="fas fa-barcode"></i> Números de Serie</h1>
+        <p class="text-muted">
+            <a href="{{ url_for('stock.articulos') }}" style="color:#94a3b8;">Artículos</a>
+            → <strong style="color:white;">{{ articulo.nombre }}</strong>
+        </p>
+    </div>
+    <div style="display:flex; gap:0.75rem; align-items:center;">
+        <span class="badge"
+            style="background:rgba(99,102,241,0.15); color:var(--primary); font-size:0.85rem; padding:0.5rem 1rem;">
+            <i class="fas fa-layer-group"></i> {{ series|length }} series registradas
+        </span>
+        <span class="badge"
+            style="background:rgba(16,185,129,0.15); color:#10b981; font-size:0.85rem; padding:0.5rem 1rem;">
+            Correlativo actual: {{ counter.ultimo_correlativo or 0 }}
+        </span>
+    </div>
+</div>
+
+<!-- 4 Paneles de operaciones -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem; margin-bottom:2rem;">
+
+    <!-- MODO 1: Scan Unit by Unit -->
+    <div class="card" style="border:1px solid rgba(99,102,241,0.3); padding:1.5rem; background:rgba(99,102,241,0.03);">
+        <h4 style="color:var(--primary); margin-top:0;"><i class="fas fa-barcode-scan"></i> Modo 1 — Scan Unitario</h4>
+        <div class="form-group" style="position:relative;">
+            <label>Escanear Código <span style="color:#10b981; font-size:0.75rem;">(F2 foco)</span></label>
+            <input type="text" id="scan-input" autofocus autocomplete="off" placeholder="Escanee o digite..."
+                style="background:rgba(15,23,42,0.6); border-color: rgba(99,102,241,0.5);"
+                onkeydown="if(event.key==='Enter') submitScan()">
+        </div>
+        <div id="scan-log"
+            style="max-height:80px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:6px; padding:0.5rem; font-size:0.75rem; font-family:monospace; color:#94a3b8; min-height:40px;">
+            Esperando scanner...
+        </div>
+        <button class="btn btn-primary" style="width:100%; margin-top:0.75rem;" onclick="submitScan()">
+            <i class="fas fa-check"></i> Registrar
+        </button>
+    </div>
+
+    <!-- MODO 3: Auto-Generate -->
+    <div class="card" style="border:1px solid rgba(139,92,246,0.3); padding:1.5rem; background:rgba(139,92,246,0.03);">
+        <h4 style="color:#a78bfa; margin-top:0;"><i class="fas fa-magic"></i> Modo 2 — Auto Generar</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+            <div class="form-group"><label>Cant.</label><input type="number" id="auto-cant" value="1" min="1" max="500">
+            </div>
+            <div class="form-group"><label>Lote</label><input type="text" id="auto-lote" placeholder="LOTE-001"></div>
+        </div>
+        <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; margin-bottom:0.75rem;">
+            <input type="checkbox" id="auto-print" checked> <span style="font-size:0.85rem;">🖨️ Imprimir
+                etiquetas</span>
+        </label>
+        <button class="btn" style="width:100%; background:#8b5cf6; color:white;" onclick="submitAutoGenerar()">
+            <i class="fas fa-magic"></i> Generar
+        </button>
+    </div>
+
+    <!-- MODO 4: Master Box Aggregation -->
+    <div class="card" style="border:1px solid rgba(16,185,129,0.3); padding:1.5rem; background:rgba(16,185,129,0.03);">
+        <h4 style="color:#34d399; margin-top:0;"><i class="fas fa-box-open"></i> Modo 3 — Master Box (Caja)</h4>
+        <p style="font-size:0.75rem; color:#94a3b8;">Vincule múltiples unidades a una caja contenedora.</p>
+        <div class="form-group">
+            <label>Serie de la CAJA (Caja Maestra)</label>
+            <input type="text" id="mb-parent" placeholder="Escanee serie de la caja..." style="border-color:#10b981;">
+        </div>
+        <div class="form-group">
+            <label>Series de UNIDADES (Separadas por comas o enter)</label>
+            <textarea id="mb-children" rows="2" placeholder="Escanee todas las unidades contenidas..."
+                style="background:rgba(0,0,0,0.2); color:white; font-size:0.8rem;"></textarea>
+        </div>
+        <button class="btn" style="width:100%; background:#10b981; color:white; font-weight:bold;"
+            onclick="submitVinculacionMB()">
+            <i class="fas fa-link"></i> Consolidar Master Box
+        </button>
+    </div>
+
+    <!-- MODO 2: Import -->
+    <div class="card" style="border:1px solid rgba(245,158,11,0.2); padding:1.5rem; opacity:0.8;">
+        <h4 style="color:#fbbf24; margin-top:0;"><i class="fas fa-file-import"></i> Modo 4 — Importar</h4>
+        <div class="form-group">
+            <input type="file" id="import-file" accept=".csv" style="font-size:0.7rem;">
+        </div>
+        <button class="btn" style="width:100%; background:#f59e0b; color:black; font-size:0.8rem;"
+            onclick="submitImport()">
+            <i class="fas fa-upload"></i> Subir CSV
+        </button>
+    </div>
+</div>
+
+<!-- Listado de series registradas -->
+<div class="card" style="padding:0; overflow:hidden;">
+    <div
+        style="padding:1rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="margin:0;"><i class="fas fa-list"></i> Series Registradas</h4>
+        <div style="display:flex; gap:0.5rem;">
+            <select id="filter-estado" onchange="filterTable()"
+                style="background:rgba(15,23,42,0.8);color:white;padding:0.3rem 0.6rem;border-radius:6px;font-size:0.8rem;">
+                <option value="">Todos los estados</option>
+                <option value="EN_STOCK">En Stock</option>
+                <option value="VENDIDO">Vendido</option>
+                <option value="RESERVADO">Reservado</option>
+                <option value="DADO_BAJA">Dado de Baja</option>
+            </select>
+            <input id="filter-search" type="text" placeholder="🔍 Buscar serie..." oninput="filterTable()"
+                style="background:rgba(15,23,42,0.6);color:white;padding:0.3rem 0.6rem;border-radius:6px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.1);">
+        </div>
+    </div>
+    <table class="data-table" id="series-table">
+        <thead>
+            <tr>
+                <th>NÚMERO DE SERIE</th>
+                <th style="text-align:center;">JERARQUÍA / CONTENIDO</th>
+                <th style="text-align:center;">ESTADO</th>
+                <th>LOTE</th>
+                <th style="text-align:center;">AUDITORÍA</th>
+                <th style="text-align:center;">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody id="series-tbody">
+            {% for s in series %}
+            <tr data-estado="{{ s.estado }}" data-serie="{{ s.numero_serie }}">
+                <td>
+                    <code style="font-size:0.9rem; font-weight:bold; color:white;">{{ s.numero_serie }}</code>
+                    <br>
+                    <span style="font-size:0.65rem; color:#64748b;">ORIGEN: {{ s.origen }}</span>
+                </td>
+                <td style="text-align:center;">
+                    {% if s.es_contenedor %}
+                    <span class="badge" style="background:#059669; color:white;"><i class="fas fa-boxes"></i> MASTER
+                        BOX</span>
+                    {% elif s.parent_id %}
+                    <span class="badge" style="background:rgba(59, 130, 246, 0.1); color:#60a5fa;"><i
+                            class="fas fa-link"></i> Contenido en {{ s.parent_id }}</span>
+                    {% else %}
+                    <span style="color:#475569; font-size:0.75rem;">Individual</span>
+                    {% endif %}
+                </td>
+                <td style="text-align:center;">
+                    {% if s.estado == 'EN_STOCK' %}
+                    <span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981;">En Stock</span>
+                    {% elif s.estado == 'VENDIDO' %}
+                    <span class="badge" style="background:rgba(239,68,68,0.15); color:#ef4444;">Vendido</span>
+                    {% elif s.estado == 'RESERVADO' %}
+                    <span class="badge" style="background:rgba(245,158,11,0.15); color:#fbbf24;">Reservado</span>
+                    {% else %}
+                    <span class="badge" style="background:rgba(255,255,255,0.05); color:#64748b;">Baja</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:0.8rem; color:#94a3b8;">{{ s.lote or '—' }}</td>
+                <td style="text-align:center;">
+                    <button class="btn-action" onclick="showPedigree({{ s.id }}, '{{ s.numero_serie }}')"
+                        title="Ver Historia de Vida"
+                        style="background:rgba(139, 92, 246, 0.1); color:#a78bfa; border:1px solid rgba(139, 92, 246, 0.2); padding:0.3rem 0.6rem; border-radius:4px;">
+                        <i class="fas fa-history"></i> Log
+                    </button>
+                </td>
+                <td style="text-align:center;">
+                    <button class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.75rem;"
+                        onclick="window.open('/stock/api/articulos/{{ articulo.id }}/print_label?serie={{ s.numero_serie }}','_blank','width=420,height=280')">
+                        <i class="fas fa-print"></i>
+                    </button>
+                    {% if s.es_contenedor %}
+                    <button class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.75rem; color:#f59e0b;"
+                        onclick="submitDesvinculacionMB('{{ s.numero_serie }}')" title="Desconsolidar Caja">
+                        <i class="fas fa-box-open"></i>
+                    </button>
+                    {% endif %}
+                    <button class="btn-secondary" style="padding:0.3rem 0.6rem; font-size:0.75rem; color:#ef4444;"
+                        onclick="deleteSerie({{ s.id }}, this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% else %}
+            <tr id="empty-row">
+                <td colspan="6" style="text-align:center; padding:3rem; color:#64748b;">
+                    <i class="fas fa-barcode fa-3x" style="opacity:0.2; display:block; margin-bottom:1rem;"></i>
+                    No hay series registradas aún. Use cualquiera de los 4 modos arriba.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Pedigree (Life Log) -->
+<div id="modal-pedigree" class="modal"
+    style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7);">
+    <div
+        style="background:#0f172a; margin:5% auto; padding:2rem; width:80%; max-width:800px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h2 style="margin:0; color:#a78bfa;"><i class="fas fa-history"></i> Historia del Serial: <span
+                    id="pedigree-nro" style="color:white;"></span></h2>
+            <button onclick="document.getElementById('modal-pedigree').style.display='none'" class="btn-close"
+                style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div id="pedigree-body" style="max-height:400px; overflow-y:auto;">
+            <p style="color:#94a3b8;">Cargando historia de trazabilidad...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ARTICULO_ID = {{ articulo.id }};
+
+    // ── MODO 1: Scan ─────────────────────────────────────────────────────────────
+    function submitScan() {
+        const input = document.getElementById('scan-input');
+        const numero = input.value.trim();
+        if (!numero) return;
+
+        fetch(`/stock/api/seriales/${ARTICULO_ID}/scan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numero_serie: numero, lote: '' })
+        })
+            .then(r => r.json())
+            .then(data => {
+                const log = document.getElementById('scan-log');
+                if (data.success) {
+                    log.innerHTML = `<span style="color:#10b981;">✓ ${numero}</span><br>` + log.innerHTML;
+                    location.reload(); // Recargar para ver jerarquías si aplica
+                } else {
+                    log.innerHTML = `<span style="color:#ef4444;">✗ ${data.message}</span><br>` + log.innerHTML;
+                }
+                input.value = '';
+                input.focus();
+            })
+            .catch(console.error);
+    }
+
+    // ── MODO 3: Master Box ────────────────────────────────────────────────────────
+    function submitVinculacionMB() {
+        const parent = document.getElementById('mb-parent').value.trim();
+        const children = document.getElementById('mb-children').value.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+
+        if (!parent || children.length === 0) {
+            alert("Debe ingresar la serie de la caja y al menos una unidad.");
+            return;
+        }
+
+        fetch('/stock/api/seriales/vincular-caja', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ parent_serie: parent, children_series: children })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            });
+    }
+
+    function submitDesvinculacionMB(parentSerie) {
+        if (!confirm(`¿Desea desvincular todas las unidades de la caja ${parentSerie}?`)) return;
+
+        fetch('/stock/api/seriales/desvincular-caja', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ parent_serie: parentSerie })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            });
+    }
+
+    // ── PEDIGREE (Life Log) ───────────────────────────────────────────────────────
+    function showPedigree(id, nro) {
+        const modal = document.getElementById('modal-pedigree');
+        const body = document.getElementById('pedigree-body');
+        document.getElementById('pedigree-nro').innerText = nro;
+
+        modal.style.display = 'block';
+        body.innerHTML = '<p style="color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Cargando historia...</p>';
+
+        fetch(`/stock/api/seriales/${id}/pedigree`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.pedigree.length === 0) {
+                        body.innerHTML = '<p style="padding:2rem; text-align:center; color:#64748b;">No hay eventos registrados para este serial.</p>';
+                        return;
+                    }
+
+                    let html = '<table style="width:100%; border-collapse:collapse; color:#cbd5e1; font-size:0.85rem;">';
+                    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:#94a3b8;"><th style="padding:0.6rem; text-align:left;">Fecha</th><th style="padding:0.6rem; text-align:left;">Evento</th><th style="padding:0.6rem; text-align:left;">Usuario</th><th style="padding:0.6rem; text-align:left;">Detalle / Notas</th></tr>';
+
+                    data.pedigree.forEach(ev => {
+                        const date = new Date(ev.fecha_registro).toLocaleString();
+                        let color = '#94a3b8';
+                        if (ev.tipo_evento === 'INGRESO') color = '#10b981';
+                        if (ev.tipo_evento === 'VENTA') color = '#60a5fa';
+                        if (ev.tipo_evento === 'DEVOLUCION') color = '#f59e0b';
+                        if (ev.tipo_evento === 'BAJA') color = '#ef4444';
+
+                        html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <td style="padding:0.6rem;">${date}</td>
+                        <td style="padding:0.6rem;"><span class="badge" style="background:${color}22; color:${color}; font-weight:bold;">${ev.tipo_evento}</span></td>
+                        <td style="padding:0.6rem;">${ev.usuario_nombre || 'SISTEMA'}</td>
+                        <td style="padding:0.6rem;">
+                            ${ev.notas || ''} 
+                            ${ev.deposito_nombre ? `<br><small style="color:#64748b">📍 ${ev.deposito_nombre}</small>` : ''}
+                        </td>
+                    </tr>`;
+                    });
+                    html += '</table>';
+                    body.innerHTML = html;
+                } else {
+                    body.innerHTML = `<p style="color:#ef4444;">Error: ${data.message}</p>`;
+                }
+            });
+    }
+
+    // ── MODO 2: Import ────────────────────────────────────────────────────────────
+    function submitImport() {
+        const file = document.getElementById('import-file').files[0];
+        if (!file) { alert('Seleccione un archivo CSV.'); return; }
+
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('columna', '0');
+
+        fetch(`/stock/api/seriales/${ARTICULO_ID}/import`, { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) { alert(data.message); location.reload(); }
+                else alert('Error: ' + data.message);
+            });
+    }
+
+    // ── MODO 4: Auto-generate ─────────────────────────────────────────────────────
+    function submitAutoGenerar() {
+        const cant = parseInt(document.getElementById('auto-cant').value);
+        const lote = document.getElementById('auto-lote').value;
+        const print = document.getElementById('auto-print').checked;
+
+        fetch(`/stock/api/seriales/${ARTICULO_ID}/autogenerar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cantidad: cant, lote: lote, imprimir: print })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    if (print && data.generados) {
+                        data.generados.slice(0, 5).forEach(s => {
+                            window.open(`/stock/api/articulos/${ARTICULO_ID}/print_label?serie=${s}`, '_blank', 'width=400,height=300');
+                        });
+                    }
+                    location.reload();
+                }
+                else alert('Error: ' + data.message);
+            });
+    }
+
+    // ── Delete ────────────────────────────────────────────────────────────────────
+    function deleteSerie(id, btn) {
+        if (!confirm('¿Quitar esta serie del inventario?')) return;
+        fetch(`/stock/api/seriales/${id}/eliminar`, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(d => { if (d.success) btn.closest('tr').remove(); else alert(d.message); });
+    }
+
+    // ── Filter table ──────────────────────────────────────────────────────────────
+    function filterTable() {
+        const estado = document.getElementById('filter-estado').value;
+        const search = document.getElementById('filter-search').value.toLowerCase();
+        document.querySelectorAll('#series-tbody tr[data-serie]').forEach(row => {
+            const matchEstado = !estado || row.dataset.estado === estado;
+            const matchSearch = !search || row.dataset.serie.toLowerCase().includes(search);
+            row.style.display = (matchEstado && matchSearch) ? '' : 'none';
+        });
+    }
+
+    // Atajos de teclado
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F2') {
+            e.preventDefault();
+            document.getElementById('scan-input').focus();
+        }
+    });
+
+    // Cerrar modal al clickear afuera
+    window.onclick = function (event) {
+        let modal = document.getElementById('modal-pedigree');
+        if (event.target == modal) modal.style.display = "none";
+    }
+</script>
+{% endblock %}

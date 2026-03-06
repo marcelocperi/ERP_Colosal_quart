@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="header-action">
+    <h1>Importar Artículos por Idioma</h1>
+</div>
+
+<div class="grid-stats" style="grid-template-columns: 1fr 2fr; gap: 2rem;">
+    <!-- Formulario -->
+    <div class="card">
+        <h3>Configuración de Importación</h3>
+        <p class="text-muted" style="margin-bottom: 1.5rem;">
+            Se buscarán artículos en Open Library y se agregarán a la base de datos local.
+            Los artículos existentes serán contados como duplicados.
+        </p>
+        <form action="{{ url_for('stock.articulos_importar') }}" method="POST">
+            <div class="form-group">
+                <label for="source">Fuente de Datos</label>
+                <select name="source" id="source" required
+                    style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: var(--radius);">
+                    <option value="openlibrary">Open Library (Internacional)</option>
+                    <option value="google">Google Books (Más exhaustivo)</option>
+                    <option value="worldcat">WorldCat / MundoCat (Catálogo Global)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="idioma">Idioma</label>
+                <select name="idioma" id="idioma" required
+                    style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: var(--radius);">
+                    <option value="spa">Español (spa)</option>
+                    <option value="eng">Inglés (eng)</option>
+                    <option value="fre">Francés (fre)</option>
+                    <option value="ger">Alemán (ger)</option>
+                    <option value="ita">Italiano (ita)</option>
+                    <option value="por">Portugués (por)</option>
+                    <option value="dut">Holandés (dut)</option>
+                    <option value="rus">Ruso (rus)</option>
+                    <option value="lat">Latín (lat)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="cantidad">Cantidad a Recuperar</label>
+                <input type="number" name="cantidad" id="cantidad" min="1" max="100" value="10" required
+                    style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: var(--radius);">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                <i class="fas fa-cloud-download-alt"></i> Iniciar Importación
+            </button>
+        </form>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card">
+        <h3>Resultados de la Operación</h3>
+
+        {% if resultados %}
+        <div class="grid-stats" style="margin: 1rem 0; grid-template-columns: 1fr 1fr;">
+            <div class="card" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success);">
+                <div class="text-muted">Nuevas Altas</div>
+                <div style="font-size: 2rem; font-weight: bold; color: var(--success);">{{ resultados.altas }}</div>
+            </div>
+            <div class="card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning);">
+                <div class="text-muted">Duplicados (Existentes)</div>
+                <div style="font-size: 2rem; font-weight: bold; color: var(--warning);">{{ resultados.duplicados }}
+                </div>
+            </div>
+        </div>
+
+        {% if libros_agregados %}
+        <h4>Artículos Agregados:</h4>
+        <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Autor</th>
+                        <th>ISBN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for libro in libros_agregados %}
+                    <tr>
+                        <td>{{ libro.title }}</td>
+                        <td>{{ libro.author }}</td>
+                        <td><small>{{ libro.isbn }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% else %}
+        <div
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
+            <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p>Seleccione un idioma y cantidad para ver los resultados aquí.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
