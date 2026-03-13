@@ -293,6 +293,18 @@
     // --- MANEJO DE BORRADOR LOCAL (AUTO-SAVE) ---
     const DRAFT_KEY = esNC ? 'factura_draft_nc' : 'factura_draft';
 
+    // Migración: limpiar items viejos del localStorage (formato anterior)
+    try {
+        const oldDraft = localStorage.getItem(DRAFT_KEY);
+        if (oldDraft) {
+            const parsed = JSON.parse(oldDraft);
+            if (parsed.items) {
+                delete parsed.items;
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(parsed));
+            }
+        }
+    } catch(e) {}
+
     function guardarBorrador() {
         // No guardar borrador si venimos de una NC precargada u otro flujo estricto
         if (esNC || clientePreseleccionado) return;
@@ -301,14 +313,20 @@
             cliente_id: document.getElementById('cliente_id').value,
             tipo_comprobante: document.getElementById('tipo_comprobante').value,
             condicion_pago_id: document.getElementById('condicion_pago_id').value,
-            deposito_id: document.getElementById('deposito_id').value,
-            items: items
+            deposito_id: document.getElementById('deposito_id').value
         };
 
-        if (items.length === 0 && !draft.cliente_id) {
+        if (!draft.cliente_id) {
             localStorage.removeItem(DRAFT_KEY);
         } else {
             localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        }
+
+        // Items en sessionStorage: sobrevive refresh/corte de red, se borra al cerrar pestaña
+        if (items.length > 0) {
+            sessionStorage.setItem(DRAFT_KEY + '_items', JSON.stringify(items));
+        } else {
+            sessionStorage.removeItem(DRAFT_KEY + '_items');
         }
     }
 
@@ -345,6 +363,13 @@
             alicARBA = 0; alicAGIP = 0;
             actualizarTotales();
             return;
+        }
+
+        // Si cambia el cliente orgánicamente (no restaurando borrador), limpiar items
+        if (!window.isRestoringDraft) {
+            items = [];
+            sessionStorage.removeItem(DRAFT_KEY + '_items');
+            renderTable();
         }
 
         const tipoResponsable = opt.dataset.tipo;
@@ -708,7 +733,9 @@
 
         if (!esNCFact) {
             const dirId = document.getElementById('entrega_direccion_id').value;
-            const transp = document.getElementById('logistica_transportista').value;
+            const transpSelect = document.getElementById('logistica_transportista');
+            const transp = transpSelect.value;
+            const esTransportePropio = transp === 'PROPIO';
             const patente = document.getElementById('logistica_patente').value;
 
             if (!dirId) {
@@ -719,7 +746,8 @@
                 showPremiumAlert('🚨 Debe seleccionar un Transportista.', 'warning', 'LOGÍSTICA INCOMPLETA');
                 return;
             }
-            if (!patente) {
+            // Patente y COT no son requeridos para Transporte Propio
+            if (!esTransportePropio && !patente) {
                 showPremiumAlert('🚨 Debe ingresar la Patente del vehículo.', 'warning', 'LOGÍSTICA INCOMPLETA');
                 return;
             }
@@ -898,15 +926,16 @@
     window.enviarFactura = async function (esCtaCte) {
         // Bloquear botones para evitar doble submit
         const btnConfirmar = document.getElementById('btnConfirmarPago');
-        const btnCtaCte = document.querySelector('button[onclick="enviarFactura(true)"]');
+        const btnCtaCte = document.getElementById('btnFacturarCtaCte');
         
         const targetBtn = esCtaCte ? btnCtaCte : btnConfirmar;
+        if (!targetBtn) { console.error('Botón no encontrado'); return; }
         const originalHtml = targetBtn.innerHTML;
 
         targetBtn.disabled = true;
         targetBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Emitiendo...';
-        if (!esCtaCte) btnCtaCte.disabled = true;
-        else btnConfirmar.disabled = true;
+        if (!esCtaCte && btnCtaCte) btnCtaCte.disabled = true;
+        else if (btnConfirmar) btnConfirmar.disabled = true;
 
         const payload = {
             cliente_id: document.getElementById('cliente_id').value,
@@ -959,6 +988,7 @@
 
                 // Limpiar borrador local al éxito
                 localStorage.removeItem(DRAFT_KEY);
+                sessionStorage.removeItem(DRAFT_KEY + '_items');
 
                 const redirectUrl = new URL("{{ url_for('ventas.comprobantes') }}", window.location.origin);
                 if (window.SID) redirectUrl.searchParams.set('sid', window.SID);
@@ -988,11 +1018,10 @@
             targetBtn.disabled = false;
             targetBtn.innerHTML = originalHtml;
             if (!esCtaCte) {
-                // actualizarInfoPagos volverá a setear el estado correcto de deshabilitación segun el saldo
                 actualizarInfoPagos();
-                btnCtaCte.disabled = false;
+                if (btnCtaCte) btnCtaCte.disabled = false;
             } else {
-                btnConfirmar.disabled = false;
+                if (btnConfirmar) btnConfirmar.disabled = false;
                 actualizarInfoPagos();
             }
         }
@@ -1114,42 +1143,42 @@
         // Recuperar Borrador Local si existe
         if (!esNC && !clientePreseleccionado) {
             const draftJson = localStorage.getItem(DRAFT_KEY);
+            const draftItemsJson = sessionStorage.getItem(DRAFT_KEY + '_items');
+
             if (draftJson) {
                 try {
                     const draft = JSON.parse(draftJson);
-                    if (draft.items?.length > 0 || draft.cliente_id) {
-                        // Restauramos silenciosamente el borrador para mejorar UX
-
-                        if (draft.cliente_id) {
-                            const selCli = document.getElementById('cliente_id');
-                            selCli.value = draft.cliente_id;
-                            // Disparamos el refresco de cliente despues para poblar logistica, tipos y condiciones
+                    if (draft.cliente_id) {
+                        const selCli = document.getElementById('cliente_id');
+                        selCli.value = draft.cliente_id;
+                        window.isRestoringDraft = true;
+                        setTimeout(() => {
+                            selCli.dispatchEvent(new Event('change'));
                             setTimeout(() => {
-                                selCli.dispatchEvent(new Event('change'));
+                                if (draft.tipo_comprobante) document.getElementById('tipo_comprobante').value = draft.tipo_comprobante;
+                                if (draft.deposito_id) document.getElementById('deposito_id').value = draft.deposito_id;
+                                if (draft.condicion_pago_id) document.getElementById('condicion_pago_id').value = draft.condicion_pago_id;
+                                setTimeout(() => window.isRestoringDraft = false, 200);
+                            }, 800);
+                        }, 100);
+                    }
+                } catch (e) { console.error("Error leyendo borrador:", e); }
+            }
 
-                                // Restablecemos resto de controles cuando termine (aproximado)
-                                setTimeout(() => {
-                                    if (draft.tipo_comprobante) document.getElementById('tipo_comprobante').value = draft.tipo_comprobante;
-                                    if (draft.deposito_id) document.getElementById('deposito_id').value = draft.deposito_id;
-                                    if (draft.condicion_pago_id) document.getElementById('condicion_pago_id').value = draft.condicion_pago_id;
-                                }, 800);
-                            }, 100);
-                        }
-
-                        if (draft.items) {
-                            items = draft.items;
-                            renderTable();
-                        }
-
-                        // Show a small non-intrusive toast or alert to let user know draft was loaded
+            // Items en sessionStorage: sobrevive refresh/corte de red, NO sobrevive cierre de pestaña
+            if (draftItemsJson) {
+                try {
+                    items = JSON.parse(draftItemsJson);
+                    if (items.length > 0) {
+                        renderTable();
                         const toast = document.createElement('div');
-                        toast.className = "alert alert-info py-2 px-3 position-fixed shadow-sm animate__animated animate__fadeInDown";
-                        toast.style.cssText = "top: 20px; right: 20px; z-index: 9999;";
-                        toast.innerHTML = `<i class="fas fa-undo me-2"></i>Borrador recuperado automáticamente.`;
+                        toast.className = 'alert alert-info py-2 px-3 position-fixed shadow-sm animate__animated animate__fadeInDown';
+                        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+                        toast.innerHTML = '<i class="fas fa-undo me-2"></i>Items recuperados (sesión activa).';
                         document.body.appendChild(toast);
                         setTimeout(() => toast.remove(), 4000);
                     }
-                } catch (e) { console.error("Error leyendo borrador:", e); }
+                } catch (e) { console.error("Error leyendo items de sesión:", e); }
             }
         }
 
@@ -1184,7 +1213,7 @@
             btnConf.classList.remove('btn-primary');
             btnConf.classList.add('btn-danger');
 
-            const btnCtaCte = document.querySelector('button[onclick="enviarFactura(true)"]');
+            const btnCtaCte = document.getElementById('btnFacturarCtaCte');
             if (btnCtaCte) btnCtaCte.textContent = "Imputar en Cta. Cte. (Saldo a Favor)";
         }
 
@@ -1362,8 +1391,7 @@
             </table>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" onclick="enviarFactura(true)">Facturar en Cta. Cte.
-                (Sin Pago)</button>
+            <button type="button" class="btn btn-outline-secondary" id="btnFacturarCtaCte" onclick="enviarFactura(true)">Facturar en Cta. Cte. (Sin Pago)</button>
             <button type="button" class="btn btn-primary" id="btnConfirmarPago" onclick="enviarFactura(false)"
                 disabled>Confirmar Pago y Facturar</button>
         </div>
