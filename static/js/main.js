@@ -579,3 +579,60 @@ function goBack() {
  */
 window.addEventListener('online', () => showToast('Conexión restablecida', 'success'));
 window.addEventListener('offline', () => showToast('Se ha perdido la conexión a internet', 'error'));
+
+/**
+ * Specialized Modal for AFIP Errors with action suggestions
+ */
+function showAFIPErrorModal(message, codes) {
+    if (typeof Swal === 'undefined') {
+        alert("AFIP REJECTED: " + message);
+        return;
+    }
+    
+    const color = '#ef4444'; // Red for errors
+    const title = 'RECHAZO DE AFIP';
+    
+    // Force array if string
+    const codesList = Array.isArray(codes) ? codes : [codes];
+    
+    // Check if we have the "sync" error (10016 - El numero de comprobante no coincide)
+    const hasSyncError = codesList.includes('10016') || codesList.includes(10016);
+    const syncActionHtml = hasSyncError ? `
+        <div style="margin-top: 15px; padding: 12px; background: rgba(234, 179, 8, 0.1); border: 1px dashed #eab308; border-radius: 8px; font-size: 0.85rem; color: #fef08a;">
+            <i class="fas fa-sync-alt me-2"></i> <strong>Sugerencia Técnica:</strong> AFIP indica que el número de comprobante no coincide con sus registros.
+            <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
+                <a href="/configuracion/puntos-venta" class="btn btn-xs btn-warning" style="font-size: 0.7rem; padding: 2px 8px; color: #000; text-decoration: none; border-radius: 4px; font-weight: bold; background: #eab308;">
+                    <i class="fas fa-external-link-alt me-1"></i> Ir a Sincronizar Pv
+                </a>
+            </div>
+        </div>
+    ` : '';
+
+    Swal.fire({
+        icon: 'error',
+        title: `<span style="color: ${color}; font-weight: 800; font-size: 1.1rem; text-transform: uppercase;">
+                    <i class="fas fa-file-circle-exclamation"></i> ${title}
+                </span>`,
+        html: `
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 15px; text-align: left;">
+                <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 12px;">El servicio de Facturación Electrónica ha rechazado la solicitud:</p>
+                <div style="background: rgba(0,0,0,0.3); border-left: 4px solid ${color}; padding: 15px; border-radius: 5px; color: #f8fafc; font-size: 0.95rem; user-select: text; line-height: 1.6; word-break: break-word;">
+                    ${message}
+                </div>
+                ${syncActionHtml}
+                <div style="margin-top: 15px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 4px; font-size: 0.7rem; color: #64748b;">
+                    <strong>Códigos de Error AFIP:</strong> ${codesList.join(', ')}
+                </div>
+                <div style="margin-top: 15px; font-size: 0.75rem; color: #94a3b8; text-align: center;">
+                    <i class="fas fa-info-circle"></i> La transacción de stock y cuenta corriente fue revertida automáticamente.
+                </div>
+            </div>`,
+        background: '#111827',
+        color: '#fff',
+        confirmButtonColor: color,
+        confirmButtonText: 'ENTENDIDO, CORREGIR',
+        width: '600px',
+        allowOutsideClick: false,
+        showCloseButton: true
+    });
+}

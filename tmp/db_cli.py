@@ -1,20 +1,21 @@
 import os
 import sys
 import json
+import asyncio
 
-project_root = r"c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP"
+project_root = os.getcwd()
 if project_root not in sys.path:
     sys.path.append(project_root)
 
 from database import get_db_cursor
 
-def run_query(sql, params=None):
+async def run_query(sql, params=None):
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute(sql, params or ())
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute(sql, params or ())
             # Intentar obtener resultados solo si es una consulta que los devuelve
             if cursor.description:
-                results = cursor.fetchall()
+                results = await cursor.fetchall()
                 print(json.dumps(results, indent=2, default=str))
             else:
                 print(json.dumps({"status": "success", "rowcount": cursor.rowcount}))
@@ -27,4 +28,4 @@ if __name__ == "__main__":
     else:
         sql = sys.argv[1]
         params = json.loads(sys.argv[2]) if len(sys.argv) > 2 else None
-        run_query(sql, params)
+        asyncio.run(run_query(sql, params))

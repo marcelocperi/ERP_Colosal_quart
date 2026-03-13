@@ -15,7 +15,7 @@ SENDER_PASSWORD = ""
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
-def get_enterprise_email_config(enterprise_id):
+async def get_enterprise_email_config(enterprise_id):
     """Obtiene credenciales de correo para una empresa especifica utilizando desencriptacion."""
     from cryptography.fernet import Fernet
     import os
@@ -25,13 +25,13 @@ def get_enterprise_email_config(enterprise_id):
     cipher_suite = None
     if os.path.exists(key_path):
         with open(key_path, 'rb') as key_file:
-            key = key_file.read()
+            key = await key_file.read()
             cipher_suite = Fernet(key)
 
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT cuenta_mailing, mailing_password FROM sys_enterprises WHERE id = %s", (enterprise_id,))
-            row = cursor.fetchone()
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT cuenta_mailing, mailing_password FROM sys_enterprises WHERE id = %s", (enterprise_id,))
+            row = await cursor.fetchone()
             if row and row['cuenta_mailing'] and row['mailing_password'] and cipher_suite:
                 try:
                     decrypted_pwd = cipher_suite.decrypt(row['mailing_password'].encode('utf-8')).decode('utf-8')
@@ -117,26 +117,26 @@ def _generar_html_template(titulo, mensaje_principal, detalles, color_primario="
     </html>
     """
 
-def _obtener_branding(enterprise_id):
+async def _obtener_branding(enterprise_id):
     """Obtiene el nombre, logo y CUIT de la empresa de la BD."""
     from database import get_db_cursor
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT nombre, logo_path, cuit FROM sys_enterprises WHERE id = %s", (enterprise_id,))
-            res = cursor.fetchone()
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT nombre, logo_path, cuit FROM sys_enterprises WHERE id = %s", (enterprise_id,))
+            res = await cursor.fetchone()
             if res:
                 return res['nombre'] or "Colosal", res['logo_path'], res['cuit']
     except Exception:
         pass
     return "Colosal", None, ""
 
-def _enviar_email(recipient_email, subject, html_content, attachments=None, enterprise_id=None):
+async def _enviar_email(recipient_email, subject, html_content, attachments=None, enterprise_id=None):
     """
     Versión unificada y robusta para envío de correos.
     Soporta configuraciones por empresa y adjuntos (paths o tuplas).
     Retorna (True, None) si tiene éxito, o (False, error_msg) si falla.
     """
-    email_config = get_enterprise_email_config(enterprise_id)
+    email_config = await get_enterprise_email_config(enterprise_id)
     sender_email = email_config['email']
     sender_password = email_config['password']
     smtp_server = email_config['server']
@@ -161,7 +161,7 @@ def _enviar_email(recipient_email, subject, html_content, attachments=None, ente
                     # Es un path de archivo
                     if os.path.exists(attachment):
                         with open(attachment, "rb") as f:
-                            part = MIMEApplication(f.read(), Name=os.path.basename(attachment))
+                            part = MIMEApplication(await f.read(), Name=os.path.basename(attachment))
                         part['Content-Disposition'] = f'attachment; filename="{os.path.basename(attachment)}"'
                         msg.attach(part)
                 elif isinstance(attachment, tuple) and len(attachment) == 2:
@@ -185,9 +185,9 @@ def _enviar_email(recipient_email, subject, html_content, attachments=None, ente
         return False, err_msg
 
 
-def enviar_notificacion_prestamo(usuario_email, usuario_nombre, libro_nombre, isbn, fecha_dev, prestamo_id, enterprise_id):
+async def enviar_notificacion_prestamo(usuario_email, usuario_nombre, libro_nombre, isbn, fecha_dev, prestamo_id, enterprise_id):
     subject = f"Préstamo #{prestamo_id}"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     detalles = {
         "Usuario": usuario_nombre,
         "Libro": libro_nombre,
@@ -205,11 +205,11 @@ def enviar_notificacion_prestamo(usuario_email, usuario_nombre, libro_nombre, is
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def enviar_notificacion_devolucion(usuario_email, usuario_nombre, libro_datos, fecha_prestamo, prestamo_id, enterprise_id):
+async def enviar_notificacion_devolucion(usuario_email, usuario_nombre, libro_datos, fecha_prestamo, prestamo_id, enterprise_id):
     subject = f"Devolución #{prestamo_id}"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     
     # Manejar si libro_datos es string (legacy) o dict
     titulo = libro_datos if isinstance(libro_datos, str) else libro_datos.get('titulo')
@@ -238,11 +238,11 @@ def enviar_notificacion_devolucion(usuario_email, usuario_nombre, libro_datos, f
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def enviar_clave_temporal(usuario_email, usuario_nombre, clave_temporal, enterprise_id):
+async def enviar_clave_temporal(usuario_email, usuario_nombre, clave_temporal, enterprise_id):
     subject = "Seguridad: Acceso Temporal al Sistema"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     detalles = {
         "Usuario": usuario_nombre,
         "Clave Temporal": f"<code style='background: #e2e8f0; padding: 2px 5px; border-radius: 4px;'>{clave_temporal}</code>",
@@ -269,14 +269,14 @@ def enviar_clave_temporal(usuario_email, usuario_nombre, clave_temporal, enterpr
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def enviar_link_recuperacion(usuario_email, usuario_nombre, link, enterprise_id):
+async def enviar_link_recuperacion(usuario_email, usuario_nombre, link, enterprise_id):
     """
     Envía un enlace único para restablecer contraseña.
     """
     subject = "Recuperación de Acceso - Enlace Seguro"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     
     detalles = {
         "Usuario": usuario_nombre,
@@ -311,9 +311,9 @@ def enviar_link_recuperacion(usuario_email, usuario_nombre, link, enterprise_id)
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def alert_admin_multiples_intentos(admin_email, usuario_nombre, intentos):
+async def alert_admin_multiples_intentos(admin_email, usuario_nombre, intentos):
     subject = f"ALERTA SEGURIDAD: Múltiples intentos de recuperación - {usuario_nombre}"
     ahora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     
@@ -339,11 +339,11 @@ def alert_admin_multiples_intentos(admin_email, usuario_nombre, intentos):
     )
 
     # Nota: No pasamos enterprise_id aqui ya que es una alerta global de seguridad
-    return _enviar_email(admin_email, subject, html)
+    return await _enviar_email(admin_email, subject, html)
 
-def enviar_notificacion_cambio_password(usuario_email, usuario_nombre, admin_email=None, enterprise_id=None):
+async def enviar_notificacion_cambio_password(usuario_email, usuario_nombre, admin_email=None, enterprise_id=None):
     subject = "Seguridad: Cambio de Contraseña Confirmado"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     ahora = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     detalles = {
         "Usuario": usuario_nombre,
@@ -370,18 +370,18 @@ def enviar_notificacion_cambio_password(usuario_email, usuario_nombre, admin_ema
 
     res_user = (True, None)
     if usuario_email:
-        res_user = _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+        res_user = await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
     
     res_admin = (True, None)
     if admin_email and (not usuario_email or admin_email != usuario_email):
         subject_admin = f"AVISO SEGURIDAD: Cambio de clave - {usuario_nombre}"
-        res_admin = _enviar_email(admin_email, subject_admin, html, enterprise_id=enterprise_id)
+        res_admin = await _enviar_email(admin_email, subject_admin, html, enterprise_id=enterprise_id)
         
     return res_user if usuario_email else res_admin
 
-def enviar_confirmacion_reserva(usuario_email, usuario_nombre, libro_datos, fecha_estimada, enterprise_id):
+async def enviar_confirmacion_reserva(usuario_email, usuario_nombre, libro_datos, fecha_estimada, enterprise_id):
     subject = "Reserva Confirmada"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     
     titulo = libro_datos.get('titulo') if isinstance(libro_datos, dict) else str(libro_datos)
     autor = libro_datos.get('autor', 'Desconocido') if isinstance(libro_datos, dict) else ''
@@ -412,11 +412,11 @@ def enviar_confirmacion_reserva(usuario_email, usuario_nombre, libro_datos, fech
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def enviar_disponibilidad_reserva(usuario_email, usuario_nombre, libro_datos, fecha_limite, enterprise_id):
+async def enviar_disponibilidad_reserva(usuario_email, usuario_nombre, libro_datos, fecha_limite, enterprise_id):
     subject = "¡Tu libro reservado está disponible!"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     
     titulo = libro_datos.get('titulo') if isinstance(libro_datos, dict) else str(libro_datos)
     autor = libro_datos.get('autor', '') if isinstance(libro_datos, dict) else ''
@@ -446,11 +446,11 @@ def enviar_disponibilidad_reserva(usuario_email, usuario_nombre, libro_datos, fe
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def enviar_cancelacion_reserva(usuario_email, usuario_nombre, libro_datos, motivo, enterprise_id):
+async def enviar_cancelacion_reserva(usuario_email, usuario_nombre, libro_datos, motivo, enterprise_id):
     subject = "Actualización de Reserva Cancelada"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     
     titulo = libro_datos.get('titulo') if isinstance(libro_datos, dict) else str(libro_datos)
     autor = libro_datos.get('autor', '') if isinstance(libro_datos, dict) else ''
@@ -482,7 +482,7 @@ def enviar_cancelacion_reserva(usuario_email, usuario_nombre, libro_datos, motiv
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
 def validar_estado_correo(email):
     """
@@ -506,11 +506,11 @@ def validar_estado_correo(email):
 
 
 
-def enviar_notificacion_retencion(destinatario_email, sujeto_nombre, certificado_nro, tipo, importe, comprobantes, enterprise_id):
+async def enviar_notificacion_retencion(destinatario_email, sujeto_nombre, certificado_nro, tipo, importe, comprobantes, enterprise_id):
     """
     Envía el certificado de retención con un resumen responsive de los comprobantes que lo originan.
     """
-    empresa_nombre, logo_path, empresa_cuit = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, empresa_cuit = await _obtener_branding(enterprise_id)
     
     # Nuevo formato de subject: CUIT_PERIODO_MM_YYYY_FEC_EMIS_DDMMYYYYHHMMSS
     now = datetime.datetime.now()
@@ -583,9 +583,9 @@ def enviar_notificacion_retencion(destinatario_email, sujeto_nombre, certificado
     # Nota: Los adjuntos se manejaran desde el llamador para evitar dependencias circulares de PDF en este service
     return subject, html
 
-def enviar_notificacion_incidente(usuario_email, usuario_nombre, req_id, status, nota, history, enterprise_id):
+async def enviar_notificacion_incidente(usuario_email, usuario_nombre, req_id, status, nota, history, enterprise_id):
     subject = f"Actualización de Incidente #{req_id}"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     
     estado_labels = {
         'OPEN': 'Abierto',
@@ -632,13 +632,13 @@ def enviar_notificacion_incidente(usuario_email, usuario_nombre, req_id, status,
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def enviar_notificacion_percepcion(destinatario_email, sujeto_nombre, factura_nro, importe_percepcion, enterprise_id):
+async def enviar_notificacion_percepcion(destinatario_email, sujeto_nombre, factura_nro, importe_percepcion, enterprise_id):
     """
     Envía la notificación de percepción incluida en una factura de venta.
     """
-    empresa_nombre, logo_path, empresa_cuit = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, empresa_cuit = await _obtener_branding(enterprise_id)
     
     # Aplicar mismo naming convention para tax docs
     now = datetime.datetime.now()
@@ -671,9 +671,9 @@ def enviar_notificacion_percepcion(destinatario_email, sujeto_nombre, factura_nr
     )
 
     return subject, html
-def enviar_solicitud_devolucion(usuario_email, usuario_nombre, solicitud_id, factura_nro, items, enterprise_id):
+async def enviar_solicitud_devolucion(usuario_email, usuario_nombre, solicitud_id, factura_nro, items, enterprise_id):
     subject = f"Solicitud de Devolución #{solicitud_id} recibida"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     
     filas_html = ""
     for item in items:
@@ -723,12 +723,12 @@ def enviar_solicitud_devolucion(usuario_email, usuario_nombre, solicitud_id, fac
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def enviar_alerta_demora(usuario_email, usuario_nombre, despacho_nro, buque, fecha_arribo, dias_restantes, costo_diario, enterprise_id):
+async def enviar_alerta_demora(usuario_email, usuario_nombre, despacho_nro, buque, fecha_arribo, dias_restantes, costo_diario, enterprise_id):
     """Notifica el vencimiento próximo de los días libres de puerto."""
     subject = f"ALERTA LOGÍSTICA: Vencimiento de Libres - Despacho {despacho_nro}"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     
     color = "#f59e0b" # Naranja
     if dias_restantes <= 0:
@@ -767,11 +767,11 @@ def enviar_alerta_demora(usuario_email, usuario_nombre, despacho_nro, buque, fec
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
-def enviar_notificacion_propuesta_precios(usuario_email, usuario_nombre, lista_nombre, count, enterprise_id):
+async def enviar_notificacion_propuesta_precios(usuario_email, usuario_nombre, lista_nombre, count, enterprise_id):
     subject = f"PENDIENTE: Propuesta de Precios - {lista_nombre}"
-    empresa_nombre, logo_path, _ = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, _ = await _obtener_branding(enterprise_id)
     detalles = {
         "Usuario": usuario_nombre,
         "Lista de Precios": lista_nombre,
@@ -798,15 +798,15 @@ def enviar_notificacion_propuesta_precios(usuario_email, usuario_nombre, lista_n
         logo_url=logo_path
     )
 
-    return _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(usuario_email, subject, html, enterprise_id=enterprise_id)
 
 
-def enviar_ticket_embarque(destinatario_email, destinatario_nombre, comprobante_data, enterprise_id):
+async def enviar_ticket_embarque(destinatario_email, destinatario_nombre, comprobante_data, enterprise_id):
     """
     Envía el 'Ticket de Embarque' (Factura Electrónica finalizada con CAE) al pasajero.
     Se llama luego de obtener el CAE exitosamente, ya sea en tiempo real o tras reintentos.
     """
-    empresa_nombre, logo_path, empresa_cuit = _obtener_branding(enterprise_id)
+    empresa_nombre, logo_path, empresa_cuit = await _obtener_branding(enterprise_id)
     
     tipo = comprobante_data.get('tipo_nombre', 'Comprobante')
     numero = f"{str(comprobante_data.get('punto_venta', 1)).zfill(5)}-{str(comprobante_data.get('numero', 0)).zfill(8)}"
@@ -845,7 +845,7 @@ def enviar_ticket_embarque(destinatario_email, destinatario_nombre, comprobante_
         logo_url=logo_path
     )
 
-    return _enviar_email(destinatario_email, subject, html, enterprise_id=enterprise_id)
+    return await _enviar_email(destinatario_email, subject, html, enterprise_id=enterprise_id)
 
 
 async def procesar_cae_pendientes(enterprise_id=None):
@@ -860,8 +860,8 @@ async def procesar_cae_pendientes(enterprise_id=None):
     params = (enterprise_id,) if enterprise_id else ()
 
     try:
-        with get_db_cursor(dictionary=True) as cur:
-            cur.execute(f"""
+        async with get_db_cursor(dictionary=True) as cur:
+            await cur.execute(f"""
                 SELECT p.id, p.enterprise_id, p.comprobante_id, p.intentos
                 FROM fin_cae_pendientes p
                 WHERE p.estado = 'PENDIENTE'
@@ -871,7 +871,7 @@ async def procesar_cae_pendientes(enterprise_id=None):
                 ORDER BY p.creado_en ASC
                 LIMIT 20
             """, params)
-            pendientes = cur.fetchall()
+            pendientes = await cur.fetchall()
     except Exception as e:
         print(f"[RETRY-CAE] Error leyendo cola: {e}")
         return {"procesados": 0, "errores": 1}
@@ -887,13 +887,13 @@ async def procesar_cae_pendientes(enterprise_id=None):
             # Reintento real contra AFIP
             resultado = await AfipService._ejecutar_solicitud_cae(
                 None, eid, cbte_id,
-                AfipService.get_afip_config(eid)
+                await AfipService.get_afip_config(eid)
             )
 
             if resultado.get('success'):
                 # ¡CAE obtenido! Actualizar estado en cola
-                with get_db_cursor(dictionary=True) as cur:
-                    cur.execute("""
+                async with get_db_cursor(dictionary=True) as cur:
+                    await cur.execute("""
                         UPDATE fin_cae_pendientes 
                         SET estado = 'PROCESADO', ultimo_intento = NOW(), ultimo_error = NULL
                         WHERE id = %s
@@ -901,8 +901,8 @@ async def procesar_cae_pendientes(enterprise_id=None):
 
                 # Obtener datos del comprobante para enviar el mail
                 try:
-                    with get_db_cursor(dictionary=True) as cur:
-                        cur.execute("""
+                    async with get_db_cursor(dictionary=True) as cur:
+                        await cur.execute("""
                             SELECT c.*, t.email as cliente_email, t.nombre as cliente_nombre,
                                    t.cuit as cliente_cuit, tc.nombre as tipo_nombre
                             FROM erp_comprobantes c
@@ -910,7 +910,7 @@ async def procesar_cae_pendientes(enterprise_id=None):
                             LEFT JOIN fin_tipos_comprobantes tc ON c.tipo_comprobante = tc.codigo
                             WHERE c.id = %s AND c.enterprise_id = %s
                         """, (cbte_id, eid))
-                        cbte = cur.fetchone()
+                        cbte = await cur.fetchone()
 
                     if cbte and cbte.get('cliente_email'):
                         cbte['cae'] = resultado.get('cae')
@@ -918,7 +918,7 @@ async def procesar_cae_pendientes(enterprise_id=None):
                         cbte['total'] = float(cbte.get('importe_total', 0))
                         cbte['numero'] = cbte.get('numero_comprobante')
                         
-                        ok, _ = enviar_ticket_embarque(
+                        ok, _ = await enviar_ticket_embarque(
                             cbte['cliente_email'],
                             cbte['cliente_nombre'],
                             cbte,
@@ -934,8 +934,8 @@ async def procesar_cae_pendientes(enterprise_id=None):
             else:
                 # Aún falla: incrementar intentos y reprogramar
                 prox = "DATE_ADD(NOW(), INTERVAL 30 MINUTE)"
-                with get_db_cursor(dictionary=True) as cur:
-                    cur.execute(f"""
+                async with get_db_cursor(dictionary=True) as cur:
+                    await cur.execute(f"""
                         UPDATE fin_cae_pendientes 
                         SET intentos = intentos + 1, ultimo_intento = NOW(),
                             proximo_intento = {prox},

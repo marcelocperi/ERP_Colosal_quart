@@ -66,7 +66,7 @@ PSP_CVU_CODES = {
 class BCRAService:
     """
     Servicio de integración con la API de Entidades Financieras del BCRA.
-    Gestiona bancos (CBU) y billeteras virtuales / PSP (CVU).
+    Gestiona await bancos(CBU) y billeteras virtuales / PSP (CVU).
     """
 
     TIMEOUT = 15
@@ -74,10 +74,10 @@ class BCRAService:
     CODIGO_PADRE_BILLETERAS = "1.1.03"  # Billeteras CVU
 
     @classmethod
-    def initialize_db(cls):
+    async def initialize_db(cls):
         """Crea la tabla fin_bancos si no existe (con todos los campos)."""
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 CREATE TABLE IF NOT EXISTS fin_bancos (
                     id                 INT AUTO_INCREMENT PRIMARY KEY,
                     enterprise_id      INT NOT NULL DEFAULT 0,
@@ -148,7 +148,7 @@ class BCRAService:
         return f"Banco {nombre_entidad}"
 
     @classmethod
-    def _get_o_crear_cuenta(cls, cursor, enterprise_id, tipo_entidad, codigo_3d, nombre_entidad):
+    async def _get_o_crear_cuenta(cls, cursor, enterprise_id, tipo_entidad, codigo_3d, nombre_entidad):
         """
         Busca o crea la cuenta analítica en cont_plan_cuentas.
 
@@ -166,27 +166,27 @@ class BCRAService:
         nombre_cta   = cls._nombre_cuenta(tipo_entidad, nombre_entidad)
 
         # ¿Ya existe?
-        cursor.execute("""
+        await cursor.execute("""
             SELECT id FROM cont_plan_cuentas
             WHERE codigo = %s AND (enterprise_id = %s OR enterprise_id = 0)
             LIMIT 1
         """, (codigo_cta, enterprise_id))
-        row = cursor.fetchone()
+        row = await cursor.fetchone()
         if row:
-            cursor.execute("UPDATE cont_plan_cuentas SET nombre = %s WHERE id = %s",
+            await cursor.execute("UPDATE cont_plan_cuentas SET nombre = %s WHERE id = %s",
                            (nombre_cta, row[0]))
             return row[0]
 
         # Buscar cuenta padre (1.1.02 o 1.1.03)
-        cursor.execute("""
+        await cursor.execute("""
             SELECT id FROM cont_plan_cuentas
             WHERE codigo = %s AND (enterprise_id = %s OR enterprise_id = 0)
             LIMIT 1
         """, (prefijo, enterprise_id))
-        padre_row = cursor.fetchone()
+        padre_row = await cursor.fetchone()
         padre_id  = padre_row[0] if padre_row else None
 
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_plan_cuentas
                 (enterprise_id, codigo, nombre, tipo, imputable, padre_id, nivel, es_analitica)
             VALUES (%s, %s, %s, 'ACTIVO', 1, %s, 4, 1)
@@ -264,7 +264,7 @@ class BCRAService:
     # ── Sincronización ────────────────────────────────────────────────────────
 
     @classmethod
-    def _upsert_entidad(cls, cursor, enterprise_id, tipo_entidad,
+    async def _upsert_entidad(cls, cursor, enterprise_id, tipo_entidad,
                         bcra_id, nombre, tipo,
                         numero_cuenta=None, direccion=None, telefono=None,
                         web=None, cuit=None, bic=None):
@@ -287,10 +287,10 @@ class BCRAService:
             except ValueError:
                 pass
 
-        cuenta_id = cls._get_o_crear_cuenta(
+        cuenta_id = await cls._get_o_crear_cuenta(
             cursor, enterprise_id, tipo_entidad, codigo_3d, nombre) if codigo_3d else None
 
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO fin_bancos
                 (enterprise_id, bcra_id, tipo_entidad, numero_cuenta, codigo_cbu,
                  cuenta_contable_id, nombre, tipo, cuit, bic,
@@ -319,14 +319,14 @@ class BCRAService:
         return cursor.rowcount, cuenta_id
 
     @classmethod
-    def sincronizar_desde_bcra(cls, enterprise_id=0):
-        """Sincroniza bancos (CBU) desde la API del BCRA."""
-        cls.initialize_db()
+    async def sincronizar_desde_bcra(cls, enterprise_id=0):
+        """Sincroniza await bancos(CBU) desde la API del BCRA."""
+        await cls.initialize_db()
         entidades = cls.get_entidades_bcra()
         stats = {"insertados": 0, "actualizados": 0, "cuentas": 0, "errores": 0,
                  "total": len(entidades), "tipo": "CBU"}
 
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             for ent in entidades:
                 try:
                     bcra_id   = ent.get("cdEntidad") or ent.get("id") or ent.get("codigo")
@@ -343,7 +343,7 @@ class BCRAService:
                         stats["errores"] += 1
                         continue
 
-                    rc, cuenta_id = cls._upsert_entidad(
+                    rc, cuenta_id = await cls._upsert_entidad(
                         cursor, enterprise_id, 'CBU', bcra_id, nombre, tipo,
                         direccion=direccion, telefono=telefono, web=web,
                         cuit=cuit, bic=bic)
@@ -361,14 +361,14 @@ class BCRAService:
         return stats
 
     @classmethod
-    def sincronizar_billeteras(cls, enterprise_id=0):
+    async def sincronizar_billeteras(cls, enterprise_id=0):
         """Sincroniza billeteras virtuales (CVU) desde la API del BCRA o listado semilla."""
-        cls.initialize_db()
+        await cls.initialize_db()
         billeteras = cls.get_billeteras_bcra()
         stats = {"insertados": 0, "actualizados": 0, "cuentas": 0, "errores": 0,
                  "total": len(billeteras), "tipo": "CVU"}
 
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             for b in billeteras:
                 try:
                     bcra_id   = b.get("cdEntidad") or b.get("id") or b.get("codigo")
@@ -385,7 +385,7 @@ class BCRAService:
                         stats["errores"] += 1
                         continue
 
-                    rc, cuenta_id = cls._upsert_entidad(
+                    rc, cuenta_id = await cls._upsert_entidad(
                         cursor, enterprise_id, 'CVU', bcra_id, nombre, tipo,
                         numero_cuenta=num_cvu, direccion=direccion,
                         telefono=telefono, web=web, cuit=cuit)
@@ -405,7 +405,7 @@ class BCRAService:
     # ── Helpers ───────────────────────────────────────────────────────────────
 
     @classmethod
-    def crear_cuenta_para_banco(cls, cursor, enterprise_id, banco_id, nombre, tipo_entidad,
+    async def crear_cuenta_para_banco(cls, cursor, enterprise_id, banco_id, nombre, tipo_entidad,
                                 bcra_id=None, numero_cuenta=None):
         """
         Crea/obtiene la cuenta analítica para una entidad y actualiza fin_bancos.
@@ -421,10 +421,10 @@ class BCRAService:
             try: bcra_id = int(codigo_3d)
             except ValueError: pass
 
-        cuenta_id = cls._get_o_crear_cuenta(
+        cuenta_id = await cls._get_o_crear_cuenta(
             cursor, enterprise_id, tipo_entidad, codigo_3d, nombre)
         if cuenta_id and banco_id:
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE fin_bancos
                 SET cuenta_contable_id = %s, codigo_cbu = %s, bcra_id = COALESCE(%s, bcra_id)
                 WHERE id = %s
@@ -432,9 +432,9 @@ class BCRAService:
         return cuenta_id
 
     @staticmethod
-    def get_bancos_db(enterprise_id, solo_activos=False, tipo_entidad=None):
+    async def get_bancos_db(enterprise_id, solo_activos=False, tipo_entidad=None):
         """Retorna bancos/billeteras de la base local con su cuenta contable."""
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             sql = """
                 SELECT b.*,
                        c.codigo AS cuenta_codigo,
@@ -450,8 +450,8 @@ class BCRAService:
                 sql += " AND b.tipo_entidad = %s"
                 params.append(tipo_entidad)
             sql += " ORDER BY b.tipo_entidad, b.nombre ASC"
-            cursor.execute(sql, params)
-            return cursor.fetchall()
+            await cursor.execute(sql, params)
+            return await cursor.fetchall()
 
 
 # ==============================================================================
@@ -492,10 +492,10 @@ class CurrencyRateService:
     Servicio para obtener y almacenar tipos de cambio desde la API pública del BCRA.
     
     Uso típico (desde cron job):
-        CurrencyRateService.actualizar_cotizaciones_hoy()
+        await CurrencyRateService.actualizar_cotizaciones_hoy()
     
     Uso en formularios de importación:
-        tc = CurrencyRateService.get_tipo_cambio('USD', tipo='OFICIAL_VENDEDOR')
+        tc = await CurrencyRateService.get_tipo_cambio('USD', tipo='OFICIAL_VENDEDOR')
     """
 
     TIMEOUT = 15
@@ -517,16 +517,16 @@ class CurrencyRateService:
             return []
 
     @classmethod
-    def _upsert_tipo_cambio(cls, cursor, enterprise_id, fecha, moneda, tipo, valor, fuente="BCRA"):
+    async def _upsert_tipo_cambio(cls, cursor, enterprise_id, fecha, moneda, tipo, valor, fuente="BCRA"):
         """Inserta o actualiza un tipo de cambio en fin_tipos_cambio."""
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO fin_tipos_cambio (enterprise_id, fecha, moneda, tipo, valor, fuente)
             VALUES (%s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE valor = VALUES(valor), fuente = VALUES(fuente)
         """, (enterprise_id, fecha, moneda, tipo, valor, fuente))
 
     @classmethod
-    def actualizar_cotizaciones_hoy(cls, enterprise_id=0):
+    async def actualizar_cotizaciones_hoy(cls, enterprise_id=0):
         """
         Descarga los tipos de cambio del día desde el BCRA y los guarda en fin_tipos_cambio.
         Diseñado para ejecutarse desde el cron job diario.
@@ -537,7 +537,7 @@ class CurrencyRateService:
         ayer     = (dt.date.today() - dt.timedelta(days=3)).isoformat()  # margen para fines de semana
         stats    = {"actualizados": 0, "errores": 0, "monedas": []}
 
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # ---------- 1. USD Oficial (variable 1 = mayorista referencia) ----------
             try:
                 data = cls._get_bcra(f"{BCRA_STATS_URL}/datosvariable/1/{ayer}/{hoy}")
@@ -546,7 +546,7 @@ class CurrencyRateService:
                     valor  = float(ultimo.get("valor", 0))
                     fecha  = ultimo.get("fecha", hoy)[:10]
                     if valor > 0:
-                        cls._upsert_tipo_cambio(cursor, enterprise_id, fecha, "USD", "OFICIAL_VENDEDOR", valor)
+                        await cls._upsert_tipo_cambio(cursor, enterprise_id, fecha, "USD", "OFICIAL_VENDEDOR", valor)
                         stats["actualizados"] += 1
                         stats["monedas"].append(f"USD/OFICIAL={valor}")
             except Exception as e:
@@ -561,7 +561,7 @@ class CurrencyRateService:
                     valor  = float(ultimo.get("valor", 0))
                     fecha  = ultimo.get("fecha", hoy)[:10]
                     if valor > 0:
-                        cls._upsert_tipo_cambio(cursor, enterprise_id, fecha, "USD", "OFICIAL_MINORISTA", valor)
+                        await cls._upsert_tipo_cambio(cursor, enterprise_id, fecha, "USD", "OFICIAL_MINORISTA", valor)
                         stats["actualizados"] += 1
                         stats["monedas"].append(f"USD/MINORISTA={valor}")
             except Exception as e:
@@ -578,7 +578,7 @@ class CurrencyRateService:
                         continue  # Solo las que tenemos mapeadas
                     valor = float(d.get("tipoPase", d.get("cotizacion", d.get("valor", 0))) or 0)
                     if valor > 0:
-                        cls._upsert_tipo_cambio(cursor, enterprise_id, hoy, moneda_iso, "OFICIAL_VENDEDOR", valor)
+                        await cls._upsert_tipo_cambio(cursor, enterprise_id, hoy, moneda_iso, "OFICIAL_VENDEDOR", valor)
                         stats["actualizados"] += 1
                         stats["monedas"].append(f"{moneda_iso}={valor}")
             except Exception as e:
@@ -589,7 +589,7 @@ class CurrencyRateService:
         return stats
 
     @classmethod
-    def get_tipo_cambio(cls, moneda="USD", tipo="OFICIAL_VENDEDOR", fecha=None, enterprise_id=0):
+    async def get_tipo_cambio(cls, moneda="USD", tipo="OFICIAL_VENDEDOR", fecha=None, enterprise_id=0):
         """
         Retorna el tipo de cambio más reciente (o de la fecha indicada) para la moneda/tipo.
         
@@ -602,41 +602,41 @@ class CurrencyRateService:
         if not fecha:
             fecha = dt.date.today().isoformat()
         
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Buscar exactamente la fecha
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT valor FROM fin_tipos_cambio 
                 WHERE (enterprise_id = %s OR enterprise_id = 0)
                   AND moneda = %s AND tipo = %s AND fecha = %s
                 ORDER BY enterprise_id DESC LIMIT 1
             """, (enterprise_id, moneda, tipo, fecha))
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
             if row:
                 return float(row["valor"])
             
             # 2. Buscar el más reciente antes de esa fecha
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT valor FROM fin_tipos_cambio 
                 WHERE (enterprise_id = %s OR enterprise_id = 0)
                   AND moneda = %s AND tipo = %s AND fecha <= %s
                 ORDER BY fecha DESC, enterprise_id DESC LIMIT 1
             """, (enterprise_id, moneda, tipo, fecha))
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
             if row:
                 return float(row["valor"])
 
         # 3. Fallback: intentar actualizar y reintentar
         logger.info(f"[CurrencyRate] Sin datos para {moneda}/{tipo}/{fecha}. Intentando actualizar...")
         try:
-            cls.actualizar_cotizaciones_hoy(enterprise_id)
-            with get_db_cursor(dictionary=True) as cursor:
-                cursor.execute("""
+            await cls.actualizar_cotizaciones_hoy(enterprise_id)
+            async with get_db_cursor(dictionary=True) as cursor:
+                await cursor.execute("""
                     SELECT valor FROM fin_tipos_cambio 
                     WHERE (enterprise_id = %s OR enterprise_id = 0)
                       AND moneda = %s AND tipo = %s
                     ORDER BY fecha DESC LIMIT 1
                 """, (enterprise_id, moneda, tipo))
-                row = cursor.fetchone()
+                row = await cursor.fetchone()
                 if row:
                     return float(row["valor"])
         except Exception as e:
@@ -645,13 +645,13 @@ class CurrencyRateService:
         return None
 
     @classmethod
-    def get_all_vigentes(cls, enterprise_id=0):
+    async def get_all_vigentes(cls, enterprise_id=0):
         """
         Retorna todos los tipos de cambio vigentes (última fecha por moneda/tipo).
         Útil para poblar selectores en formularios de importación.
         """
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT t1.*
                 FROM fin_tipos_cambio t1
                 INNER JOIN (
@@ -663,10 +663,10 @@ class CurrencyRateService:
                 WHERE t1.enterprise_id IN (0, %s)
                 ORDER BY t1.moneda, t1.tipo
             """, (enterprise_id, enterprise_id))
-            return cursor.fetchall()
+            return await cursor.fetchall()
 
     @classmethod
-    def registrar_manual(cls, enterprise_id, moneda, tipo, valor, fecha=None, user_id=None):
+    async def registrar_manual(cls, enterprise_id, moneda, tipo, valor, fecha=None, user_id=None):
         """
         Permite registrar un tipo de cambio manualmente (cuando la API no está disponible
         o el usuario necesita usar un TC específico acordado en el contrato).
@@ -675,8 +675,8 @@ class CurrencyRateService:
         if not fecha:
             fecha = dt.date.today().isoformat()
         
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO fin_tipos_cambio (enterprise_id, fecha, moneda, tipo, valor, fuente, user_id)
                 VALUES (%s, %s, %s, %s, %s, 'MANUAL', %s)
                 ON DUPLICATE KEY UPDATE valor = VALUES(valor), fuente = 'MANUAL', user_id = VALUES(user_id)

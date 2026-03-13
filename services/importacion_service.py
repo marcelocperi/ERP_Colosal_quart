@@ -43,20 +43,20 @@ class ImportacionService:
     ]
 
     @classmethod
-    def get_cargos_orden(cls, orden_compra_id, enterprise_id):
+    async def get_cargos_orden(cls, orden_compra_id, enterprise_id):
         """Retorna todos los cargos registrados para una orden de importación."""
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT c.*, p.nombre as proveedor_nombre
                 FROM imp_cargos c
                 LEFT JOIN erp_terceros p ON c.proveedor_id = p.id
                 WHERE c.orden_compra_id = %s AND c.enterprise_id = %s
                 ORDER BY c.tipo_cargo, c.id
             """, (orden_compra_id, enterprise_id))
-            return cursor.fetchall()
+            return await cursor.fetchall()
 
     @classmethod
-    def agregar_cargo(cls, enterprise_id, orden_compra_id, tipo_cargo,
+    async def agregar_cargo(cls, enterprise_id, orden_compra_id, tipo_cargo,
                       descripcion, monto_orig, moneda_orig, tipo_cambio,
                       proveedor_id=None, fecha=None, user_id=None, aplica_a_cui=1,
                       es_estimado=0, cargo_referencia_id=None):
@@ -66,8 +66,8 @@ class ImportacionService:
         tipo_cambio = float(tipo_cambio or 0)
         monto_ars = float(monto_orig) * tipo_cambio if moneda_orig != 'ARS' else float(monto_orig)
 
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO imp_cargos (
                     enterprise_id, orden_compra_id, tipo_cargo, descripcion,
                     proveedor_id, monto_orig, moneda_orig, tipo_cambio, monto_ars,
@@ -85,10 +85,10 @@ class ImportacionService:
     # ─────────────────────────────────────────────────────────────────────────
 
     @classmethod
-    def get_items_orden(cls, orden_compra_id, enterprise_id):
+    async def get_items_orden(cls, orden_compra_id, enterprise_id):
         """Retorna los ítems de la orden de compra con datos del artículo."""
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT i.*, i.cantidad_solicitada as cantidad, 
                        i.precio_unitario as precio_usd,
                        a.nombre as articulo_nombre, a.codigo as articulo_codigo,
@@ -97,14 +97,14 @@ class ImportacionService:
                 JOIN stk_articulos a ON i.articulo_id = a.id
                 WHERE i.orden_id = %s AND i.enterprise_id = %s
             """, (orden_compra_id, enterprise_id))
-            return cursor.fetchall()
+            return await cursor.fetchall()
 
     # ─────────────────────────────────────────────────────────────────────────
     # CÁLCULO DEL CUI (Costo Unitario de Importación)
     # ─────────────────────────────────────────────────────────────────────────
 
     @classmethod
-    def calcular_cui(cls, orden_compra_id, enterprise_id, tipo_cambio_usd=None):
+    async def calcular_cui(cls, orden_compra_id, enterprise_id, tipo_cambio_usd=None):
         """
         Calcula el CUI (Costo Unitario de Importación) para cada artículo
         de la orden, distribuyendo los cargos proporcionalmente a su valor FOB.
@@ -119,13 +119,13 @@ class ImportacionService:
         """
         if not tipo_cambio_usd:
             from services.bcra_service import CurrencyRateService
-            tipo_cambio_usd = CurrencyRateService.get_tipo_cambio('USD', 'OFICIAL_VENDEDOR') or 1000.0
+            tipo_cambio_usd = await CurrencyRateService.get_tipo_cambio('USD', 'OFICIAL_VENDEDOR') or 1000.0
 
         tc = float(tipo_cambio_usd)
 
         # 1. Ítems de la OC
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT i.articulo_id, i.cantidad_solicitada as cantidad,
                        COALESCE(i.precio_unitario, 0) as precio_usd,
                        a.nombre as articulo_nombre, a.codigo
@@ -133,12 +133,12 @@ class ImportacionService:
                 JOIN stk_articulos a ON i.articulo_id = a.id
                 WHERE i.orden_id = %s AND i.enterprise_id = %s
             """, (orden_compra_id, enterprise_id))
-            items = cursor.fetchall()
+            items = await cursor.fetchall()
 
         if not items:
             # Intentar con tabla alternativa de items
-            with get_db_cursor(dictionary=True) as cursor:
-                cursor.execute("""
+            async with get_db_cursor(dictionary=True) as cursor:
+                await cursor.execute("""
                     SELECT i.articulo_id, i.cantidad,
                            COALESCE(i.precio_cotizado, 0) as precio_usd,
                            a.nombre as articulo_nombre, a.codigo
@@ -149,10 +149,10 @@ class ImportacionService:
                         SELECT cotizacion_id FROM cmp_ordenes_compra WHERE id = %s
                     ) AND i.enterprise_id = %s
                 """, (orden_compra_id, enterprise_id))
-                items = cursor.fetchall()
+                items = await cursor.fetchall()
 
         # 2. Cargos que deben incluirse en CUI
-        cargos = cls.get_cargos_orden(orden_compra_id, enterprise_id)
+        cargos = await cls.get_cargos_orden(orden_compra_id, enterprise_id)
         cargos = [c for c in cargos if c.get('aplica_a_cui', 1)]
 
         # Cargos en USD y en ARS separados
@@ -165,7 +165,7 @@ class ImportacionService:
 
         # 2b. Integrar Tributos del Despacho (Derechos, Tasa Estadística, etc.)
         total_tributos_ars = 0
-        despacho = cls.get_despacho(orden_compra_id, enterprise_id)
+        despacho = await cls.get_despacho(orden_compra_id, enterprise_id)
         if despacho:
             # Estos tributos ya están en ARS en la tabla imp_despachos
             total_tributos_ars += float(despacho.get('derechos_ars', 0) or 0)
@@ -234,7 +234,7 @@ class ImportacionService:
     # ─────────────────────────────────────────────────────────────────────────
 
     @classmethod
-    def registrar_ingreso_stock(cls, orden_compra_id, despacho_id,
+    async def registrar_ingreso_stock(cls, orden_compra_id, despacho_id,
                                 enterprise_id, deposito_id, user_id,
                                 tipo_cambio_usd=None):
         """
@@ -249,28 +249,28 @@ class ImportacionService:
           7. Registrar snapshot de CUI en imp_despachos_items
           Retorna: dict con resultado del ingreso.
         """
-        cui_resultado = cls.calcular_cui(orden_compra_id, enterprise_id, tipo_cambio_usd)
+        cui_resultado = await cls.calcular_cui(orden_compra_id, enterprise_id, tipo_cambio_usd)
         items_cui = cui_resultado['items']
 
         if not items_cui:
             return {'success': False, 'message': 'No hay ítems con CUI calculado para ingresar.'}
 
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # a) Obtener motivo de compra
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT id FROM stk_motivos
                 WHERE (enterprise_id = %s OR enterprise_id = 0)
                   AND automatico = 1 AND tipo = 'ENTRADA'
                 ORDER BY enterprise_id DESC LIMIT 1
             """, (enterprise_id,))
-            motivo_row = cursor.fetchone()
+            motivo_row = await cursor.fetchone()
             if not motivo_row:
                 return {'success': False, 'message': 'No existe motivo de ENTRADA automático en stk_motivos.'}
             motivo_id = motivo_row['id']
 
             # b) Crear cabecera de movimiento
             from datetime import date
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO stk_movimientos (
                     enterprise_id, fecha, motivo_id, deposito_destino_id,
                     comprobante_id, user_id, observaciones, estado
@@ -290,13 +290,13 @@ class ImportacionService:
                 cui     = float(item['cui_ars'])
 
                 # c) Detalle de movimiento
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_movimientos_detalle (movimiento_id, articulo_id, cantidad)
                     VALUES (%s, %s, %s)
                 """, (movimiento_id, art_id, qty))
 
                 # d) Actualizar existencias (UPSERT)
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_existencias (enterprise_id, deposito_id, articulo_id, cantidad)
                     VALUES (%s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE cantidad = cantidad + VALUES(cantidad)
@@ -310,7 +310,7 @@ class ImportacionService:
                 pass
 
                 # f) Snapshot en imp_despachos_items
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO imp_despachos_items (
                         despacho_id, orden_compra_id, articulo_id,
                         cantidad, precio_unitario_usd, valor_total_usd,
@@ -335,12 +335,12 @@ class ImportacionService:
                 })
 
             # g) Actualizar estado despacho y OC
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE imp_despachos SET estado = 'INGRESADO', fecha_liberacion = CURDATE()
                 WHERE id = %s AND enterprise_id = %s
             """, (despacho_id, enterprise_id))
 
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE cmp_ordenes_compra
                 SET estado_importacion = 'INGRESADO', estado = 'RECIBIDA_TOTAL'
                 WHERE id = %s AND enterprise_id = %s
@@ -356,7 +356,7 @@ class ImportacionService:
                 {'articulo_id': r['articulo_id'], 'costo_calculado': r['cui_ars']} 
                 for r in artículos_ingresados
             ]
-            PricingService.generar_propuestas_desde_costo(
+            await PricingService.generar_propuestas_desde_costo(
                 enterprise_id=enterprise_id,
                 origen='IMPORTACION',
                 documento_origen_id=despacho_id,
@@ -380,26 +380,26 @@ class ImportacionService:
     # ─────────────────────────────────────────────────────────────────────────
 
     @classmethod
-    def get_despacho(cls, orden_compra_id, enterprise_id):
+    async def get_despacho(cls, orden_compra_id, enterprise_id):
         """Retorna el despacho activo de una orden (puede ser None)."""
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT d.*, p.nombre as despachante_nombre
                 FROM imp_despachos d
                 LEFT JOIN erp_terceros p ON d.despachante_id = p.id
                 WHERE d.orden_compra_id = %s AND d.enterprise_id = %s
                 ORDER BY d.id DESC LIMIT 1
             """, (orden_compra_id, enterprise_id))
-            return cursor.fetchone()
+            return await cursor.fetchone()
 
     @classmethod
-    def crear_o_actualizar_despacho(cls, enterprise_id, orden_compra_id, data, user_id):
+    async def crear_o_actualizar_despacho(cls, enterprise_id, orden_compra_id, data, user_id):
         """
         Crea o actualiza el despacho aduanero de una orden de importación.
         `data` es un dict con los campos del despacho.
         Retorna el id del despacho.
         """
-        despacho_existente = cls.get_despacho(orden_compra_id, enterprise_id)
+        despacho_existente = await cls.get_despacho(orden_compra_id, enterprise_id)
 
         campos = {
             'numero_despacho':              data.get('numero_despacho'),
@@ -429,9 +429,9 @@ class ImportacionService:
             'fecha_devolucion_contenedor':  data.get('fecha_devolucion_contenedor') or None,
         }
 
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             if despacho_existente:
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE imp_despachos
                     SET numero_despacho = %s, despachante_id = %s,
                         fecha_oficializacion = %s, canal = %s, estado = %s,
@@ -459,7 +459,7 @@ class ImportacionService:
                 ))
                 despacho_id = despacho_existente['id']
             else:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO imp_despachos (
                         enterprise_id, orden_compra_id,
                         numero_despacho, despachante_id, fecha_oficializacion,
@@ -487,7 +487,7 @@ class ImportacionService:
                 despacho_id = cursor.lastrowid
 
             # Actualizar estado de la OC
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE cmp_ordenes_compra SET estado_importacion = %s
                 WHERE id = %s AND enterprise_id = %s
             """, (campos['estado'], orden_compra_id, enterprise_id))
@@ -539,7 +539,7 @@ class ImportacionService:
         }
 
     @classmethod
-    def get_dashboard_stats(cls, enterprise_id):
+    async def get_dashboard_stats(cls, enterprise_id):
         """Obtiene estadísticas globales para el Dashboard Ejecutivo de Importaciones."""
         from datetime import date, timedelta
         hoy = date.today()
@@ -572,15 +572,15 @@ class ImportacionService:
             'ordenes_recientes': []
         }
 
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Resumen por Estado de Importación
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT estado_importacion, COUNT(*) as cant
                 FROM cmp_ordenes_compra
                 WHERE enterprise_id = %s AND proveedor_id IN (SELECT id FROM erp_terceros WHERE pais_origen != 'AR')
                 GROUP BY estado_importacion
             """, (enterprise_id,))
-            for row in cursor.fetchall():
+            for row in await cursor.fetchall():
                 est = row['estado_importacion'] or 'PENDIENTE'
                 stats['resumen']['total_ocs'] += row['cant']
                 if est in ('PENDIENTE', 'PAGADO'): stats['resumen']['en_tramite'] += row['cant']
@@ -589,13 +589,13 @@ class ImportacionService:
                 elif est == 'INGRESADO': stats['resumen']['finalizadas'] += row['cant']
 
             # 2. Logística y Fechas
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT d.*, o.numero_comprobante
                 FROM imp_despachos d
                 JOIN cmp_ordenes_compra o ON d.orden_compra_id = o.id
                 WHERE d.enterprise_id = %s AND d.estado != 'INGRESADO'
             """, (enterprise_id,))
-            for d in cursor.fetchall():
+            for d in await cursor.fetchall():
                 if d['fecha_embarque'] and not d['fecha_arribo_real']:
                     stats['logistica']['bultos_en_transito'] += (d['bultos'] or 0)
                     stats['logistica']['peso_en_transito_kg'] += float(d['peso_kg'] or 0)
@@ -607,26 +607,26 @@ class ImportacionService:
 
             # 3. Financiero
             # Total FOB: Suma de monto_total de las OCs de importación activas (moneda USD)
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT SUM(monto_total) as total 
                 FROM cmp_ordenes_compra 
                 WHERE enterprise_id = %s AND es_importacion = 1 AND moneda = 'USD'
                   AND estado_importacion != 'INGRESADO'
             """, (enterprise_id,))
-            stats['financiero']['total_fob_usd'] = float(cursor.fetchone()['total'] or 0)
+            stats['financiero']['total_fob_usd'] = float(await cursor.fetchone()['total'] or 0)
 
             # Total Pagado: Suma de pagos en USD
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT SUM(monto_orig) as total FROM imp_pagos
                 WHERE enterprise_id = %s AND moneda = 'USD'
             """, (enterprise_id,))
-            stats['financiero']['total_pagado_usd'] = float(cursor.fetchone()['total'] or 0)
+            stats['financiero']['total_pagado_usd'] = float(await cursor.fetchone()['total'] or 0)
             
             # Pendiente (estimado)
             stats['financiero']['pendiente_pago_usd'] = max(0, stats['financiero']['total_fob_usd'] - stats['financiero']['total_pagado_usd'])
 
             # 3.5 Alertas de Desvío AIS (Stage 5.3)
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT v.orden_compra_id, v.vessel_name, v.eta_predicted, d.fecha_arribo_estimada, o.numero_comprobante
                 FROM imp_vessel_tracking v
                 JOIN imp_despachos d ON v.orden_compra_id = d.orden_compra_id AND v.enterprise_id = d.enterprise_id
@@ -638,7 +638,7 @@ class ImportacionService:
                   AND d.fecha_arribo_estimada IS NOT NULL
             """, (enterprise_id, enterprise_id))
             
-            for al in cursor.fetchall():
+            for al in await cursor.fetchall():
                 eta_ais = al['eta_predicted'].date() if hasattr(al['eta_predicted'], 'date') else al['eta_predicted']
                 eta_man = al['fecha_arribo_estimada']
                 
@@ -659,7 +659,7 @@ class ImportacionService:
             eventos = []
             
             # a) Arribos (ETAs)
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT d.fecha_arribo_estimada as fecha, o.numero_comprobante, t.nombre as proveedor, 'ARRIBO' as tipo
                 FROM imp_despachos d
                 JOIN cmp_ordenes_compra o ON d.orden_compra_id = o.id
@@ -668,7 +668,7 @@ class ImportacionService:
                   AND d.fecha_arribo_real IS NULL
                 ORDER BY d.fecha_arribo_estimada
             """, (enterprise_id, hoy))
-            for res in cursor.fetchall():
+            for res in await cursor.fetchall():
                 eventos.append({
                     'fecha': res['fecha'].isoformat(),
                     'tipo': 'ARRIBO',
@@ -679,14 +679,14 @@ class ImportacionService:
 
             # b) Pagos Pendientes (Estimados por fecha_emision + 30 o 60 días si no hay fecha_pago_est)
             # Nota: Aquí usamos una lógica simplificada para el dashboard
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT o.fecha_emision, o.monto_total, o.numero_comprobante, t.nombre as proveedor
                 FROM cmp_ordenes_compra o
                 JOIN erp_terceros t ON o.proveedor_id = t.id
                 WHERE o.enterprise_id = %s AND o.es_importacion = 1 AND o.moneda = 'USD'
                   AND o.estado_importacion NOT IN ('INGRESADO', 'CANCELADO')
             """, (enterprise_id,))
-            for res in cursor.fetchall():
+            for res in await cursor.fetchall():
                 # Simulamos vencimiento a 30 días de la emisión como placeholder si no hay otro dato
                 venc = res['fecha_emision'] + datetime.timedelta(days=30)
                 if venc >= hoy:
@@ -709,9 +709,9 @@ class ImportacionService:
         return stats
 
     @classmethod
-    def get_desvio_costos(cls, orden_id, enterprise_id):
+    async def get_desvio_costos(cls, orden_id, enterprise_id):
         """Analiza desviaciones entre costos estimados y reales."""
-        cargos = cls.get_cargos_orden(orden_id, enterprise_id)
+        cargos = await cls.get_cargos_orden(orden_id, enterprise_id)
         
         resumen = {} # {tipo_cargo: {estimado: X, real: Y, delta: Z}}
         
@@ -756,14 +756,14 @@ class ImportacionService:
 
 
     @classmethod
-    def _generar_asiento_importacion(cls, cursor, orden_id, enterprise_id, total_ars, user_id=None):
+    async def _generar_asiento_importacion(cls, cursor, orden_id, enterprise_id, total_ars, user_id=None):
         """Genera el asiento contable por el ingreso de la importación."""
         # 1. Obtener cuentas (Mercaderías 1.4.01, Importaciones en Curso 1.4.05 o Proveedores 2.1.01)
-        cursor.execute("""
+        await cursor.execute("""
             SELECT id, codigo FROM cont_plan_cuentas 
             WHERE (enterprise_id = %s OR enterprise_id = 0) AND codigo IN ('1.4.01', '1.4.05', '2.1.01')
         """, (enterprise_id,))
-        cuentas = {r['codigo']: r['id'] for r in cursor.fetchall()}
+        cuentas = {r['codigo']: r['id'] for r in await cursor.fetchall()}
         
         if '1.4.01' not in cuentas:
             logger.warning("[Contabilidad] Falta cuenta 1.4.01. No se genera asiento.")
@@ -776,12 +776,12 @@ class ImportacionService:
             return None
 
         # 2. Próximo nro asiento
-        cursor.execute("SELECT COALESCE(MAX(numero_asiento), 0) + 1 as proximo FROM cont_asientos WHERE enterprise_id = %s", (enterprise_id,))
-        proximo_nro = cursor.fetchone()['proximo']
+        await cursor.execute("SELECT COALESCE(MAX(numero_asiento), 0) + 1 as proximo FROM cont_asientos WHERE enterprise_id = %s", (enterprise_id,))
+        proximo_nro = await cursor.fetchone()['proximo']
 
         # 3. Cabecera
         concepto = f"Ingreso Importación OC#{orden_id}"
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_asientos (enterprise_id, fecha, concepto, modulo_origen, comprobante_id, numero_asiento, user_id, estado)
             VALUES (%s, CURDATE(), %s, 'COMPRAS', %s, %s, %s, 'CONFIRMADO')
         """, (enterprise_id, concepto, orden_id, proximo_nro, user_id))
@@ -789,13 +789,13 @@ class ImportacionService:
 
         # 4. Detalles
         # DEBE: Mercaderías (Activo aumenta)
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_asientos_detalle (asiento_id, enterprise_id, cuenta_id, debe, haber, glosa)
             VALUES (%s, %s, %s, %s, 0, %s)
         """, (asiento_id, enterprise_id, cuentas['1.4.01'], total_ars, f"CUI Importación OC#{orden_id}"))
 
         # HABER: Importaciones en Curso / Proveedores (Pasivo/Regularizadora aumenta)
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_asientos_detalle (asiento_id, enterprise_id, cuenta_id, debe, haber, glosa)
             VALUES (%s, %s, %s, 0, %s, %s)
         """, (asiento_id, enterprise_id, cuenta_haber, total_ars, f"Provision Importación OC#{orden_id}"))
@@ -806,20 +806,20 @@ class ImportacionService:
     # ─────────────────────────────────────────────────────────────────────────
 
     @classmethod
-    def get_pagos_orden(cls, orden_id, enterprise_id):
+    async def get_pagos_orden(cls, orden_id, enterprise_id):
         """Retorna los pagos realizados para una orden de importación."""
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT p.*, b.nombre as banco_nombre
                 FROM imp_pagos p
                 LEFT JOIN fin_bancos b ON p.banco_id = b.id
                 WHERE p.orden_compra_id = %s AND p.enterprise_id = %s
                 ORDER BY p.fecha DESC
             """, (orden_id, enterprise_id))
-            return cursor.fetchall()
+            return await cursor.fetchall()
 
     @classmethod
-    def agregar_pago(cls, enterprise_id, orden_id, proveedor_id, monto_orig, moneda, 
+    async def agregar_pago(cls, enterprise_id, orden_id, proveedor_id, monto_orig, moneda, 
                      tipo_cambio, banco_id, fecha, swift, observaciones, user_id):
         """
         Registra un pago internacional (Transferencia Bancaria / SWIFT).
@@ -828,9 +828,9 @@ class ImportacionService:
         tipo_cambio = float(tipo_cambio)
         monto_ars = float(monto_orig) * tipo_cambio
         
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # 1. Insertar pago
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO imp_pagos (
                     enterprise_id, orden_compra_id, proveedor_id, 
                     fecha, moneda, monto_orig, tipo_cambio, monto_ars,
@@ -845,12 +845,12 @@ class ImportacionService:
 
             # 2. Generar Asiento Contable
             try:
-                asiento_id = cls._generar_asiento_pago_internacional(
+                asiento_id = await cls._generar_asiento_pago_internacional(
                     cursor, enterprise_id, pago_id, orden_id, proveedor_id,
                     moneda, monto_orig, tipo_cambio, monto_ars, banco_id, user_id
                 )
                 if asiento_id:
-                    cursor.execute("UPDATE imp_pagos SET asiento_id = %s WHERE id = %s", (asiento_id, pago_id))
+                    await cursor.execute("UPDATE imp_pagos SET asiento_id = %s WHERE id = %s", (asiento_id, pago_id))
             except Exception as e:
                 logger.error(f"[Finanzas] Error al generar asiento de pago: {e}")
                 asiento_id = None
@@ -858,21 +858,21 @@ class ImportacionService:
         return {'success': True, 'pago_id': pago_id, 'asiento_id': asiento_id}
 
     @classmethod
-    def _generar_asiento_pago_internacional(cls, cursor, enterprise_id, pago_id, orden_id, 
+    async def _generar_asiento_pago_internacional(cls, cursor, enterprise_id, pago_id, orden_id, 
                                             proveedor_id, moneda, monto_orig, tc, monto_ars, 
                                             banco_id, user_id):
         """Genera el asiento: Proveedores (Debe) a Banco (Haber)."""
         # a) Obtener Cuenta del Banco
-        cursor.execute("SELECT cuenta_contable_id FROM fin_bancos WHERE id = %s", (banco_id,))
-        row_b = cursor.fetchone()
+        await cursor.execute("SELECT cuenta_contable_id FROM fin_bancos WHERE id = %s", (banco_id,))
+        row_b = await cursor.fetchone()
         cuenta_banco_id = row_b[0] if row_b else None
         
         # b) Obtener Cuenta Proveedores (2.1.01)
-        cursor.execute("""
+        await cursor.execute("""
             SELECT id FROM cont_plan_cuentas 
             WHERE (enterprise_id = %s OR enterprise_id = 0) AND codigo = '2.1.01'
         """, (enterprise_id,))
-        row_p = cursor.fetchone()
+        row_p = await cursor.fetchone()
         cuenta_prov_id = row_p[0] if row_p else None
         
         if not cuenta_banco_id or not cuenta_prov_id:
@@ -880,11 +880,11 @@ class ImportacionService:
             return None
 
         # c) Cabecera Asiento
-        cursor.execute("SELECT COALESCE(MAX(numero_asiento), 0) + 1 as proximo FROM cont_asientos WHERE enterprise_id = %s", (enterprise_id,))
-        proximo_nro = cursor.fetchone()[0]
+        await cursor.execute("SELECT COALESCE(MAX(numero_asiento), 0) + 1 as proximo FROM cont_asientos WHERE enterprise_id = %s", (enterprise_id,))
+        proximo_nro = await cursor.fetchone()[0]
 
         concepto = f"Pago Importación OC#{orden_id} - Ref SWIFT: {pago_id}"
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_asientos (enterprise_id, fecha, concepto, modulo_origen, comprobante_id, numero_asiento, user_id, estado)
             VALUES (%s, CURDATE(), %s, 'FONDOS', %s, %s, %s, 'CONFIRMADO')
         """, (enterprise_id, concepto, pago_id, proximo_nro, user_id))
@@ -892,13 +892,13 @@ class ImportacionService:
 
         # d) Detalles
         # DEBE: Proveedores (Pasivo disminuye)
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_asientos_detalle (asiento_id, enterprise_id, cuenta_id, debe, haber, glosa)
             VALUES (%s, %s, %s, %s, 0, %s)
         """, (asiento_id, enterprise_id, cuenta_prov_id, monto_ars, f"Pago a Prov. Extranjero {moneda} {monto_orig} TC {tc}"))
 
         # HABER: Banco (Activo disminuye)
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_asientos_detalle (asiento_id, enterprise_id, cuenta_id, debe, haber, glosa)
             VALUES (%s, %s, %s, 0, %s, %s)
         """, (asiento_id, enterprise_id, cuenta_banco_id, monto_ars, f"Salida por SWIFT Pago OC#{orden_id}"))
@@ -906,11 +906,11 @@ class ImportacionService:
         return asiento_id
 
     @classmethod
-    def get_supplier_performance(cls, enterprise_id):
+    async def get_supplier_performance(cls, enterprise_id):
         """Analiza el desempeño de proveedores de importación."""
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Métricas: Lead Time, Volumen FOB, y Eficiencia (Deviaciones)
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT 
                     t.nombre as proveedor,
                     COUNT(o.id) as total_ocs,
@@ -925,10 +925,10 @@ class ImportacionService:
                 HAVING COUNT(o.id) > 0
                 ORDER BY total_fob_usd DESC
             """, (enterprise_id,))
-            return cursor.fetchall()
+            return await cursor.fetchall()
 
     @classmethod
-    def procesar_alertas_demora(cls):
+    async def procesar_alertas_demora(cls):
         """
         Escanea despachos activos para enviar alertas de vencimiento de días libres.
         Ejecutado idealmente por el Cron Job de Vessel Tracking.
@@ -940,9 +940,9 @@ class ImportacionService:
         hoy = date.today()
         alertas_enviadas = 0
 
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Seleccionar despachos con buque arribado, sin contenedor devuelto y con alerta pendiente
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT d.id, d.enterprise_id, d.orden_compra_id, d.numero_despacho, d.fecha_arribo_real, 
                        d.dias_libres_puerto, d.costo_demora_diario_usd, 
                        o.numero_comprobante, t.nombre as buque_nombre, e.nombre as empresa_nombre
@@ -955,7 +955,7 @@ class ImportacionService:
                   AND d.dias_libres_puerto > 0
                   AND d.alerta_demora_enviada = 0
             """)
-            despachos = cursor.fetchall()
+            despachos = await cursor.fetchall()
 
             for d in despachos:
                 # Calcular días transcurridos desde arribo
@@ -966,14 +966,14 @@ class ImportacionService:
                 if dias_restantes <= 2:
                     # Buscar destinatarios (Email de la empresa y administradores)
                     # Por ahora enviamos al email configurado para la empresa
-                    config = get_enterprise_email_config(d['enterprise_id'])
+                    config = await get_enterprise_email_config(d['enterprise_id'])
                     destinatario = config.get('email')
                     
                     if destinatario:
                         logger.info(f"Enviando alerta demora OC {d['numero_comprobante']} a {destinatario}")
                         buque = d['buque_nombre'] or "Buque No Identificado"
                         
-                        success, error = enviar_alerta_demora(
+                        success, error = await enviar_alerta_demora(
                             destinatario, "Coordinador de Logística", d['numero_despacho'],
                             buque, d['fecha_arribo_real'].strftime('%d/%m/%Y'),
                             dias_restantes, float(d['costo_demora_diario_usd'] or 0),
@@ -981,7 +981,7 @@ class ImportacionService:
                         )
 
                         if success:
-                            cursor.execute("UPDATE imp_despachos SET alerta_demora_enviada = 1 WHERE id = %s", (d['id'],))
+                            await cursor.execute("UPDATE imp_despachos SET alerta_demora_enviada = 1 WHERE id = %s", (d['id'],))
                             alertas_enviadas += 1
                         else:
                             logger.error(f"Error enviando alerta: {error}")

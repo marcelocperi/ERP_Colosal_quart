@@ -15,17 +15,17 @@ class EfficiencyManager:
         self.conn = conn
         self.cursor = conn.cursor() if conn else None
 
-    def get_service_ranking(self):
+    async def get_service_ranking(self):
         """Devuelve una lista ordenada de servicios por eficiencia."""
         if not self.cursor: return []
         try:
-            self.cursor.execute("SELECT service_name FROM service_efficiency ORDER BY fields_provided DESC, hits_count DESC")
-            return [row[0] for row in self.cursor.fetchall()]
+            await self.cursor.execute("SELECT service_name FROM service_efficiency ORDER BY fields_provided DESC, hits_count DESC")
+            return [row[0] for row in await self.cursor.fetchall()]
         except Exception as e:
             logger.warning(f"Error cargando ranking de eficiencia: {e}")
             return []
 
-    def update_score(self, service_name, fields_count, ebook_found=0):
+    async def update_score(self, service_name, fields_count, ebook_found=0):
         """Registra un éxito para un servicio (UPSERT)."""
         if not self.cursor: return
         query = """
@@ -37,27 +37,27 @@ class EfficiencyManager:
                 ebooks_provided = ebooks_provided + %s
         """
         try:
-            self.cursor.execute(query, (service_name, fields_count, ebook_found, fields_count, ebook_found))
+            await self.cursor.execute(query, (service_name, fields_count, ebook_found, fields_count, ebook_found))
             # No commit explícito aquí si es parte de una transacción mayor
         except Exception as e:
             logger.warning(f"Error actualizando score de {service_name}: {e}")
 
-    def rotate_learning_cycle(self):
+    async def rotate_learning_cycle(self):
         """Reinicia el aprendizaje cada ciertos ciclos para adaptarse a nuevas fuentes."""
         if not self.cursor: return
         try:
             # Incrementar contador global
-            self.cursor.execute("UPDATE sys_enrichment_counters SET processed_since_reset = processed_since_reset + 1 WHERE id = 1")
+            await self.cursor.execute("UPDATE sys_enrichment_counters SET processed_since_reset = processed_since_reset + 1 WHERE id = 1")
             
             # Verificar umbral (300 libros)
-            self.cursor.execute("SELECT processed_since_reset FROM sys_enrichment_counters WHERE id = 1")
-            row = self.cursor.fetchone()
+            await self.cursor.execute("SELECT processed_since_reset FROM sys_enrichment_counters WHERE id = 1")
+            row = await self.cursor.fetchone()
             
             if row and row[0] >= 300:
                 logger.info("  ♻️ [APRENDIZAJE] Ciclo completado. Reiniciando estadísticas de eficiencia...")
-                self.cursor.execute("TRUNCATE TABLE service_efficiency")
-                self.cursor.execute("UPDATE sys_enrichment_counters SET processed_since_reset = 0 WHERE id = 1")
-                self.conn.commit()
+                await self.cursor.execute("TRUNCATE TABLE service_efficiency")
+                await self.cursor.execute("UPDATE sys_enrichment_counters SET processed_since_reset = 0 WHERE id = 1")
+                await self.conn.commit()
                 logger.info("  >> Estadísticas truncadas para nueva evaluación.")
         except Exception as e:
             logger.warning(f"Error en ciclo de aprendizaje: {e}")

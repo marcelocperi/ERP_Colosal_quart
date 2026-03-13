@@ -12,7 +12,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-def process_mitigation(transaction_data):
+async def process_mitigation(transaction_data):
     """
     Analiza si una transacción requiere una respuesta de mitigación activa (FMECA).
     
@@ -24,7 +24,7 @@ def process_mitigation(transaction_data):
     failure_mode = transaction_data.get('failure_mode')
     
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Buscar reglas que apliquen a esta empresa o globales (0)
             # Filtramos por severidad y modo de falla (si la regla lo especifica)
             query = """
@@ -34,36 +34,36 @@ def process_mitigation(transaction_data):
                 AND (failure_mode IS NULL OR failure_mode = %s)
                 AND min_severity <= %s
             """
-            cursor.execute(query, (ent_id, failure_mode, severity))
-            rules = cursor.fetchall()
+            await cursor.execute(query, (ent_id, failure_mode, severity))
+            rules = await cursor.fetchall()
             
             for rule in rules:
-                _execute_mitigation_action(rule, transaction_data, cursor)
+                await _execute_mitigation_action(rule, transaction_data, cursor)
                 
     except Exception as e:
         logger.error(f"⚠️ Error en Mitigación Activa: {e}")
 
-def _execute_mitigation_action(rule, data, cursor):
+async def _execute_mitigation_action(rule, data, cursor):
     """Ejecuta la acción definida en la regla."""
     action = rule['action_type']
     ent_id = data.get('enterprise_id', 0)
     user_id = data.get('user_id')
     
     # Registrar que se está tomando una acción
-    cursor.execute("""
+    await cursor.execute("""
         INSERT INTO sys_risk_active_mitigations (enterprise_id, rule_id, target_user_id, action_taken)
         VALUES (%s, %s, %s, %s)
     """, (ent_id, rule['id'], user_id, action))
     
     if action == 'ALERT_EMAIL':
-        _send_risk_alert_email(rule, data)
+        await _send_risk_alert_email(rule, data)
     elif action == 'LOG_CRITICAL':
         logger.critical(f"🔥 FMECA RISK ALERT: {data}")
     elif action == 'BLOCK_USER' and user_id:
         # Aquí se podría implementar una lógica para marcar al usuario como 'suspendido' temporalmente
         logger.warning(f"🚫 BLOCK_USER mitigación activada para usuario {user_id} en empresa {ent_id}")
 
-def _send_risk_alert_email(rule, data):
+async def _send_risk_alert_email(rule, data):
     """Envía alerta por correo al administrador responsable."""
     recipient = rule['recipient_email'] or "admin@biblioteca.com"
     subject = f"⚠️ ALERTA DE RIESGO: {data['module'].upper()} - Falla: {data['failure_mode'] or 'TECHNICAL'}"
@@ -95,16 +95,16 @@ def _send_risk_alert_email(rule, data):
         empresa_nombre="Sistema de Gestión de Riesgos"
     )
     
-    success, err = _enviar_email(recipient, subject, html, enterprise_id=data.get('enterprise_id'))
+    success, err = await _enviar_email(recipient, subject, html, enterprise_id=data.get('enterprise_id'))
     if not success:
         logger.error(f"Fallo al enviar alerta de mitigación: {err}")
 
-def seed_default_rules():
+async def seed_default_rules():
     """Seed de reglas básicas de mitigación."""
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Borrar si existen para evitar duplicados en el seed
-            cursor.execute("TRUNCATE sys_risk_mitigation_rules")
+            await cursor.execute("TRUNCATE sys_risk_mitigation_rules")
             
             rules = [
                 # Regla 1: Alerta por severidad extrema (9 o 10)
@@ -115,7 +115,7 @@ def seed_default_rules():
                 (0, 'SECURITY_AUTH', 7, 0, 'ALERT_EMAIL', 'marcelocperi@gmail.com', 1)
             ]
             
-            cursor.executemany("""
+            await cursor.executemany("""
                 INSERT INTO sys_risk_mitigation_rules 
                 (enterprise_id, failure_mode, min_severity, max_rpn, action_type, recipient_email, is_active)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)

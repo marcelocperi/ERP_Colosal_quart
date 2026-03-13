@@ -1,10 +1,9 @@
 
-from flask import Flask, session, g, request, url_for
+from quart import Quart, session, g, request, url_for
 from core.routes import core_bp
 from core.enterprise_admin import ent_bp
-from biblioteca.routes import biblioteca_bp
-from compras.routes import compras_bp
 from ventas.routes import ventas_bp
+from compras.routes import compras_bp
 from stock.routes import stock_bp
 from contabilidad.routes import contabilidad_bp
 from fondos.routes import fondos_bp
@@ -20,7 +19,7 @@ import logging
 import time
 
 import decimal
-from flask.json.provider import DefaultJSONProvider
+from quart.json.provider import DefaultJSONProvider
 
 class CustomJSONProvider(DefaultJSONProvider):
     def default(self, obj):
@@ -30,7 +29,7 @@ class CustomJSONProvider(DefaultJSONProvider):
             return obj.isoformat()
         return super().default(obj)
 
-app = Flask(__name__)
+app = Quart(__name__)
 app.json = CustomJSONProvider(app)
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'bibliotecaweb-secret-key-multi-mcp-2024')
@@ -57,9 +56,8 @@ logger = logging.getLogger(__name__)
 # Register Blueprints
 app.register_blueprint(core_bp)
 app.register_blueprint(ent_bp)
-app.register_blueprint(biblioteca_bp)
-app.register_blueprint(compras_bp)
 app.register_blueprint(ventas_bp)
+app.register_blueprint(compras_bp)
 app.register_blueprint(stock_bp)
 app.register_blueprint(contabilidad_bp)
 app.register_blueprint(fondos_bp)
@@ -67,28 +65,31 @@ app.register_blueprint(utilitarios_bp)
 app.register_blueprint(pricing_bp)
 app.register_blueprint(produccion_bp)
 
-def _prewarm_db_pool():
-    """Pre-inicializa el pool de MariaDB en background para evitar freeze en primer request."""
-    import time
-    time.sleep(1)  # Esperar que Waitress termine de arrancar
+@app.before_serving
+async def initialize_all_services():
+    """Inicialización centralizada de servicios en el arranque de Quart."""
     try:
         from database import get_db_pool, get_db_cursor
-        pool = get_db_pool()
+        from services.georef_service import GeorefService
+        from services.erp_master_service import ErpMasterService
+        
+        # 1. Pool de DB
+        pool = await get_db_pool()
         if pool:
-            # Hacer una query liviana para verificar que el pool funciona
-            with get_db_cursor() as cur:
-                cur.execute("SELECT 1")
-            logger.info("✅ DB Pool pre-inicializado correctamente en background.")
-        else:
-            logger.info("ℹ️ Sin pool nativo (pymysql fallback). OK.")
+            async with get_db_cursor() as cur:
+                await cur.execute("SELECT 1")
+            logger.info("✅ DB Pool asíncrono pre-inicializado.")
+        
+        # 2. Servicios de negocio
+        await GeorefService.initialize_db()
+        await ErpMasterService.initialize_db()
+        logger.info("✅ Servicios Georef/ERP inicializados.")
+        
     except Exception as e:
-        logger.warning(f"⚠️ DB Pool pre-warm falló (no crítico): {e}")
-
-import threading
-threading.Thread(target=_prewarm_db_pool, daemon=True).start()
+        logger.error(f"❌ Error crítico en initialize_services: {e}")
 
 @app.after_request
-def add_header(response):
+async def add_header(response):
     """
     Add headers to both force latest IE rendering engine or chrome frame,
     and also to cache the rendered page for 0 seconds.
@@ -99,17 +100,17 @@ def add_header(response):
     return response
 
 
-from services.cm05_routes import cm05_api_bp
-app.register_blueprint(cm05_api_bp)
+# from services.cm05_routes import cm05_api_bp
+# app.register_blueprint(cm05_api_bp)
 
-from services.ai_chat_routes import ai_chat_bp
-app.register_blueprint(ai_chat_bp)
+# from services.ai_chat_routes import ai_chat_bp
+# app.register_blueprint(ai_chat_bp)
 
 # El manejo de permisos y caché ahora se centraliza en services.session_service.SessionDispatcher
 
 
 @app.before_request
-def security_and_auth():
+async def security_and_auth():
     # Initialize globals first to avoid AttributeError in logs
     g.user = None
     g.permissions = []
@@ -123,7 +124,7 @@ def security_and_auth():
         # Skip CSRF for login and static/API routes that might not support it yet
         exempt_paths = [url_for('core.login'), '/api/clima', '/api/finance']
         if request.path not in exempt_paths:
-            token = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token')
+            token = (await request.form).get('csrf_token') or request.headers.get('X-CSRF-Token')
             session_token = session.get('csrf_token')
             
             if not token or token != session_token:
@@ -133,14 +134,14 @@ def security_and_auth():
                 accept = request.headers.get('Accept', '')
                 content_type = request.headers.get('Content-Type', '')
                 if 'application/json' in accept or 'application/json' in content_type or 'text/html' not in accept:
-                    from flask import jsonify
+                    from quart import jsonify
                     return jsonify({"error": "Token CSRF inválido. Recargue la página."}), 403
                 return "Error de Seguridad: Token CSRF inválido. Intente recargar la página.", 403
 
     # 2. Despachador de Sesión Independiente (Dispatcher)
     # Procesa la identidad del usuario, empresa y permisos de forma centralizada.
     from services.session_service import SessionDispatcher
-    SessionDispatcher.attach_session_context()
+    await SessionDispatcher.attach_session_context()
     
     # 3. Registro de incidentes si se intenta acceder a rutas protegidas sin sesión válida
     # (La validación final ocurre en los decoradores @login_required)
@@ -148,7 +149,7 @@ def security_and_auth():
 
 
 @app.after_request
-def add_security_headers(response):
+async def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
@@ -173,7 +174,7 @@ def pull_sid_from_url(endpoint, values):
         g.sid = values.pop('sid')
 
 @app.context_processor
-def inject_globals():
+async def inject_globals():
     from utils.menu_loader import load_menu_structure, filter_menu_by_permissions
     
     # Cargar estructura del menú
@@ -226,7 +227,7 @@ def human_format(num):
 from werkzeug.exceptions import HTTPException
 
 @app.errorhandler(Exception)
-def global_exception_handler(e):
+async def global_exception_handler(e):
     # Atrapar cualquier error HTTP (400, 403, 404, 405, 500, etc) o RuntimeError, ValueError, etc.
     try:
         from database import get_db_cursor
@@ -244,8 +245,8 @@ def global_exception_handler(e):
             
         req_data = {}
         try:
-            if request.is_json: req_data = request.json
-            elif request.form: req_data = dict(request.form)
+            if request.is_json: req_data = await request.json
+            elif await request.form: req_data = dict(await request.form)
         except: pass
         
         clob = {
@@ -268,12 +269,12 @@ def global_exception_handler(e):
             
             error_id = "N/A"
             try:
-                with get_db_cursor() as log_cursor:
-                    log_cursor.execute("SHOW COLUMNS FROM sys_transaction_logs LIKE 'clob_data'")
-                    has_clob = bool(log_cursor.fetchone())
+                async with get_db_cursor() as log_cursor:
+                    await log_cursor.execute("SHOW COLUMNS FROM sys_transaction_logs LIKE 'clob_data'")
+                    has_clob = bool(await log_cursor.fetchone())
                     
                     if has_clob:
-                        log_cursor.execute("""
+                        await log_cursor.execute("""
                             INSERT INTO sys_transaction_logs 
                             (enterprise_id, user_id, session_id, module, endpoint, request_method, request_data, 
                              status, severity, impact_category, failure_mode, error_message, clob_data)
@@ -281,7 +282,7 @@ def global_exception_handler(e):
                         """, (ent_id, user_id, sid, 'SYSTEM', request.path, request.method, json.dumps(req_data),
                               'ERROR', 8 if status_code >= 500 else 3, 'OPERACIONAL', failure_mode, error_msg, json.dumps(clob)))
                     else:
-                        log_cursor.execute("""
+                        await log_cursor.execute("""
                             INSERT INTO sys_transaction_logs 
                             (enterprise_id, user_id, session_id, module, endpoint, request_method, request_data, 
                              status, severity, impact_category, failure_mode, error_message, error_traceback)
@@ -296,13 +297,11 @@ def global_exception_handler(e):
             if status_code >= 500:
                 try:
                     from services import email_service
-                    import threading
-                    app_ctx = app.app_context()
                     
-                    def notify_superadmin(ctx, eid, emsg, tb):
-                        with ctx:
+                    async def notify_superadmin(eid, emsg, tb):
+                        async with app.app_context():
                             # Notificar caída general al super admin
-                            success, err = email_service._enviar_email(
+                            success, err = await email_service._enviar_email(
                                 "marcelocperi@gmail.com", 
                                 f"[URGENTE] Caída General del Servicio - Error #{eid}", 
                                 f"<h3>ALERTA DE SISTEMA CLASIFICADA</h3><p>Se ha registrado un error grave (HTTP 500+ o Exception crítica).</p><b>ID de Error:</b> #{eid}<br><b>Mensaje:</b> {emsg}<br><br><pre style='font-size:10px; background:#f4f4f4;'>{tb}</pre>",
@@ -313,9 +312,9 @@ def global_exception_handler(e):
                             else:
                                 logger.error(f"❌ FALLO al enviar email de alerta: {err}")
 
-                    threading.Thread(target=notify_superadmin, args=(app_ctx, error_id, error_msg, traceback.format_exc())).start()
+                    app.add_background_task(notify_superadmin, error_id, error_msg, traceback.format_exc())
                 except Exception as mail_ex:
-                    logger.error(f"Failed to trigger severe error email thread: {mail_ex}")
+                    logger.error(f"Failed to trigger severe error email background task: {mail_ex}")
         except Exception as ex_inner:
             logger.error(f"Falla en lógica interna de global_handler: {ex_inner}")
 
@@ -381,45 +380,31 @@ def ensure_port_is_free(port):
         pass
 
 if __name__ == '__main__':
-    from services.georef_service import GeorefService
-    from services.erp_master_service import ErpMasterService
-    import os
-    
-    # Determinar puerto antes de inicializar para el desbloqueo
     port = int(os.environ.get('PORT', 5000))
     ensure_port_is_free(port)
     
     print("="*60)
-    print("  COLOSAL ERP - SERVIDOR DE PRODUCCION (multiMCP)")
+    print("  COLOSAL ERP - SERVIDOR DE PRODUCCION (Quart/Hypercorn)")
     print("="*60)
     
-    # Inicializaciones de DB
-    try:
-        GeorefService.initialize_db()
-        ErpMasterService.initialize_db()
-    except Exception as e:
-        print(f"[ERROR] Falla en inicializacion de DB: {e}")
-    
-    # Determinar si usamos modo produccion o debug
     env = os.environ.get('FLASK_ENV', 'production').lower()
 
     if env == 'development':
-        print(f"MODO: DESARROLLO (Flask Debug)")
+        print(f"MODO: DESARROLLO (Quart Debug)")
         print(f"URL:  http://localhost:{port}")
-        print("="*60)
         app.run(host='0.0.0.0', port=port, debug=True)
     else:
         try:
-            from waitress import serve
-            print(f"MODO: PRODUCCION (Waitress Server)")
+            from hypercorn.config import Config as HyperConfig
+            from hypercorn.asyncio import serve
+            import asyncio
+            
+            print(f"MODO: PRODUCCION (Hypercorn)")
             print(f"URL:  http://0.0.0.0:{port}")
-            print(f"Acceso Externo: Configura tu router puerto {port} -> 192.168.0.97")
-            print("="*60)
             
-            # Iniciar actualizador de DNS en segundo plano
-            # start_dns_updater()
-            
-            serve(app, host='0.0.0.0', port=port, threads=16)
+            config = HyperConfig()
+            config.bind = [f"0.0.0.0:{port}"]
+            asyncio.run(serve(app, config))
         except ImportError:
-            print("[ALERTA] Waitress no instalado. Usando Flask nativo (no recomendado para produccion).")
+            print("[ALERTA] Hypercorn no instalado. Usando Quart nativo.")
             app.run(host='0.0.0.0', port=port, debug=False)

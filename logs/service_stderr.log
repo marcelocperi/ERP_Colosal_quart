@@ -1280,3 +1280,157 @@ C:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP\services\../../multiMCP\s
 2026-03-06 10:04:49,098 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
 2026-03-06 10:04:55,921 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
 2026-03-06 10:09:33,790 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\run_production.py", line 6, in <module>
+    from app import app
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 2, in <module>
+    from quart import Quart, session, g, request, url_for
+ModuleNotFoundError: No module named 'quart'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\run_production.py", line 6, in <module>
+    from app import app
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 2, in <module>
+    from quart import Quart, session, g, request, url_for
+ModuleNotFoundError: No module named 'quart'
+2026-03-11 16:33:22,679 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-11 16:33:22,717 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-11 17:29:36,148 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-11 17:29:36,157 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-11 17:51:33,477 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 17:51:34,480 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 17:51:34,555 - waitress - ERROR - Exception while serving /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 17:52:35,043 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 17:52:35,075 - waitress - ERROR - Exception while serving /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 18:06:24,587 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 18:06:24,634 - waitress - ERROR - Exception while serving /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 19:03:31,685 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-11 19:03:31,690 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-11 19:06:22,320 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-11 19:06:22,326 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-12 11:30:24,976 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-12 11:30:24,981 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-13 00:16:20,575 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-13 00:16:20,589 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-13 00:16:21,119 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-13 00:16:21,992 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-13 00:16:22,099 - waitress - ERROR - Exception while serving /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'

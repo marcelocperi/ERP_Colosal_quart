@@ -1,4 +1,4 @@
-from flask import render_template, request, g, jsonify, flash, redirect, url_for
+from quart import render_template, request, g, jsonify, flash, redirect, url_for
 from contabilidad import contabilidad_bp
 from core.decorators import login_required, permission_required
 from database import get_db_cursor, atomic_transaction
@@ -9,60 +9,60 @@ from services.validation_service import format_cuit
 
 @contabilidad_bp.route('/contabilidad/dashboard')
 @login_required
-def dashboard():
+async def dashboard():
     try:
-        return render_template('contabilidad/dashboard.html')
+        return await render_template('contabilidad/dashboard.html')
     except Exception as e:
         import traceback
         traceback.print_exc()
-        flash(f"Error al cargar el dashboard de contabilidad: {str(e)}", "danger")
+        await flash(f"Error al cargar el dashboard de contabilidad: {str(e)}", "danger")
         return redirect('/')
 
 @contabilidad_bp.route('/contabilidad/config-fiscal', methods=['GET', 'POST'])
 @login_required
-def config_fiscal():
+async def config_fiscal():
     from services.afip_service import AfipService
     enterprise_id = g.user['enterprise_id']
     
     status = None
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         if request.method == 'POST':
-            cuit = request.form.get('cuit')
-            afip_crt = request.form.get('afip_crt')
-            afip_key = request.form.get('afip_key')
-            afip_entorno = request.form.get('afip_entorno')
+            cuit = (await request.form).get('cuit')
+            afip_crt = (await request.form).get('afip_crt')
+            afip_key = (await request.form).get('afip_key')
+            afip_entorno = (await request.form).get('afip_entorno')
             
             cuit = format_cuit(cuit)
             
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE sys_enterprises 
                 SET cuit = %s, afip_crt = %s, afip_key = %s, afip_entorno = %s 
                 WHERE id = %s
             """, (cuit, afip_crt, afip_key, afip_entorno, enterprise_id))
-            flash("Configuración fiscal actualizada correctamente", "success")
+            await flash("Configuración fiscal actualizada correctamente", "success")
             return redirect(url_for('contabilidad.config_fiscal'))
 
-        cursor.execute("SELECT cuit, afip_crt, afip_key, afip_entorno FROM sys_enterprises WHERE id = %s", (enterprise_id,))
-        enterprise = cursor.fetchone()
+        await cursor.execute("SELECT cuit, afip_crt, afip_key, afip_entorno FROM sys_enterprises WHERE id = %s", (enterprise_id,))
+        enterprise = await cursor.fetchone()
         
-    status = AfipService.verificar_configuracion(enterprise_id)
+    status = await AfipService.verificar_configuracion(enterprise_id)
         
-    return render_template('contabilidad/config_fiscal.html', 
+    return await render_template('contabilidad/config_fiscal.html', 
                           enterprise=enterprise, 
                           status=status)
 
 @contabilidad_bp.route('/contabilidad/libro-iva-ventas', methods=['GET'])
 @login_required
-def libro_iva_ventas():
+async def libro_iva_ventas():
     # Parametros de filtro
     today = datetime.date.today()
     anio = request.args.get('anio', today.year, type=int)
     mes = request.args.get('mes', today.month, type=int)
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Consulta principal: Comprobantes del periodo
         # La tabla erp_comprobantes tiene la informacion necesaria
-        cursor.execute("""
+        await cursor.execute("""
             SELECT 
                 erp_comprobantes.id, erp_comprobantes.fecha_emision, erp_comprobantes.tipo_comprobante, erp_comprobantes.punto_venta, erp_comprobantes.numero,
                 erp_comprobantes.importe_neto, erp_comprobantes.importe_iva, erp_comprobantes.importe_total,
@@ -78,7 +78,7 @@ def libro_iva_ventas():
             ORDER BY erp_comprobantes.fecha_emision ASC, erp_comprobantes.numero ASC
         """, (g.user['enterprise_id'], anio, mes))
         
-        comprobantes_db = cursor.fetchall()
+        comprobantes_db = await cursor.fetchall()
         
         # Procesar datos y calcular totales
         reporte = []
@@ -117,20 +117,20 @@ def libro_iva_ventas():
         7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
     }
 
-    return render_template('contabilidad/libro_iva_ventas.html', 
+    return await render_template('contabilidad/libro_iva_ventas.html', 
                            anio=anio, mes=mes, 
                            reporte=reporte, totales=totales,
                            meses_nombre=meses_nombre)
 
 @contabilidad_bp.route('/contabilidad/libro-iva-compras', methods=['GET'])
 @login_required
-def libro_iva_compras():
+async def libro_iva_compras():
     today = datetime.date.today()
     anio = request.args.get('anio', today.year, type=int)
     mes = request.args.get('mes', today.month, type=int)
     
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT 
                 erp_comprobantes.id, erp_comprobantes.fecha_emision, erp_comprobantes.tipo_comprobante, erp_comprobantes.punto_venta, erp_comprobantes.numero,
                 erp_comprobantes.importe_neto, erp_comprobantes.importe_iva, erp_comprobantes.importe_total,
@@ -146,7 +146,7 @@ def libro_iva_compras():
             ORDER BY erp_comprobantes.fecha_emision ASC, erp_comprobantes.numero ASC
         """, (g.user['enterprise_id'], anio, mes))
         
-        comprobantes_db = cursor.fetchall()
+        comprobantes_db = await cursor.fetchall()
         
         reporte = []
         totales = {'neto': 0.0, 'iva': 0.0, 'total': 0.0}
@@ -181,27 +181,27 @@ def libro_iva_compras():
         7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
     }
 
-    return render_template('contabilidad/libro_iva_compras.html', 
+    return await render_template('contabilidad/libro_iva_compras.html', 
                            anio=anio, mes=mes, 
                            reporte=reporte, totales=totales,
                            meses_nombre=meses_nombre)
 
 @contabilidad_bp.route('/contabilidad/padrones-iibb')
 @login_required
-def padrones_iibb():
+async def padrones_iibb():
     stats = {}
     logs = []
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Estadísticas básicas
-        cursor.execute("SELECT COUNT(*) as total FROM sys_padrones_iibb")
-        total = cursor.fetchone()
+        await cursor.execute("SELECT COUNT(*) as total FROM sys_padrones_iibb")
+        total = await cursor.fetchone()
         
-        cursor.execute("SELECT COUNT(DISTINCT jurisdiccion) as juris_cnt FROM sys_padrones_iibb")
-        juris = cursor.fetchone()
+        await cursor.execute("SELECT COUNT(DISTINCT jurisdiccion) as juris_cnt FROM sys_padrones_iibb")
+        juris = await cursor.fetchone()
         
-        cursor.execute("SELECT COUNT(DISTINCT cuit) as cuit_cnt FROM sys_padrones_iibb")
-        cuits = cursor.fetchone()
+        await cursor.execute("SELECT COUNT(DISTINCT cuit) as cuit_cnt FROM sys_padrones_iibb")
+        cuits = await cursor.fetchone()
 
         # Simulación de vigencia
         stats = {
@@ -213,30 +213,30 @@ def padrones_iibb():
 
         # Obtener Logs de Procesos
         try:
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT * FROM sys_padrones_logs 
                 ORDER BY fecha_ejecucion DESC 
                 LIMIT 50
             """)
-            logs = cursor.fetchall()
+            logs = await cursor.fetchall()
         except Exception as e:
             print(f"Error fetching logs: {e}")
             logs = []
 
-    return render_template('contabilidad/padrones.html', stats=stats, logs=logs)
+    return await render_template('contabilidad/padrones.html', stats=stats, logs=logs)
 
 @contabilidad_bp.route('/contabilidad/api/consultar-padron/<string:cuit>')
 @login_required
-def api_consultar_padron(cuit):
+async def api_consultar_padron(cuit):
     import asyncio
     from services.afip_service import AfipService
     cuit_clean = re.sub(r'\D', '', cuit)
     res = {'jurisdicciones': {}, 'afip': None}
     
     # 1. Consultar Padrones Locales (IIBB)
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM sys_padrones_iibb WHERE cuit = %s", (cuit_clean,))
-        rows = cursor.fetchall()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM sys_padrones_iibb WHERE cuit = %s", (cuit_clean,))
+        rows = await cursor.fetchall()
         for r in rows:
             res['jurisdicciones'][r['jurisdiccion']] = {
                 'alicuota_percepcion': float(r['alicuota_percepcion'] or 0),
@@ -248,7 +248,7 @@ def api_consultar_padron(cuit):
             }
             
     # 2. Consultar AFIP (Real o Simulado)
-    afip_res = asyncio.run(AfipService.consultar_padron(g.user['enterprise_id'], cuit_clean))
+    afip_res = await AfipService.consultar_padron(g.user['enterprise_id'], cuit_clean)
     if afip_res.get('success'):
         res['afip'] = afip_res['data']
     else:
@@ -259,20 +259,20 @@ def api_consultar_padron(cuit):
 @contabilidad_bp.route('/contabilidad/importar-padron/<string:jurisdiccion>', methods=['POST'])
 @login_required
 @atomic_transaction('contabilidad', severity=7, impact_category='Compliance')
-def importar_padron(jurisdiccion):
-    if 'archivo' not in request.files:
-        flash("No se seleccionó archivó.", "danger")
+async def importar_padron(jurisdiccion):
+    if 'archivo' not in (await request.files):
+        await flash("No se seleccionó archivó.", "danger")
         return redirect(url_for('contabilidad.padrones_iibb'))
     
-    file = request.files['archivo']
+    file = (await request.files)['archivo']
     if file.filename == '':
-        flash("Archivo vacío.", "danger")
+        await flash("Archivo vacío.", "danger")
         return redirect(url_for('contabilidad.padrones_iibb'))
 
     # Parseo simplificado del padrón
     # NOTA: En producción esto debería ser un task de fondo (Celery/RQ)
     try:
-        content = file.read().decode('utf-8', errors='ignore')
+        content = await file.read().decode('utf-8', errors='ignore')
         lines = content.splitlines()
         
         # Default dates (Current Month)
@@ -293,12 +293,12 @@ def importar_padron(jurisdiccion):
         jurisdiccion_id = JURIS_MAP.get(jurisdiccion)
         
         if not jurisdiccion_id:
-             flash(f"Jurisdicción desconocida: {jurisdiccion}", "danger")
+             await flash(f"Jurisdicción desconocida: {jurisdiccion}", "danger")
              return redirect(url_for('contabilidad.padrones_iibb'))
 
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Limpiar padrón anterior (ARBA/AGIP) para esta jurisdicción
-            cursor.execute("DELETE FROM sys_padrones_iibb WHERE jurisdiccion_id = %s", (jurisdiccion_id,))
+            await cursor.execute("DELETE FROM sys_padrones_iibb WHERE jurisdiccion_id = %s", (jurisdiccion_id,))
             
             records = []
             if jurisdiccion == 'ARBA':
@@ -508,14 +508,14 @@ def importar_padron(jurisdiccion):
 
             
             if records:
-                cursor.executemany("""
+                await cursor.executemany("""
                     INSERT INTO sys_padrones_iibb (jurisdiccion, jurisdiccion_id, cuit, alicuota_percepcion, alicuota_retencion, desde, hasta, exencion_iibb)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, records)
             
             # Log de Proceso
             try:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO sys_padrones_logs 
                     (jurisdiccion, tipo_proceso, archivo_origen, registros_procesados, registros_altas, status, mensaje)
                     VALUES (%s, %s, %s, %s, %s, 'SUCCESS', 'Proceso finalizado correctamente')
@@ -523,14 +523,14 @@ def importar_padron(jurisdiccion):
             except Exception as e:
                 print(f"Error logging padron process: {e}")
                 
-        flash(f"Padron {jurisdiccion} procesado con éxito. ({len(records)} registros)", "success")
+        await flash(f"Padron {jurisdiccion} procesado con éxito. ({len(records)} registros)", "success")
     except Exception as e:
-        flash(f"Error procesando padrón: {str(e)}", "danger")
+        await flash(f"Error procesando padrón: {str(e)}", "danger")
 
 @contabilidad_bp.route('/contabilidad/exportar-afip', methods=['GET'])
 @login_required
-def exportar_afip():
-    from flask import Response
+async def exportar_afip():
+    from quart import Response
     import io
 
     periodo = request.args.get('periodo') # YYYYMM
@@ -545,9 +545,9 @@ def exportar_afip():
     filename = f"LIBRO_IVA_{modulo}_{tipo_archivo}_{periodo}.txt"
     output = io.StringIO()
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         if tipo_archivo == 'CBTE':
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT erp_comprobantes.*, erp_terceros.cuit, erp_terceros.nombre, sys_tipos_comprobante.codigo as afip_tipo
                 FROM erp_comprobantes
                 JOIN erp_terceros ON erp_comprobantes.tercero_id = erp_terceros.id
@@ -556,7 +556,7 @@ def exportar_afip():
                   AND YEAR(erp_comprobantes.fecha_emision) = %s AND MONTH(erp_comprobantes.fecha_emision) = %s
             """, (g.user['enterprise_id'], modulo, anio, mes))
             
-            for r in cursor.fetchall():
+            for r in await cursor.fetchall():
                 fecha = r['fecha_emision'].strftime('%Y%m%d')
                 tipo = f"{int(r['afip_tipo']):03}"
                 pv = f"{int(r['punto_venta']):05}"
@@ -573,7 +573,7 @@ def exportar_afip():
                 output.write(line + "\r\n")
         
         else: # ALICUOTAS
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT d.alicuota_iva, d.subtotal_neto, d.importe_iva, 
                        c.tipo_comprobante as afip_tipo, c.punto_venta, c.numero
                 FROM erp_comprobantes_detalle d
@@ -586,7 +586,7 @@ def exportar_afip():
             # 5: 21%, 4: 10.5%, 6: 27%, 8: 5%, 9: 2.5%, 3: 0%
             map_ali = {21.0: '0005', 10.5: '0004', 27.0: '0006', 5.0: '0008', 2.5: '0009', 0.0: '0003'}
             
-            for r in cursor.fetchall():
+            for r in await cursor.fetchall():
                 tipo = f"{int(r['afip_tipo']):03}"
                 pv = f"{int(r['punto_venta']):05}"
                 nro = f"{int(r['numero']):020}"
@@ -605,13 +605,13 @@ def exportar_afip():
 
 @contabilidad_bp.route('/contabilidad/reporte-iibb')
 @login_required
-def reporte_iibb():
-    with get_db_cursor(dictionary=True) as cursor:
+async def reporte_iibb():
+    async with get_db_cursor(dictionary=True) as cursor:
         # 1. Percepciones sufridas (en Compras)
         # 2. Retenciones sufridas (en Cobros - No implementado todavía)
         # 3. Retenciones practicadas (en Pagos - Implementado en fin_retenciones_emitidas)
         
-        cursor.execute("""
+        await cursor.execute("""
             SELECT sys_jurisdicciones.codigo, sys_jurisdicciones.nombre, 
                    COALESCE(SUM(erp_comprobantes.importe_neto), 0) as base,
                    COALESCE(SUM(erp_comprobantes.importe_percepcion_iibb_arba + erp_comprobantes.importe_percepcion_iibb_agip), 0) as percepciones,
@@ -625,7 +625,7 @@ def reporte_iibb():
             ORDER BY sys_jurisdicciones.codigo
         """, (g.user['enterprise_id'], g.user['enterprise_id'], g.user['enterprise_id']))
         
-        reporte = cursor.fetchall()
+        reporte = await cursor.fetchall()
         
         totales = {
             'base': sum(float(r['base']) for r in reporte),
@@ -634,23 +634,23 @@ def reporte_iibb():
         }
         
     import datetime
-    return render_template('contabilidad/reporte_iibb.html', 
+    return await render_template('contabilidad/reporte_iibb.html', 
                             reporte=reporte, 
                             totales=totales,
                             current_month=datetime.date.today().strftime('%Y-%m'))
 
 @contabilidad_bp.route('/contabilidad/exportar-sicore', methods=['GET'])
 @login_required
-def exportar_sicore():
-    from flask import Response
+async def exportar_sicore():
+    from quart import Response
     import io
     
     periodo = request.args.get('periodo', datetime.date.today().strftime('%Y%m')) # YYYYMM
     tipo = request.args.get('tipo', 'SICORE') # SICORE o SIFERE
     
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT cuit FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
-        empresa = cursor.fetchone()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT cuit FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
+        empresa = await cursor.fetchone()
         
         # Naming convention: CUIT_PERIODO_MM_YYYY_FEC_EMIS_DDMMYYYYHHMMSS.txt
         cuit_clean = re.sub(r'\D', '', empresa['cuit'])
@@ -660,14 +660,14 @@ def exportar_sicore():
         output = io.StringIO()
         
         # Obtener retenciones del periodo
-        cursor.execute("""
+        await cursor.execute("""
             SELECT fin_retenciones_emitidas.*, erp_terceros.cuit as sujeto_cuit, erp_terceros.nombre as sujeto_nombre
             FROM fin_retenciones_emitidas
             JOIN erp_terceros ON fin_retenciones_emitidas.tercero_id = erp_terceros.id
             WHERE fin_retenciones_emitidas.enterprise_id = %s AND DATE_FORMAT(fin_retenciones_emitidas.fecha, '%%Y%%m') = %s
         """, (g.user['enterprise_id'], periodo))
         
-        retenciones = cursor.fetchall()
+        retenciones = await cursor.fetchall()
         
         for r in retenciones:
             # Formatos específicos (Ejemplo SICORE simplificado)
@@ -693,22 +693,22 @@ def exportar_sicore():
 
 @contabilidad_bp.route('/contabilidad/plan-cuentas')
 @login_required
-def plan_cuentas():
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+async def plan_cuentas():
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT id, codigo, nombre, tipo, nivel, es_analitica 
             FROM cont_plan_cuentas 
             WHERE enterprise_id = %s 
             ORDER BY codigo
         """, (g.user['enterprise_id'],))
-        cuentas = cursor.fetchall()
-    return render_template('contabilidad/plan_cuentas.html', cuentas=cuentas)
+        cuentas = await cursor.fetchall()
+    return await render_template('contabilidad/plan_cuentas.html', cuentas=cuentas)
 
 @contabilidad_bp.route('/contabilidad/libro-diario')
 @login_required
-def libro_diario():
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+async def libro_diario():
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT cont_asientos.*, 
                    (SELECT SUM(debe) FROM cont_asientos_detalle WHERE asiento_id = cont_asientos.id) as total_debe,
                    (SELECT SUM(haber) FROM cont_asientos_detalle WHERE asiento_id = cont_asientos.id) as total_haber
@@ -716,32 +716,32 @@ def libro_diario():
             WHERE cont_asientos.enterprise_id = %s 
             ORDER BY cont_asientos.fecha DESC, cont_asientos.id DESC
         """, (g.user['enterprise_id'],))
-        asientos = cursor.fetchall()
-    return render_template('contabilidad/libro_diario.html', asientos=asientos)
+        asientos = await cursor.fetchall()
+    return await render_template('contabilidad/libro_diario.html', asientos=asientos)
 
 @contabilidad_bp.route('/contabilidad/asiento/<int:id>')
 @login_required
-def ver_asiento(id):
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM cont_asientos WHERE id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
-        asiento = cursor.fetchone()
+async def ver_asiento(id):
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM cont_asientos WHERE id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
+        asiento = await cursor.fetchone()
         if not asiento:
-            flash("Asiento no encontrado", "danger")
+            await flash("Asiento no encontrado", "danger")
             return redirect(url_for('contabilidad.libro_diario'))
         
-        cursor.execute("""
+        await cursor.execute("""
             SELECT cont_asientos_detalle.*, cont_plan_cuentas.codigo as cuenta_codigo, cont_plan_cuentas.nombre as cuenta_nombre
             FROM cont_asientos_detalle
             JOIN cont_plan_cuentas ON cont_asientos_detalle.cuenta_id = cont_plan_cuentas.id
             WHERE cont_asientos_detalle.asiento_id = %s
         """, (id,))
-        detalles = cursor.fetchall()
-    return render_template('contabilidad/ver_asiento.html', asiento=asiento, detalles=detalles)
+        detalles = await cursor.fetchall()
+    return await render_template('contabilidad/ver_asiento.html', asiento=asiento, detalles=detalles)
 
 @contabilidad_bp.route('/contabilidad/centralizacion', methods=['GET', 'POST'])
 @login_required
 @atomic_transaction('contabilidad', severity=8, impact_category='Financial')
-def centralizacion():
+async def centralizacion():
     today = datetime.date.today()
     meses_nombre = {
         1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio',
@@ -749,83 +749,83 @@ def centralizacion():
     }
 
     if request.method == 'POST':
-        modulo = request.form.get('modulo')
-        mes = int(request.form.get('mes'))
-        anio = int(request.form.get('anio'))
+        modulo = (await request.form).get('modulo')
+        mes = int((await request.form).get('mes'))
+        anio = int((await request.form).get('anio'))
         
         try:
-            res = _generar_asiento_resumen(modulo, mes, anio)
+            res = await _generar_asiento_resumen(modulo, mes, anio)
             if res:
-                flash(f"Centralización de {modulo} realizada con éxito. Asiento #{res}", "success")
+                await flash(f"Centralización de {modulo} realizada con éxito. Asiento #{res}", "success")
             else:
-                flash(f"No hay comprobantes pendientes de centralizar para {modulo} en {mes}/{anio}", "warning")
+                await flash(f"No hay comprobantes pendientes de centralizar para {modulo} en {mes}/{anio}", "warning")
         except Exception as e:
-            flash(f"Error en centralización: {str(e)}", "danger")
+            await flash(f"Error en centralización: {str(e)}", "danger")
         
         return redirect(url_for('contabilidad.centralizacion'))
 
     # GET: Mostrar resumen de pendientes
     pendientes = []
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Pendientes Ventas
-        cursor.execute("""
+        await cursor.execute("""
             SELECT 'VENTAS' as modulo, COUNT(*) as cantidad, SUM(importe_total) as total 
             FROM erp_comprobantes 
             WHERE enterprise_id = %s AND modulo = 'VENTAS' AND asiento_id IS NULL
         """, (g.user['enterprise_id'],))
-        pendientes.append(cursor.fetchone())
+        pendientes.append(await cursor.fetchone())
         
         # Pendientes Compras
-        cursor.execute("""
+        await cursor.execute("""
             SELECT 'COMPRAS' as modulo, COUNT(*) as cantidad, SUM(importe_total) as total 
             FROM erp_comprobantes 
             WHERE enterprise_id = %s AND modulo = 'COMPRAS' AND asiento_id IS NULL
         """, (g.user['enterprise_id'],))
-        pendientes.append(cursor.fetchone())
+        pendientes.append(await cursor.fetchone())
 
         # Pendientes Fondos
-        cursor.execute("""
+        await cursor.execute("""
             SELECT 'FONDOS' as modulo, COUNT(*) as cantidad, SUM(importe) as total 
             FROM erp_movimientos_fondos 
             WHERE enterprise_id = %s AND asiento_id IS NULL
         """, (g.user['enterprise_id'],))
-        pendientes.append(cursor.fetchone())
+        pendientes.append(await cursor.fetchone())
         
         # Pendientes Sueldos
-        cursor.execute("""
+        await cursor.execute("""
             SELECT 'SUELDOS' as modulo, COUNT(*) as cantidad, SUM(total_neto) as total 
             FROM fin_nominas 
             WHERE enterprise_id = %s AND asiento_id IS NULL
         """, (g.user['enterprise_id'],))
-        pendientes.append(cursor.fetchone())
+        pendientes.append(await cursor.fetchone())
 
-    return render_template('contabilidad/centralizacion.html', 
+    return await render_template('contabilidad/centralizacion.html', 
                          meses_nombre=meses_nombre, 
                          today_mes=today.month, 
                          today_anio=today.year,
                          pendientes=pendientes)
 
-def _get_cuenta_id(cursor, enterprise_id, codigo):
-    cursor.execute("SELECT id FROM cont_plan_cuentas WHERE enterprise_id = %s AND codigo = %s", (enterprise_id, codigo))
-    res = cursor.fetchone()
+async def _get_cuenta_id(cursor, enterprise_id, codigo):
+    await cursor.execute("SELECT id FROM cont_plan_cuentas WHERE enterprise_id = %s AND codigo = %s", (enterprise_id, codigo))
+    res = await cursor.fetchone()
     if not res:
         # Fallback to global
-        cursor.execute("SELECT id FROM cont_plan_cuentas WHERE (enterprise_id = 0 OR enterprise_id = 1) AND codigo = %s LIMIT 1", (codigo,))
-        res = cursor.fetchone()
+        await cursor.execute("SELECT id FROM cont_plan_cuentas WHERE (enterprise_id = 0 OR enterprise_id = 1) AND codigo = %s LIMIT 1", (codigo,))
+        res = await cursor.fetchone()
     return res['id'] if res else None
 
-def _generar_asiento_resumen(modulo, mes, anio):
+async def _generar_asiento_resumen(modulo, mes, anio):
     enterprise_id = g.user['enterprise_id']
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         if modulo == 'VENTAS':
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT id, importe_neto, importe_iva, importe_total, tipo_comprobante
                 FROM erp_comprobantes 
                 WHERE enterprise_id = %s AND modulo = 'VENTAS' AND asiento_id IS NULL
                 AND MONTH(fecha_emision) = %s AND YEAR(fecha_emision) = %s
             """, (enterprise_id, mes, anio))
-            comprobantes = cursor.fetchall()
+            comprobantes = await cursor.fetchall()
             
             if not comprobantes: return None
             
@@ -850,45 +850,45 @@ def _generar_asiento_resumen(modulo, mes, anio):
             else:
                 fecha_asiento = datetime.date(anio, mes + 1, 1) - datetime.timedelta(days=1)
 
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO cont_asientos (enterprise_id, fecha, concepto, modulo_origen, user_id)
                 VALUES (%s, %s, %s, %s, %s)
             """, (enterprise_id, fecha_asiento, f"Centralización Ventas {mes}/{anio}", 'VENTAS', g.user['id']))
             asiento_id = cursor.lastrowid
             
             # Detalle
-            cta_deudores = _get_cuenta_id(cursor, enterprise_id, '1.3.01')
-            cta_ventas = _get_cuenta_id(cursor, enterprise_id, '4.1')
-            cta_iva_db = _get_cuenta_id(cursor, enterprise_id, '2.2.01')
+            cta_deudores = await _get_cuenta_id(cursor, enterprise_id, '1.3.01')
+            cta_ventas = await _get_cuenta_id(cursor, enterprise_id, '4.1')
+            cta_iva_db = await _get_cuenta_id(cursor, enterprise_id, '2.2.01')
             
             # Partida Doble: Ventas es HABER, Deudores es DEBE
             # Si total_total > 0: DEBE Deudores, HABER Ventas, HABER IVA
             # DEBE
             # DEBE
-            cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                            (asiento_id, cta_deudores, total_total if total_total > 0 else 0, abs(total_total) if total_total < 0 else 0, "Deudores por Ventas", enterprise_id, g.user['id']))
             # HABER Ventas
-            cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                            (asiento_id, cta_ventas, abs(total_neto) if total_neto < 0 else 0, total_neto if total_neto > 0 else 0, "Ventas del periodo", enterprise_id, g.user['id']))
             # HABER IVA
             if total_iva != 0:
-                cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                                (asiento_id, cta_iva_db, abs(total_iva) if total_iva < 0 else 0, total_iva if total_iva > 0 else 0, "IVA Débito Fiscal", enterprise_id, g.user['id']))
             
             # Actualizar links
             format_strings = ','.join(['%s'] * len(ids))
-            cursor.execute(f"UPDATE erp_comprobantes SET asiento_id = %s WHERE id IN ({format_strings})", [asiento_id] + ids)
+            await cursor.execute(f"UPDATE erp_comprobantes SET asiento_id = %s WHERE id IN ({format_strings})", [asiento_id] + ids)
             
             return asiento_id
 
         elif modulo == 'COMPRAS':
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT id, importe_neto, importe_iva, importe_total, tipo_comprobante
                 FROM erp_comprobantes 
                 WHERE enterprise_id = %s AND modulo = 'COMPRAS' AND asiento_id IS NULL
                 AND MONTH(fecha_emision) = %s AND YEAR(fecha_emision) = %s
             """, (enterprise_id, mes, anio))
-            comprobantes = cursor.fetchall()
+            comprobantes = await cursor.fetchall()
             
             if not comprobantes: return None
             
@@ -907,7 +907,7 @@ def _generar_asiento_resumen(modulo, mes, anio):
 
             fecha_asiento = datetime.date(anio, mes + 1, 1) - datetime.timedelta(days=1) if mes < 12 else datetime.date(anio, 12, 31)
 
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO cont_asientos (enterprise_id, fecha, concepto, modulo_origen, user_id)
                 VALUES (%s, %s, %s, %s, %s)
             """, (enterprise_id, fecha_asiento, f"Centralización Compras {mes}/{anio}", 'COMPRAS', g.user['id']))
@@ -916,37 +916,37 @@ def _generar_asiento_resumen(modulo, mes, anio):
             # Detalle Compras
             # IVA Credito (Si no existe 1.5.01, usamos 2.2.01 negativo o creamos uno)
             # Para este MVP usaremos 2.2.02 (IVA a Pagar) o buscaremos uno de Activo.
-            cta_gastos = _get_cuenta_id(cursor, enterprise_id, '5.2') # Gastos Admin genérico
-            cta_iva_cr = _get_cuenta_id(cursor, enterprise_id, '1.5.01') # Suponiendo que existe
-            if not cta_iva_cr: cta_iva_cr = _get_cuenta_id(cursor, enterprise_id, '2.2.01') # Fallback
+            cta_gastos = await _get_cuenta_id(cursor, enterprise_id, '5.2') # Gastos Admin genérico
+            cta_iva_cr = await _get_cuenta_id(cursor, enterprise_id, '1.5.01') # Suponiendo que existe
+            if not cta_iva_cr: cta_iva_cr = await _get_cuenta_id(cursor, enterprise_id, '2.2.01') # Fallback
             
-            cta_proveedores = _get_cuenta_id(cursor, enterprise_id, '2.1.01')
+            cta_proveedores = await _get_cuenta_id(cursor, enterprise_id, '2.1.01')
             
             # HABER Proveedores
-            cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                            (asiento_id, cta_proveedores, abs(total_total) if total_total < 0 else 0, total_total if total_total > 0 else 0, "Proveedores (Acreedores)", enterprise_id, g.user['id']))
             # DEBE Gastos/Mercaderia
-            cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                            (asiento_id, cta_gastos, total_neto if total_neto > 0 else 0, abs(total_neto) if total_neto < 0 else 0, "Compras de Bienes/Servicios", enterprise_id, g.user['id']))
             # DEBE IVA
             if total_iva != 0:
-                cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                                (asiento_id, cta_iva_cr, total_iva if total_iva > 0 else 0, abs(total_iva) if total_iva < 0 else 0, "IVA Crédito Fiscal", enterprise_id, g.user['id']))
             
             format_strings = ','.join(['%s'] * len(ids))
-            cursor.execute(f"UPDATE erp_comprobantes SET asiento_id = %s WHERE id IN ({format_strings})", [asiento_id] + ids)
+            await cursor.execute(f"UPDATE erp_comprobantes SET asiento_id = %s WHERE id IN ({format_strings})", [asiento_id] + ids)
             return asiento_id
 
         elif modulo == 'FONDOS':
             # Centralizar Ingresos y Egresos de Tesorería
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT m.*, cf.cuenta_contable_id
                 FROM erp_movimientos_fondos m
                 JOIN erp_cuentas_fondos cf ON m.cuenta_fondo_id = cf.id
                 WHERE m.enterprise_id = %s AND m.asiento_id IS NULL
                 AND MONTH(m.fecha) = %s AND YEAR(m.fecha) = %s
             """, (enterprise_id, mes, anio))
-            movimientos = cursor.fetchall()
+            movimientos = await cursor.fetchall()
             
             if not movimientos: return None
             
@@ -955,8 +955,8 @@ def _generar_asiento_resumen(modulo, mes, anio):
             ids = []
             
             # Cuentas default para contrapartida
-            cta_deudores = _get_cuenta_id(cursor, enterprise_id, '1.3.01')
-            cta_proveedores = _get_cuenta_id(cursor, enterprise_id, '2.1.01')
+            cta_deudores = await _get_cuenta_id(cursor, enterprise_id, '1.3.01')
+            cta_proveedores = await _get_cuenta_id(cursor, enterprise_id, '2.1.01')
             
             for m in movimientos:
                 importe = float(m['importe'])
@@ -979,7 +979,7 @@ def _generar_asiento_resumen(modulo, mes, anio):
                     saldos[cta_proveedores]['debe'] += importe
 
             fecha_asiento = datetime.date(anio, mes + 1, 1) - datetime.timedelta(days=1) if mes < 12 else datetime.date(anio, 12, 31)
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO cont_asientos (enterprise_id, fecha, concepto, modulo_origen, user_id)
                 VALUES (%s, %s, %s, %s, %s)
             """, (enterprise_id, fecha_asiento, f"Centralización Tesorería {mes}/{anio}", 'FONDOS', g.user['id']))
@@ -987,13 +987,13 @@ def _generar_asiento_resumen(modulo, mes, anio):
             
             for ctid, values in saldos.items():
                 if values['debe'] != 0 or values['haber'] != 0:
-                    cursor.execute("""
+                    await cursor.execute("""
                         INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id)
                         VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """, (asiento_id, ctid, values['debe'], values['haber'], "Movimientos de Tesorería", enterprise_id, g.user['id']))
             
             format_strings = ','.join(['%s'] * len(ids))
-            cursor.execute(f"UPDATE erp_movimientos_fondos SET asiento_id = %s WHERE id IN ({format_strings})", [asiento_id] + ids)
+            await cursor.execute(f"UPDATE erp_movimientos_fondos SET asiento_id = %s WHERE id IN ({format_strings})", [asiento_id] + ids)
             return asiento_id
 
     return None
@@ -1002,22 +1002,22 @@ def _generar_asiento_resumen(modulo, mes, anio):
 
 @contabilidad_bp.route('/contabilidad/sueldos')
 @login_required
-def sueldos_dashboard():
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM fin_nominas WHERE enterprise_id = %s ORDER BY periodo DESC", (g.user['enterprise_id'],))
-        nominas = cursor.fetchall()
-    return render_template('contabilidad/sueldos.html', nominas=nominas)
+async def sueldos_dashboard():
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM fin_nominas WHERE enterprise_id = %s ORDER BY periodo DESC", (g.user['enterprise_id'],))
+        nominas = await cursor.fetchall()
+    return await render_template('contabilidad/sueldos.html', nominas=nominas)
 
 @contabilidad_bp.route('/contabilidad/liquidar-sueldos', methods=['POST'])
 @login_required
 @atomic_transaction('contabilidad', severity=9, impact_category='Financial')
-def liquidar_sueldos():
-    periodo = request.form.get('periodo') # YYYY-MM
-    descripcion = request.form.get('descripcion', f"Liquidación {periodo}")
+async def liquidar_sueldos():
+    periodo = (await request.form).get('periodo') # YYYY-MM
+    descripcion = (await request.form).get('descripcion', f"Liquidación {periodo}")
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # 1. Crear cabecera de nómina
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO fin_nominas (enterprise_id, periodo, descripcion, estado)
             VALUES (%s, %s, %s, 'LIQUIDADO')
         """, (g.user['enterprise_id'], periodo, descripcion))
@@ -1025,8 +1025,8 @@ def liquidar_sueldos():
         
         # 2. Obtener empleados (usuarios con rol de empleado o similar)
         # Por simplificacion, liquidamos a TODOS los usuarios activos de la empresa
-        cursor.execute("SELECT id FROM sys_users WHERE enterprise_id = %s", (g.user['enterprise_id'],))
-        empleados = cursor.fetchall()
+        await cursor.execute("SELECT id FROM sys_users WHERE enterprise_id = %s", (g.user['enterprise_id'],))
+        empleados = await cursor.fetchall()
         
         total_bruto = 0
         total_neto = 0
@@ -1037,7 +1037,7 @@ def liquidar_sueldos():
             retenciones = bruto * 0.17 # 17% aportes
             neto = bruto - retenciones
             
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO fin_liquidaciones (enterprise_id, nomina_id, usuario_id, sueldo_bruto, retenciones, neto_a_cobrar)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (g.user['enterprise_id'], nomina_id, emp['id'], bruto, retenciones, neto))
@@ -1046,52 +1046,52 @@ def liquidar_sueldos():
             total_neto += neto
             
         # Actualizar totales en cabecera
-        cursor.execute("UPDATE fin_nominas SET total_bruto = %s, total_neto = %s WHERE id = %s", (total_bruto, total_neto, nomina_id))
+        await cursor.execute("UPDATE fin_nominas SET total_bruto = %s, total_neto = %s WHERE id = %s", (total_bruto, total_neto, nomina_id))
         
-        flash(f"Nómina de {periodo} generada correctamente para {len(empleados)} empleados.", "success")
+        await flash(f"Nómina de {periodo} generada correctamente para {len(empleados)} empleados.", "success")
         
     return redirect(url_for('contabilidad.sueldos_dashboard'))
 
 @contabilidad_bp.route('/contabilidad/centralizar-sueldos/<int:id>', methods=['POST'])
 @login_required
 @atomic_transaction('contabilidad', severity=9, impact_category='Financial')
-def centralizar_sueldos(id):
+async def centralizar_sueldos(id):
     enterprise_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM fin_nominas WHERE id = %s AND enterprise_id = %s AND asiento_id IS NULL", (id, enterprise_id))
-        nomina = cursor.fetchone()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM fin_nominas WHERE id = %s AND enterprise_id = %s AND asiento_id IS NULL", (id, enterprise_id))
+        nomina = await cursor.fetchone()
         
         if not nomina:
-            flash("Nómina no encontrada o ya centralizada.", "warning")
+            await flash("Nómina no encontrada o ya centralizada.", "warning")
             return redirect(url_for('contabilidad.sueldos_dashboard'))
         
         # Crear Asiento
-        cta_sueldos_gasto = _get_cuenta_id(cursor, enterprise_id, '5.2.01') # Sueldos y Jornales
-        cta_sueldos_pagar = _get_cuenta_id(cursor, enterprise_id, '2.1.01') # Proveedores/Acreedores genérico o crear cta especifica
+        cta_sueldos_gasto = await _get_cuenta_id(cursor, enterprise_id, '5.2.01') # Sueldos y Jornales
+        cta_sueldos_pagar = await _get_cuenta_id(cursor, enterprise_id, '2.1.01') # Proveedores/Acreedores genérico o crear cta especifica
         # Si no existe cta especifica de Sueldos a Pagar, usamos una transitoria
         
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_asientos (enterprise_id, fecha, concepto, modulo_origen, user_id)
             VALUES (%s, NOW(), %s, 'SUELDOS', %s)
         """, (enterprise_id, f"Asiento Sueldos {nomina['periodo']}", g.user['id']))
         asiento_id = cursor.lastrowid
         
         # DEBE: Gasto
-        cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                        (asiento_id, cta_sueldos_gasto, nomina['total_bruto'], 0, "Sueldos Brutos Periodo", enterprise_id, g.user['id']))
         
         # HABER: Sueldos a Pagar (Neto)
-        cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                        (asiento_id, cta_sueldos_pagar, 0, nomina['total_neto'], "Sueldos a Pagar (Neto)", enterprise_id, g.user['id']))
         
         # HABER: Retenciones a Pagar (Diferencia)
         ret_val = float(nomina['total_bruto']) - float(nomina['total_neto'])
         if ret_val > 0:
-            cta_retenciones = _get_cuenta_id(cursor, enterprise_id, '2.2.02') # IVA/Fiscas a Pagar genérico
-            cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            cta_retenciones = await _get_cuenta_id(cursor, enterprise_id, '2.2.02') # IVA/Fiscas a Pagar genérico
+            await cursor.execute("INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, glosa, enterprise_id, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                        (asiento_id, cta_retenciones, 0, ret_val, "Aportes y Contribuciones a Pagar", enterprise_id, g.user['id']))
         
-        cursor.execute("UPDATE fin_nominas SET asiento_id = %s, estado = 'CONTABILIZADO' WHERE id = %s", (asiento_id, id))
-        flash(f"Nómina centralizada con Asiento #{asiento_id}", "success")
+        await cursor.execute("UPDATE fin_nominas SET asiento_id = %s, estado = 'CONTABILIZADO' WHERE id = %s", (asiento_id, id))
+        await flash(f"Nómina centralizada con Asiento #{asiento_id}", "success")
         
     return redirect(url_for('contabilidad.sueldos_dashboard'))

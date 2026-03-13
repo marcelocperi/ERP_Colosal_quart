@@ -30,7 +30,7 @@ class AuditCertificationService:
     }
 
     @staticmethod
-    def analyze_module_compliance(module_prefix):
+    async def analyze_module_compliance(module_prefix):
         """
         Analiza el cumplimiento de estándares de auditoría para un módulo específico.
         Identifica tablas, verifica esquemas y escanea el código fuente.
@@ -43,20 +43,20 @@ class AuditCertificationService:
             'status': 'FAIL'
         }
 
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Identificar Tablas del Módulo
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT TABLE_NAME 
                 FROM INFORMATION_SCHEMA.TABLES 
                 WHERE TABLE_SCHEMA = DATABASE() 
                 AND TABLE_NAME LIKE %s
             """, (f"{module_prefix}_%",))
-            tables = [r['TABLE_NAME'] for r in cursor.fetchall()]
+            tables = [r['TABLE_NAME'] for r in await cursor.fetchall()]
 
             for table in tables:
                 table_info = {'name': table, 'fields': {}, 'compliant': False}
-                cursor.execute(f"DESCRIBE {table}")
-                columns = {c['Field']: c for c in cursor.fetchall()}
+                await cursor.execute(f"DESCRIBE {table}")
+                columns = {c['Field']: c for c in await cursor.fetchall()}
                 
                 missing = []
                 for f in AuditCertificationService.REQUIRED_FIELDS:
@@ -90,7 +90,7 @@ class AuditCertificationService:
                                 if file.endswith('.py'):
                                     file_path = os.path.join(root, file)
                                     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                                        content = f.read()
+                                        content = await f.read()
                                         if table in content:
                                             # Regex para buscar INSERT que incluya user_id
                                             if re.search(rf"INSERT\s+INTO\s+{table}.*user_id", content, re.IGNORECASE | re.DOTALL):
@@ -117,12 +117,12 @@ class AuditCertificationService:
         return results
 
     @staticmethod
-    def get_all_modules_compliance():
+    async def get_all_modules_compliance():
         modules = ['fin', 'cmp', 'stk', 'vta', 'erp', 'cont']
-        return [AuditCertificationService.analyze_module_compliance(m) for m in modules]
+        return [await AuditCertificationService.analyze_module_compliance(m) for m in modules]
 
     @staticmethod
-    def validate_permissions_compliance(permission_ids):
+    async def validate_permissions_compliance(permission_ids):
         """
         Verifica si los módulos asociados a una lista de permisos cumplen con el estándar.
         Retorna (True, None) o (False, error_details).
@@ -130,17 +130,17 @@ class AuditCertificationService:
         if not permission_ids:
             return True, None
             
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Obtener categorías únicas involucradas
             format_strings = ','.join(['%s'] * len(permission_ids))
-            cursor.execute(f"SELECT DISTINCT category FROM sys_permissions WHERE id IN ({format_strings})", tuple(permission_ids))
-            categories = [r['category'] for r in cursor.fetchall() if r['category']]
+            await cursor.execute(f"SELECT DISTINCT category FROM sys_permissions WHERE id IN ({format_strings})", tuple(permission_ids))
+            categories = [r['category'] for r in await cursor.fetchall() if r['category']]
             
             non_compliant = []
             for cat in categories:
                 prefix = AuditCertificationService.CATEGORY_TO_PREFIX.get(cat.upper())
                 if prefix:
-                    compliance = AuditCertificationService.analyze_module_compliance(prefix)
+                    compliance = await AuditCertificationService.analyze_module_compliance(prefix)
                     if compliance['status'] == 'FAIL':
                         non_compliant.append({
                             'module': cat,
@@ -154,7 +154,7 @@ class AuditCertificationService:
         return True, None
 
     @staticmethod
-    def notify_saas_owner(violation_details, actor_user, target_object):
+    async def notify_saas_owner(violation_details, actor_user, target_object):
         """
         Envía una alerta crítica al SaaS Owner sobre la violación de estándares de auditoría.
         """
@@ -194,4 +194,4 @@ class AuditCertificationService:
             color_primario="#b91c1c" # Rojo crítico
         )
         
-        return _enviar_email(saas_owner_email, subject, html)
+        return await _enviar_email(saas_owner_email, subject, html)

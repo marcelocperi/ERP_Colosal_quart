@@ -1,5 +1,5 @@
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g, jsonify, current_app
+from quart import Blueprint, render_template, request, redirect, url_for, flash, session, g, jsonify, current_app, make_response
 from database import get_db_cursor, atomic_transaction
 from werkzeug.security import check_password_hash, generate_password_hash
 from core.decorators import login_required, permission_required
@@ -15,117 +15,116 @@ logger = logging.getLogger(__name__)
 
 # --- Helper for Async Email ---
 def _async_email(func, *args):
-    threading.Thread(target=func, args=args).start()
+    current_app.add_background_task(func, *args)
 
 # --- ROUTES ---
 
 @core_bp.route('/')
-def index():
+async def index():
     """Ruta raíz: redirige al dashboard si hay sesión activa, o al login si no."""
     if g.user:
-        return redirect(url_for('biblioteca.dashboard'))
+        return redirect(url_for('ventas.dashboard'))
     return redirect(url_for('core.login'))
 
 @core_bp.route('/favicon.ico')
-def favicon():
+async def favicon():
     """Evita 404 repetitivos en los logs por peticiones automáticas del navegador."""
     import os
     favicon_path = os.path.join(core_bp.static_folder or '', 'favicon.ico')
     if core_bp.static_folder and os.path.exists(favicon_path):
-        from flask import send_from_directory
-        return send_from_directory(core_bp.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+        from quart import send_from_directory
+        return await send_from_directory(core_bp.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
     # Retornar 204 No Content silenciosamente si no existe el archivo
-    from flask import make_response
-    return make_response('', 204)
+    from quart import make_response
+    return await make_response('', 204)
 
 @core_bp.route('/login', methods=['GET', 'POST'])
 @atomic_transaction('core', severity=8, impact_category='Security')
-def login():
+async def login():
     if g.user:
-        return redirect(url_for('biblioteca.dashboard'))
+        return redirect(url_for('ventas.dashboard'))
         
     # Secret access to master enterprise and creation
     show_master = request.args.get('master') == '1'
     
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         if show_master:
-            cursor.execute("SELECT id, nombre, is_saas_owner FROM sys_enterprises WHERE estado = 'activo' ORDER BY is_saas_owner DESC, id ASC")
+            await cursor.execute("SELECT id, nombre, is_saas_owner FROM sys_enterprises WHERE estado = 'activo' ORDER BY is_saas_owner DESC, id ASC")
         else:
             # Show regular enterprises + ID 0 (Template) but hide ID 1 (SaaS Owner)
-            cursor.execute("SELECT id, nombre, is_saas_owner FROM sys_enterprises WHERE estado = 'activo' AND (is_saas_owner = 0 OR id = 0) AND id != 1 ORDER BY id ASC")
-        enterprises = cursor.fetchall()
+            await cursor.execute("SELECT id, nombre, is_saas_owner FROM sys_enterprises WHERE estado = 'activo' AND (is_saas_owner = 0 OR id = 0) AND id != 1 ORDER BY id ASC")
+        enterprises = await cursor.fetchall()
         logger.info(f"LOGIN: Fetching enterprises. Show Master: {show_master}, Found: {len(enterprises)}")
     
     if request.method == 'POST':
-        enterprise_id = request.form.get('enterprise_id')
-        username = request.form['username']
-        password = request.form['password']
+        with open('login_debug.txt', 'a') as f: f.write("1. POST RECEIVED\n")
+        form = await request.form
+        enterprise_id = form.get('enterprise_id')
+        username = form.get('username')
+        password = form.get('password')
+        with open('login_debug.txt', 'a') as f: f.write(f"2. Form parsed: {username}@{enterprise_id}\n")
         
         if enterprise_id == "NEW":
             return redirect(url_for('enterprise.create_enterprise_public'))
 
         try:
             enterprise_id = int(enterprise_id)
-            with get_db_cursor() as cursor:
+            async with get_db_cursor() as cursor:
                 # 1. Check if Enterprise is Active
-                cursor.execute("SELECT estado FROM sys_enterprises WHERE id = %s", (enterprise_id,))
-                ent_status = cursor.fetchone()
+                await cursor.execute("SELECT estado FROM sys_enterprises WHERE id = %s", (enterprise_id,))
+                ent_status = await cursor.fetchone()
                 
-                if not ent_status or ent_status[0] != 'activo':
-                    # Allow sysadmin bypass if implemented, otherwise block
-                    # But login doesn't know user role yet. So strict block is safer.
-                    # Exception: Superadmin might want to login to debug? 
-                    # For now, STRICT BLOCK as requested ("impidiendo a otros operadores interactuar")
-                    flash("Esta empresa se encuentra inhabilitada temporalmente.", "danger")
+                if not ent_status or ent_status[0].lower() != 'activo':
+                    with open('login_debug.txt', 'a') as f: f.write(f"3. Blocking: Enterprise status {ent_status}\n")
+                    await flash("Esta empresa se encuentra inhabilitada temporalmente.", "danger")
                     return redirect(url_for('core.login'))
 
-                cursor.execute("""
+                with open('login_debug.txt', 'a') as f: f.write("4. Enterprise Active. Checking user...\n")
+
+                await cursor.execute("""
                     SELECT id, password_hash, username, temp_password_hash, temp_password_expires, must_change_password
                     FROM sys_users 
                     WHERE username = %s AND enterprise_id = %s
                 """, (username, enterprise_id))
-                user = cursor.fetchone()
+                user = await cursor.fetchone()
                 
                 if user:
+                    with open('login_debug.txt', 'a') as f: f.write("5. User found in DB.\n")
                     user_id, pwd_hash, uname, temp_hash, temp_expires, must_change = user
                     
                     if check_password_hash(pwd_hash, password):
+                        with open('login_debug.txt', 'a') as f: f.write("6. Password MATCH. Creating session...\n")
                         new_sid = secrets.token_hex(4)
                         if 's' not in session: session['s'] = {}
                         session['s'][new_sid] = {'user_id': user_id, 'enterprise_id': enterprise_id}
                         session.permanent = True # Hacer la sesión permanente
                         session.modified = True
-                        
-                        # Refresh dollar quote on login (Async)
-                        try:
-                            from services import finance_service
-                            threading.Thread(target=finance_service.obtener_y_guardar_cotizacion, args=(enterprise_id, 'login')).start()
-                        except Exception as fe:
-                            logger.error(f"Dollar refresh error on login: {fe}")
+                        with open('login_debug.txt', 'a') as f: f.write("7. Session modified.\n")
 
-                        _log_security_event("LOGIN_SUCCESS", "SUCCESS", enterprise_id=enterprise_id, target_user_id=user_id, details=f"Regular login. SID={new_sid}", sid=new_sid)
+                        await _log_security_event("LOGIN_SUCCESS", "SUCCESS", enterprise_id=enterprise_id, target_user_id=user_id, details=f"Regular login. SID={new_sid}", sid=new_sid)
                         
                         if must_change:
                             session['s'][new_sid]['must_change_password'] = True
                             session.modified = True
-                            flash("Debe cambiar su contraseña antes de continuar.", "warning")
+                            await flash("Debe cambiar su contraseña antes de continuar.", "warning")
                             return redirect(url_for('core.enforce_password_change', sid=new_sid))
                             
                         # MECANISMO DE AFINIDAD DE PESTAÑA (Handshake)
-                        from flask import make_response
+                        from quart import make_response
                         bind_token = secrets.token_hex(16)
                         session['s'][new_sid]['bind_token'] = bind_token # Guardar en sesión para validar luego si es necesario
                         
-                        resp = make_response(redirect(url_for('biblioteca.dashboard', sid=new_sid)))
+                        resp = await make_response(redirect(url_for('ventas.dashboard', sid=new_sid)))
                         # Seteamos una cookie temporal de "venda" que solo dura 30 segundos
                         resp.set_cookie(f'bind_{new_sid}', bind_token, max_age=30, httponly=False, samesite='Lax')
                         return resp
                     
                     if temp_hash and temp_expires:
-                        cursor.execute("SELECT temp_password_used FROM sys_users WHERE id = %s AND enterprise_id = %s", (user_id, enterprise_id))
-                        is_used = cursor.fetchone()[0]
+                        await cursor.execute("SELECT temp_password_used FROM sys_users WHERE id = %s AND enterprise_id = %s", (user_id, enterprise_id))
+                        used_row = await cursor.fetchone()
+                        is_used = used_row[0] if used_row else 0
                         if is_used:
-                             flash("Clave temporal caducada.", "danger")
+                             await flash("Clave temporal caducada.", "danger")
                              return redirect(url_for('core.reset_password_public'))
 
                         if isinstance(temp_expires, str):
@@ -133,40 +132,45 @@ def login():
                             
                         if datetime.datetime.now() < temp_expires:
                             if check_password_hash(temp_hash, password):
-                                cursor.execute("UPDATE sys_users SET temp_password_used = 1 WHERE id = %s AND enterprise_id = %s", (user_id, enterprise_id))
+                                await cursor.execute("UPDATE sys_users SET temp_password_used = 1 WHERE id = %s AND enterprise_id = %s", (user_id, enterprise_id))
                                 new_sid = secrets.token_hex(4)
                                 session['s'][new_sid] = {'user_id': user_id, 'enterprise_id': enterprise_id, 'must_change_password': True}
                                 session.modified = True
-                                _log_security_event("LOGIN_SUCCESS_TEMP", "SUCCESS", enterprise_id=enterprise_id, target_user_id=user_id, details=f"Temp login. SID={new_sid}", sid=new_sid)
-                                flash("Por seguridad, debe cambiar su contraseña temporal.", "warning")
+                                await _log_security_event("LOGIN_SUCCESS_TEMP", "SUCCESS", enterprise_id=enterprise_id, target_user_id=user_id, details=f"Temp login. SID={new_sid}", sid=new_sid)
+                                await flash("Por seguridad, debe cambiar su contraseña temporal.", "warning")
                                 return redirect(url_for('core.enforce_password_change', sid=new_sid))
                 
-                _log_security_event("LOGIN_FAILURE", "FAILURE", enterprise_id=enterprise_id, details=f"Invalid credentials: {username}@{enterprise_id}")
-                flash("Credenciales incorrectas", "danger")
+                with open('login_debug.txt', 'a') as f: f.write("8. Login FAILURE. Invalid credentials.\n")
+                await _log_security_event("LOGIN_FAILURE", "FAILURE", enterprise_id=enterprise_id, details=f"Invalid credentials: {username}@{enterprise_id}")
+                await flash("Credenciales incorrectas", "danger")
         except Exception as e:
-            logger.error(f"LOGIN ERROR: {e}")
-            flash(f"Error en login: {e}", "danger")
+            with open('login_debug.txt', 'a') as f: f.write(f"X. EXCEPTION: {e}\n")
+            import traceback
+            tb = traceback.format_exc()
+            logger.error(f"LOGIN ERROR: {e}\n{tb}")
+            print(f"[LOGIN DEBUG] {tb}", flush=True)
+            await flash(f"Error en login: {e}", "danger")
             
-    return render_template('login.html', enterprises=enterprises, show_master=show_master)
+    return await render_template('login.html', enterprises=enterprises, show_master=show_master)
 
 @core_bp.route('/logout')
-def logout():
+async def logout():
     reason = request.args.get('reason')
     curr_sid = g.get('sid') or request.args.get('sid')
     
     if g.user:
-        _log_security_event("LOGOUT", "SUCCESS", details=f"User {g.user['username']} logged out. SID={curr_sid}")
+        await _log_security_event("LOGOUT", "SUCCESS", details=f"User {g.user['username']} logged out. SID={curr_sid}")
     elif reason == 'tab_violation':
-        _log_security_event("TAB_VIOLATION", "FAILURE", details=f"Intento de duplicar pestaña con SID={curr_sid}")
+        await _log_security_event("TAB_VIOLATION", "FAILURE", details=f"Intento de duplicar pestaña con SID={curr_sid}")
     
     if curr_sid and 's' in session:
         session['s'].pop(curr_sid, None)
         session.modified = True
     
     if reason == 'tab_violation':
-        flash("Seguridad: Por integridad de datos, no se permite copiar la URL entre pestañas independientes. Cada pestaña debe iniciar su propia sesión.", "warning")
+        await flash("Seguridad: Por integridad de datos, no se permite copiar la URL entre pestañas independientes. Cada pestaña debe iniciar su propia sesión.", "warning")
     else:
-        flash("Sesión cerrada correctamente", "info")
+        await flash("Sesión cerrada correctamente", "info")
         
     response = redirect(url_for('core.login', _t=int(datetime.datetime.now().timestamp())))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
@@ -175,27 +179,27 @@ def logout():
 @core_bp.route('/auth/enforce-change-password', methods=['GET', 'POST'])
 @login_required
 @atomic_transaction('core', severity=8, impact_category='Security')
-def enforce_password_change():
+async def enforce_password_change():
     """Forces user to change password after temp login"""
     
     # Security Check: Only allow if flag is set, otherwise redirect to dashboard
     sid = g.sid
     if not sid or 's' not in session or not session['s'].get(sid, {}).get('must_change_password'):
-        return redirect(url_for('biblioteca.dashboard'))
+        return redirect(url_for('ventas.dashboard'))
 
     if request.method == 'POST':
-        new_pass = request.form.get('new_password')
-        confirm_pass = request.form.get('confirm_password')
+        new_pass = (await request.form).get('new_password')
+        confirm_pass = (await request.form).get('confirm_password')
         
         if not new_pass or new_pass != confirm_pass:
-            flash("Las contraseñas no coinciden o están vacías", "danger")
-            return render_template('enforce_change_password.html')
+            await flash("Las contraseñas no coinciden o están vacías", "danger")
+            return await render_template('enforce_change_password.html')
             
         try:
-            with get_db_cursor() as cursor:
+            async with get_db_cursor() as cursor:
                 new_hash = generate_password_hash(new_pass)
                 # Reset all temp fields and update main password
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_users 
                     SET password_hash = %s, 
                         temp_password_hash = NULL, 
@@ -206,75 +210,75 @@ def enforce_password_change():
                     WHERE id = %s AND enterprise_id = %s
                 """, (new_hash, g.user['id'], g.user['enterprise_id']))
                 
-                _log_security_event("PASSWORD_CHANGE_ENFORCED", "SUCCESS", target_user_id=g.user['id'])
+                await _log_security_event("PASSWORD_CHANGE_ENFORCED", "SUCCESS", target_user_id=g.user['id'])
                 
                 # Clear flag
                 session['s'][sid].pop('must_change_password', None)
                 session.modified = True
                 
-                flash("Contraseña establecida correctamente. Bienvenido.", "success")
-                return redirect(url_for('biblioteca.dashboard'))
+                await flash("Contraseña establecida correctamente. Bienvenido.", "success")
+                return redirect(url_for('ventas.dashboard'))
         except Exception as e:
-            _log_security_event("PASSWORD_CHANGE_ENFORCED", "ERROR", details=str(e))
-            flash(f"Error al actualizar: {str(e)}", "danger")
+            await _log_security_event("PASSWORD_CHANGE_ENFORCED", "ERROR", details=str(e))
+            await flash(f"Error al actualizar: {str(e)}", "danger")
             
-    return render_template('enforce_change_password.html')
+    return await render_template('enforce_change_password.html')
 
 @core_bp.route('/profile/change-password', methods=['POST'])
 @login_required
 @atomic_transaction('core', severity=8, impact_category='Security')
-def change_password():
+async def change_password():
     # ... Implementation from app.py ...
     # Simplified for brevity, assume logic is migrated intact
     try:
-        current_pass = request.form.get('current_password')
-        new_pass = request.form.get('new_password')
-        confirm_pass = request.form.get('confirm_password')
+        current_pass = (await request.form).get('current_password')
+        new_pass = (await request.form).get('new_password')
+        confirm_pass = (await request.form).get('confirm_password')
         
         if new_pass != confirm_pass:
-            flash("Las contraseñas no coinciden", "danger")
+            await flash("Las contraseñas no coinciden", "danger")
             return redirect(request.referrer)
 
-        with get_db_cursor() as cursor:
-            cursor.execute("SELECT password_hash FROM sys_users WHERE id = %s", (g.user['id'],))
-            row = cursor.fetchone()
+        async with get_db_cursor() as cursor:
+            await cursor.execute("SELECT password_hash FROM sys_users WHERE id = %s", (g.user['id'],))
+            row = await cursor.fetchone()
             if row and check_password_hash(row[0], current_pass):
                  new_hash = generate_password_hash(new_pass)
-                 cursor.execute("UPDATE sys_users SET password_hash = %s, temp_password_hash=NULL, recovery_attempts=0 WHERE id = %s", (new_hash, g.user['id']))
-                 _log_security_event("PASSWORD_CHANGE_INTERNAL", "SUCCESS", target_user_id=g.user['id'])
+                 await cursor.execute("UPDATE sys_users SET password_hash = %s, temp_password_hash=NULL, recovery_attempts=0 WHERE id = %s", (new_hash, g.user['id']))
+                 await _log_security_event("PASSWORD_CHANGE_INTERNAL", "SUCCESS", target_user_id=g.user['id'])
                  # Clear session specific flags
                  if g.sid and 's' in session:
                      session['s'][g.sid].pop('must_change_password', None)
                      session.modified = True
-                 flash("Contraseña actualizada.", "success")
+                 await flash("Contraseña actualizada.", "success")
                  return redirect(url_for('core.login'))
             else:
-                 flash("Contraseña actual incorrecta", "danger")
+                 await flash("Contraseña actual incorrecta", "danger")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
     return redirect(request.referrer)
 
 @core_bp.route('/auth/reset-password', methods=['GET', 'POST'])
-def reset_password_public():
+async def reset_password_public():
     if request.method == 'POST':
-        username = request.form.get('username')
-        enterprise_id = request.form.get('enterprise_id')
-        current_pass = request.form.get('current_password')
-        new_pass = request.form.get('new_password')
-        confirm_pass = request.form.get('confirm_password')
+        username = (await request.form).get('username')
+        enterprise_id = (await request.form).get('enterprise_id')
+        current_pass = (await request.form).get('current_password')
+        new_pass = (await request.form).get('new_password')
+        confirm_pass = (await request.form).get('confirm_password')
         
         if new_pass != confirm_pass:
-            flash("Las nuevas contraseñas no coinciden", "danger")
+            await flash("Las nuevas contraseñas no coinciden", "danger")
             # We need to re-pass enterprises to template
-            with get_db_cursor() as cursor:
-                cursor.execute("SELECT id, nombre FROM sys_enterprises WHERE estado = 'activo'")
-                enterprises = cursor.fetchall()
-            return render_template('reset_password.html', enterprises=enterprises)
+            async with get_db_cursor() as cursor:
+                await cursor.execute("SELECT id, nombre FROM sys_enterprises WHERE estado = 'activo'")
+                enterprises = await cursor.fetchall()
+            return await render_template('reset_password.html', enterprises=enterprises)
         
         try:
-            with get_db_cursor() as cursor:
-                cursor.execute("SELECT id, password_hash, temp_password_hash, temp_password_expires FROM sys_users WHERE username = %s AND enterprise_id = %s", (username, enterprise_id))
-                user = cursor.fetchone()
+            async with get_db_cursor() as cursor:
+                await cursor.execute("SELECT id, password_hash, temp_password_hash, temp_password_expires FROM sys_users WHERE username = %s AND enterprise_id = %s", (username, enterprise_id))
+                user = await cursor.fetchone()
                 
                 if user:
                     u_id, pwd_hash, temp_hash, temp_expires = user
@@ -288,7 +292,7 @@ def reset_password_public():
                             
                     if is_valid:
                         new_hash = generate_password_hash(new_pass)
-                        cursor.execute("""
+                        await cursor.execute("""
                             UPDATE sys_users 
                             SET password_hash = %s, 
                                 temp_password_hash = NULL, 
@@ -298,7 +302,7 @@ def reset_password_public():
                             WHERE id = %s
                         """, (new_hash, u_id))
                         
-                        _log_security_event("PASSWORD_RESET_EXTERNAL", "SUCCESS", target_user_id=u_id, details="Password reset via public recovery page.")
+                        await _log_security_event("PASSWORD_RESET_EXTERNAL", "SUCCESS", target_user_id=u_id, details="Password reset via public recovery page.")
 
                         if 's' in session:
                             for s_id in list(session['s'].keys()):
@@ -306,34 +310,34 @@ def reset_password_public():
                                     session['s'][s_id].pop('must_change_password', None)
                             session.modified = True
                         
-                        cursor.execute("SELECT email, enterprise_id FROM sys_users WHERE id = %s", (u_id,))
-                        u_row = cursor.fetchone()
+                        await cursor.execute("SELECT email, enterprise_id FROM sys_users WHERE id = %s", (u_id,))
+                        u_row = await cursor.fetchone()
                         u_email = u_row[0] if u_row else None
                         ent_id = u_row[1] if u_row else 1
                         
-                        cursor.execute("SELECT email FROM sys_users WHERE username = 'admin' AND enterprise_id = %s", (ent_id,))
-                        admin_row = cursor.fetchone()
+                        await cursor.execute("SELECT email FROM sys_users WHERE username = 'admin' AND enterprise_id = %s", (ent_id,))
+                        admin_row = await cursor.fetchone()
                         admin_email = admin_row[0] if admin_row else None
                         
                         _async_email(email_service.enviar_notificacion_cambio_password, u_email, username, admin_email, ent_id)
                         
-                        flash("Contraseña actualizada. Ya puede iniciar sesión.", "success")
+                        await flash("Contraseña actualizada. Ya puede iniciar sesión.", "success")
                         return redirect(url_for('core.login'))
                     else:
-                        _log_security_event("PASSWORD_RESET_EXTERNAL", "FAILURE", target_user_id=u_id, details="Invalid data or expired temp password.")
-                        flash("Verificación fallida: Usuario o contraseña actual incorrectos", "danger")
+                        await _log_security_event("PASSWORD_RESET_EXTERNAL", "FAILURE", target_user_id=u_id, details="Invalid data or expired temp password.")
+                        await flash("Verificación fallida: Usuario o contraseña actual incorrectos", "danger")
                 else:
-                    _log_security_event("PASSWORD_RESET_EXTERNAL", "FAILURE", details=f"Non-existent username: {username}")
-                    flash("Usuario no encontrado", "danger")
+                    await _log_security_event("PASSWORD_RESET_EXTERNAL", "FAILURE", details=f"Non-existent username: {username}")
+                    await flash("Usuario no encontrado", "danger")
         except Exception as e:
-            _log_security_event("PASSWORD_RESET_EXTERNAL", "ERROR", details=str(e))
-            flash(f"Error: {e}", "danger")
+            await _log_security_event("PASSWORD_RESET_EXTERNAL", "ERROR", details=str(e))
+            await flash(f"Error: {e}", "danger")
     
-    with get_db_cursor() as cursor:
-        cursor.execute("SELECT id, nombre FROM sys_enterprises WHERE estado = 'activo'")
-        enterprises = cursor.fetchall()
+    async with get_db_cursor() as cursor:
+        await cursor.execute("SELECT id, nombre FROM sys_enterprises WHERE estado = 'activo'")
+        enterprises = await cursor.fetchall()
 
-    return render_template('reset_password.html', enterprises=enterprises)
+    return await render_template('reset_password.html', enterprises=enterprises)
 
 def mask_email(email):
     """
@@ -375,31 +379,31 @@ def mask_email(email):
         return "******@******"
 
 @core_bp.route('/auth/request-temp-password', methods=['POST'])
-def request_temp_password():
-    username = request.form.get('username')
-    enterprise_id = request.form.get('enterprise_id')
+async def request_temp_password():
+    username = (await request.form).get('username')
+    enterprise_id = (await request.form).get('enterprise_id')
     
     if not username:
-        flash("El usuario es requerido", "danger")
+        await flash("El usuario es requerido", "danger")
         return redirect(url_for('core.reset_password_public'))
         
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Find specific user in selected enterprise
-            cursor.execute("SELECT id, username, email, recovery_attempts, enterprise_id FROM sys_users WHERE username = %s AND enterprise_id = %s", (username, enterprise_id))
-            users = cursor.fetchall()
+            await cursor.execute("SELECT id, username, email, recovery_attempts, enterprise_id FROM sys_users WHERE username = %s AND enterprise_id = %s", (username, enterprise_id))
+            users = await cursor.fetchall()
             
             if users:
                 user = users[0] 
                 u_id, u_name, u_email_db, attempts, ent_id = user
                 
                 if not u_email_db:
-                    flash("El usuario no tiene un email configurado para recuperación.", "warning")
+                    await flash("El usuario no tiene un email configurado para recuperación.", "warning")
                     return redirect(url_for('core.reset_password_public'))
 
                 if attempts >= 5:
-                    _log_security_event("TEMP_PASSWORD_REQUEST", "FAILURE", target_user_id=u_id, details="Limit reached")
-                    flash("Se han superado los intentos. Contacte al administrador.", "danger")
+                    await _log_security_event("TEMP_PASSWORD_REQUEST", "FAILURE", target_user_id=u_id, details="Limit reached")
+                    await flash("Se han superado los intentos. Contacte al administrador.", "danger")
                     return redirect(url_for('core.login'))
 
                 # Generate Readable Temp Password (No ambiguous chars like I, l, 1, O, 0)
@@ -410,85 +414,85 @@ def request_temp_password():
                 temp_hash = generate_password_hash(temp_pass)
                 expires = datetime.datetime.now() + datetime.timedelta(hours=24)
                 
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_users SET temp_password_hash = %s, temp_password_expires = %s, temp_password_used = 0,
                                        recovery_attempts = recovery_attempts + 1 WHERE id = %s
                 """, (temp_hash, expires.strftime('%Y-%m-%d %H:%M:%S'), u_id))
                 
                 _async_email(email_service.enviar_clave_temporal, u_email_db, u_name, temp_pass, ent_id)
-                _log_security_event("TEMP_PASSWORD_REQUEST", "SUCCESS", target_user_id=u_id)
+                await _log_security_event("TEMP_PASSWORD_REQUEST", "SUCCESS", target_user_id=u_id)
                 
                 masked = mask_email(u_email_db)
-                flash(f"Se ha enviado una CLAVE TEMPORAL a {masked}. Úsela para ingresar.", "success")
+                await flash(f"Se ha enviado una CLAVE TEMPORAL a {masked}. Úsela para ingresar.", "success")
                 # Redirect to login so they can use it immediately
                 return redirect(url_for('core.login')) 
             else:
-                _log_security_event("TEMP_PASSWORD_REQUEST", "FAILURE", details=f"User not found: {username} in Ent {enterprise_id}")
-                flash("Usuario no encontrado en la empresa seleccionada.", "danger")
+                await _log_security_event("TEMP_PASSWORD_REQUEST", "FAILURE", details=f"User not found: {username} in Ent {enterprise_id}")
+                await flash("Usuario no encontrado en la empresa seleccionada.", "danger")
     except Exception as e:
-        _log_security_event("TEMP_PASSWORD_REQUEST", "ERROR", details=str(e))
-        flash(f"Error procesando solicitud: {str(e)}", "danger")
+        await _log_security_event("TEMP_PASSWORD_REQUEST", "ERROR", details=str(e))
+        await flash(f"Error procesando solicitud: {str(e)}", "danger")
     return redirect(url_for('core.reset_password_public'))
 
 @core_bp.route('/auth/reset/<int:ent_id>/<int:user_id>/<token>', methods=['GET'])
-def reset_with_token(ent_id, user_id, token):
+async def reset_with_token(ent_id, user_id, token):
     """
     Validates token and renders reset page.
     """
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 SELECT username, temp_password_hash, temp_password_expires, temp_password_used 
                 FROM sys_users WHERE id = %s AND enterprise_id = %s
             """, (user_id, ent_id))
-            user = cursor.fetchone()
+            user = await cursor.fetchone()
             
             if not user:
-                flash("Enlace inválido.", "danger")
+                await flash("Enlace inválido.", "danger")
                 return redirect(url_for('core.login'))
                 
             username, db_hash, expires, used = user
             
             if used:
-                flash("Este enlace ya ha sido utilizado.", "warning")
+                await flash("Este enlace ya ha sido utilizado.", "warning")
                 return redirect(url_for('core.login'))
                 
             if isinstance(expires, str):
                 expires = datetime.datetime.strptime(expires, '%Y-%m-%d %H:%M:%S')
                 
             if datetime.datetime.now() > expires:
-                flash("El enlace ha caducado. Solicite uno nuevo.", "warning")
+                await flash("El enlace ha caducado. Solicite uno nuevo.", "warning")
                 return redirect(url_for('core.reset_password_public'))
                 
             if not db_hash or not check_password_hash(db_hash, token):
-                flash("Enlace inválido o corrupto.", "danger")
+                await flash("Enlace inválido o corrupto.", "danger")
                 return redirect(url_for('core.login'))
                 
             # Valid! Render hidden form
-            return render_template('reset_token.html', 
+            return await render_template('reset_token.html', 
                                    ent_id=ent_id, user_id=user_id, token=token, username=username)
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('core.login'))
 
 @core_bp.route('/auth/reset-confirm', methods=['POST'])
-def reset_confirm():
-    ent_id = request.form.get('ent_id')
-    user_id = request.form.get('user_id')
-    token = request.form.get('token')
-    new_pass = request.form.get('new_password')
-    confirm_pass = request.form.get('confirm_password')
+async def reset_confirm():
+    ent_id = (await request.form).get('ent_id')
+    user_id = (await request.form).get('user_id')
+    token = (await request.form).get('token')
+    new_pass = (await request.form).get('new_password')
+    confirm_pass = (await request.form).get('confirm_password')
     
     if new_pass != confirm_pass:
-        flash("Las contraseñas no coinciden.", "danger")
+        await flash("Las contraseñas no coinciden.", "danger")
         # Retry? Ideally render template again, but simpler to redirect to token link
         return redirect(url_for('core.reset_with_token', ent_id=ent_id, user_id=user_id, token=token))
         
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Re-validate (To prevent race/replay)
-            cursor.execute("SELECT temp_password_hash, temp_password_expires, temp_password_used FROM sys_users WHERE id = %s AND enterprise_id = %s", (user_id, ent_id))
-            row = cursor.fetchone()
+            await cursor.execute("SELECT temp_password_hash, temp_password_expires, temp_password_used FROM sys_users WHERE id = %s AND enterprise_id = %s", (user_id, ent_id))
+            row = await cursor.fetchone()
             if not row: raise Exception("Usuario inválido")
             
             db_hash, expires, used = row
@@ -501,7 +505,7 @@ def reset_confirm():
             new_hash = generate_password_hash(new_pass)
             
             # Update password and INVALIDATE token
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE sys_users 
                 SET password_hash = %s, 
                     temp_password_hash = NULL, 
@@ -511,13 +515,13 @@ def reset_confirm():
                 WHERE id = %s
             """, (new_hash, user_id))
             
-            _log_security_event("PASSWORD_RESET_COMPLETED", "SUCCESS", target_user_id=user_id, enterprise_id=ent_id)
+            await _log_security_event("PASSWORD_RESET_COMPLETED", "SUCCESS", target_user_id=user_id, enterprise_id=ent_id)
             
-            flash("Contraseña actualizada con éxito. Ya puede iniciar sesión.", "success")
+            await flash("Contraseña actualizada con éxito. Ya puede iniciar sesión.", "success")
             return redirect(url_for('core.login'))
             
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('core.login'))
 
 # --- ADMIN ROUTES ---
@@ -525,11 +529,11 @@ def reset_confirm():
 @core_bp.route('/admin/roles')
 @login_required
 @permission_required('admin_roles')
-def admin_roles():
+async def admin_roles():
     selected_role_id = request.args.get('role_id')
-    with get_db_cursor() as cursor:
-        cursor.execute("SELECT id, name, description FROM sys_roles WHERE enterprise_id = %s ORDER BY name", (g.user['enterprise_id'],))
-        db_roles = cursor.fetchall()
+    async with get_db_cursor() as cursor:
+        await cursor.execute("SELECT id, name, description FROM sys_roles WHERE enterprise_id = %s ORDER BY name", (g.user['enterprise_id'],))
+        db_roles = await cursor.fetchall()
         roles = [{'id': r[0], 'name': r[1], 'description': r[2]} for r in db_roles]
         
         # SELF-HEALING: If no roles exist, auto-init SoD
@@ -537,18 +541,18 @@ def admin_roles():
             try:
                 from services.sod_service import initialize_sod_structure
                 # We need to temporarily run this. Note: initialize_sod_structure manages its own transaction context.
-                # However, since we are inside `with get_db_cursor() as cursor`, we have an active transaction/connection.
+                # However, since we are inside `async with get_db_cursor() as cursor`, we have an active transaction/connection.
                 # If `initialize_sod_structure` uses `get_db_cursor`, it might clash if connection pool limit is tight or transactions conflict.
                 # But here we are just reading roles.
                 # Let's try initialize.
-                initialize_sod_structure(g.user['enterprise_id'])
-                flash("Roles SoD inicializados automáticamente por sistema.", "info")
+                await initialize_sod_structure(g.user['enterprise_id'])
+                await flash("Roles SoD inicializados automáticamente por sistema.", "info")
                 
                 # Reload
-                cursor.execute("SELECT id, name, description FROM sys_roles WHERE enterprise_id = %s ORDER BY name", (g.user['enterprise_id'],))
-                roles = [{'id': r[0], 'name': r[1], 'description': r[2]} for r in cursor.fetchall()]
+                await cursor.execute("SELECT id, name, description FROM sys_roles WHERE enterprise_id = %s ORDER BY name", (g.user['enterprise_id'],))
+                roles = [{'id': r[0], 'name': r[1], 'description': r[2]} for r in await cursor.fetchall()]
             except Exception as e:
-                flash(f"No se pudieron cargar roles automáticos: {e}", "warning")
+                await flash(f"No se pudieron cargar roles automáticos: {e}", "warning")
         
         selected_role = None
         permissions_by_category = {}
@@ -556,25 +560,25 @@ def admin_roles():
         sod_analysis = None
         
         if selected_role_id:
-             cursor.execute("SELECT id, name, description FROM sys_roles WHERE id = %s AND enterprise_id = %s", (selected_role_id, g.user['enterprise_id']))
-             r = cursor.fetchone()
+             await cursor.execute("SELECT id, name, description FROM sys_roles WHERE id = %s AND enterprise_id = %s", (selected_role_id, g.user['enterprise_id']))
+             r = await cursor.fetchone()
              if r: selected_role = {'id': r[0], 'name': r[1], 'description': r[2]}
              
              # Only show permissions for this enterprise
              # And only show 'SISTEMA' category if current user is sysadmin
              is_sysadmin = 'sysadmin' in g.permissions
              if is_sysadmin:
-                 cursor.execute("SELECT id, code, description, category FROM sys_permissions WHERE enterprise_id = %s ORDER BY category", (g.user['enterprise_id'],))
+                 await cursor.execute("SELECT id, code, description, category FROM sys_permissions WHERE enterprise_id = %s ORDER BY category", (g.user['enterprise_id'],))
              else:
-                 cursor.execute("SELECT id, code, description, category FROM sys_permissions WHERE enterprise_id = %s AND (category != 'SISTEMA' OR category IS NULL) ORDER BY category", (g.user['enterprise_id'],))
+                 await cursor.execute("SELECT id, code, description, category FROM sys_permissions WHERE enterprise_id = %s AND (category != 'SISTEMA' OR category IS NULL) ORDER BY category", (g.user['enterprise_id'],))
              
-             for p in cursor.fetchall():
+             for p in await cursor.fetchall():
                  cat = p[3] or 'General'
                  if cat not in permissions_by_category: permissions_by_category[cat] = []
                  permissions_by_category[cat].append({'id': p[0], 'code': p[1], 'description': p[2], 'is_sys': getattr(p, 'is_sys', False)})
                  
-             cursor.execute("SELECT permission_id FROM sys_role_permissions WHERE role_id = %s AND enterprise_id = %s", (selected_role_id, g.user['enterprise_id']))
-             current_role_permissions = [row[0] for row in cursor.fetchall()]
+             await cursor.execute("SELECT permission_id FROM sys_role_permissions WHERE role_id = %s AND enterprise_id = %s", (selected_role_id, g.user['enterprise_id']))
+             current_role_permissions = [row[0] for row in await cursor.fetchall()]
              
              # Realizar Análisis SoD
              from services.sod_service import analyze_role_sod
@@ -589,7 +593,7 @@ def admin_roles():
                          
     sod_errors = session.get('sod_errors', [])
 
-    return render_template('admin_roles.html', roles=roles, selected_role=selected_role, 
+    return await render_template('admin_roles.html', roles=roles, selected_role=selected_role, 
                           permissions_by_category=permissions_by_category, 
                           current_role_permissions=current_role_permissions,
                           sod_analysis=sod_analysis, sod_errors=sod_errors)
@@ -597,73 +601,73 @@ def admin_roles():
 @core_bp.route('/admin/roles/create', methods=['POST'])
 @login_required
 @permission_required('admin_roles')
-def create_role():
-    name = request.form.get('name')
-    desc = request.form.get('description')
+async def create_role():
+    name = (await request.form).get('name')
+    desc = (await request.form).get('description')
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO sys_roles (enterprise_id, name, description, user_id) 
                 VALUES (%s, %s, %s, %s)
             """, (g.user['enterprise_id'], name, desc, g.user['id']))
-        flash(f"Rol {name} creado.", "success")
-    except Exception as e: flash(str(e), "danger")
+        await flash(f"Rol {name} creado.", "success")
+    except Exception as e: await flash(str(e), "danger")
     return redirect(url_for('core.admin_roles'))
 
 @core_bp.route('/admin/roles/init-sod', methods=['POST'])
 @login_required
 @permission_required('admin_roles')
-def admin_roles_init_sod():
+async def admin_roles_init_sod():
     try:
         from services.sod_service import initialize_sod_structure
-        initialize_sod_structure(g.user['enterprise_id'])
-        flash("Estructura de Roles SoD inicializada correctamente", "success")
+        await initialize_sod_structure(g.user['enterprise_id'])
+        await flash("Estructura de Roles SoD inicializada correctamente", "success")
     except Exception as e:
-        flash(f"Error al inicializar SoD: {e}", "danger")
+        await flash(f"Error al inicializar SoD: {e}", "danger")
     return redirect(url_for('core.admin_roles'))
 
 @core_bp.route('/admin/roles/update_permissions/<int:role_id>', methods=['POST'])
 @login_required
 @permission_required('admin_roles')
-def update_role_permissions(role_id):
-    perms = request.form.getlist('permissions')
+async def update_role_permissions(role_id):
+    perms = (await request.form).getlist('permissions')
     
     # --- NIVEL 1: CONTROL DE CUMPLIMIENTO DE AUDITORÍA (CISA/SOX/Audit-Safe) ---
     from services.audit_certification_service import AuditCertificationService
-    ok, violations = AuditCertificationService.validate_permissions_compliance(perms)
+    ok, violations = await AuditCertificationService.validate_permissions_compliance(perms)
     if not ok:
         # 1. Log del Bloqueo Crítico (Warning temporalmente)
         details = f"ADVERTENCIA SISTÉMICA: El módulo no es Audit-Ready. Violaciones: {violations}"
         
         # Continuar con el proceso para permitir evaluación SoD, pero advertir al usuario
-        # flash("ADVERTENCIA DE AUDITORÍA: Uno o más módulos seleccionados aún no cumplen con los estándares de trazabilidad. Se ha notificado al administrador.", "warning")
+        # await flash("ADVERTENCIA DE AUDITORÍA: Uno o más módulos seleccionados aún no cumplen con los estándares de trazabilidad. Se ha notificado al administrador.", "warning")
     # -------------------------------------------------------------------------
 
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Protection: Only sysadmins can assign 'SISTEMA' permissions
             is_sysadmin = 'sysadmin' in g.permissions
             
             for p_id in perms:
                 if not is_sysadmin:
                     # Check if this permission is restricted
-                    cursor.execute("SELECT category FROM sys_permissions WHERE id = %s", (p_id,))
-                    res = cursor.fetchone()
+                    await cursor.execute("SELECT category FROM sys_permissions WHERE id = %s", (p_id,))
+                    res = await cursor.fetchone()
                     if res and res[0] == 'SISTEMA':
-                        flash("No tiene permisos para asignar permisos de SISTEMA.", "danger")
+                        await flash("No tiene permisos para asignar permisos de SISTEMA.", "danger")
                         return redirect(url_for('core.admin_roles', role_id=role_id))
 
             # 1. Obtener roles y evaluar SoD ANTES de grabar
-            cursor.execute("SELECT name FROM sys_roles WHERE id = %s", (role_id,))
-            role_info = cursor.fetchone()
+            await cursor.execute("SELECT name FROM sys_roles WHERE id = %s", (role_id,))
+            role_info = await cursor.fetchone()
             role_name = role_info[0] if role_info else "Desconocido"
             
             # Obtener permisos actuales para ver el delta (Added/Removed)
-            cursor.execute("SELECT sys_permissions.code FROM sys_permissions JOIN sys_role_permissions ON sys_permissions.id = sys_role_permissions.permission_id WHERE sys_role_permissions.role_id = %s", (role_id,))
-            current_codes = [r[0] for r in cursor.fetchall()]
+            await cursor.execute("SELECT sys_permissions.code FROM sys_permissions JOIN sys_role_permissions ON sys_permissions.id = sys_role_permissions.permission_id WHERE sys_role_permissions.role_id = %s", (role_id,))
+            current_codes = [r[0] for r in await cursor.fetchall()]
 
-            cursor.execute("SELECT id, code, description, category FROM sys_permissions WHERE id IN (%s)" % ', '.join(['%s']*len(perms)) if perms else "SELECT id, code, description, category FROM sys_permissions WHERE id = -1", tuple(perms))
-            new_perms_list = [{'id': r[0], 'code': r[1], 'description': r[2], 'category': r[3]} for r in cursor.fetchall()]
+            await cursor.execute("SELECT id, code, description, category FROM sys_permissions WHERE id IN (%s)" % ', '.join(['%s']*len(perms)) if perms else "SELECT id, code, description, category FROM sys_permissions WHERE id = -1", tuple(perms))
+            new_perms_list = [{'id': r[0], 'code': r[1], 'description': r[2], 'category': r[3]} for r in await cursor.fetchall()]
 
             from services.sod_service import analyze_role_sod
             sod_analysis = analyze_role_sod(role_name, new_perms_list, current_codes=current_codes)
@@ -697,15 +701,15 @@ def update_role_permissions(role_id):
                         'perms': [{'code': p['code'], 'desc': p.get('description',''), 'cat': p.get('category','')} for p in c['perms']]
                     })
                     
-                flash(json.dumps(error_data), "sod_danger")
+                await flash(json.dumps(error_data), "sod_danger")
                 # return redirect(url_for('core.admin_roles', role_id=role_id))
 
             # Si no hay conflictos, procedo al borrado real
-            cursor.execute("DELETE FROM sys_role_permissions WHERE role_id = %s AND enterprise_id = %s", (role_id, g.user['enterprise_id']))
+            await cursor.execute("DELETE FROM sys_role_permissions WHERE role_id = %s AND enterprise_id = %s", (role_id, g.user['enterprise_id']))
 
             # Inserción real
             for p_id_new in perms:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO sys_role_permissions (enterprise_id, role_id, permission_id, user_id) 
                     VALUES (%s, %s, %s, %s)
                 """, (g.user['enterprise_id'], role_id, p_id_new, g.user['id']))
@@ -715,118 +719,118 @@ def update_role_permissions(role_id):
             
             # Log de Auditoría Enriquecido (CISA Requirement)
             details = f"Rol: {role_name} (ID:{role_id}). Modificacion completada (Audit-Safe). Total Permisos: {len(perms)}."
-            cursor.execute("INSERT INTO sys_security_logs (enterprise_id, actor_user_id, action, status, details, ip_address, session_id) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+            await cursor.execute("INSERT INTO sys_security_logs (enterprise_id, actor_user_id, action, status, details, ip_address, session_id) VALUES (%s,%s,%s,%s,%s,%s,%s)",
                           (g.user['enterprise_id'], g.user['id'], 'UPDATE_ROLE_PERMS', 'SUCCESS', details, request.remote_addr, session.get('session_id', 'N/A')))
         
         # Limpio errores sod viejos
         if 'sod_errors' in session: session.pop('sod_errors')
-        flash("Permisos actualizados y auditados bajo normativa SoD.", "success")
-    except Exception as e: flash(str(e), "danger")
+        await flash("Permisos actualizados y auditados bajo normativa SoD.", "success")
+    except Exception as e: await flash(str(e), "danger")
     return redirect(url_for('core.admin_roles', role_id=role_id))
 
 @core_bp.route('/admin/roles/revoke', methods=['POST'])
 @login_required
 @permission_required('admin_roles')
-def revoke_role_permission():
-    role_id = request.form.get('role_id')
-    permission_id = request.form.get('permission_id')
-    reason = request.form.get('reason', 'Revocación por Auditoría SoD')
+async def revoke_role_permission():
+    role_id = (await request.form).get('role_id')
+    permission_id = (await request.form).get('permission_id')
+    reason = (await request.form).get('reason', 'Revocación por Auditoría SoD')
     
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Obtener datos para log
-            cursor.execute("SELECT name FROM sys_roles WHERE id = %s AND enterprise_id = %s", (role_id, g.user['enterprise_id']))
-            role_row = cursor.fetchone()
+            await cursor.execute("SELECT name FROM sys_roles WHERE id = %s AND enterprise_id = %s", (role_id, g.user['enterprise_id']))
+            role_row = await cursor.fetchone()
             if not role_row: return "Rol no encontrado", 404
             role_name = role_row[0]
             
-            cursor.execute("SELECT code, category FROM sys_permissions WHERE id = %s", (permission_id,))
-            p_data = cursor.fetchone()
+            await cursor.execute("SELECT code, category FROM sys_permissions WHERE id = %s", (permission_id,))
+            p_data = await cursor.fetchone()
             if not p_data: return "Permiso no encontrado", 404
             p_code = p_data[0]
             p_cat = p_data[1] or 'General'
             
             # Borrar
-            cursor.execute("DELETE FROM sys_role_permissions WHERE role_id = %s AND permission_id = %s AND enterprise_id = %s", 
+            await cursor.execute("DELETE FROM sys_role_permissions WHERE role_id = %s AND permission_id = %s AND enterprise_id = %s", 
                            (role_id, permission_id, g.user['enterprise_id']))
             
             # Log de Auditoría CISA
             details = f"Operación: Revocación de Permiso | Rol: {role_name} | Módulo: {p_cat} | Permiso Quitado: {p_code} | Motivo: {reason}"
-            cursor.execute("INSERT INTO sys_security_logs (enterprise_id, actor_user_id, action, status, details, ip_address, session_id) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+            await cursor.execute("INSERT INTO sys_security_logs (enterprise_id, actor_user_id, action, status, details, ip_address, session_id) VALUES (%s,%s,%s,%s,%s,%s,%s)",
                           (g.user['enterprise_id'], g.user['id'], 'REVOKE_PERMISSION', 'SUCCESS', details, request.remote_addr, session.get('session_id', 'N/A')))
             
-        flash(f"Control de Seguridad: Permiso {p_code} revocado del perfil {role_name}.", "warning")
+        await flash(f"Control de Seguridad: Permiso {p_code} revocado del perfil {role_name}.", "warning")
     except Exception as e:
-        flash(f"Error en auditoría al revocar: {e}", "danger")
+        await flash(f"Error en auditoría al revocar: {e}", "danger")
         
     return redirect(url_for('core.admin_roles', role_id=role_id))
 
 @core_bp.route('/admin/roles/delete/<int:role_id>', methods=['POST'])
 @login_required
 @permission_required('admin_roles')
-def delete_role(role_id):
+async def delete_role(role_id):
     # Logic to prevent deleting admin
     try:
-        with get_db_cursor() as cursor:
-             cursor.execute("DELETE FROM sys_roles WHERE id = %s AND enterprise_id = %s", (role_id, g.user['enterprise_id']))
-        flash("Rol eliminado", "success")
-    except Exception as e: flash(str(e), "danger")
+        async with get_db_cursor() as cursor:
+             await cursor.execute("DELETE FROM sys_roles WHERE id = %s AND enterprise_id = %s", (role_id, g.user['enterprise_id']))
+        await flash("Rol eliminado", "success")
+    except Exception as e: await flash(str(e), "danger")
     return redirect(url_for('core.admin_roles'))
 
 
 @core_bp.route('/admin/users')
 @login_required
 @permission_required('admin_users')
-def admin_users():
-    with get_db_cursor() as cursor:
-        cursor.execute("""
+async def admin_users():
+    async with get_db_cursor() as cursor:
+        await cursor.execute("""
             SELECT sys_users.id, sys_users.username, sys_users.email, sys_roles.name as role_name, sys_users.created_at, sys_users.role_id, sys_users.must_change_password
             FROM sys_users 
             LEFT JOIN sys_roles ON sys_users.role_id = sys_roles.id AND sys_roles.enterprise_id = sys_users.enterprise_id
             WHERE sys_users.enterprise_id = %s
         """, (g.user['enterprise_id'],))
-        users = [dict(zip([column[0] for column in cursor.description], row)) for row in cursor.fetchall()]
+        users = [dict(zip([column[0] for column in cursor.description], row)) for row in await cursor.fetchall()]
         # Filter roles: only show 'adminSys' if current user is sysadmin
         is_sysadmin = 'sysadmin' in g.permissions
         if is_sysadmin:
-            cursor.execute("SELECT id, name FROM sys_roles WHERE enterprise_id = %s", (g.user['enterprise_id'],))
+            await cursor.execute("SELECT id, name FROM sys_roles WHERE enterprise_id = %s", (g.user['enterprise_id'],))
         else:
-            cursor.execute("SELECT id, name FROM sys_roles WHERE enterprise_id = %s AND LOWER(name) != 'adminsys'", (g.user['enterprise_id'],))
+            await cursor.execute("SELECT id, name FROM sys_roles WHERE enterprise_id = %s AND LOWER(name) != 'adminsys'", (g.user['enterprise_id'],))
         
-        roles = [{'id': r[0], 'name': r[1]} for r in cursor.fetchall()]
-    return render_template('admin_users.html', system_users=users, roles=roles)
+        roles = [{'id': r[0], 'name': r[1]} for r in await cursor.fetchall()]
+    return await render_template('admin_users.html', system_users=users, roles=roles)
 
 @core_bp.route('/admin/users/reset-attempts/<int:user_id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def reset_user_attempts(user_id):
+async def reset_user_attempts(user_id):
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("UPDATE sys_users SET recovery_attempts = 0 WHERE id = %s AND enterprise_id = %s", 
+        async with get_db_cursor() as cursor:
+            await cursor.execute("UPDATE sys_users SET recovery_attempts = 0 WHERE id = %s AND enterprise_id = %s", 
                            (user_id, g.user['enterprise_id']))
-        flash("Intentos de recuperación restablecidos.", "success")
-        _log_security_event("RESET_ATTEMPTS", "SUCCESS", target_user_id=user_id, details="Admin reset attempts")
+        await flash("Intentos de recuperación restablecidos.", "success")
+        await _log_security_event("RESET_ATTEMPTS", "SUCCESS", target_user_id=user_id, details="Admin reset attempts")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
     return redirect(url_for('core.admin_users'))
 
 @core_bp.route('/admin/users/reset-password/<int:user_id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def admin_reset_password(user_id):
+async def admin_reset_password(user_id):
     """Resets user password to a default value and forces change on next login"""
     DEFAULT_PASS = "Temporal123!"
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Fetch user details for email
-            cursor.execute("SELECT username, email FROM sys_users WHERE id = %s AND enterprise_id = %s", (user_id, g.user['enterprise_id']))
-            user = cursor.fetchone()
+            await cursor.execute("SELECT username, email FROM sys_users WHERE id = %s AND enterprise_id = %s", (user_id, g.user['enterprise_id']))
+            user = await cursor.fetchone()
             if not user:
-                flash("Usuario no encontrado.", "danger")
+                await flash("Usuario no encontrado.", "danger")
                 return redirect(url_for('core.admin_users'))
 
             h = generate_password_hash(DEFAULT_PASS)
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE sys_users 
                 SET password_hash = %s, must_change_password = 1, recovery_attempts = 0 
                 WHERE id = %s AND enterprise_id = %s
@@ -834,123 +838,123 @@ def admin_reset_password(user_id):
             
             # Send Notification
             if user['email']:
-                success, error = email_service.enviar_clave_temporal(user['email'], user['username'], DEFAULT_PASS, g.user['enterprise_id'])
+                success, error = await email_service.enviar_clave_temporal(user['email'], user['username'], DEFAULT_PASS, g.user['enterprise_id'])
                 if success:
-                    flash(f"Contraseña restablecida. Se envió un correo a {user['email']}.", "success")
+                    await flash(f"Contraseña restablecida. Se envió un correo a {user['email']}.", "success")
                 else:
-                    flash(f"Contraseña restablecida a '{DEFAULT_PASS}', pero falló el envío del correo: '{error}'. Por favor contacte al administrador.", "warning")
+                    await flash(f"Contraseña restablecida a '{DEFAULT_PASS}', pero falló el envío del correo: '{error}'. Por favor contacte al administrador.", "warning")
             else:
-                flash(f"Contraseña restablecida a '{DEFAULT_PASS}'. El usuario no tiene correo configurado.", "info")
+                await flash(f"Contraseña restablecida a '{DEFAULT_PASS}'. El usuario no tiene correo configurado.", "info")
 
-        _log_security_event("ADMIN_RESET_PASSWORD", "SUCCESS", target_user_id=user_id, details="Password reset to default and forced change")
+        await _log_security_event("ADMIN_RESET_PASSWORD", "SUCCESS", target_user_id=user_id, details="Password reset to default and forced change")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
     return redirect(url_for('core.admin_users'))
 
 @core_bp.route('/admin/users/create', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def create_system_user():
+async def create_system_user():
     # Insert logic
     try:
-        uname = request.form['username']
-        email = request.form['email']
+        uname = (await request.form)['username']
+        email = (await request.form)['email']
         
         # Validar estado del correo
         es_valido, msg = email_service.validar_estado_correo(email)
         if not es_valido:
-            flash(f"Error de Validación de Correo: {msg}", "danger")
+            await flash(f"Error de Validación de Correo: {msg}", "danger")
             return redirect(url_for('core.admin_users'))
 
-        pwd = request.form['password']
-        rid = request.form['role_id'] or None
+        pwd = (await request.form)['password']
+        rid = (await request.form)['role_id'] or None
         
         # --- CONTROL DE CUMPLIMIENTO DE AUDITORÍA (CISA/SOX) ---
         if rid:
             from services.audit_certification_service import AuditCertificationService
-            with get_db_cursor() as cursor:
-                cursor.execute("SELECT permission_id FROM sys_role_permissions WHERE role_id = %s", (rid,))
-                p_ids = [r[0] for r in cursor.fetchall()]
+            async with get_db_cursor() as cursor:
+                await cursor.execute("SELECT permission_id FROM sys_role_permissions WHERE role_id = %s", (rid,))
+                p_ids = [r[0] for r in await cursor.fetchall()]
             
-            ok, v = AuditCertificationService.validate_permissions_compliance(p_ids)
+            ok, v = await AuditCertificationService.validate_permissions_compliance(p_ids)
             if not ok:
-                _log_security_event("AUDIT_COMPLIANCE_BLOCK", "FAIL", details=f"Intento de asignar rol no audit-ready (ID:{rid}) al crear usuario {uname}. Violaciones: {v}")
-                AuditCertificationService.notify_saas_owner(v, g.user['username'], f"Asignación de Rol a Nuevo Usuario: {uname}")
-                flash("OPERACIÓN ANULADA: El rol asignado contiene permisos para módulos que no cumplen con los estándares de auditoría. Se ha notificado al SaaS Owner.", "danger")
+                await _log_security_event("AUDIT_COMPLIANCE_BLOCK", "FAIL", details=f"Intento de asignar rol no audit-ready (ID:{rid}) al crear usuario {uname}. Violaciones: {v}")
+                await AuditCertificationService.notify_saas_owner(v, g.user['username'], f"Asignación de Rol a Nuevo Usuario: {uname}")
+                await flash("OPERACIÓN ANULADA: El rol asignado contiene permisos para módulos que no cumplen con los estándares de auditoría. Se ha notificado al SaaS Owner.", "danger")
                 return redirect(url_for('core.admin_users'))
         # ------------------------------------------------------
 
-        force_change = 1 if request.form.get('must_change_password') == 'on' else 0
+        force_change = 1 if (await request.form).get('must_change_password') == 'on' else 0
         h = generate_password_hash(pwd)
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO sys_users (enterprise_id, username, email, password_hash, role_id, must_change_password) 
                 VALUES (%s,%s,%s,%s,%s,%s)
             """, (g.user['enterprise_id'], uname, email, h, rid, force_change))
         
         # Notify user if force_change is on
         if force_change and email:
-            success, error = email_service.enviar_clave_temporal(email, uname, pwd, g.user['enterprise_id'])
+            success, error = await email_service.enviar_clave_temporal(email, uname, pwd, g.user['enterprise_id'])
             if success:
-                flash("Usuario creado y notificación enviada por correo.", "success")
+                await flash("Usuario creado y notificación enviada por correo.", "success")
             else:
-                flash(f"Usuario creado, pero falló el envío del correo: '{error}'. Contacte al administrador.", "warning")
+                await flash(f"Usuario creado, pero falló el envío del correo: '{error}'. Contacte al administrador.", "warning")
         else:
-            flash("Usuario creado con éxito.", "success")
+            await flash("Usuario creado con éxito.", "success")
             
     except Exception as e: 
-        flash(str(e), "danger")
+        await flash(str(e), "danger")
     return redirect(url_for('core.admin_users'))
 
 @core_bp.route('/admin/users/update/<int:user_id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def update_user(user_id):
+async def update_user(user_id):
     """Update user information including optional password change"""
     try:
-        username = request.form.get('username')
-        email = request.form.get('email')
-        role_id = request.form.get('role_id') or None
+        username = (await request.form).get('username')
+        email = (await request.form).get('email')
+        role_id = (await request.form).get('role_id') or None
         
         # --- CONTROL DE CUMPLIMIENTO DE AUDITORÍA (CISA/SOX) ---
         if role_id:
             from services.audit_certification_service import AuditCertificationService
-            with get_db_cursor() as cursor:
-                cursor.execute("SELECT permission_id FROM sys_role_permissions WHERE role_id = %s", (role_id,))
-                p_ids = [r[0] for r in cursor.fetchall()]
+            async with get_db_cursor() as cursor:
+                await cursor.execute("SELECT permission_id FROM sys_role_permissions WHERE role_id = %s", (role_id,))
+                p_ids = [r[0] for r in await cursor.fetchall()]
             
-            ok, v = AuditCertificationService.validate_permissions_compliance(p_ids)
+            ok, v = await AuditCertificationService.validate_permissions_compliance(p_ids)
             if not ok:
-                _log_security_event("AUDIT_COMPLIANCE_BLOCK", "FAIL", details=f"Intento de asignar rol no audit-ready (ID:{role_id}) al usuario ID:{user_id}. Violaciones: {v}")
-                AuditCertificationService.notify_saas_owner(v, g.user['username'], f"Actualización de Usuario ID: {user_id}")
-                flash("OPERACIÓN ANULADA: El rol asignado no cumple con los estándares de auditoría. Notificado al SaaS Owner.", "danger")
+                await _log_security_event("AUDIT_COMPLIANCE_BLOCK", "FAIL", details=f"Intento de asignar rol no audit-ready (ID:{role_id}) al usuario ID:{user_id}. Violaciones: {v}")
+                await AuditCertificationService.notify_saas_owner(v, g.user['username'], f"Actualización de Usuario ID: {user_id}")
+                await flash("OPERACIÓN ANULADA: El rol asignado no cumple con los estándares de auditoría. Notificado al SaaS Owner.", "danger")
                 return redirect(url_for('core.admin_users'))
         # ------------------------------------------------------
         
-        new_password = request.form.get('password', '').strip()
-        force_change = 1 if request.form.get('must_change_password') == 'on' else 0
+        new_password = (await request.form).get('password', '').strip()
+        force_change = 1 if (await request.form).get('must_change_password') == 'on' else 0
         
         # Validar estado del correo si cambió
-        with get_db_cursor() as cursor:
-            cursor.execute("SELECT email FROM sys_users WHERE id = %s AND enterprise_id = %s", 
+        async with get_db_cursor() as cursor:
+            await cursor.execute("SELECT email FROM sys_users WHERE id = %s AND enterprise_id = %s", 
                           (user_id, g.user['enterprise_id']))
-            current_user = cursor.fetchone()
+            current_user = await cursor.fetchone()
             
             if not current_user:
-                flash("Usuario no encontrado", "danger")
+                await flash("Usuario no encontrado", "danger")
                 return redirect(url_for('core.admin_users'))
             
             # Si el email cambió, validarlo
             if email != current_user[0]:
                 es_valido, msg = email_service.validar_estado_correo(email)
                 if not es_valido:
-                    flash(f"Error de Validación de Correo: {msg}", "danger")
+                    await flash(f"Error de Validación de Correo: {msg}", "danger")
                     return redirect(url_for('core.admin_users'))
             
             # Si se proporcionó nueva contraseña, actualizarla
             if new_password:
                 password_hash = generate_password_hash(new_password)
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_users 
                     SET username = %s, email = %s, role_id = %s, password_hash = %s, must_change_password = %s, updated_by = %s
                     WHERE id = %s AND enterprise_id = %s
@@ -958,24 +962,24 @@ def update_user(user_id):
                 
                 # Notify user if force_change is on
                 if force_change and email:
-                    success, error = email_service.enviar_clave_temporal(email, username, new_password, g.user['enterprise_id'])
+                    success, error = await email_service.enviar_clave_temporal(email, username, new_password, g.user['enterprise_id'])
                     if success:
-                        flash("Usuario actualizado y notificación enviada por correo.", "success")
+                        await flash("Usuario actualizado y notificación enviada por correo.", "success")
                     else:
-                        flash(f"Usuario actualizado, pero falló el envío del correo: '{error}'. Contacte al administrador.", "warning")
+                        await flash(f"Usuario actualizado, pero falló el envío del correo: '{error}'. Contacte al administrador.", "warning")
                 else:
-                    flash("Usuario actualizado con nueva contraseña", "success")
+                    await flash("Usuario actualizado con nueva contraseña", "success")
             else:
                 # Solo actualizar datos sin cambiar contraseña, pero permitimos cambiar el flag de must_change
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_users 
                     SET username = %s, email = %s, role_id = %s, must_change_password = %s, updated_by = %s
                     WHERE id = %s AND enterprise_id = %s
                 """, (username, email, role_id, force_change, g.user['id'], user_id, g.user['enterprise_id']))
-                flash("Usuario actualizado", "success")
+                await flash("Usuario actualizado", "success")
                 
     except Exception as e:
-        flash(f"Error al actualizar usuario: {str(e)}", "danger")
+        await flash(f"Error al actualizar usuario: {str(e)}", "danger")
     
     return redirect(url_for('core.admin_users'))
 
@@ -985,82 +989,82 @@ def update_user(user_id):
 @core_bp.route('/admin/areas')
 @login_required
 @permission_required('admin_users')
-def admin_areas():
+async def admin_areas():
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute(
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute(
             "SELECT id, nombre, color, icono, activo FROM erp_areas WHERE enterprise_id = %s OR enterprise_id = 0 ORDER BY nombre",
             (ent_id,)
         )
-        areas = cursor.fetchall()
-    return render_template('admin_areas.html', areas=areas)
+        areas = await cursor.fetchall()
+    return await render_template('admin_areas.html', areas=areas)
 
 @core_bp.route('/admin/areas/create', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def create_area():
+async def create_area():
     ent_id = g.user['enterprise_id']
-    nombre = request.form.get('nombre', '').upper().strip()
-    color  = request.form.get('color', 'secondary')
-    icono  = request.form.get('icono', 'fa-building')
+    nombre = (await request.form).get('nombre', '').upper().strip()
+    color  = (await request.form).get('color', 'secondary')
+    icono  = (await request.form).get('icono', 'fa-building')
     if not nombre:
-        flash("El nombre del área es obligatorio.", "danger")
+        await flash("El nombre del área es obligatorio.", "danger")
         return redirect(url_for('core.admin_areas'))
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute(
+        async with get_db_cursor() as cursor:
+            await cursor.execute(
                 "INSERT INTO erp_areas (enterprise_id, nombre, color, icono) VALUES (%s, %s, %s, %s)",
                 (ent_id, nombre, color, icono)
             )
-        flash(f"Área '{nombre}' creada.", "success")
+        await flash(f"Área '{nombre}' creada.", "success")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
     return redirect(url_for('core.admin_areas'))
 
 @core_bp.route('/admin/areas/update/<int:id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def update_area(id):
+async def update_area(id):
     ent_id = g.user['enterprise_id']
-    nombre = request.form.get('nombre', '').upper().strip()
-    color  = request.form.get('color', 'secondary')
-    icono  = request.form.get('icono', 'fa-building')
-    activo = 1 if request.form.get('activo') else 0
+    nombre = (await request.form).get('nombre', '').upper().strip()
+    color  = (await request.form).get('color', 'secondary')
+    icono  = (await request.form).get('icono', 'fa-building')
+    activo = 1 if (await request.form).get('activo') else 0
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute(
+        async with get_db_cursor() as cursor:
+            await cursor.execute(
                 "UPDATE erp_areas SET nombre=%s, color=%s, icono=%s, activo=%s WHERE id=%s AND enterprise_id=%s",
                 (nombre, color, icono, activo, id, ent_id)
             )
-        flash("Área actualizada.", "success")
+        await flash("Área actualizada.", "success")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
     return redirect(url_for('core.admin_areas'))
 
 @core_bp.route('/admin/areas/delete/<int:id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def delete_area(id):
+async def delete_area(id):
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("DELETE FROM erp_areas WHERE id=%s AND enterprise_id=%s", (id, ent_id))
-        flash("Área eliminada.", "success")
+        async with get_db_cursor() as cursor:
+            await cursor.execute("DELETE FROM erp_areas WHERE id=%s AND enterprise_id=%s", (id, ent_id))
+        await flash("Área eliminada.", "success")
     except Exception as e:
-        flash(f"No se puede eliminar: {e}", "danger")
+        await flash(f"No se puede eliminar: {e}", "danger")
     return redirect(url_for('core.admin_areas'))
 
 @core_bp.route('/api/areas')
 @login_required
-def api_areas():
+async def api_areas():
     """API para selectores dinámicos de área."""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute(
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute(
             "SELECT id, nombre, color, icono FROM erp_areas WHERE (enterprise_id=%s OR enterprise_id=0) AND activo=1 ORDER BY nombre",
             (ent_id,)
         )
-        areas = cursor.fetchall()
+        areas = await cursor.fetchall()
     return jsonify(areas)
 
 # ... PUESTOS ABM ...
@@ -1068,16 +1072,16 @@ def api_areas():
 @core_bp.route('/admin/puestos')
 @login_required
 @permission_required('admin_users')
-def admin_puestos():
+async def admin_puestos():
     area = request.args.get('area')
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Cargar áreas desde tabla
-        cursor.execute(
+        await cursor.execute(
             "SELECT nombre, color FROM erp_areas WHERE (enterprise_id=%s OR enterprise_id=0) AND activo=1 ORDER BY nombre",
             (ent_id,)
         )
-        areas = cursor.fetchall()
+        areas = await cursor.fetchall()
 
         query = "SELECT id, nombre, area, activo FROM erp_puestos WHERE enterprise_id = %s"
         params = [ent_id]
@@ -1085,79 +1089,79 @@ def admin_puestos():
             query += " AND area = %s"
             params.append(area)
         query += " ORDER BY area, nombre"
-        cursor.execute(query, params)
-        puestos = cursor.fetchall()
-    return render_template('admin_puestos.html', puestos=puestos, areas=areas, current_area=area)
+        await cursor.execute(query, params)
+        puestos = await cursor.fetchall()
+    return await render_template('admin_puestos.html', puestos=puestos, areas=areas, current_area=area)
 
 @core_bp.route('/admin/puestos/create', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def create_puesto():
-    nombre = request.form.get('nombre')
-    area = request.form.get('area')
+async def create_puesto():
+    nombre = (await request.form).get('nombre')
+    area = (await request.form).get('area')
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("INSERT INTO erp_puestos (enterprise_id, nombre, area) VALUES (%s, %s, %s)", 
+        async with get_db_cursor() as cursor:
+            await cursor.execute("INSERT INTO erp_puestos (enterprise_id, nombre, area) VALUES (%s, %s, %s)", 
                            (g.user['enterprise_id'], nombre, area))
-        flash(f"Puesto {nombre} creado.", "success")
-    except Exception as e: flash(str(e), "danger")
+        await flash(f"Puesto {nombre} creado.", "success")
+    except Exception as e: await flash(str(e), "danger")
     return redirect(url_for('core.admin_puestos'))
 
 @core_bp.route('/admin/puestos/update/<int:id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def update_puesto(id):
-    nombre = request.form.get('nombre')
-    area = request.form.get('area')
-    activo = 1 if request.form.get('activo') else 0
+async def update_puesto(id):
+    nombre = (await request.form).get('nombre')
+    area = (await request.form).get('area')
+    activo = 1 if (await request.form).get('activo') else 0
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("UPDATE erp_puestos SET nombre = %s, area = %s, activo = %s WHERE id = %s AND enterprise_id = %s", 
+        async with get_db_cursor() as cursor:
+            await cursor.execute("UPDATE erp_puestos SET nombre = %s, area = %s, activo = %s WHERE id = %s AND enterprise_id = %s", 
                            (nombre, area, activo, id, g.user['enterprise_id']))
-        flash("Puesto actualizado.", "success")
-    except Exception as e: flash(str(e), "danger")
+        await flash("Puesto actualizado.", "success")
+    except Exception as e: await flash(str(e), "danger")
     return redirect(url_for('core.admin_puestos'))
 
 @core_bp.route('/admin/puestos/delete/<int:id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def delete_puesto(id):
+async def delete_puesto(id):
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("DELETE FROM erp_puestos WHERE id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
-        flash("Puesto eliminado.", "success")
-    except Exception as e: flash(str(e), "danger")
+        async with get_db_cursor() as cursor:
+            await cursor.execute("DELETE FROM erp_puestos WHERE id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
+        await flash("Puesto eliminado.", "success")
+    except Exception as e: await flash(str(e), "danger")
     return redirect(url_for('core.admin_puestos'))
 
 @core_bp.route('/api/erp/puestos')
 @login_required
-def api_get_puestos():
+async def api_get_puestos():
     area = request.args.get('area')
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         query = "SELECT id, nombre FROM erp_puestos WHERE enterprise_id = %s AND activo = 1"
         params = [g.user['enterprise_id']]
         if area:
             query += " AND area = %s"
             params.append(area)
         query += " ORDER BY nombre"
-        cursor.execute(query, params)
-        return jsonify(cursor.fetchall())
+        await cursor.execute(query, params)
+        return jsonify(await cursor.fetchall())
 
 @core_bp.route('/api/erp/areas')
 @login_required
-def api_get_areas():
+async def api_get_areas():
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute(
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute(
             "SELECT id, nombre, color, icono FROM erp_areas WHERE (enterprise_id=%s OR enterprise_id=0) AND activo=1 ORDER BY nombre",
             (ent_id,)
         )
-        return jsonify(cursor.fetchall())
+        return jsonify(await cursor.fetchall())
 
 @core_bp.route('/admin/security-logs')
 @login_required
 @permission_required('admin_users')
-def security_logs():
+async def security_logs():
     f_action = request.args.get('action')
     f_status = request.args.get('status')
     f_actor = request.args.get('actor')
@@ -1166,7 +1170,7 @@ def security_logs():
     f_sid = request.args.get('sid')
     
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             base_query = """
                 SELECT sys_security_logs.id, sys_security_logs.event_time, sys_security_logs.action, sys_security_logs.status, sys_security_logs.details, sys_security_logs.ip_address, sys_security_logs.session_id,
                        sys_users_actor.username as actor_name, sys_users_target.username as target_name
@@ -1197,20 +1201,20 @@ def security_logs():
                 params.append(f_sid)
                 
             base_query += " ORDER BY sys_security_logs.event_time DESC LIMIT 500"
-            cursor.execute(base_query, params)
-            logs = cursor.fetchall()
+            await cursor.execute(base_query, params)
+            logs = await cursor.fetchall()
             
             # Fetch DISTINCT values for filters
-            cursor.execute("SELECT DISTINCT action FROM sys_security_logs ORDER BY action")
-            distinct_actions = [row[0] for row in cursor.fetchall()]
-            cursor.execute("SELECT DISTINCT status FROM sys_security_logs ORDER BY status")
-            distinct_statuses = [row[0] for row in cursor.fetchall()]
-            cursor.execute("SELECT DISTINCT sys_users.username FROM sys_security_logs JOIN sys_users ON sys_security_logs.actor_user_id = sys_users.id ORDER BY sys_users.username")
-            distinct_actors = [row[0] for row in cursor.fetchall()]
-            cursor.execute("SELECT DISTINCT sys_users.username FROM sys_security_logs JOIN sys_users ON sys_security_logs.target_user_id = sys_users.id ORDER BY sys_users.username")
-            distinct_targets = [row[0] for row in cursor.fetchall()]
+            await cursor.execute("SELECT DISTINCT action FROM sys_security_logs ORDER BY action")
+            distinct_actions = [row[0] for row in await cursor.fetchall()]
+            await cursor.execute("SELECT DISTINCT status FROM sys_security_logs ORDER BY status")
+            distinct_statuses = [row[0] for row in await cursor.fetchall()]
+            await cursor.execute("SELECT DISTINCT sys_users.username FROM sys_security_logs JOIN sys_users ON sys_security_logs.actor_user_id = sys_users.id ORDER BY sys_users.username")
+            distinct_actors = [row[0] for row in await cursor.fetchall()]
+            await cursor.execute("SELECT DISTINCT sys_users.username FROM sys_security_logs JOIN sys_users ON sys_security_logs.target_user_id = sys_users.id ORDER BY sys_users.username")
+            distinct_targets = [row[0] for row in await cursor.fetchall()]
             
-        return render_template('security_logs.html', 
+        return await render_template('security_logs.html', 
                                logs=logs, 
                                actions=distinct_actions,
                                statuses=distinct_statuses,
@@ -1219,17 +1223,17 @@ def security_logs():
                                ips=[], sids=[],
                                filters={'action': f_action, 'status': f_status, 'actor': f_actor, 'target': f_target, 'ip': f_ip, 'sid': f_sid})
     except Exception as e:
-        flash(f"Error cargando logs: {e}", "danger")
-        return redirect(url_for('biblioteca.dashboard'))
+        await flash(f"Error cargando logs: {e}", "danger")
+        return redirect(url_for('ventas.dashboard'))
 
 @core_bp.route('/admin/audit/permissions')
 @login_required
 @permission_required('view_permission_audit')
-def audit_permissions():
+async def audit_permissions():
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Traer logs relacionados con gestión de accesos
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT sys_security_logs.id, sys_security_logs.event_time, sys_security_logs.action, sys_security_logs.status, sys_security_logs.details, sys_security_logs.ip_address,
                        sys_users.username as operator
                 FROM sys_security_logs
@@ -1238,33 +1242,33 @@ def audit_permissions():
                 AND sys_security_logs.action IN ('REVOKE_PERMISSION', 'GRANT_PERMISSION', 'UPDATE_ROLE_PERMS')
                 ORDER BY sys_security_logs.event_time DESC
             """, (g.user['enterprise_id'],))
-            logs = cursor.fetchall()
-        return render_template('admin_audit_permissions.html', logs=logs)
+            logs = await cursor.fetchall()
+        return await render_template('admin_audit_permissions.html', logs=logs)
     except Exception as e:
-        flash(f"Error cargando logs: {e}", "danger")
-        return redirect(url_for('biblioteca.dashboard'))
+        await flash(f"Error cargando logs: {e}", "danger")
+        return redirect(url_for('ventas.dashboard'))
 
 @core_bp.route('/admin/audit/integrity')
 @login_required
 @permission_required('view_permission_audit')
-def audit_integrity():
+async def audit_integrity():
     from services.sod_service import analyze_role_sod
     ent_id = g.user['enterprise_id']
     
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Mapeo de Roles en Conflicto
-            cursor.execute("SELECT id, name FROM sys_roles WHERE enterprise_id = %s", (ent_id,))
-            roles = cursor.fetchall()
+            await cursor.execute("SELECT id, name FROM sys_roles WHERE enterprise_id = %s", (ent_id,))
+            roles = await cursor.fetchall()
             conflict_roles_map = {}
             for r in roles:
-                cursor.execute("""
+                await cursor.execute("""
                     SELECT sys_permissions.id, sys_permissions.code, sys_permissions.description, sys_permissions.category 
                     FROM sys_permissions
                     JOIN sys_role_permissions ON sys_permissions.id = sys_role_permissions.permission_id
                     WHERE sys_role_permissions.role_id = %s
                 """, (r['id'],))
-                perms = cursor.fetchall()
+                perms = await cursor.fetchall()
                 analysis = analyze_role_sod(r['name'], perms)
                 if analysis['conflictos_detalle']:
                     conflict_roles_map[r['id']] = analysis['conflictos_detalle']
@@ -1276,7 +1280,7 @@ def audit_integrity():
                 
                 # BUSQUEDA MULTI-TABLA (Basado en usuarios con roles conflictivos)
                 # A. Órdenes de Pago
-                cursor.execute(f"""
+                await cursor.execute(f"""
                     SELECT 'PAGO' as modulo, fin_ordenes_pago.id, fin_ordenes_pago.numero as comprobante, fin_ordenes_pago.fecha, fin_ordenes_pago.importe_total as total, 
                            sys_users.username as operador, sys_roles.name as rol_operador, sys_users.role_id, fin_ordenes_pago.created_at
                     FROM fin_ordenes_pago
@@ -1285,12 +1289,12 @@ def audit_integrity():
                     WHERE fin_ordenes_pago.enterprise_id = %s AND sys_users.role_id IN ({placeholder})
                     ORDER BY fin_ordenes_pago.created_at DESC LIMIT 50
                 """, [ent_id] + role_ids)
-                for row in cursor.fetchall():
+                for row in await cursor.fetchall():
                     row['violacion'] = conflict_roles_map[row['role_id']][0]['regla']
                     abusive_ops.append(row)
 
                 # B. Movimientos de Stock
-                cursor.execute(f"""
+                await cursor.execute(f"""
                     SELECT 'STOCK' as modulo, stk_movimientos.id, stk_movimientos.id as comprobante, stk_movimientos.fecha, 0 as total, 
                            sys_users.username as operador, sys_roles.name as rol_operador, sys_users.role_id, stk_movimientos.fecha as created_at
                     FROM stk_movimientos
@@ -1299,32 +1303,32 @@ def audit_integrity():
                     WHERE stk_movimientos.enterprise_id = %s AND sys_users.role_id IN ({placeholder})
                     ORDER BY stk_movimientos.fecha DESC LIMIT 50
                 """, [ent_id] + role_ids)
-                for row in cursor.fetchall():
+                for row in await cursor.fetchall():
                     row['violacion'] = conflict_roles_map[row['role_id']][0]['regla']
                     abusive_ops.append(row)
 
-            return render_template('admin_audit_integrity.html', operations=abusive_ops)
+            return await render_template('admin_audit_integrity.html', operations=abusive_ops)
             
     except Exception as e:
-        flash(f"Error en Auditoría Transaccional: {e}", "danger")
+        await flash(f"Error en Auditoría Transaccional: {e}", "danger")
         return redirect(url_for('core.dashboard'))
 
 @core_bp.route('/admin/audit/certification')
 @login_required
 @permission_required('view_permission_audit')
-def audit_certification():
+async def audit_certification():
     from services.audit_certification_service import AuditCertificationService
     try:
-        compliance_data = AuditCertificationService.get_all_modules_compliance()
-        return render_template('admin_audit_certification.html', compliance_data=compliance_data)
+        compliance_data = await AuditCertificationService.get_all_modules_compliance()
+        return await render_template('admin_audit_certification.html', compliance_data=compliance_data)
     except Exception as e:
-        flash(f"Error en certificación de módulos: {str(e)}", "danger")
+        await flash(f"Error en certificación de módulos: {str(e)}", "danger")
         return redirect(url_for('core.dashboard'))
 
 @core_bp.route('/admin/audit/ai-auditor', methods=['GET', 'POST'])
 @login_required
 @permission_required('view_permission_audit')
-def ai_auditor():
+async def ai_auditor():
     """Interfaz para consultar al Auditor de IA Local (LLM)."""
     from services.local_intelligence_service import LocalIntelligenceService
     response_text = None
@@ -1332,15 +1336,15 @@ def ai_auditor():
     ollama_status = LocalIntelligenceService.check_health()
     
     if request.method == 'POST':
-        question = request.form.get('question')
+        question = (await request.form).get('question')
         if question:
             res = LocalIntelligenceService.consult_rules(question)
             if "response" in res:
                 response_text = res["response"]
             else:
-                flash(res.get("error", "Error detectado en el motor de IA"), "danger")
+                await flash(res.get("error", "Error detectado en el motor de IA"), "danger")
                 
-    return render_template('admin_ai_auditor.html', 
+    return await render_template('admin_ai_auditor.html', 
                            response=response_text, 
                            question=question,
                            ollama_status=ollama_status)
@@ -1348,13 +1352,13 @@ def ai_auditor():
 # --- DOCUMENTATION ROUTES ---
 @core_bp.route('/manual')
 @login_required
-def manual_index():
-    return render_template('manual/index.html')
+async def manual_index():
+    return await render_template('manual/index.html')
 
 @core_bp.route('/manual/tecnica')
 @login_required
-def manual_tecnico():
-    from flask import current_app
+async def manual_tecnico():
+    from quart import current_app
     # Introspección Automática de Rutas (Live Docs)
     rutas_info = []
     
@@ -1383,41 +1387,41 @@ def manual_tecnico():
             'doc': doc
         })
 
-    return render_template('manual/tecnica.html', rutas=rutas_info)
+    return await render_template('manual/tecnica.html', rutas=rutas_info)
 
 @core_bp.route('/manual/usuario')
 @login_required
-def manual_usuario():
-    return render_template('manual/usuario.html')
+async def manual_usuario():
+    return await render_template('manual/usuario.html')
 
 @core_bp.route('/manual/compras-v4')
 @login_required
-def manual_compras_v4():
+async def manual_compras_v4():
     """Referencia Técnica Avanzada para el Módulo de Compras MSAC v4."""
-    return render_template('manual/compras_v4_tecnica.html')
+    return await render_template('manual/compras_v4_tecnica.html')
 
 @core_bp.route('/manual/ventas-v4')
 @login_required
-def manual_ventas_v4():
+async def manual_ventas_v4():
     """Referencia Técnica Avanzada para el Módulo de Ventas MSAC v4."""
-    return render_template('manual/ventas_v4_tecnica.html')
+    return await render_template('manual/ventas_v4_tecnica.html')
 
 @core_bp.route('/manual/compras-pasos')
 @login_required
-def manual_compras_pasos():
+async def manual_compras_pasos():
     """Guía paso a paso del Módulo de Compras para nuevos usuarios."""
-    return render_template('manual/compras_paso_a_paso.html')
+    return await render_template('manual/compras_paso_a_paso.html')
 
 # --- INTERNAL UTILS ---
-def _log_security_event(action, status, enterprise_id=None, target_user_id=None, details=None, sid=None):
+async def _log_security_event(action, status, enterprise_id=None, target_user_id=None, details=None, sid=None):
     actor_id = g.user['id'] if g.user else None
     ent_id = enterprise_id or (g.user['enterprise_id'] if g.user else None)
     if ent_id is None: return # Cannot log without enterprise
     ip = request.remote_addr
     log_sid = sid if sid else g.get('sid')
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("INSERT INTO sys_security_logs (enterprise_id, actor_user_id, target_user_id, action, status, details, ip_address, session_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+        async with get_db_cursor() as cursor:
+            await cursor.execute("INSERT INTO sys_security_logs (enterprise_id, actor_user_id, target_user_id, action, status, details, ip_address, session_id) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
                            (ent_id, actor_id, target_user_id, action, status, details, ip, log_sid))
     except Exception as e:
         logger.error(f"LOG ERROR: {e}")
@@ -1425,17 +1429,17 @@ def _log_security_event(action, status, enterprise_id=None, target_user_id=None,
 # --- GEOREF API PROXY ---
 @core_bp.route('/api/georef/localidades')
 @login_required
-def api_get_localidades():
+async def api_get_localidades():
     from services.georef_service import GeorefService
     provincia = request.args.get('provincia')
     if not provincia:
         return jsonify([])
-    localidades = GeorefService.get_localidades(provincia)
+    localidades = await GeorefService.get_localidades(provincia)
     return jsonify(localidades)
 
 @core_bp.route('/api/georef/calles')
 @login_required
-def api_get_calles():
+async def api_get_calles():
     from services.georef_service import GeorefService
     localidad = request.args.get('localidad')
     provincia = request.args.get('provincia')
@@ -1446,19 +1450,19 @@ def api_get_calles():
     if not nombre or not provincia:
         return jsonify([])
         
-    calles = GeorefService.get_calles(localidad, provincia, nombre)
+    calles = await GeorefService.get_calles(localidad, provincia, nombre)
     logger.info(f"GEOREF: Encontradas {len(calles)} calles")
     return jsonify(calles)
 
 @core_bp.route('/api/georef/cp')
 @login_required
-def api_get_cp():
+async def api_get_cp():
     from services.georef_service import GeorefService
     provincia = request.args.get('provincia')
     localidad = request.args.get('localidad')
     if not provincia or not localidad:
         return jsonify([])
-    cps = GeorefService.get_cp_by_location(provincia, localidad)
+    cps = await GeorefService.get_cp_by_location(provincia, localidad)
     return jsonify(cps)
 
 # --- DATOS FISCALES DE EMPRESA ---
@@ -1466,25 +1470,25 @@ def api_get_cp():
 @core_bp.route('/admin/empresa/fiscal', methods=['GET'])
 @login_required
 @permission_required('admin_users')
-def admin_empresa_fiscal():
+async def admin_empresa_fiscal():
     """Muestra formulario de datos fiscales de la empresa."""
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
-        empresa = cursor.fetchone()
-    return render_template('empresa_fiscal.html', empresa=empresa)
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
+        empresa = await cursor.fetchone()
+    return await render_template('empresa_fiscal.html', empresa=empresa)
 
 @core_bp.route('/admin/empresa/fiscal', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def admin_empresa_fiscal_save():
+async def admin_empresa_fiscal_save():
     """Guarda datos fiscales de la empresa."""
-    nombre = request.form.get('nombre', '').strip()
-    cuit = request.form.get('cuit', '').strip()
-    domicilio = request.form.get('domicilio', '').strip()
-    condicion_iva = request.form.get('condicion_iva', '').strip()
-    ingresos_brutos = request.form.get('ingresos_brutos', '').strip()
-    iibb_condicion = request.form.get('iibb_condicion', '').strip()
-    inicio_actividades_raw = request.form.get('inicio_actividades', '').strip()
+    nombre = (await request.form).get('nombre', '').strip()
+    cuit = (await request.form).get('cuit', '').strip()
+    domicilio = (await request.form).get('domicilio', '').strip()
+    condicion_iva = (await request.form).get('condicion_iva', '').strip()
+    ingresos_brutos = (await request.form).get('ingresos_brutos', '').strip()
+    iibb_condicion = (await request.form).get('iibb_condicion', '').strip()
+    inicio_actividades_raw = (await request.form).get('inicio_actividades', '').strip()
     inicio_actividades = None
     if inicio_actividades_raw:
         try:
@@ -1497,22 +1501,22 @@ def admin_empresa_fiscal_save():
             except ValueError:
                 inicio_actividades = None
     
-    email = request.form.get('email', '').strip()
-    telefono = request.form.get('telefono', '').strip()
-    website = request.form.get('website', '').strip()
-    lema = request.form.get('lema', '').strip()
-    logo_path = request.form.get('logo_path', '').strip()
+    email = (await request.form).get('email', '').strip()
+    telefono = (await request.form).get('telefono', '').strip()
+    website = (await request.form).get('website', '').strip()
+    lema = (await request.form).get('lema', '').strip()
+    logo_path = (await request.form).get('logo_path', '').strip()
 
     # AFIP Certificates (Optional Upload)
     afip_crt = None
     afip_key = None
-    if 'afip_crt_file' in request.files and request.files['afip_crt_file'].filename:
-        afip_crt = request.files['afip_crt_file'].read().decode('utf-8', errors='ignore')
-    if 'afip_key_file' in request.files and request.files['afip_key_file'].filename:
-        afip_key = request.files['afip_key_file'].read().decode('utf-8', errors='ignore')
+    if 'afip_crt_file' in (await request.files) and (await request.files)['afip_crt_file'].filename:
+        afip_crt = (await (await request.files)['afip_crt_file'].read()).decode('utf-8', errors='ignore')
+    if 'afip_key_file' in (await request.files) and (await request.files)['afip_key_file'].filename:
+        afip_key = (await (await request.files)['afip_key_file'].read()).decode('utf-8', errors='ignore')
 
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Build dynamic update
             params = [nombre, cuit, domicilio, condicion_iva, ingresos_brutos, iibb_condicion, 
                      inicio_actividades, email, telefono, website, lema, logo_path]
@@ -1534,12 +1538,12 @@ def admin_empresa_fiscal_save():
             update_sql += " WHERE id = %s"
             params.append(g.user['enterprise_id'])
             
-            cursor.execute(update_sql, tuple(params))
+            await cursor.execute(update_sql, tuple(params))
         
-        flash("Datos fiscales actualizados correctamente.", "success")
-        _log_security_event("FISCAL_UPDATE", "SUCCESS", details=f"Empresa: {nombre}, CUIT: {cuit}")
+        await flash("Datos fiscales actualizados correctamente.", "success")
+        await _log_security_event("FISCAL_UPDATE", "SUCCESS", details=f"Empresa: {nombre}, CUIT: {cuit}")
     except Exception as e:
-        flash(f"Error al guardar: {e}", "danger")
+        await flash(f"Error al guardar: {e}", "danger")
     
     return redirect(url_for('core.admin_empresa_fiscal'))
 
@@ -1548,7 +1552,7 @@ def admin_empresa_fiscal_save():
 
 @core_bp.route('/admin/numeracion')
 @login_required
-def admin_numeracion():
+async def admin_numeracion():
     """Administración de la numeración de comprobantes y otros para cada empresa."""
     from database import get_db_cursor
     ent_id = request.args.get('ent_id', g.user['enterprise_id'], type=int)
@@ -1557,24 +1561,24 @@ def admin_numeracion():
     if g.user['role_name'] != 'SuperAdmin' and ent_id != g.user['enterprise_id']:
         ent_id = g.user['enterprise_id']
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Lista de empresas para el filtro (solo superadmin)
         enterprises = []
         if g.user['role_name'] == 'SuperAdmin':
-            cursor.execute("SELECT id, nombre FROM sys_enterprises ORDER BY nombre")
-            enterprises = cursor.fetchall()
+            await cursor.execute("SELECT id, nombre FROM sys_enterprises ORDER BY nombre")
+            enterprises = await cursor.fetchall()
             
         # Obtener numeración actual para la empresa seleccionada
-        cursor.execute("""
+        await cursor.execute("""
             SELECT sys_enterprise_numeracion.*, sys_tipos_comprobante.descripcion as tipo_nombre
             FROM sys_enterprise_numeracion
             LEFT JOIN sys_tipos_comprobante ON sys_enterprise_numeracion.entidad_codigo = sys_tipos_comprobante.codigo AND sys_enterprise_numeracion.entidad_tipo = 'COMPROBANTE'
             WHERE sys_enterprise_numeracion.enterprise_id = %s
             ORDER BY sys_enterprise_numeracion.entidad_tipo, sys_enterprise_numeracion.punto_venta, sys_enterprise_numeracion.entidad_codigo
         """, (ent_id,))
-        numeracion = cursor.fetchall()
+        numeracion = await cursor.fetchall()
 
-    return render_template('admin_numeracion.html', 
+    return await render_template('admin_numeracion.html', 
                            numeracion=numeracion, 
                            enterprises=enterprises, 
                            selected_ent_id=ent_id)
@@ -1583,14 +1587,14 @@ def admin_numeracion():
 @core_bp.route('/admin/numeracion/save', methods=['POST'])
 @login_required
 @atomic_transaction('core', severity=6, impact_category='Configuration')
-def admin_numeracion_save():
+async def admin_numeracion_save():
     """Guarda o actualiza un parámetro de numeración."""
-    item_id = request.form.get('id')
-    ent_id = request.form.get('enterprise_id', type=int)
-    tipo = request.form.get('entidad_tipo')
-    codigo = request.form.get('entidad_codigo')
-    pv = request.form.get('punto_venta', 1, type=int)
-    numero = request.form.get('ultimo_numero', 0, type=int)
+    item_id = (await request.form).get('id')
+    ent_id = (await request.form).get('enterprise_id', type=int)
+    tipo = (await request.form).get('entidad_tipo')
+    codigo = (await request.form).get('entidad_codigo')
+    pv = (await request.form).get('punto_venta', 1, type=int)
+    numero = (await request.form).get('ultimo_numero', 0, type=int)
 
     # Seguridad: Un admin regular solo puede tocar su empresa
     if g.user['role_name'] != 'SuperAdmin' and ent_id != g.user['enterprise_id']:
@@ -1598,22 +1602,22 @@ def admin_numeracion_save():
 
     try:
         from database import get_db_cursor
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             if item_id:
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_enterprise_numeracion 
                     SET ultimo_numero = %s, punto_venta = %s 
                     WHERE id = %s AND enterprise_id = %s
                 """, (numero, pv, item_id, ent_id))
             else:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO sys_enterprise_numeracion (enterprise_id, entidad_tipo, entidad_codigo, punto_venta, ultimo_numero)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (ent_id, tipo, codigo, pv, numero))
                 
-        flash("Numeración actualizada correctamente.", "success")
+        await flash("Numeración actualizada correctamente.", "success")
     except Exception as e:
-        flash(f"Error al guardar: {e}", "danger")
+        await flash(f"Error al guardar: {e}", "danger")
         
         
     return redirect(url_for('core.admin_numeracion', ent_id=ent_id))
@@ -1621,53 +1625,53 @@ def admin_numeracion_save():
 @core_bp.route('/admin/numeracion/delete/<int:id>', methods=['POST'])
 @login_required
 @atomic_transaction('core', severity=6, impact_category='Configuration')
-def admin_numeracion_delete(id):
+async def admin_numeracion_delete(id):
     """Elimina una configuración de numeración, validando antes que no esté en uso."""
-    ent_id = request.form.get('enterprise_id', type=int)
+    ent_id = (await request.form).get('enterprise_id', type=int)
 
     if g.user['role_name'] != 'SuperAdmin' and ent_id != g.user['enterprise_id']:
         return jsonify({'success': False, 'message': 'No tiene permisos para modificar esta empresa'}), 403
 
     try:
         from database import get_db_cursor
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM sys_enterprise_numeracion WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-            num = cursor.fetchone()
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT * FROM sys_enterprise_numeracion WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+            num = await cursor.fetchone()
             
             if not num:
-                flash("El registro seleccionado no existe.", "danger")
+                await flash("El registro seleccionado no existe.", "danger")
                 return redirect(url_for('core.admin_numeracion', ent_id=ent_id))
                 
-            # Validar si ya hay comprobantes (esquema de ventas) para este punto de venta
+            # Validar si ya hay await comprobantes(esquema de ventas) para este punto de venta
             if num['entidad_tipo'] == 'COMPROBANTE':
-                cursor.execute("""
+                await cursor.execute("""
                     SELECT 1 FROM erp_comprobantes 
                     WHERE enterprise_id = %s AND tipo_comprobante = %s AND punto_venta = %s
                     LIMIT 1
                 """, (ent_id, num['entidad_codigo'], num['punto_venta']))
-                if cursor.fetchone():
-                    flash(f"No se puede borrar el código {num['entidad_codigo']}. Ya existen comprobantes asignados en el esquema de ventas para el Punto de Venta {num['punto_venta']}.", "danger")
+                if await cursor.fetchone():
+                    await flash(f"No se puede borrar el código {num['entidad_codigo']}. Ya existen comprobantes asignados en el esquema de ventas para el Punto de Venta {num['punto_venta']}.", "danger")
                     return redirect(url_for('core.admin_numeracion', ent_id=ent_id))
             
             # Borrar si pasó la validación
-            cursor.execute("DELETE FROM sys_enterprise_numeracion WHERE id = %s", (id,))
-            flash(f"Punto de venta y Numerador ({num['entidad_codigo']}) eliminados correctamente.", "success")
+            await cursor.execute("DELETE FROM sys_enterprise_numeracion WHERE id = %s", (id,))
+            await flash(f"Punto de venta y Numerador ({num['entidad_codigo']}) eliminados correctamente.", "success")
             
     except Exception as e:
-        flash(f"Error al intentar borrar: {e}", "danger")
+        await flash(f"Error al intentar borrar: {e}", "danger")
         
     return redirect(url_for('core.admin_numeracion', ent_id=ent_id))
 
 @core_bp.route('/admin/numeracion/clone', methods=['POST'])
 @login_required
 @atomic_transaction('core', severity=6, impact_category='Configuration')
-def admin_numeracion_clone():
+async def admin_numeracion_clone():
     """Toma la configuración actual de un enterprise_id y la duplica hacia un nuevo punto de venta inicializando en 0."""
-    ent_id = request.form.get('enterprise_id', type=int)
-    nuevo_pv = request.form.get('nuevo_pv', type=int)
+    ent_id = (await request.form).get('enterprise_id', type=int)
+    nuevo_pv = (await request.form).get('nuevo_pv', type=int)
 
     if not ent_id or not nuevo_pv or nuevo_pv < 1:
-        flash("Datos inválidos para clonar.", "danger")
+        await flash("Datos inválidos para clonar.", "danger")
         return redirect(url_for('core.admin_numeracion', ent_id=ent_id))
 
     if g.user['role_name'] != 'SuperAdmin' and ent_id != g.user['enterprise_id']:
@@ -1675,35 +1679,35 @@ def admin_numeracion_clone():
 
     try:
         from database import get_db_cursor
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Seleccionar la base actual del PV 1 (o general) de la empresa
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT entidad_tipo, entidad_codigo 
                 FROM sys_enterprise_numeracion 
                 WHERE enterprise_id = %s 
                 GROUP BY entidad_tipo, entidad_codigo
             """, (ent_id,))
             
-            bases = cursor.fetchall()
+            bases = await cursor.fetchall()
             insertadas = 0
             
             for b in bases:
                 # Ver si ya existe para ese pv
-                cursor.execute("""
+                await cursor.execute("""
                     SELECT id FROM sys_enterprise_numeracion 
                     WHERE enterprise_id = %s AND entidad_tipo = %s AND entidad_codigo = %s AND punto_venta = %s
                 """, (ent_id, b[0], b[1], nuevo_pv))
                 
-                if not cursor.fetchone():
-                    cursor.execute("""
+                if not await cursor.fetchone():
+                    await cursor.execute("""
                         INSERT INTO sys_enterprise_numeracion (enterprise_id, entidad_tipo, entidad_codigo, punto_venta, ultimo_numero)
                         VALUES (%s, %s, %s, %s, 0)
                     """, (ent_id, b[0], b[1], nuevo_pv))
                     insertadas += 1
                     
-        flash(f"Se clonaron {insertadas} registros hacia el Punto de Venta {nuevo_pv} (iniciados en 0).", "success")
+        await flash(f"Se clonaron {insertadas} registros hacia el Punto de Venta {nuevo_pv} (iniciados en 0).", "success")
     except Exception as e:
-        flash(f"Error al clonar numeración: {e}", "danger")
+        await flash(f"Error al clonar numeración: {e}", "danger")
         
     return redirect(url_for('core.admin_numeracion', ent_id=ent_id))
 
@@ -1713,39 +1717,39 @@ def admin_numeracion_clone():
 @core_bp.route('/admin/tipos-comprobante')
 @login_required
 @permission_required('admin_users')
-def admin_tipos_comprobante():
+async def admin_tipos_comprobante():
     """Maestro global de tipos de comprobante."""
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM sys_tipos_comprobante ORDER BY codigo")
-        tipos = cursor.fetchall()
-    return render_template('admin_tipos_comprobante.html', tipos=tipos)
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM sys_tipos_comprobante ORDER BY codigo")
+        tipos = await cursor.fetchall()
+    return await render_template('admin_tipos_comprobante.html', tipos=tipos)
 
 
 @core_bp.route('/admin/tipos-comprobante/save', methods=['POST'])
 @login_required
 @permission_required('admin_users')
 @atomic_transaction('core', severity=7, impact_category='Configuration')
-def admin_tipos_comprobante_save():
+async def admin_tipos_comprobante_save():
     """Guarda o actualiza un tipo de comprobante maestro."""
-    orig_codigo = request.form.get('orig_codigo')
-    codigo = request.form.get('codigo')
-    descripcion = request.form.get('descripcion')
-    letra = request.form.get('letra', '')
-    es_fiscal = 1 if 'es_fiscal' in request.form else 0
-    es_numerable = 1 if 'es_numerable' in request.form else 0
-    afip_code = request.form.get('afip_code') or None
+    orig_codigo = (await request.form).get('orig_codigo')
+    codigo = (await request.form).get('codigo')
+    descripcion = (await request.form).get('descripcion')
+    letra = (await request.form).get('letra', '')
+    es_fiscal = 1 if 'es_fiscal' in (await request.form) else 0
+    es_numerable = 1 if 'es_numerable' in (await request.form) else 0
+    afip_code = (await request.form).get('afip_code') or None
 
     try:
         from database import get_db_cursor
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             if orig_codigo:
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_tipos_comprobante 
                     SET codigo = %s, descripcion = %s, letra = %s, es_fiscal = %s, afip_code = %s, es_numerable = %s
                     WHERE codigo = %s
                 """, (codigo, descripcion, letra, es_fiscal, afip_code, es_numerable, orig_codigo))
             else:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO sys_tipos_comprobante (codigo, descripcion, letra, es_fiscal, afip_code, es_numerable)
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """, (codigo, descripcion, letra, es_fiscal, afip_code, es_numerable))
@@ -1753,13 +1757,13 @@ def admin_tipos_comprobante_save():
                 # REQUERIMIENTO: Insertar en tabla de numeración para cada empresa
                 try:
                     from services.enterprise_init import sync_new_concept_to_all_enterprises
-                    sync_new_concept_to_all_enterprises('COMPROBANTE', codigo)
+                    await sync_new_concept_to_all_enterprises('COMPROBANTE', codigo)
                 except Exception as e:
                     logger.error(f"Error sincronizando nuevo tipo a empresas: {e}")
 
-        flash("Tipo de comprobante guardado correctamente.", "success")
+        await flash("Tipo de comprobante guardado correctamente.", "success")
     except Exception as e:
-        flash(f"Error al guardar: {e}", "danger")
+        await flash(f"Error al guardar: {e}", "danger")
         
     return redirect(url_for('core.admin_tipos_comprobante'))
 
@@ -1768,7 +1772,7 @@ def admin_tipos_comprobante_save():
 @core_bp.route('/admin/services')
 @login_required
 @permission_required('admin_users')
-def admin_services():
+async def admin_services():
     # Mapeos predefinidos para documentación (DOM vs DB)
     mappings = {
         'CuspideScraper': [
@@ -1803,15 +1807,15 @@ def admin_services():
     }
 
 
-    with get_db_cursor() as cursor:
-        cursor.execute("""
+    async with get_db_cursor() as cursor:
+        await cursor.execute("""
             SELECT id, nombre, tipo_servicio, clase_implementacion, url_objetivo, activo, last_status, created_at
             FROM sys_external_services 
             WHERE enterprise_id = %s
             ORDER BY created_at DESC
         """, (g.user['enterprise_id'],))
         desc = cursor.description
-        services_rows = cursor.fetchall()
+        services_rows = await cursor.fetchall()
         services = []
         for row in services_rows:
             s_dict = dict(zip([col[0] for col in desc], row))
@@ -1831,198 +1835,199 @@ def admin_services():
         'pool_size': len(rotation_manager.proxies_pool)
     }
         
-    return render_template('admin_services.html', services=services, rotation_status=rotation_status)
+    return await render_template('admin_services.html', services=services, rotation_status=rotation_status)
 
 @core_bp.route('/admin/services/control/<int:service_id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def control_service(service_id):
-    action = request.form.get('action') # start, stop, restart
+async def control_service(service_id):
+    action = (await request.form).get('action') # start, stop, restart
     
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             if action == 'start':
-                cursor.execute("UPDATE sys_external_services SET activo = 1, last_status = 'RUNNING' WHERE id = %s AND enterprise_id = %s", (service_id, g.user['enterprise_id']))
-                flash("Servicio iniciado correctamente.", "success")
+                await cursor.execute("UPDATE sys_external_services SET activo = 1, last_status = 'RUNNING' WHERE id = %s AND enterprise_id = %s", (service_id, g.user['enterprise_id']))
+                await flash("Servicio iniciado correctamente.", "success")
             elif action == 'stop':
-                cursor.execute("UPDATE sys_external_services SET activo = 0, last_status = 'STOPPED' WHERE id = %s AND enterprise_id = %s", (service_id, g.user['enterprise_id']))
-                flash("Servicio detenido.", "warning")
+                await cursor.execute("UPDATE sys_external_services SET activo = 0, last_status = 'STOPPED' WHERE id = %s AND enterprise_id = %s", (service_id, g.user['enterprise_id']))
+                await flash("Servicio detenido.", "warning")
             elif action == 'restart':
                 # Potentially clear counts or re-init in a real daemon, 
                 # here we just cycle status for visual feedback
-                cursor.execute("UPDATE sys_external_services SET activo = 1, last_status = 'RESTARTING' WHERE id = %s AND enterprise_id = %s", (service_id, g.user['enterprise_id']))
+                await cursor.execute("UPDATE sys_external_services SET activo = 1, last_status = 'RESTARTING' WHERE id = %s AND enterprise_id = %s", (service_id, g.user['enterprise_id']))
                 # In a real app, you might trigger a worker reload here
-                cursor.execute("UPDATE sys_external_services SET last_status = 'RUNNING' WHERE id = %s AND enterprise_id = %s", (service_id, g.user['enterprise_id']))
-                flash("Servicio reiniciado.", "info")
+                await cursor.execute("UPDATE sys_external_services SET last_status = 'RUNNING' WHERE id = %s AND enterprise_id = %s", (service_id, g.user['enterprise_id']))
+                await flash("Servicio reiniciado.", "info")
                 
-        _log_security_event("SERVICE_CONTROL", "SUCCESS", details=f"Service {service_id} {action}")
+        await _log_security_event("SERVICE_CONTROL", "SUCCESS", details=f"Service {service_id} {action}")
     except Exception as e:
-        flash(f"Error al controlar servicio: {e}", "danger")
+        await flash(f"Error al controlar servicio: {e}", "danger")
         
     return redirect(url_for('core.admin_services'))
 
 @core_bp.route('/admin/services/georef/sync', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def admin_georef_sync():
+async def admin_georef_sync():
     """Dispara la sincronización batch de localidades Georef."""
     try:
         from services.georef_service import GeorefService
         import threading
         
-        def run_sync():
+        async def run_async_sync():
             logger.info("Iniciando sincronización batch de Georef...")
-            count = GeorefService.load_localidades()
+            count = await GeorefService.load_localidades() # If this is sync, it's fine, but let's assume it might need await if changed
             logger.info(f"Sincronización batch finalizada. Total: {count}")
             
             # Opcional: Registrar evento en DB si se desea persistencia del resultado
-            with get_db_cursor() as cursor:
-                cursor.execute("""
+            async with get_db_cursor() as cursor:
+                await cursor.execute("""
                     INSERT INTO sys_security_logs (enterprise_id, action, status, details, ip_address)
                     VALUES (%s, 'GEOREF_SYNC', 'SUCCESS', %s, 'BATCH')
                 """, (1, f"Carga completa: {count} localidades")) # Enterprise 1 hardcoded or system context
 
-        # Ejecutar en hilo separado para no bloquear UI
-        threading.Thread(target=run_sync).start()
+        # Ejecutar en segundo plano (Quart way)
+        from quart import current_app
+        current_app.add_background_task(run_async_sync)
         
-        flash("La sincronización de localidades se ha iniciado en segundo plano. Puede tardar unos minutos.", "info")
+        await flash("La sincronización de localidades se ha iniciado en segundo plano. Puede tardar unos minutos.", "info")
     except Exception as e:
         logger.error(f"Error al iniciar sync georef: {e}")
-        flash(f"Error al iniciar sincronización: {e}", "danger")
+        await flash(f"Error al iniciar sincronización: {e}", "danger")
         
     return redirect(url_for('core.admin_services'))
 
 @core_bp.route('/admin/services/rotation', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def admin_rotation_control():
+async def admin_rotation_control():
     """Controla el servicio de rotación de IPs."""
     from services.rotation_service import rotation_manager
     
-    action = request.form.get('action')
+    action = (await request.form).get('action')
     
     try:
         if action == 'rotate':
             rotation_manager.rotate()
-            flash("Identidad rotada exitosamente.", "success")
+            await flash("Identidad rotada exitosamente.", "success")
         elif action == 'config':
-            mode = request.form.get('mode')
+            mode = (await request.form).get('mode')
             if mode in ['DIRECT', 'TOR', 'POOL', 'SCRAPERAPI']:
                 rotation_manager.mode = mode
                 # Re-init session if needed
-                rotation_manager._initialize_session()
-                flash(f"Modo de rotación cambiado a: {mode}", "success")
+                await rotation_manager._initialize_session()
+                await flash(f"Modo de rotación cambiado a: {mode}", "success")
             else:
-                flash("Modo no válido.", "danger")
+                await flash("Modo no válido.", "danger")
                 
-        _log_security_event("ROTATION_CONTROL", "SUCCESS", details=f"Action: {action}")
+        await _log_security_event("ROTATION_CONTROL", "SUCCESS", details=f"Action: {action}")
     except Exception as e:
-        flash(f"Error en rotación: {e}", "danger")
+        await flash(f"Error en rotación: {e}", "danger")
         
     return redirect(url_for('core.admin_services'))
 
 @core_bp.route('/admin/services/config/<int:service_id>', methods=['GET', 'POST'])
 @login_required
 @permission_required('admin_users')
-def admin_service_config(service_id):
+async def admin_service_config(service_id):
     """Interfaz para configurar tokens y credenciales de servicios externos."""
     ent_id = g.user['enterprise_id']
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         if request.method == 'POST':
-            config_str = request.form.get('config_json')
+            config_str = (await request.form).get('config_json')
             try:
                 # Validar que sea JSON válido
                 import json
                 json.loads(config_str)
                 
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_external_services 
                     SET config_json = %s 
                     WHERE id = %s AND enterprise_id = %s
                 """, (config_str, service_id, ent_id))
-                flash("Configuración actualizada correctamente.", "success")
+                await flash("Configuración actualizada correctamente.", "success")
                 return redirect(url_for('core.admin_services'))
             except Exception as e:
-                flash(f"Error en formato JSON o guardado: {e}", "danger")
+                await flash(f"Error en formato JSON o guardado: {e}", "danger")
 
-        cursor.execute("SELECT * FROM sys_external_services WHERE id = %s AND enterprise_id = %s", (service_id, ent_id))
-        service = cursor.fetchone()
+        await cursor.execute("SELECT * FROM sys_external_services WHERE id = %s AND enterprise_id = %s", (service_id, ent_id))
+        service = await cursor.fetchone()
         
     if not service:
-        flash("Servicio no encontrado.", "danger")
+        await flash("Servicio no encontrado.", "danger")
         return redirect(url_for('core.admin_services'))
         
-    return render_template('admin_service_config.html', service=service)
+    return await render_template('admin_service_config.html', service=service)
 
 @core_bp.route('/admin/services/create', methods=['GET', 'POST'])
 @login_required
 @permission_required('admin_users')
-def admin_service_create():
+async def admin_service_create():
     """Permite registrar un nuevo servicio externo (API/Scraper) para la empresa."""
     ent_id = g.user['enterprise_id']
     
     if request.method == 'POST':
-        nombre = request.form.get('nombre')
-        tipo_servicio = request.form.get('tipo_servicio')
-        clase_impl = request.form.get('clase_implementacion')
-        modo_captura = request.form.get('modo_captura')
-        url_objetivo = request.form.get('url_objetivo')
-        system_code = request.form.get('system_code')
-        config_json = request.form.get('config_json', '{}')
+        nombre = (await request.form).get('nombre')
+        tipo_servicio = (await request.form).get('tipo_servicio')
+        clase_impl = (await request.form).get('clase_implementacion')
+        modo_captura = (await request.form).get('modo_captura')
+        url_objetivo = (await request.form).get('url_objetivo')
+        system_code = (await request.form).get('system_code')
+        config_json = (await request.form).get('config_json', '{}')
         
         try:
             # Validar JSON
             import json
             json.loads(config_json)
             
-            with get_db_cursor() as cursor:
-                cursor.execute("""
+            async with get_db_cursor() as cursor:
+                await cursor.execute("""
                     INSERT INTO sys_external_services 
                     (enterprise_id, nombre, tipo_servicio, clase_implementacion, config_json, modo_captura, url_objetivo, system_code, activo, last_status)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 1, 'IDLE')
                 """, (ent_id, nombre, tipo_servicio, clase_impl, config_json, modo_captura, url_objetivo, system_code))
                 
-            flash(f"Servicio '{nombre}' registrado exitosamente.", "success")
-            _log_security_event("SERVICE_CREATE", "SUCCESS", details=f"New service: {nombre}")
+            await flash(f"Servicio '{nombre}' registrado exitosamente.", "success")
+            await _log_security_event("SERVICE_CREATE", "SUCCESS", details=f"New service: {nombre}")
             return redirect(url_for('core.admin_services'))
         except Exception as e:
-            flash(f"Error al registrar servicio: {e}", "danger")
+            await flash(f"Error al registrar servicio: {e}", "danger")
             
-    return render_template('admin_service_create.html')
+    return await render_template('admin_service_create.html')
 
 # --- SYSTEM DASHBOARD ---
 @core_bp.route('/admin/dashboard')
 @login_required
 @permission_required('admin_users')
-def admin_dashboard():
+async def admin_dashboard():
     """Dashboard consolidado de sistemas y estados externos."""
     from core.concurrency import get_active_tasks
     import time
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # 1. External Services Status
-        cursor.execute("SELECT id, nombre, activo, last_status, tipo_servicio FROM sys_external_services WHERE enterprise_id = %s", (g.user['enterprise_id'],))
-        services_status = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre, activo, last_status, tipo_servicio FROM sys_external_services WHERE enterprise_id = %s", (g.user['enterprise_id'],))
+        services_status = await cursor.fetchall()
         
         # 2. Recent Security Logs (Last 10 with status)
-        cursor.execute("""
+        await cursor.execute("""
             SELECT event_time, action, status, details, ip_address
             FROM sys_security_logs 
             WHERE enterprise_id = %s 
             ORDER BY event_time DESC LIMIT 10
         """, (g.user['enterprise_id'],))
-        recent_logs = cursor.fetchall()
+        recent_logs = await cursor.fetchall()
         
         # 3. Managed Crons Status
-        cursor.execute("SELECT id, nombre, estado, ultima_ejecucion, proxima_ejecucion FROM sys_crons WHERE enterprise_id = %s", (g.user['enterprise_id'],))
-        crons_status = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre, estado, ultima_ejecucion, proxima_ejecucion FROM sys_crons WHERE enterprise_id = %s", (g.user['enterprise_id'],))
+        crons_status = await cursor.fetchall()
 
     # Active Managed Tasks
-    active_tasks = get_active_tasks()
+    active_tasks = await get_active_tasks()
     
     now = __import__('datetime').datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    return render_template('admin_dashboard.html', 
+    return await render_template('admin_dashboard.html', 
                            services=services_status,
                            logs=recent_logs,
                            crons=crons_status,
@@ -2034,7 +2039,7 @@ def admin_dashboard():
 @core_bp.route('/admin/risk-dashboard')
 @login_required
 @permission_required('view_risk_dashboard')
-def admin_risk_dashboard():
+async def admin_risk_dashboard():
     """Dashboard de Riesgos FMECA – Heatmap, RPN y Mitigaciones Activas."""
     is_super = str(g.user.get('username', '')).lower() == 'superadmin'
     ent_id = g.user['enterprise_id']
@@ -2057,7 +2062,7 @@ def admin_risk_dashboard():
         date_filter_sql = "DATE(created_at) BETWEEN %s AND %s"
         date_params.extend([date_start, date_end])
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # -- 1. KPIs Globales --
         filters_1 = []
         params_1 = []
@@ -2070,7 +2075,7 @@ def admin_risk_dashboard():
             
         where_clause_1 = "WHERE " + " AND ".join(filters_1) if filters_1 else ""
 
-        cursor.execute(f"""
+        await cursor.execute(f"""
             SELECT 
                 COUNT(*) as total_ops,
                 SUM(CASE WHEN status = 'ERROR' THEN 1 ELSE 0 END) as total_errors,
@@ -2079,10 +2084,10 @@ def admin_risk_dashboard():
                 AVG(duration_ms) as avg_duration
             FROM sys_transaction_logs {where_clause_1}
         """, tuple(params_1))
-        kpis = cursor.fetchone() or {}
+        kpis = await cursor.fetchone() or {}
 
         # -- 2. Heatmap por Módulo (RPN = Severidad × Frecuencia de Error) --
-        cursor.execute(f"""
+        await cursor.execute(f"""
             SELECT 
                 module,
                 COUNT(*) as total_ops,
@@ -2096,7 +2101,7 @@ def admin_risk_dashboard():
             GROUP BY module
             ORDER BY rpn DESC
         """, tuple(params_1))
-        module_heatmap = cursor.fetchall()
+        module_heatmap = await cursor.fetchall()
 
         # -- 3. Distribución de Failure Modes --
         
@@ -2111,7 +2116,7 @@ def admin_risk_dashboard():
             
         where_clause_3 = "WHERE " + " AND ".join(filters_3)
 
-        cursor.execute(f"""
+        await cursor.execute(f"""
             SELECT 
                 failure_mode,
                 COUNT(*) as total,
@@ -2121,7 +2126,7 @@ def admin_risk_dashboard():
             GROUP BY failure_mode
             ORDER BY total DESC
         """, tuple(params_3))
-        failure_modes = cursor.fetchall()
+        failure_modes = await cursor.fetchall()
 
         # -- 4. Últimas Operaciones Críticas (Severidad >= 8 + Error) --
         filters_4 = ["severity >= 8", "status = 'ERROR'"]
@@ -2135,7 +2140,7 @@ def admin_risk_dashboard():
             
         where_clause_4 = "WHERE " + " AND ".join(filters_4)
 
-        cursor.execute(f"""
+        await cursor.execute(f"""
             SELECT enterprise_id, module, endpoint, status, severity, impact_category, 
                    failure_mode, error_message, duration_ms, created_at
             FROM sys_transaction_logs
@@ -2143,7 +2148,7 @@ def admin_risk_dashboard():
             ORDER BY created_at DESC
             LIMIT 20
         """, tuple(params_4))
-        critical_events = cursor.fetchall()
+        critical_events = await cursor.fetchall()
 
         # -- 5. Mitigaciones Activas Recientes --
         filters_5 = []
@@ -2158,7 +2163,7 @@ def admin_risk_dashboard():
             
         where_clause_5 = "WHERE " + " AND ".join(filters_5) if filters_5 else ""
 
-        cursor.execute(f"""
+        await cursor.execute(f"""
             SELECT sys_risk_active_mitigations.*, sys_risk_mitigation_rules.action_type, sys_risk_mitigation_rules.failure_mode as rule_mode, sys_risk_mitigation_rules.min_severity
             FROM sys_risk_active_mitigations
             JOIN sys_risk_mitigation_rules ON sys_risk_active_mitigations.rule_id = sys_risk_mitigation_rules.id
@@ -2166,7 +2171,7 @@ def admin_risk_dashboard():
             ORDER BY sys_risk_active_mitigations.started_at DESC
             LIMIT 10
         """, tuple(params_5))
-        mitigations = cursor.fetchall()
+        mitigations = await cursor.fetchall()
 
         # -- 6. Trend de errores (Siempre usa 7 dias o el rango seleccionado para dibujar la linea temporal) --
         filters_6 = []
@@ -2187,7 +2192,7 @@ def admin_risk_dashboard():
              
         where_clause_6 = "WHERE " + " AND ".join(filters_6)
 
-        cursor.execute(f"""
+        await cursor.execute(f"""
             SELECT 
                 DATE(created_at) as day,
                 module,
@@ -2198,7 +2203,7 @@ def admin_risk_dashboard():
             GROUP BY DATE(created_at), module
             ORDER BY day, module
         """, tuple(params_6))
-        trend_raw = cursor.fetchall()
+        trend_raw = await cursor.fetchall()
         
         # Structure the data for multi-line chart
         # We need a list of unique days (labels) and a mapping of module -> list of values
@@ -2243,7 +2248,7 @@ def admin_risk_dashboard():
                 'color': colors[i % len(colors)]
             })
 
-    return render_template('admin_risk_dashboard.html',
+    return await render_template('admin_risk_dashboard.html',
                            kpis=kpis,
                            module_heatmap=module_heatmap,
                            failure_modes=failure_modes,
@@ -2260,7 +2265,7 @@ def admin_risk_dashboard():
 @core_bp.route('/admin/threads')
 @login_required
 @permission_required('sysadmin')
-def admin_threads():
+async def admin_threads():
     """Muestra una consola con los hilos activos y procesos OS de la aplicación."""
     import threading
     from core.concurrency import get_active_tasks
@@ -2271,7 +2276,7 @@ def admin_threads():
     current_os_pid = os.getpid()
     
     # 1. Tareas gestionadas (DB)
-    managed_tasks = get_active_tasks()
+    managed_tasks = await get_active_tasks()
     now = time.time()
     
     top_level_tasks = []
@@ -2334,7 +2339,7 @@ def admin_threads():
             'daemon': t.daemon
         })
         
-    return render_template('admin_threads.html', 
+    return await render_template('admin_threads.html', 
                            top_level=top_level_tasks,
                            dependents=dependent_tasks,
                            native_threads=native_threads,
@@ -2345,12 +2350,12 @@ def admin_threads():
 @core_bp.route('/admin/threads/cancel/<task_id>', methods=['POST'])
 @login_required
 @permission_required('sysadmin')
-def cancel_thread(task_id):
+async def cancel_thread(task_id):
     """Envía señal de cancelación a un hilo gestionado."""
     from core.concurrency import signal_stop
     
-    signal_stop(task_id)
-    flash(f"Señal de cancelación enviada a la tarea {task_id}. El hilo se detendrá al finalizar su ciclo actual.", "warning")
+    await signal_stop(task_id)
+    await flash(f"Señal de cancelación enviada a la tarea {task_id}. El hilo se detendrá al finalizar su ciclo actual.", "warning")
     
     return redirect(url_for('core.admin_threads'))
 
@@ -2394,7 +2399,7 @@ _IMPACT_LABELS = {
 @core_bp.route('/admin/error-log')
 @login_required
 @permission_required('view_error_log')
-def error_log():
+async def error_log():
     """Módulo de consulta de errores — perfil Negocio / Experto."""
     is_super = str(g.user.get('username', '')).lower() == 'superadmin'
     ent_id   = g.user['enterprise_id']
@@ -2453,13 +2458,13 @@ def error_log():
     where_sql = "WHERE " + " AND ".join(conditions) if conditions else ""
     offset = (page - 1) * per_page
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Total para paginación
-        cursor.execute(f"SELECT COUNT(*) as cnt FROM sys_transaction_logs {where_sql}", params)
-        total = cursor.fetchone()['cnt']
+        await cursor.execute(f"SELECT COUNT(*) as cnt FROM sys_transaction_logs {where_sql}", params)
+        total = await cursor.fetchone()['cnt']
 
         # Registros paginados
-        cursor.execute(f"""
+        await cursor.execute(f"""
             SELECT id, enterprise_id, user_id, module, endpoint, request_method,
                    request_data, status, severity, impact_category, failure_mode,
                    error_message, duration_ms, created_at,
@@ -2470,22 +2475,22 @@ def error_log():
             ORDER BY created_at DESC
             LIMIT %s OFFSET %s
         """, params + [per_page, offset])
-        errors = cursor.fetchall()
+        errors = await cursor.fetchall()
 
         # Listas para filtros desplegables
-        cursor.execute("SELECT DISTINCT module FROM sys_transaction_logs WHERE module IS NOT NULL ORDER BY module")
-        modules_list = [r['module'] for r in cursor.fetchall()]
+        await cursor.execute("SELECT DISTINCT module FROM sys_transaction_logs WHERE module IS NOT NULL ORDER BY module")
+        modules_list = [r['module'] for r in await cursor.fetchall()]
 
-        cursor.execute("SELECT DISTINCT failure_mode FROM sys_transaction_logs WHERE failure_mode IS NOT NULL ORDER BY failure_mode")
-        failures_list = [r['failure_mode'] for r in cursor.fetchall()]
+        await cursor.execute("SELECT DISTINCT failure_mode FROM sys_transaction_logs WHERE failure_mode IS NOT NULL ORDER BY failure_mode")
+        failures_list = [r['failure_mode'] for r in await cursor.fetchall()]
 
         # Lista de usuarios que han tenido errores
-        cursor.execute("SELECT DISTINCT user_id FROM sys_transaction_logs WHERE user_id IS NOT NULL ORDER BY user_id")
-        users_list = [r['user_id'] for r in cursor.fetchall()]
+        await cursor.execute("SELECT DISTINCT user_id FROM sys_transaction_logs WHERE user_id IS NOT NULL ORDER BY user_id")
+        users_list = [r['user_id'] for r in await cursor.fetchall()]
 
     total_pages = max(1, (total + per_page - 1) // per_page)
 
-    return render_template('admin_error_log.html',
+    return await render_template('admin_error_log.html',
                            errors=errors,
                            total=total,
                            page=page,
@@ -2511,15 +2516,15 @@ def error_log():
 @core_bp.route('/admin/error-log/detail/<int:error_id>')
 @login_required
 @permission_required('view_error_log')
-def error_log_detail(error_id):
+async def error_log_detail(error_id):
     """Detalle completo de un error — vista Negocio o Experto."""
     import json as _json
     is_super  = str(g.user.get('username', '')).lower() == 'superadmin'
     ent_id    = g.user['enterprise_id']
     f_profile = request.args.get('profile', 'business')
 
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT sys_transaction_logs.*, sys_users_creator.username, sys_users_creator.email as user_email, 
                    DATEDIFF(NOW(), sys_transaction_logs.created_at) as dias_sin_resolucion,
                    sys_users_assignee.username as assignee_name
@@ -2528,15 +2533,15 @@ def error_log_detail(error_id):
             LEFT JOIN sys_users sys_users_assignee ON sys_transaction_logs.assigned_to = sys_users_assignee.id
             WHERE sys_transaction_logs.id = %s
         """, (error_id,))
-        error = cursor.fetchone()
+        error = await cursor.fetchone()
 
     if not error:
-        flash("Registro de error no encontrado.", "danger")
+        await flash("Registro de error no encontrado.", "danger")
         return redirect(url_for('core.error_log'))
 
     # Verificar que el error pertenece a la empresa del usuario (o es superadmin)
     if not is_super and error['enterprise_id'] != ent_id and error['enterprise_id'] != 0:
-        flash("Acceso denegado.", "danger")
+        await flash("Acceso denegado.", "danger")
         return redirect(url_for('core.error_log'))
 
     # Parsear request_data (JSON string -> dict)
@@ -2566,7 +2571,7 @@ def error_log_detail(error_id):
     # Fetch users habilitados para soporte (rol soporte_tecnico)
     users_list = []
     try:
-        cursor.execute("""
+        await cursor.execute("""
             SELECT sys_users.id, sys_users.username
             FROM sys_users
             JOIN sys_roles ON sys_users.role_id = sys_roles.id AND sys_roles.enterprise_id = sys_users.enterprise_id
@@ -2574,12 +2579,12 @@ def error_log_detail(error_id):
               AND (sys_users.enterprise_id = %s OR sys_users.enterprise_id = 0)
             ORDER BY sys_users.username
         """, (ent_id,))
-        users_list = cursor.fetchall()
+        users_list = await cursor.fetchall()
     except Exception:
         pass
 
 
-    return render_template('admin_error_detail.html',
+    return await render_template('admin_error_detail.html',
                            error=error,
                            req_data=req_data_parsed,
                            history_list=history_parsed,
@@ -2592,19 +2597,19 @@ def error_log_detail(error_id):
 @core_bp.route('/admin/error-log/update/<int:error_id>', methods=['POST'])
 @login_required
 @permission_required('view_error_log')
-def error_log_update_incident(error_id):
+async def error_log_update_incident(error_id):
     import json
     import datetime
     from services import email_service
     is_super = str(g.user.get('username', '')).lower() == 'superadmin'
 
-    status = request.form.get('incident_status')
-    asignado_str = request.form.get('assigned_to')  # id user o empty
-    notas = request.form.get('new_note', '').strip()
-    res_date = request.form.get('resolution_date')
+    status = (await request.form).get('incident_status')
+    asignado_str = (await request.form).get('assigned_to')  # id user o empty
+    notas = (await request.form).get('new_note', '').strip()
+    res_date = (await request.form).get('resolution_date')
 
     if not status:
-        flash("Estado de incidente requerido.", "warning")
+        await flash("Estado de incidente requerido.", "warning")
         return redirect(url_for('core.error_log_detail', error_id=error_id, profile='business'))
 
     assigned_to = None
@@ -2615,10 +2620,10 @@ def error_log_update_incident(error_id):
         res_date = datetime.datetime.strptime(res_date, "%Y-%m-%d").strftime("%Y-%m-%d %H:%M:%S")
 
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Check exist y ver permisos
-            cursor.execute("SELECT id, enterprise_id, management_history, user_id FROM sys_transaction_logs WHERE id = %s", (error_id,))
-            error = cursor.fetchone()
+            await cursor.execute("SELECT id, enterprise_id, management_history, user_id FROM sys_transaction_logs WHERE id = %s", (error_id,))
+            error = await cursor.fetchone()
             if not error: raise Exception("Incidente no encontrado.")
             if not is_super and error['enterprise_id'] != g.user['enterprise_id']: raise Exception("No autorizado.")
 
@@ -2639,7 +2644,7 @@ def error_log_update_incident(error_id):
 
             new_history_str = json.dumps(history)
 
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE sys_transaction_logs 
                 SET incident_status = %s, assigned_to = %s, resolution_date = %s, management_history = %s
                 WHERE id = %s
@@ -2654,16 +2659,16 @@ def error_log_update_incident(error_id):
                 
                 # Usuario original
                 if error.get('user_id'):
-                    cursor.execute("SELECT email, username FROM sys_users WHERE id = %s", (error.get('user_id'),))
-                    u = cursor.fetchone()
+                    await cursor.execute("SELECT email, username FROM sys_users WHERE id = %s", (error.get('user_id'),))
+                    u = await cursor.fetchone()
                     if u and u['email']:
                         emails_to_notify.add(u['email'])
                         names_to_notify.append(u['username'])
 
                 # Responsable asignado
                 if assigned_to:
-                    cursor.execute("SELECT email, username FROM sys_users WHERE id = %s", (assigned_to,))
-                    resp = cursor.fetchone()
+                    await cursor.execute("SELECT email, username FROM sys_users WHERE id = %s", (assigned_to,))
+                    resp = await cursor.fetchone()
                     if resp and resp['email']:
                         emails_to_notify.add(resp['email'])
 
@@ -2672,29 +2677,26 @@ def error_log_update_incident(error_id):
                     pass
 
                 # Dispatch async mails
-                app_ctx = current_app.app_context()
-                def send_inc_mail(ctx, e_mail, e_name):
-                    with ctx:
-                        email_service.enviar_notificacion_incidente(
-                            e_mail,
-                            e_name,
-                            error_id,
-                            status,
-                            notas,
-                            history,
-                            error['enterprise_id']
-                        )
+                async def send_inc_mail_1(e_mail, e_name):
+                    await email_service.enviar_notificacion_incidente(
+                        e_mail,
+                        e_name,
+                        error_id,
+                        status,
+                        notas,
+                        history,
+                        error['enterprise_id']
+                    )
 
                 for mail in emails_to_notify:
                     if mail:
                         uname = names_to_notify[0] if names_to_notify else "Usuario"
-                        import threading
-                        threading.Thread(target=send_inc_mail, args=(app_ctx, mail, uname)).start()
+                        current_app.add_background_task(send_inc_mail_1, mail, uname)
 
-        flash("Incidente actualizado correctamente.", "success")
+        await flash("Incidente actualizado correctamente.", "success")
 
     except Exception as e:
-        flash(f"Error actualizando incidente: {e}", "danger")
+        await flash(f"Error actualizando incidente: {e}", "danger")
 
     return redirect(url_for('core.error_log_detail', error_id=error_id, profile='expert'))
 
@@ -2702,13 +2704,13 @@ def error_log_update_incident(error_id):
 @core_bp.route('/admin/error-log/quick-action/<int:error_id>', methods=['POST'])
 @login_required
 @permission_required('view_error_log')
-def error_log_quick_action(error_id):
+async def error_log_quick_action(error_id):
     """Acción rápida desde la lista: tomar / resolver / reabrir un incidente sin ir al detalle."""
     import json, datetime, threading
     from services import email_service
 
-    action = request.form.get('action')  # 'take' | 'resolve' | 'reopen'
-    return_url = request.form.get('return_url', url_for('core.error_log', profile='expert'))
+    action = (await request.form).get('action')  # 'take' | 'resolve' | 'reopen'
+    return_url = (await request.form).get('return_url', url_for('core.error_log', profile='expert'))
 
     action_map = {
         'take':     ('IN_PROGRESS', f'Tomado por {g.user["username"]}'),
@@ -2718,19 +2720,19 @@ def error_log_quick_action(error_id):
         'reopen':   ('OPEN',        f'Reabierto por {g.user["username"]}'),
     }
     if action not in action_map:
-        flash("Acción no reconocida.", "warning")
+        await flash("Acción no reconocida.", "warning")
         return redirect(return_url)
 
     new_status, auto_note = action_map[action]
     is_super = str(g.user.get('username', '')).lower() == 'superadmin'
 
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute(
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute(
                 "SELECT id, enterprise_id, management_history, user_id FROM sys_transaction_logs WHERE id = %s",
                 (error_id,)
             )
-            err = cursor.fetchone()
+            err = await cursor.fetchone()
             if not err:
                 raise Exception("Incidente no encontrado.")
             if not is_super and err['enterprise_id'] != g.user['enterprise_id']:
@@ -2753,7 +2755,7 @@ def error_log_quick_action(error_id):
             # Al "tomar" → me asigno; al resolver/reabrir → sin tocar el assigned_to existente
             assigned_to = g.user['id'] if action == 'take' else err.get('assigned_to')
 
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE sys_transaction_logs
                 SET incident_status   = %s,
                     assigned_to       = %s,
@@ -2767,22 +2769,22 @@ def error_log_quick_action(error_id):
 
             # Usuario que originó el error
             if err.get('user_id'):
-                cursor.execute(
+                await cursor.execute(
                     "SELECT email, username FROM sys_users WHERE id = %s",
                     (err['user_id'],)
                 )
-                u = cursor.fetchone()
+                u = await cursor.fetchone()
                 if u and u.get('email'):
                     emails_to_notify.add(u['email'])
                     names_to_notify.append(u['username'])
 
             # Responsable asignado (puede ser yo mismo al "tomar")
             if assigned_to:
-                cursor.execute(
+                await cursor.execute(
                     "SELECT email, username FROM sys_users WHERE id = %s",
                     (assigned_to,)
                 )
-                resp = cursor.fetchone()
+                resp = await cursor.fetchone()
                 if resp and resp.get('email'):
                     emails_to_notify.add(resp['email'])
                     if resp['username'] not in names_to_notify:
@@ -2790,31 +2792,25 @@ def error_log_quick_action(error_id):
 
             # Dispatch async para no bloquear la respuesta
             if emails_to_notify:
-                app_ctx = current_app.app_context()
-
-                def send_inc_mail(ctx, e_mail, e_name):
-                    with ctx:
-                        email_service.enviar_notificacion_incidente(
-                            e_mail,
-                            e_name,
-                            error_id,
-                            new_status,
-                            auto_note,
-                            history,
-                            err['enterprise_id']
-                        )
+                async def send_inc_mail_2(e_mail, e_name):
+                    await email_service.enviar_notificacion_incidente(
+                        e_mail,
+                        e_name,
+                        error_id,
+                        new_status,
+                        auto_note,
+                        history,
+                        err['enterprise_id']
+                    )
 
                 for mail in emails_to_notify:
                     uname = names_to_notify[0] if names_to_notify else "Usuario"
-                    threading.Thread(
-                        target=send_inc_mail,
-                        args=(app_ctx, mail, uname)
-                    ).start()
+                    current_app.add_background_task(send_inc_mail_2, mail, uname)
 
-        flash(f"Incidente #{error_id} → {new_status}. Notificaciones enviadas.", "success")
+        await flash(f"Incidente #{error_id} → {new_status}. Notificaciones enviadas.", "success")
 
     except Exception as e:
-        flash(f"Error en acción rápida: {e}", "danger")
+        await flash(f"Error en acción rápida: {e}", "danger")
 
     return redirect(return_url)
 
@@ -2823,10 +2819,10 @@ def error_log_quick_action(error_id):
 @core_bp.route('/admin/proyectos', methods=['GET'])
 @login_required
 @permission_required('admin_users')
-def admin_proyectos():
+async def admin_proyectos():
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT sys_proyectos_requerimientos.*, sys_users.username as reported_by
             FROM sys_proyectos_requerimientos
             LEFT JOIN sys_users ON sys_proyectos_requerimientos.user_id = sys_users.id
@@ -2834,54 +2830,54 @@ def admin_proyectos():
             ORDER BY FIELD(sys_proyectos_requerimientos.estado, 'PENDIENTE', 'EN_PROGRESO', 'COMPLETADO', 'DESCARTADO'), 
                      FIELD(sys_proyectos_requerimientos.prioridad, 'ALTA', 'MEDIA', 'BAJA'), sys_proyectos_requerimientos.created_at DESC
         """, (ent_id,))
-        proyectos = cursor.fetchall()
-    return render_template('admin_proyectos.html', proyectos=proyectos)
+        proyectos = await cursor.fetchall()
+    return await render_template('admin_proyectos.html', proyectos=proyectos)
 
 @core_bp.route('/admin/proyectos/guardar', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def admin_proyectos_guardar():
+async def admin_proyectos_guardar():
     ent_id = g.user['enterprise_id']
     user_id = g.user['id']
     
-    id_req = request.form.get('id')
-    titulo = request.form.get('titulo')
-    descripcion = request.form.get('descripcion')
-    tipo = request.form.get('tipo', 'REQUERIMIENTO')
-    estado = request.form.get('estado', 'PENDIENTE')
-    prioridad = request.form.get('prioridad', 'MEDIA')
+    id_req = (await request.form).get('id')
+    titulo = (await request.form).get('titulo')
+    descripcion = (await request.form).get('descripcion')
+    tipo = (await request.form).get('tipo', 'REQUERIMIENTO')
+    estado = (await request.form).get('estado', 'PENDIENTE')
+    prioridad = (await request.form).get('prioridad', 'MEDIA')
 
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
             if id_req:
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_proyectos_requerimientos 
                     SET titulo=%s, descripcion=%s, tipo=%s, estado=%s, prioridad=%s
                     WHERE id=%s AND enterprise_id=%s
                 """, (titulo, descripcion, tipo, estado, prioridad, id_req, ent_id))
-                flash("Requerimiento actualizado.", "success")
+                await flash("Requerimiento actualizado.", "success")
             else:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO sys_proyectos_requerimientos 
                     (enterprise_id, titulo, descripcion, tipo, estado, prioridad, user_id)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """, (ent_id, titulo, descripcion, tipo, estado, prioridad, user_id))
-                flash("Requerimiento creado.", "success")
+                await flash("Requerimiento creado.", "success")
         except Exception as e:
-            flash(f"Error al guardar: {e}", "danger")
+            await flash(f"Error al guardar: {e}", "danger")
             
     return redirect(url_for('core.admin_proyectos'))
 
 @core_bp.route('/admin/proyectos/eliminar/<int:id>', methods=['POST'])
 @login_required
 @permission_required('admin_users')
-def admin_proyectos_eliminar(id):
+async def admin_proyectos_eliminar(id):
     ent_id = g.user['enterprise_id']
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
-            cursor.execute("DELETE FROM sys_proyectos_requerimientos WHERE id=%s AND enterprise_id=%s", (id, ent_id))
-            flash("Requerimiento eliminado.", "success")
+            await cursor.execute("DELETE FROM sys_proyectos_requerimientos WHERE id=%s AND enterprise_id=%s", (id, ent_id))
+            await flash("Requerimiento eliminado.", "success")
         except Exception as e:
-            flash(f"Error al eliminar: {e}", "danger")
+            await flash(f"Error al eliminar: {e}", "danger")
     return redirect(url_for('core.admin_proyectos'))
 

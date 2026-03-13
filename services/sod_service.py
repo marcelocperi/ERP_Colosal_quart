@@ -11,7 +11,7 @@ ROLES_SOD = {
         'permisos': ['view_articulos', 'view_movimientos']
     },
     'COMPRADOR': {
-        'description': 'Gestiona OC y proveedores (no aprueba ni recibe)',
+        'description': 'Gestiona OC y await proveedores(no aprueba ni recibe)',
         'permisos': ['create_orden_compra', 'view_proveedores', 'view_compras']
     },
     'APROBADOR_COMPRAS': {
@@ -27,7 +27,7 @@ ROLES_SOD = {
         'permisos': ['view_clientes', 'create_presupuesto', 'view_pedidos', 'view_articulos']
     },
     'FACTURACION': {
-        'description': 'Emisión de comprobantes (no vende ni cobra)',
+        'description': 'Emisión de await comprobantes(no vende ni cobra)',
         'permisos': ['facturar_ventas', 'facturar_compras', 'view_compras', 'view_clientes']
     },
     'ALMACENISTA': {
@@ -100,25 +100,25 @@ USUARIOS_SOD = [
     {'username': 'soporte1', 'role': 'SOPORTE_TECNICO', 'full_name': 'Soporte Nivel 1'},
 ]
 
-def initialize_sod_structure(enterprise_id: int):
+async def initialize_sod_structure(enterprise_id: int):
     """
     Inicializa roles y usuarios SoD para una nueva empresa.
     """
     logger.info(f"Implementando SoD para enterprise_id={enterprise_id}")
     pwd_hash = generate_password_hash('BiblioSOD2026!')
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # 1. Crear Roles y Asignar Permisos
         for role_name, role_data in ROLES_SOD.items():
             try:
                 # Check Role
-                cursor.execute("SELECT id FROM sys_roles WHERE name=%s AND enterprise_id=%s", (role_name, enterprise_id))
-                row = cursor.fetchone()
+                await cursor.execute("SELECT id FROM sys_roles WHERE name=%s AND enterprise_id=%s", (role_name, enterprise_id))
+                row = await cursor.fetchone()
                 if row:
                     role_id = row['id']
                 else:
                     # Create role
-                    cursor.execute("INSERT INTO sys_roles (enterprise_id, name, description) VALUES (%s, %s, %s)", 
+                    await cursor.execute("INSERT INTO sys_roles (enterprise_id, name, description) VALUES (%s, %s, %s)", 
                                   (enterprise_id, role_name, role_data['description']))
                     role_id = cursor.lastrowid
                     logger.info(f"Rol {role_name} creado (ID: {role_id})")
@@ -126,14 +126,14 @@ def initialize_sod_structure(enterprise_id: int):
                 # Assign Permissions
                 for p_code in role_data['permisos']:
                     # Find permission (local or global)
-                    cursor.execute("SELECT id FROM sys_permissions WHERE code=%s AND (enterprise_id=%s OR enterprise_id=0) ORDER BY enterprise_id DESC LIMIT 1", (p_code, enterprise_id))
-                    perm = cursor.fetchone()
+                    await cursor.execute("SELECT id FROM sys_permissions WHERE code=%s AND (enterprise_id=%s OR enterprise_id=0) ORDER BY enterprise_id DESC LIMIT 1", (p_code, enterprise_id))
+                    perm = await cursor.fetchone()
                     if not perm:
                         logger.warning(f"Permiso {p_code} no encontrado para rol {role_name}")
                         continue
                     
                     try:
-                        cursor.execute("INSERT INTO sys_role_permissions (enterprise_id, role_id, permission_id) VALUES (%s, %s, %s)", 
+                        await cursor.execute("INSERT INTO sys_role_permissions (enterprise_id, role_id, permission_id) VALUES (%s, %s, %s)", 
                                       (enterprise_id, role_id, perm['id']))
                         # logger.debug(f"Permiso {p_code} asignado a {role_name}")
                     except Exception as e:
@@ -148,20 +148,20 @@ def initialize_sod_structure(enterprise_id: int):
         for u in USUARIOS_SOD:
             try:
                 # Check user
-                cursor.execute("SELECT id FROM sys_users WHERE username=%s AND enterprise_id=%s", (u['username'], enterprise_id))
-                if cursor.fetchone():
+                await cursor.execute("SELECT id FROM sys_users WHERE username=%s AND enterprise_id=%s", (u['username'], enterprise_id))
+                if await cursor.fetchone():
                     continue
                 
                 # Get role ID
-                cursor.execute("SELECT id FROM sys_roles WHERE name=%s AND enterprise_id=%s", (u['role'], enterprise_id))
-                role_row = cursor.fetchone()
+                await cursor.execute("SELECT id FROM sys_roles WHERE name=%s AND enterprise_id=%s", (u['role'], enterprise_id))
+                role_row = await cursor.fetchone()
                 if not role_row:
                     logger.warning(f"Rol {u['role']} no encontrado para usuario {u['username']}")
                     continue
                 
                 # Create user
                 email = f"{u['username']}@biblioteca.local"
-                cursor.execute("INSERT INTO sys_users (enterprise_id, username, password_hash, role_id, email) VALUES (%s, %s, %s, %s, %s)",
+                await cursor.execute("INSERT INTO sys_users (enterprise_id, username, password_hash, role_id, email) VALUES (%s, %s, %s, %s, %s)",
                               (enterprise_id, u['username'], pwd_hash, role_row['id'], email))
                 logger.info(f"Usuario {u['username']} creado")
             except Exception as e:
@@ -324,4 +324,4 @@ if __name__ == "__main__":
     # Configuración básica de logging para ejecución standalone
     logging.basicConfig(level=logging.INFO)
     ent_id = int(sys.argv[1]) if len(sys.argv) > 1 else 1
-    initialize_sod_structure(ent_id)
+    await initialize_sod_structure(ent_id)

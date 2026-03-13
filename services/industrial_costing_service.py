@@ -15,20 +15,20 @@ class IndustrialCostingService:
     # FASE 1.2: COSTO DE MATERIALES (BOM Roll-up)
     # -----------------------------------------------
     @staticmethod
-    def get_industrial_cost(enterprise_id, producto_id, recursive=False):
+    async def get_industrial_cost(enterprise_id, producto_id, recursive=False):
         """
         Calcula el costo total proyectado para un artículo producido.
         Si recursive=True, se usa para llamadas internas en explosión multi-nivel.
         Costo = Σ(Material_i * Qty_i * Costo_Capa_i) + Σ(Gastos Normalizados por Unidad)
         """
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Buscar receta activa
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT id FROM cmp_recetas_bom 
                 WHERE enterprise_id = %s AND producto_id = %s AND activo = 1
                 LIMIT 1
             """, (enterprise_id, producto_id))
-            rec_row = cursor.fetchone()
+            rec_row = await cursor.fetchone()
             
             if not rec_row:
                 if recursive: return None
@@ -44,15 +44,15 @@ class IndustrialCostingService:
             total_materiales = Decimal('0')
 
             # 2. Sumar materiales con merma
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT articulo_id, cantidad, porcentaje_merma_esperada 
                 FROM cmp_recetas_detalle WHERE receta_id = %s
             """, (rec_id,))
-            items = cursor.fetchall()
+            items = await cursor.fetchall()
                 
             for it in items:
                 # 2.1 Recursividad: ¿Es este componente también producido (semielaborado)?
-                comp_costo_data = IndustrialCostingService.get_industrial_cost(
+                comp_costo_data = await IndustrialCostingService.get_industrial_cost(
                     enterprise_id, it['articulo_id'], recursive=True
                 )
                 
@@ -60,16 +60,16 @@ class IndustrialCostingService:
                     costo_unitario = Decimal(str(comp_costo_data['costo_total_industrial']))
                 else:
                     # 2.2 Sourcing fallback: Última recepción → Mejor precio → 0
-                    source = SourcingService.get_best_option(enterprise_id, it['articulo_id'], strategy='LAST_RECEPTION')
+                    source = await SourcingService.get_best_option(enterprise_id, it['articulo_id'], strategy='LAST_RECEPTION')
                     if not source:
-                        source = SourcingService.get_best_option(enterprise_id, it['articulo_id'], strategy='BEST_PRICE')
+                        source = await SourcingService.get_best_option(enterprise_id, it['articulo_id'], strategy='BEST_PRICE')
                     costo_unitario = Decimal(str(source['precio_referencia'])) if source else Decimal('0')
                 
                 factor_merma = Decimal('1') + (Decimal(str(it['porcentaje_merma_esperada'])) / Decimal('100'))
                 total_materiales += Decimal(str(it['cantidad'])) * factor_merma * costo_unitario
 
             # 3. FASE 1.3: Sumar Gastos Indirectos normalizados por unidad
-            overhead = IndustrialCostingService.get_overhead_por_unidad(enterprise_id, producto_id, cursor)
+            overhead = await IndustrialCostingService.get_overhead_por_unidad(enterprise_id, producto_id, cursor)
             total_indirectos = Decimal(str(overhead['total_overhead_por_unidad']))
             margen = Decimal(str(overhead['margen_promedio']))
 
@@ -90,25 +90,25 @@ class IndustrialCostingService:
     # FASE 1.3: GESTIÓN DE GASTOS INDIRECTOS
     # -----------------------------------------------
     @staticmethod
-    def get_overhead_por_unidad(enterprise_id, articulo_id, cursor=None):
+    async def get_overhead_por_unidad(enterprise_id, articulo_id, cursor=None):
         """
         Recupera y normaliza los gastos indirectos de un artículo por unidad producida.
         Los gastos de tipo BATCH se dividen por cantidad_batch para obtener el costo/unidad.
         """
-        def _query(cur):
-            cur.execute("""
+        async def _query(cur):
+            await cur.execute("""
                 SELECT tipo_gasto, descripcion, base_calculo, cantidad_batch, 
                        monto_estimado, porcentaje_margen_esperado
                 FROM cmp_articulos_costos_indirectos
                 WHERE enterprise_id = %s AND articulo_id = %s AND activo = 1
             """, (enterprise_id, articulo_id))
-            return cur.fetchall()
+            return await cur.fetchall()
 
         if cursor:
-            rows = _query(cursor)
+            rows = await _query(cursor)
         else:
-            with get_db_cursor(dictionary=True) as cur:
-                rows = _query(cur)
+            async with get_db_cursor(dictionary=True) as cur:
+                rows = await _query(cur)
 
         total_overhead = Decimal('0')
         margen_acum = Decimal('0')
@@ -145,14 +145,14 @@ class IndustrialCostingService:
         }
 
     @staticmethod
-    def agregar_gasto_indirecto(enterprise_id, articulo_id, tipo_gasto, descripcion,
+    async def agregar_gasto_indirecto(enterprise_id, articulo_id, tipo_gasto, descripcion,
                                  monto_estimado, base_calculo='UNIDAD', cantidad_batch=1,
                                  margen=20.0, user_id=None):
         """
         Registra un nuevo componente de overhead para un artículo producido.
         """
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO cmp_articulos_costos_indirectos
                     (enterprise_id, articulo_id, tipo_gasto, descripcion, monto_estimado,
                      base_calculo, cantidad_batch, porcentaje_margen_esperado, user_id)
@@ -162,44 +162,44 @@ class IndustrialCostingService:
             return cursor.lastrowid
 
     @staticmethod
-    def eliminar_gasto_indirecto(enterprise_id, gasto_id, user_id=None):
+    async def eliminar_gasto_indirecto(enterprise_id, gasto_id, user_id=None):
         """Borrado lógico de un gasto indirecto."""
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 UPDATE cmp_articulos_costos_indirectos
                 SET activo = 0, user_id_update = %s
                 WHERE id = %s AND enterprise_id = %s
             """, (user_id, gasto_id, enterprise_id))
 
     @staticmethod
-    def listar_gastos(enterprise_id, articulo_id):
+    async def listar_gastos(enterprise_id, articulo_id):
         """Devuelve todos los gastos activos de un artículo."""
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT id, tipo_gasto, descripcion, base_calculo, cantidad_batch,
                        monto_estimado, porcentaje_margen_esperado, created_at
                 FROM cmp_articulos_costos_indirectos
                 WHERE enterprise_id = %s AND articulo_id = %s AND activo = 1
                 ORDER BY tipo_gasto, descripcion
             """, (enterprise_id, articulo_id))
-            return cursor.fetchall()
+            return await cursor.fetchall()
 
     @staticmethod
-    def aplicar_overhead_template(enterprise_id, template_id, articulo_id, user_id=None):
+    async def aplicar_overhead_template(enterprise_id, template_id, articulo_id, user_id=None):
         """
         Aplica un template de overhead predefinido a un artículo.
         Útil para estandarizar costos en artículos similares.
         """
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT tipo_gasto, descripcion, monto_estimado, base_calculo, cantidad_batch
                 FROM cmp_overhead_templates_detalle
                 WHERE template_id = %s AND enterprise_id = %s
             """, (template_id, enterprise_id))
-            items = cursor.fetchall()
+            items = await cursor.fetchall()
 
             for it in items:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO cmp_articulos_costos_indirectos
                         (enterprise_id, articulo_id, tipo_gasto, descripcion, monto_estimado,
                          base_calculo, cantidad_batch, user_id)

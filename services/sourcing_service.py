@@ -9,7 +9,7 @@ class SourcingService:
     """
 
     @staticmethod
-    def get_best_option(enterprise_id, articulo_id, strategy='BEST_PRICE'):
+    async def get_best_option(enterprise_id, articulo_id, strategy='BEST_PRICE'):
         """
         Retorna el mejor proveedor para un artículo basado en una estrategia.
         Estrategias:
@@ -17,7 +17,7 @@ class SourcingService:
         - LAST_RECEPTION: El que proveyó la última factura de compra.
         - HABITUAL: El marcado como es_habitual=1.
         """
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             if strategy == 'HABITUAL':
                 sql = """
                     SELECT ap.*, t.nombre as proveedor_nombre, o.nombre as origen_nombre
@@ -27,8 +27,8 @@ class SourcingService:
                     WHERE ap.enterprise_id = %s AND ap.articulo_id = %s AND ap.es_habitual = 1
                     LIMIT 1
                 """
-                cursor.execute(sql, (enterprise_id, articulo_id))
-                return cursor.fetchone()
+                await cursor.execute(sql, (enterprise_id, articulo_id))
+                return await cursor.fetchone()
 
             elif strategy == 'BEST_PRICE':
                 sql = """
@@ -40,8 +40,8 @@ class SourcingService:
                     ORDER BY ap.precio_referencia ASC
                     LIMIT 1
                 """
-                cursor.execute(sql, (enterprise_id, articulo_id))
-                return cursor.fetchone()
+                await cursor.execute(sql, (enterprise_id, articulo_id))
+                return await cursor.fetchone()
 
             elif strategy == 'LAST_RECEPTION':
                 # Buscamos en el detalle de comprobantes de compra
@@ -57,18 +57,18 @@ class SourcingService:
                     ORDER BY c.fecha_emision DESC
                     LIMIT 1
                 """
-                cursor.execute(sql, (enterprise_id, articulo_id))
-                return cursor.fetchone()
+                await cursor.execute(sql, (enterprise_id, articulo_id))
+                return await cursor.fetchone()
 
         return None
 
     @staticmethod
-    def sync_habitual_from_history(enterprise_id, articulo_id=None):
+    async def sync_habitual_from_history(enterprise_id, articulo_id=None):
         """
         Analiza el historial de compras y marca como 'habitual' al proveedor 
         con mayor volumen de compra en los últimos 6 meses.
         """
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # Si no se pasa articulo_id, podríamos iterar todos, pero por ahora manejamos uno
             if not articulo_id:
                 return False
@@ -84,20 +84,20 @@ class SourcingService:
                 ORDER BY total_qty DESC
                 LIMIT 1
             """
-            cursor.execute(sql_analysis, (enterprise_id, articulo_id))
-            best = cursor.fetchone()
+            await cursor.execute(sql_analysis, (enterprise_id, articulo_id))
+            best = await cursor.fetchone()
 
             if best:
                 prov_id = best[0]
                 # Reset habituales para este articulo
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE cmp_articulos_proveedores 
                     SET es_habitual = 0 
                     WHERE enterprise_id = %s AND articulo_id = %s
                 """, (enterprise_id, articulo_id))
                 
                 # Set nuevo habitual
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE cmp_articulos_proveedores 
                     SET es_habitual = 1 
                     WHERE enterprise_id = %s AND articulo_id = %s AND proveedor_id = %s

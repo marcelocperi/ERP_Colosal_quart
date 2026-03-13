@@ -27,7 +27,7 @@ class BookEnrichmentProcessor:
             'Reld': ('Reld', 'services.scraping_service', 'ReldScraper')
         }
 
-    def get_existing_files_map(self, book_ids, enterprise_id=None):
+    async def get_existing_files_map(self, book_ids, enterprise_id=None):
         """Optimización N+1: Obtiene todos los IDs de libros que ya tienen archivos digitalizados."""
         if not book_ids:
             return set()
@@ -40,10 +40,10 @@ class BookEnrichmentProcessor:
              query += " AND enterprise_id = %s"
              params.append(enterprise_id)
 
-        self.cursor.execute(query, tuple(params))
-        return {row['articulo_id'] for row in self.cursor.fetchall()}
+        await self.cursor.execute(query, tuple(params))
+        return {row['articulo_id'] for row in await self.cursor.fetchall()}
 
-    def build_execution_plan(self, lib, enterprise_id, db_ranking, deep_scan=False):
+    async def build_execution_plan(self, lib, enterprise_id, db_ranking, deep_scan=False):
         """Construye el plan de ejecución dinámico para un libro específico."""
         user_sequence = [
             'Mercado Libre', 'Google Books', 'Librario', 'Open Library', 
@@ -52,7 +52,7 @@ class BookEnrichmentProcessor:
         
         # 1. Prioridad oficial por tipo de artículo
         tipo_id = lib.get('tipo_articulo_id', 1)
-        service_primario = BookServiceFactory.get_service_for_type(tipo_id, enterprise_id)
+        service_primario = await BookServiceFactory.get_service_for_type(tipo_id, enterprise_id)
         
         class_to_label = {v[2]: k for k, v in self.service_map.items()}
         official_label = class_to_label.get(service_primario.__class__.__name__)
@@ -76,12 +76,12 @@ class BookEnrichmentProcessor:
         # Limitar niveles si no es deep scan
         return execution_plan if deep_scan else execution_plan[:4]
 
-    def enrich_book(self, lib, enterprise_id, db_ranking, deep_scan=False, has_file=False):
+    async def enrich_book(self, lib, enterprise_id, db_ranking, deep_scan=False, has_file=False):
         """Orquesta el enriquecimiento de un solo libro."""
         isbn = lib.get('codigo') or lib.get('isbn', '')
         libro_nombre = lib.get('nombre', 'Sin título')
         
-        execution_plan = self.build_execution_plan(lib, enterprise_id, db_ranking, deep_scan)
+        execution_plan = await self.build_execution_plan(lib, enterprise_id, db_ranking, deep_scan)
         
         api_data = {}
         success = False
@@ -104,13 +104,13 @@ class BookEnrichmentProcessor:
                 
                 if s_success and isinstance(s_data, dict):
                     success = True
-                    self._merge_data(api_data, s_data, s_name)
+                    await self._merge_data(api_data, s_data, s_name)
             except Exception as e:
                 logger.warning(f"    [X] Error en {s_name}: {e}")
 
         # Procesar descarga de ebook si no tiene
         if not has_file:
-            self._handle_ebook_download(lib['id'], api_data, enterprise_id)
+            await self._handle_ebook_download(lib['id'], api_data, enterprise_id)
 
         return success, api_data
 
@@ -123,7 +123,7 @@ class BookEnrichmentProcessor:
                 return False
         return True
 
-    def _merge_data(self, target, source, service_name):
+    async def _merge_data(self, target, source, service_name):
         """Fusiona datos nuevos en el diccionario de resultados y actualiza eficiencia."""
         field_map = {
             'cover_url': 'Portada', 
@@ -149,11 +149,11 @@ class BookEnrichmentProcessor:
         
         if added or 'ebook_access' in source:
             ebook_hit = 1 if source.get('ebook_access') else 0
-            self.efficiency_mgr.update_score(service_name, len(added), ebook_hit)
+            await self.efficiency_mgr.update_score(service_name, len(added), ebook_hit)
             if added:
                 logger.info(f"    [OK] {service_name} aportó: {', '.join(added)}")
 
-    def _handle_ebook_download(self, book_id, api_data, enterprise_id):
+    async def _handle_ebook_download(self, book_id, api_data, enterprise_id):
         """Gestiona la descarga y guardado del archivo digital."""
         ebook_access = api_data.get('ebook_access')
         if not ebook_access or not ebook_access.get('url'):
@@ -165,7 +165,7 @@ class BookEnrichmentProcessor:
         content, mime, filename = library_api_service.download_ebook_content(url)
         if content:
             try:
-                self.cursor.execute("""
+                await self.cursor.execute("""
                     INSERT INTO stk_archivos_digitales (enterprise_id, articulo_id, contenido, formato, nombre_archivo)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (enterprise_id, book_id, content, mime.split('/')[-1][:10], sanitize_filename(filename)))
@@ -175,7 +175,7 @@ class BookEnrichmentProcessor:
             except Exception as e:
                 logger.warning(f"    [!] Error guardando BLOB: {e}")
 
-    def update_book_record(self, lib, metadata, api_data):
+    async def update_book_record(self, lib, metadata, api_data):
         """Persiste los cambios en la tabla stk_articulos."""
         # Mapeo de Géneros
         GENRE_MAP = {
@@ -208,7 +208,7 @@ class BookEnrichmentProcessor:
         metadata['lengua'] = str(api_data.get('lengua') or metadata.get('lengua', 'und'))[:3].lower()
         metadata['origen'] = "Local" if metadata['lengua'] == "spa" else "Importado"
 
-        self.cursor.execute("""
+        await self.cursor.execute("""
             UPDATE stk_articulos 
             SET nombre = %s, marca = %s, modelo = %s, metadata_json = %s 
             WHERE id = %s

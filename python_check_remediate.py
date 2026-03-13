@@ -146,7 +146,7 @@ def create_missing_python_route(route_name, blueprints):
             f.write("from flask import Blueprint, render_template\n")
             f.write("from core.decorators import login_required\n\n")
             f.write(f"{bp_var} = Blueprint('{bp_name}', __name__)\n")
-        f.write(f"\n\n@{bp_var}.route('/{bp_name}/{func_name.replace('_', '-')}')\n@login_required\ndef {func_name}():\n    return render_template('{bp_name}/{func_name}.html')\n")
+        f.write(f"\n\n@{bp_var}.route('/{bp_name}/{func_name.replace('_', '-')}')\n@login_required\ndef {func_name}():\n    return await render_template('{bp_name}/{func_name}.html')\n")
     return target_file
 
 def reconcile():

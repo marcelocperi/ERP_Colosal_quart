@@ -117,7 +117,7 @@ def api_cuenta_corriente(id):
             })
             
         cursor.close()
-        return render_template('ventas/cuenta_corriente_modal.html', cuenta_corriente=cuenta_corriente)
+        return await render_template('ventas/cuenta_corriente_modal.html', cuenta_corriente=cuenta_corriente)
 
     except Exception as e:
         cursor.close()

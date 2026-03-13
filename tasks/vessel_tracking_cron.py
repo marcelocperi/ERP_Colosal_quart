@@ -12,21 +12,21 @@ from services.vessel_tracking_service import VesselTrackingService
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def run_vessel_update():
+async def run_vessel_update():
     """
     Tarea de fondo (Cron) para actualizar el estado de todos los buques activos.
     Se recomienda ejecutar 1 vez al día (o cada 12hs).
     """
     logger.info("Iniciando actualización automática de buques AIS...")
     
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         # 1. Definición de "Flujo Abierto" para rastreo satelital:
         # - El barco tiene un MMSI asignado.
         # - NO se ha registrado aún la Fecha de Arribo Real (ATA).
         # - La orden no ha sido finalizada completamente (INGRESADO).
         # Esto permite seguir el buque aunque ya esté en puerto o esperando canal, 
         # hasta que el usuario confirme el arribo real.
-        cursor.execute("""
+        await cursor.execute("""
             SELECT id, enterprise_id, orden_compra_id, vessel_mmsi, vessel_name 
             FROM imp_despachos 
             WHERE (fecha_arribo_real IS NULL OR fecha_arribo_real = '0000-00-00')
@@ -34,7 +34,7 @@ def run_vessel_update():
               AND vessel_mmsi != ''
               AND estado != 'INGRESADO'
         """)
-        active_trackings = cursor.fetchall()
+        active_trackings = await cursor.fetchall()
         
     if not active_trackings:
         logger.info("No hay buques pendientes de arribo con MMSI configurado. Finalizando tarea.")
@@ -48,7 +48,7 @@ def run_vessel_update():
     for row in active_trackings:
         try:
             # Usamos un user_id ficticio (0 o un ID de sistema) para el log de 'creado por'
-            res = VesselTrackingService.track_vessel_by_mmsi(
+            res = await VesselTrackingService.track_vessel_by_mmsi(
                 enterprise_id=row['enterprise_id'],
                 orden_id=row['orden_compra_id'],
                 mmsi=row['vessel_mmsi'],
@@ -71,9 +71,9 @@ def run_vessel_update():
     # 2. Procesar Alertas de Demora (Vencimiento de días libres de puerto)
     try:
         from services.importacion_service import ImportacionService
-        ImportacionService.procesar_alertas_demora()
+        await ImportacionService.procesar_alertas_demora()
     except Exception as e:
         logger.error(f"[ERR] Error procesando alertas de demora: {e}")
 
 if __name__ == "__main__":
-    run_vessel_update()
+    await run_vessel_update()

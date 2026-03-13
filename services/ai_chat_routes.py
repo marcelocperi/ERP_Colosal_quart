@@ -10,7 +10,7 @@ El ranking (0-10) se persiste en `sys_ai_feedback` junto con:
 Esto permite análisis posterior de calidad y mejora de prompts.
 """
 
-from flask import Blueprint, render_template, request, jsonify, g
+from quart import Blueprint, render_template, request, jsonify, g
 from core.decorators import login_required
 from services.local_intelligence_service import LocalIntelligenceService
 from database import get_db_cursor
@@ -27,22 +27,22 @@ ai_chat_bp = Blueprint('ai_chat', __name__, template_folder='../core/templates')
 # ─────────────────────────────────────────────
 @ai_chat_bp.route('/ai/chat', methods=['GET', 'POST'])
 @login_required
-def ai_chat_page():
+async def ai_chat_page():
     """Renderiza la pantalla de chat con el CORE AUDITOR (Técnico)."""
     ollama_online = LocalIntelligenceService.check_health()
     response_text = None
     question = None
 
     if request.method == 'POST':
-        question = request.form.get('question')
+        question = (await request.form).get('question')
         if question and ollama_online:
             user_context = f"Usuario: {g.user['username']} | Rol: {g.user['role_name']} | Auditoría Técnica"
             result = LocalIntelligenceService.consult_rules(question, user_context=user_context)
             response_text = result.get('response') if 'error' not in result else f"Error: {result['error']}"
             if response_text:
-                _save_interaction(question, response_text)
+                await _save_interaction(question, response_text)
 
-    return render_template('admin_ai_auditor.html', 
+    return await render_template('admin_ai_auditor.html', 
                           ollama_status=ollama_online, 
                           response=response_text, 
                           question=question)
@@ -50,9 +50,9 @@ def ai_chat_page():
 
 @ai_chat_bp.route('/ai/assistant')
 @login_required
-def ai_user_assistant():
+async def ai_user_assistant():
     """Renderiza la pantalla de chat para el usuario general (Visual/Premium)."""
-    return render_template('ai_chat.html')
+    return await render_template('ai_chat.html')
 
 
 # ─────────────────────────────────────────────
@@ -60,7 +60,7 @@ def ai_user_assistant():
 # ─────────────────────────────────────────────
 @ai_chat_bp.route('/api/ai/health')
 @login_required
-def ai_health():
+async def ai_health():
     """Verifica si Ollama está disponible."""
     online = LocalIntelligenceService.check_health()
     return jsonify({'online': online})
@@ -71,7 +71,7 @@ def ai_health():
 # ─────────────────────────────────────────────
 @ai_chat_bp.route('/api/ai/chat', methods=['POST'])
 @login_required
-def ai_chat():
+async def ai_chat():
     """
     Recibe { message: str } y retorna { response: str, session_id: int }.
     También persiste la interacción en sys_ai_feedback (sin rating aún).
@@ -103,7 +103,7 @@ def ai_chat():
     response_text = result.get('response', '')
 
     # Persistir la interacción (rating queda NULL hasta que el usuario califica)
-    session_id = _save_interaction(question, response_text)
+    session_id = await _save_interaction(question, response_text)
 
     return jsonify({
         'response': response_text,
@@ -116,7 +116,7 @@ def ai_chat():
 # ─────────────────────────────────────────────
 @ai_chat_bp.route('/api/ai/rate', methods=['POST'])
 @login_required
-def ai_rate():
+async def ai_rate():
     """
     Recibe { session_id: int, rating: int (0-10) } y actualiza el rating
     en sys_ai_feedback. Si no hay session_id guarda un registro libre.
@@ -141,10 +141,10 @@ def ai_rate():
         return jsonify({'error': 'Rating inválido (debe ser 0-10)'}), 400
 
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             if session_id:
                 # Actualizar registro existente
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE sys_ai_feedback
                     SET rating = %s,
                         rated_at = %s,
@@ -160,7 +160,7 @@ def ai_rate():
                 ))
             else:
                 # Crear registro si el frontend no envió session_id
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO sys_ai_feedback
                         (enterprise_id, user_id, question, response, rating, rating_label, rated_at)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -186,7 +186,7 @@ def ai_rate():
 # ─────────────────────────────────────────────
 @ai_chat_bp.route('/api/ai/stats')
 @login_required
-def ai_stats():
+async def ai_stats():
     """
     Devuelve estadísticas del feedback para la empresa actual:
     - Total de interacciones
@@ -195,11 +195,11 @@ def ai_stats():
     - Peores respuestas (rating <= 3) para revisión
     """
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             ent_id = g.user['enterprise_id']
 
             # Totales generales
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT
                     COUNT(*) as total,
                     AVG(rating) as avg_rating,
@@ -208,10 +208,10 @@ def ai_stats():
                 FROM sys_ai_feedback
                 WHERE enterprise_id = %s AND rating IS NOT NULL
             """, (ent_id,))
-            summary = cursor.fetchone()
+            summary = await cursor.fetchone()
 
             # Peores respuestas para revisión (rating <= 3)
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT id, question, response, rating, rating_label, rated_at,
                        u.username
                 FROM sys_ai_feedback f
@@ -220,16 +220,16 @@ def ai_stats():
                 ORDER BY f.rated_at DESC
                 LIMIT 10
             """, (ent_id,))
-            worst = cursor.fetchall()
+            worst = await cursor.fetchall()
 
             # Distribución de ratings (histograma 0-10)
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT rating, COUNT(*) as cnt
                 FROM sys_ai_feedback
                 WHERE enterprise_id = %s AND rating IS NOT NULL
                 GROUP BY rating ORDER BY rating
             """, (ent_id,))
-            distribution = {row['rating']: row['cnt'] for row in cursor.fetchall()}
+            distribution = {row['rating']: row['cnt'] for row in await cursor.fetchall()}
 
         return jsonify({
             'summary': {
@@ -250,14 +250,14 @@ def ai_stats():
 # ─────────────────────────────────────────────
 #  HELPERS PRIVADOS
 # ─────────────────────────────────────────────
-def _save_interaction(question: str, response: str) -> int | None:
+async def _save_interaction(question: str, response: str) -> int | None:
     """
     Guarda la interacción pregunta/respuesta en sys_ai_feedback.
     Retorna el ID del registro para poder vincular el rating después.
     """
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO sys_ai_feedback
                     (enterprise_id, user_id, question, response, created_at)
                 VALUES (%s, %s, %s, %s, %s)

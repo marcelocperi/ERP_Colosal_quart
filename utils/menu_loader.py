@@ -5,7 +5,7 @@ Carga la estructura jerárquica del menú desde el archivo JSON de configuració
 
 import json
 from pathlib import Path
-from flask import g, url_for
+from quart import g, url_for
 
 def load_menu_structure():
     """Carga la estructura del menú desde el archivo JSON"""

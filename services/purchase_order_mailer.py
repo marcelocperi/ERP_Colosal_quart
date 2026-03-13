@@ -30,36 +30,36 @@ class PurchaseOrderMailer:
         random_str = ''.join(secrets.choice(chars) for _ in range(70))
         return f"PO_PROV{provider_id}_{random_str}"
 
-    def create_order_from_quotation(self, cotizacion_id, existing_cursor=None):
+    async def create_order_from_quotation(self, cotizacion_id, existing_cursor=None):
         """Crea la Orden de Compra en BD basada en la Cotización Aprobada."""
         # Si ya viene un cursor de una transacción atómica superior, lo usamos.
         if existing_cursor:
-            return self._logic_create_order(cotizacion_id, existing_cursor)
+            return await self._logic_create_order(cotizacion_id, existing_cursor)
         
         # Si no, creamos uno nuevo (comportamiento legacy)
-        with get_db_cursor(dictionary=True) as c:
-            return self._logic_create_order(cotizacion_id, c)
+        async with get_db_cursor(dictionary=True) as c:
+            return await self._logic_create_order(cotizacion_id, c)
 
-    def _logic_create_order(self, cotizacion_id, c):
+    async def _logic_create_order(self, cotizacion_id, c):
         """Lógica interna de creación de PO."""
         # Get Quotation & Items
-        c.execute("SELECT * FROM cmp_cotizaciones WHERE id = %s AND enterprise_id = %s", (cotizacion_id, self.enterprise_id))
-        cot = c.fetchone()
+        await c.execute("SELECT * FROM cmp_cotizaciones WHERE id = %s AND enterprise_id = %s", (cotizacion_id, self.enterprise_id))
+        cot = await c.fetchone()
         if not cot: return None, "Cotización no encontrada"
         
-        c.execute("""
+        await c.execute("""
             SELECT i.*, a.nombre as articulo_nombre, a.codigo as articulo_codigo 
             FROM cmp_items_cotizacion i 
             JOIN stk_articulos a ON i.articulo_id = a.id 
             WHERE i.cotizacion_id = %s AND i.enterprise_id = %s
         """, (cotizacion_id, self.enterprise_id))
-        items = c.fetchall()
+        items = await c.fetchall()
         
         # Create PO Header
-        po_hash = self.generate_security_hash(cot['proveedor_id'])
+        po_hash = await self.generate_security_hash(cot['proveedor_id'])
         
         # Insert PO
-        c.execute("""
+        await c.execute("""
             INSERT INTO cmp_ordenes_compra 
             (enterprise_id, proveedor_id, estado, fecha_emision, cotizacion_id, security_hash, total_estimado)
             VALUES (%s, %s, 'PENDIENTE_APROBACION_COMPRAS', NOW(), %s, %s, 0)
@@ -82,7 +82,7 @@ class PurchaseOrderMailer:
             subtotal = float(precio) * float(cant_final)
             total_estimado += subtotal
             
-            c.execute("""
+            await c.execute("""
                 INSERT INTO cmp_detalles_orden 
                 (enterprise_id, orden_id, articulo_id, cantidad, precio_unitario)
                 VALUES (%s, %s, %s, %s, %s)
@@ -98,11 +98,11 @@ class PurchaseOrderMailer:
             })
 
         # Update PO Total
-        c.execute("UPDATE cmp_ordenes_compra SET total_estimado = %s WHERE id = %s AND enterprise_id = %s", (total_estimado, po_id, self.enterprise_id))
+        await c.execute("UPDATE cmp_ordenes_compra SET total_estimado = %s WHERE id = %s AND enterprise_id = %s", (total_estimado, po_id, self.enterprise_id))
 
         return {'po_id': po_id, 'hash': po_hash, 'items': po_items, 'proveedor_id': cot['proveedor_id']}, None
 
-    def generate_excel_po(self, po_id, proveedor_nombre, items, po_hash):
+    async def generate_excel_po(self, po_id, proveedor_nombre, items, po_hash):
         """Genera Excel de Orden de Compra (PO)."""
         wb = Workbook()
         ws = wb.active
@@ -148,7 +148,7 @@ class PurchaseOrderMailer:
             
         filename = f"PO_{po_id}_{po_hash[:10]}.xlsx"
         filepath = OUTBOX_DIR / filename
-        wb.save(filepath)
+        await wb.save(filepath)
         return str(filepath)
 
     def generate_html_body(self, empresa_nombre, po_id, po_hash):
@@ -184,13 +184,13 @@ class PurchaseOrderMailer:
         </html>
         """
 
-    def send_po_email(self, to_email, po_id, po_hash, excel_path, empresa_nombre=""):
+    async def send_po_email(self, to_email, po_id, po_hash, excel_path, empresa_nombre=""):
         """Envía el email de Orden de Compra usando el servicio centralizado."""
         subject = f"Purchase Order #{po_id} - REF: {po_hash[:10]} - CONFIRMACION REQUERIDA"
         body = self.generate_html_body(empresa_nombre or "Nuestra Empresa", po_id, po_hash)
         
         # El servicio _enviar_email ya maneja adjuntos como paths
-        success, error = email_service._enviar_email(
+        success, error = await email_service._enviar_email(
             recipient_email=to_email,
             subject=subject,
             html_content=body,

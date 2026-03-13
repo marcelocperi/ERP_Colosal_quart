@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Colosal</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-main);
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-logo {
+            width: 80px;
+            margin-bottom: 1.5rem;
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 8px;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .toggle-field {
+            position: absolute;
+            right: 1rem;
+            bottom: 0.9rem;
+            color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+        }
+
+        .toggle-field:hover {
+            color: white;
+        }
+
+        .toggle-field {
+            display: inline-block !important;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-login:hover {
+            background: var(--primary-hover);
+        }
+
+        .flash-msg {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .caps-lock-warning {
+            display: none;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            padding: 0.5rem;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-card">
+        <img src="/static/img/logo.png" alt="Colosal" class="login-logo">
+        <h1 class="login-title">COLOSAL</h1>
+        <p
+            style="color: var(--text-muted); font-size: 0.8rem; margin-top: -1.5rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 2px;">
+            Plataforma ERP</p>
+
+        
+        
+        
+
+        <form action="/login" method="POST">
+            <input type="hidden" name="csrf_token" value="41ada4d2aa34fa20e4cdfb1e6491fc7d">
+            <div class="input-group">
+                <label>Empresa</label>
+                <select name="enterprise_id" id="enterprise-select" required
+                    style="width: 100%; padding: 1rem; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); color: white; border-radius: 8px;">
+                    
+                    <option value="0" data-confidential="1">
+                        Marcelo Ceferino Peri (SaaS Owner)
+                    </option>
+                    
+                    
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Usuario</label>
+                <input type="text" name="username" id="username-input" required autocomplete="off">
+                <i class="fas fa-eye toggle-field" id="eye-username" style="color: rgba(255, 255, 255, 0.6);"
+                    onclick="toggleField('username-input', this)"></i>
+            </div>
+            <div class="input-group">
+                <label>Contraseña</label>
+                <input type="password" name="password" id="password-input" required autocomplete="current-password">
+                <i class="fas fa-eye toggle-field" id="eye-password"
+                    style="color: rgba(255, 255, 255, 0.6); display: inline-block;"
+                    onclick="toggleField('password-input', this)"></i>
+                <div id="caps-warning" class="caps-lock-warning">
+                    <i class="fas fa-exclamation-triangle me-1"></i> ¡Bloqueo de mayúsculas activado!
+                </div>
+            </div>
+            <button type="submit" class="btn-login">Iniciar Sesión</button>
+            <div style="margin-top: 1.5rem;">
+                <a href="/auth/reset-password#forgot"
+                    style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
+                    ¿Olvidó su clave? Obtener clave temporal
+                </a>
+            </div>
+        </form>
+    </div>
+    <script>
+        const enterpriseSelect = document.getElementById('enterprise-select');
+        const usernameInput = document.getElementById('username-input');
+        const usernameEye = document.getElementById('eye-username');
+        const passwordInput = document.getElementById('password-input');
+        const capsWarning = document.getElementById('caps-warning');
+
+        function updateUsernameMask() {
+            if (!enterpriseSelect || enterpriseSelect.options.length === 0 || enterpriseSelect.selectedIndex === -1) {
+                return; // Evitar freeze si no hay opciones
+            }
+            const selectedOption = enterpriseSelect.options[enterpriseSelect.selectedIndex];
+            const isConfidential = selectedOption.getAttribute('data-confidential') === '1';
+
+            // Limpiar campos al cambiar de empresa (Seguridad: "los datos deben olvidarse")
+            usernameInput.value = "";
+            passwordInput.value = "";
+
+            if (isConfidential) {
+                usernameInput.type = "password";
+                usernameInput.placeholder = ""; // No dar pistas del usuario maestro
+                usernameEye.style.display = "inline-block";
+            } else {
+                usernameInput.type = "text";
+                usernameInput.placeholder = "admin";
+                usernameEye.style.display = "inline-block";
+                // Ensure eye icon resets if it was slashed
+                usernameEye.classList.remove("fa-eye-slash");
+                usernameEye.classList.add("fa-eye");
+            }
+        }
+
+        enterpriseSelect.addEventListener('change', updateUsernameMask);
+        // Run on load to set initial state
+        window.addEventListener('load', () => {
+            try {
+                updateUsernameMask();
+            } catch (e) {
+                console.error("Error updating username mask:", e);
+            }
+        });
+
+        // Detectar Bloqueo de Mayúsculas (Caps Lock)
+        function checkCapsLock(e) {
+            if (e.getModifierState && e.getModifierState('CapsLock')) {
+                capsWarning.style.display = 'block';
+            } else {
+                capsWarning.style.display = 'none';
+            }
+        }
+
+        passwordInput.addEventListener('keyup', checkCapsLock);
+        passwordInput.addEventListener('mousedown', checkCapsLock);
+        usernameInput.addEventListener('keyup', checkCapsLock);
+        usernameInput.addEventListener('mousedown', checkCapsLock);
+
+        function toggleField(id, icon) {
+            const input = document.getElementById(id);
+            if (input.type === "password" || (input.id === 'username-input' && input.type === 'password')) {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else if (input.id === 'password-input' || (input.id === 'username-input' && input.type === 'text')) {
+                // If it's username, we only toggle back to password if it's supposed to be confidential
+                const isConfidential = enterpriseSelect.options[enterpriseSelect.selectedIndex].getAttribute('data-confidential') === '1';
+                if (input.id === 'username-input' && !isConfidential) {
+                    // Do nothing, should stay text
+                    return;
+                }
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
+    <script src="/static/js/main.js"></script>
+</body>
+
+</html>

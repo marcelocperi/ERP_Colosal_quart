@@ -9,7 +9,7 @@ class RotationManager:
     """
     Gestiona la rotación de identidades. Soporta Tor o Proxy Pool.
     """
-    def __init__(self, mode='DIRECT', rotation_threshold=10, api_key=None):
+    async def __init__(self, mode='DIRECT', rotation_threshold=10, api_key=None):
         self.mode = mode # 'TOR', 'POOL', 'SCRAPERAPI' o 'DIRECT'
         self.rotation_threshold = rotation_threshold
         self.api_key = api_key
@@ -17,9 +17,9 @@ class RotationManager:
         self.proxies_pool = [] # Lista de strings 'ip:port'
         self.current_proxy = None
         self.session = requests.Session()
-        self._initialize_session()
+        await self._initialize_session()
 
-    def _initialize_session(self):
+    async def _initialize_session(self):
         """Configura la sesión inicial según el modo."""
         self.session.proxies = {} # Reset
         
@@ -39,18 +39,18 @@ class RotationManager:
             }
         
         # User-Agent rotation (siempre bueno)
-        self.session.headers.update({
+        await self.await session.await headers.update({
             'User-Agent': random.choice([
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36'
             ])
         })
 
-    def set_proxies(self, proxy_list):
+    async def set_proxies(self, proxy_list):
         """Asigna una lista de proxies manuales y cambia a modo POOL."""
         self.proxies_pool = proxy_list
         self.mode = 'POOL'
-        self._initialize_session()
+        await self._initialize_session()
 
     def rotate(self):
         """Rota la identidad (Nueva IP)."""

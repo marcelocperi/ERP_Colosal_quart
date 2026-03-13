@@ -9,31 +9,31 @@ class RfqService:
     """
 
     @staticmethod
-    def explode_bom_for_rfq(enterprise_id, producto_id, cantidad_final=1):
+    async def explode_bom_for_rfq(enterprise_id, producto_id, cantidad_final=1):
         """
         Explosiona los materiales necesarios para producir 'cantidad_final' y 
         sugiere el proveedor habitual para cada insumo.
         """
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Buscar receta
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT id FROM cmp_recetas_bom 
                 WHERE enterprise_id = %s AND producto_id = %s AND activo = 1
                 LIMIT 1
             """, (enterprise_id, producto_id))
-            receta = cursor.fetchone()
+            receta = await cursor.fetchone()
             
             if not receta:
                 return []
 
             # 2. Obtener detalles de la receta
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT rd.articulo_id, rd.cantidad, rd.porcentaje_merma_esperada, a.nombre, a.codigo
                 FROM cmp_recetas_detalle rd
                 JOIN stk_articulos a ON rd.articulo_id = a.id
                 WHERE rd.receta_id = %s
             """, (receta['id'],))
-            items = cursor.fetchall()
+            items = await cursor.fetchall()
 
             enriched_items = []
             for it in items:
@@ -42,9 +42,9 @@ class RfqService:
                 final_qty = qty_needed * merma
                 
                 # Buscamos el proveedor habitual o el mejor precio
-                best_source = SourcingService.get_best_option(enterprise_id, it['articulo_id'], strategy='HABITUAL')
+                best_source = await SourcingService.get_best_option(enterprise_id, it['articulo_id'], strategy='HABITUAL')
                 if not best_source:
-                    best_source = SourcingService.get_best_option(enterprise_id, it['articulo_id'], strategy='BEST_PRICE')
+                    best_source = await SourcingService.get_best_option(enterprise_id, it['articulo_id'], strategy='BEST_PRICE')
 
                 enriched_items.append({
                     'articulo_id': it['articulo_id'],

@@ -1,4 +1,4 @@
-from flask import current_app
+from quart import current_app
 import os
 from decimal import Decimal
 
@@ -44,7 +44,7 @@ class BillingService:
         return '006' # Default B
 
     @staticmethod
-    def get_allowed_comprobantes(emisor_tipo, receptor_tipo, existing_cursor=None):
+    async def get_allowed_comprobantes(emisor_tipo, receptor_tipo, existing_cursor=None):
         """
         Consulta la tabla sys_fiscal_comprobante_rules para determinar qué códigos de 
         comprobante son válidos para la combinación de condiciones fiscales.
@@ -61,15 +61,15 @@ class BillingService:
         if not receptor: receptor = '*'
 
         if existing_cursor:
-            return BillingService._logic_allowed_comprobantes(emisor, receptor, existing_cursor)
+            return await BillingService._logic_allowed_comprobantes(emisor, receptor, existing_cursor)
         
         from database import get_db_cursor
-        with get_db_cursor(dictionary=True) as cursor:
-            return BillingService._logic_allowed_comprobantes(emisor, receptor, cursor)
+        async with get_db_cursor(dictionary=True) as cursor:
+            return await BillingService._logic_allowed_comprobantes(emisor, receptor, cursor)
 
     @staticmethod
-    def _logic_allowed_comprobantes(emisor, receptor, cursor):
-        cursor.execute("""
+    async def _logic_allowed_comprobantes(emisor, receptor, cursor):
+        await cursor.execute("""
             SELECT allowed_codigos FROM sys_fiscal_comprobante_rules 
             WHERE (emisor_condicion = %s OR emisor_condicion = '*') 
               AND (receptor_condicion = %s OR receptor_condicion = '*')
@@ -78,34 +78,34 @@ class BillingService:
                  CASE WHEN receptor_condicion = '*' THEN 0 ELSE 1 END) DESC
             LIMIT 1
         """, (emisor, receptor))
-        row = cursor.fetchone()
+        row = await cursor.fetchone()
         return row['allowed_codigos'].split(',') if row else []
 
     @staticmethod
-    def get_layout(enterprise_id, existing_cursor=None):
+    async def get_layout(enterprise_id, existing_cursor=None):
         if existing_cursor:
-            return BillingService._logic_get_layout(enterprise_id, existing_cursor)
+            return await BillingService._logic_get_layout(enterprise_id, existing_cursor)
         
         from database import get_db_cursor
-        with get_db_cursor(dictionary=True) as cursor:
-            return BillingService._logic_get_layout(enterprise_id, cursor)
+        async with get_db_cursor(dictionary=True) as cursor:
+            return await BillingService._logic_get_layout(enterprise_id, cursor)
 
     @staticmethod
-    def _logic_get_layout(enterprise_id, cursor):
+    async def _logic_get_layout(enterprise_id, cursor):
         # Primero intentar el específico de la empresa
-        cursor.execute("SELECT * FROM sys_invoice_layouts WHERE enterprise_id = %s", (enterprise_id,))
-        layout = cursor.fetchall()
+        await cursor.execute("SELECT * FROM sys_invoice_layouts WHERE enterprise_id = %s", (enterprise_id,))
+        layout = await cursor.fetchall()
         
         # Si no hay nada, usar el global (enterprise_id = 0)
         if not layout:
-            cursor.execute("SELECT * FROM sys_invoice_layouts WHERE enterprise_id = 0")
-            layout = cursor.fetchall()
+            await cursor.execute("SELECT * FROM sys_invoice_layouts WHERE enterprise_id = 0")
+            layout = await cursor.fetchall()
     
         return {item['field_name']: item for item in layout}
 
 
     @staticmethod
-    def prepare_invoice_values(c, detalles, empresa, cliente_dir, impuestos):
+    async def prepare_invoice_values(c, detalles, empresa, cliente_dir, impuestos):
         """Prepara los valores para los campos del layout."""
         tipo_comp = str(c.get('tipo_comprobante', ''))
         es_remito = tipo_comp in ['091', '099', 'REMITO']
@@ -191,16 +191,16 @@ class BillingService:
             'label_autorizado': 'Comprobante Autorizado',
             'label_disclaimer': 'Esta Agencia no se responsabiliza por los datos ingresados en el detalle de la operación',
             # QR and Barcode
-            'qr_code': BillingService._generate_qr(c, empresa, cliente_dir),
+            'qr_code': await BillingService._generate_qr(c, empresa, cliente_dir),
             'barcode': BillingService._generate_barcode(c, empresa)
         }
         return vals
 
     @staticmethod
-    def _generate_qr(c, empresa, cliente_dir):
+    async def _generate_qr(c, empresa, cliente_dir):
         try:
             from services.barcode_service import BarcodeService
-            return BarcodeService.generate_afip_qr(c, empresa, cliente_dir)
+            return await BarcodeService.generate_afip_qr(c, empresa, cliente_dir)
         except Exception as e:
             print(f"Error generating QR: {e}")
             return None

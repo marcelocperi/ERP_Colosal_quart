@@ -1,5 +1,5 @@
 import os
-from flask import render_template, request, jsonify, g, flash, redirect, url_for
+from quart import render_template, request, jsonify, g, flash, redirect, url_for
 from core.decorators import login_required, permission_required
 from database import get_db_cursor
 from services.industrial_costing_service import IndustrialCostingService
@@ -15,41 +15,41 @@ def register_industrial_routes(bp):
 
     @bp.route('/industrial/overhead-templates', methods=['GET'])
     @login_required
-    def overhead_templates():
+    async def overhead_templates():
         """Listado de Plantillas de Costos Indirectos."""
         ent_id = g.user['enterprise_id']
         templates = []
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Traer plantillas
-            cursor.execute('''
+            await cursor.execute('''
                 SELECT id, nombre, descripcion, activo, created_at 
                 FROM cmp_overhead_templates 
                 WHERE enterprise_id = %s
                 ORDER BY nombre ASC
             ''', (ent_id,))
-            templates = cursor.fetchall()
+            templates = await cursor.fetchall()
             
             # Traer detalles agregados (cantidad de items y suma estimada)
             for t in templates:
-                cursor.execute('''
+                await cursor.execute('''
                     SELECT 
                         COUNT(*) as qty_items, 
                         SUM(monto_estimado) as total_estimado 
                     FROM cmp_overhead_templates_detalle 
                     WHERE template_id = %s
                 ''', (t['id'],))
-                stats = cursor.fetchone()
+                stats = await cursor.fetchone()
                 t['detalles_count'] = stats['qty_items'] or 0
                 t['suma_estimada'] = stats['total_estimado'] or 0.0
 
-        return render_template('compras/industrial/overhead_templates.html', templates=templates)
+        return await render_template('compras/industrial/overhead_templates.html', templates=templates)
 
     @bp.route('/industrial/overhead-templates/api/save', methods=['POST'])
     @login_required
-    def api_save_overhead_template():
+    async def api_save_overhead_template():
         """Crea o actualiza una plantilla de costos indirectos (AJAX)."""
         ent_id = g.user['enterprise_id']
-        data = request.json
+        data = (await request.json)
         
         nombre = data.get('nombre')
         descripcion = data.get('descripcion', '')
@@ -59,9 +59,9 @@ def register_industrial_routes(bp):
             return jsonify({'success': False, 'message': 'El nombre es obligatorio'}), 400
             
         try:
-            with get_db_cursor() as cursor:
+            async with get_db_cursor() as cursor:
                 # 1. Crear el Template base
-                cursor.execute('''
+                await cursor.execute('''
                     INSERT INTO cmp_overhead_templates 
                     (enterprise_id, nombre, descripcion, user_id)
                     VALUES (%s, %s, %s, %s)
@@ -70,7 +70,7 @@ def register_industrial_routes(bp):
                 
                 # 2. Insertar cada renglón de gasto (MOD, Energia, Ensayos, etc.)
                 for det in detalles:
-                    cursor.execute('''
+                    await cursor.execute('''
                         INSERT INTO cmp_overhead_templates_detalle
                         (template_id, enterprise_id, tipo_gasto, descripcion, monto_estimado, base_calculo, cantidad_batch, user_id)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -90,31 +90,31 @@ def register_industrial_routes(bp):
 
     @bp.route('/industrial/overhead-templates/<int:template_id>/api/detalles', methods=['GET'])
     @login_required
-    def api_get_template_detalles(template_id):
+    async def api_get_template_detalles(template_id):
         """Devuelve los detalles de una plantilla específica para aplicarlos a un artículo."""
         ent_id = g.user['enterprise_id']
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Validar que pertenece a la empresa
-            cursor.execute('SELECT id FROM cmp_overhead_templates WHERE id=%s AND enterprise_id=%s', (template_id, ent_id))
-            if not cursor.fetchone():
+            await cursor.execute('SELECT id FROM cmp_overhead_templates WHERE id=%s AND enterprise_id=%s', (template_id, ent_id))
+            if not await cursor.fetchone():
                 return jsonify({'success': False, 'message': 'No encontrado'}), 404
                 
-            cursor.execute('''
+            await cursor.execute('''
                 SELECT id, tipo_gasto, descripcion, monto_estimado, base_calculo, cantidad_batch
                 FROM cmp_overhead_templates_detalle
                 WHERE template_id = %s
             ''', (template_id,))
-            detalles = cursor.fetchall()
+            detalles = await cursor.fetchall()
             
         return jsonify({'success': True, 'detalles': detalles})
 
     @bp.route('/industrial/documentos', methods=['GET'])
     @login_required
-    def industrial_documentos():
+    async def industrial_documentos():
         """Repositorio Técnico/Legal."""
         ent_id = g.user['enterprise_id']
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute('''
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute('''
                 SELECT d.*, 
                     CASE 
                         WHEN entidad_tipo = 'ARTICULO' THEN (SELECT nombre FROM stk_articulos WHERE id = d.entidad_id)
@@ -125,22 +125,22 @@ def register_industrial_routes(bp):
                 WHERE d.enterprise_id = %s
                 ORDER BY d.fecha_vencimiento ASC
             ''', (ent_id,))
-            documentos = cursor.fetchall()
-        return render_template('compras/industrial/documentos.html', documentos=documentos)
+            documentos = await cursor.fetchall()
+        return await render_template('compras/industrial/documentos.html', documentos=documentos)
 
     @bp.route('/industrial/proyectos', methods=['GET'])
     @login_required
-    def industrial_proyectos():
+    async def industrial_proyectos():
         """Proyectos de I+D."""
         ent_id = g.user['enterprise_id']
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute('''
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute('''
                 SELECT p.*, a.nombre as producto_nombre
                 FROM prd_proyectos_desarrollo p
                 LEFT JOIN stk_articulos a ON p.articulo_objetivo_id = a.id
                 WHERE p.enterprise_id = %s
                 ORDER BY p.fecha_inicio DESC
             ''', (ent_id,))
-            proyectos = cursor.fetchall()
-        return render_template('compras/industrial/proyectos.html', proyectos=proyectos)
+            proyectos = await cursor.fetchall()
+        return await render_template('compras/industrial/proyectos.html', proyectos=proyectos)
 

@@ -4,7 +4,7 @@ Tax Engine — Motor de cálculo fiscal parametrizable por empresa.
 Responsabilidades:
   - Resolver qué impuestos aplican dado: operación + perfil del tercero + condición IIBB
   - Calcular importes según alícuotas vigentes (con herencia enterprise_id=0)
-  - Exponer la configuración al frontend vía get_reglas_para_frontend()
+  - Exponer la configuración al frontend vía await get_reglas_para_frontend()
   - Calcular totales de un comprobante
 
 Herencia de reglas:
@@ -24,14 +24,14 @@ Uso básico:
     engine = TaxEngine(enterprise_id=1)
 
     # Obtener reglas para el frontend (qué campos mostrar)
-    reglas = engine.get_reglas_para_frontend(
+    reglas = await engine.get_reglas_para_frontend(
         operacion='COMPRAS',
         tipo_responsable='RI',
         condicion_iibb='ARBA'
     )
 
     # Calcular impuestos sobre importes
-    resultado = engine.calcular(
+    resultado = await engine.calcular(
         operacion='COMPRAS',
         tipo_responsable='RI',
         condicion_iibb='ARBA',
@@ -83,7 +83,7 @@ class TaxEngine:
     # MÉTODO PRINCIPAL: reglas para el frontend
     # ─────────────────────────────────────────────────────────────────────────
 
-    def get_reglas_para_frontend(self, operacion: str, tipo_responsable: str,
+    async def get_reglas_para_frontend(self, operacion: str, tipo_responsable: str,
                                   condicion_iibb: str = '',
                                   exencion_iibb: str = '') -> dict:
         """
@@ -102,9 +102,9 @@ class TaxEngine:
         cond_norm    = self._normalizar_iibb(condicion_iibb)
         exencion_norm = self._normalizar_exencion(exencion_iibb)
 
-        impuestos_aplicables = self._resolver_impuestos(operacion, tipo_norm, cond_norm, exencion_norm)
-        alicuotas = self._get_alicuotas_vigentes()
-        reglas_iibb = self._resolver_iibb(cond_norm)
+        impuestos_aplicables = await self._resolver_impuestos(operacion, tipo_norm, cond_norm, exencion_norm)
+        alicuotas = await self._get_alicuotas_vigentes()
+        reglas_iibb = await self._resolver_iibb(cond_norm)
 
         # Construir lista de impuestos con metadatos para el frontend
         impuestos_out = []
@@ -156,7 +156,7 @@ class TaxEngine:
     # CÁLCULO DE IMPUESTOS
     # ─────────────────────────────────────────────────────────────────────────
 
-    def calcular(self, operacion: str, tipo_responsable: str,
+    async def calcular(self, operacion: str, tipo_responsable: str,
                  condicion_iibb: str, importes: dict,
                  percepciones_cm: list = None) -> dict:
         """
@@ -190,7 +190,7 @@ class TaxEngine:
             }
         """
         tipo_norm = self._normalizar_tipo(tipo_responsable)
-        alicuotas = self._get_alicuotas_vigentes()
+        alicuotas = await self._get_alicuotas_vigentes()
 
         # IVA
         neto_21   = float(importes.get('neto_21', 0))
@@ -254,7 +254,7 @@ class TaxEngine:
     # RESOLUCIÓN DE REGLAS (con herencia enterprise_id=0)
     # ─────────────────────────────────────────────────────────────────────────
 
-    def _resolver_impuestos(self, operacion: str, tipo_norm: str,
+    async def _resolver_impuestos(self, operacion: str, tipo_norm: str,
                              cond_norm: str, exencion_norm: str = '*', existing_cursor=None) -> list:
         """Resuelve qué impuestos aplican delegando en lógica interna."""
         cache_key = (operacion, tipo_norm, cond_norm, exencion_norm)
@@ -262,16 +262,16 @@ class TaxEngine:
             return self._cache_reglas[cache_key]
 
         if existing_cursor:
-            result = self._logic_resolver_impuestos(operacion, tipo_norm, cond_norm, exencion_norm, existing_cursor)
+            result = await self._logic_resolver_impuestos(operacion, tipo_norm, cond_norm, exencion_norm, existing_cursor)
         else:
-            with get_db_cursor(dictionary=True) as cursor:
-                result = self._logic_resolver_impuestos(operacion, tipo_norm, cond_norm, exencion_norm, cursor)
+            async with get_db_cursor(dictionary=True) as cursor:
+                result = await self._logic_resolver_impuestos(operacion, tipo_norm, cond_norm, exencion_norm, cursor)
         
         self._cache_reglas[cache_key] = result
         return result
 
-    def _logic_resolver_impuestos(self, operacion, tipo_norm, cond_norm, exencion_norm, cursor):
-        cursor.execute("""
+    async def _logic_resolver_impuestos(self, operacion, tipo_norm, cond_norm, exencion_norm, cursor):
+        await cursor.execute("""
             SELECT DISTINCT
                 ti.id, ti.codigo, ti.nombre, ti.tipo, ti.orden_display,
                 tr.es_obligatorio,
@@ -294,30 +294,30 @@ class TaxEngine:
             self.enterprise_id, self.enterprise_id, self.enterprise_id,
             operacion, tipo_norm, cond_norm, exencion_norm
         ))
-        rows = cursor.fetchall()
+        rows = await cursor.fetchall()
         seen = set(); result = []
         for r in rows:
             if r['codigo'] not in seen:
                 seen.add(r['codigo']); result.append(r)
         return result
 
-    def _resolver_iibb(self, cond_norm: str, existing_cursor=None) -> list:
+    async def _resolver_iibb(self, cond_norm: str, existing_cursor=None) -> list:
         if cond_norm in self._cache_iibb:
             return self._cache_iibb[cond_norm]
 
         if not cond_norm or cond_norm == 'NINGUNO': return []
 
         if existing_cursor:
-            result = self._logic_resolver_iibb(cond_norm, existing_cursor)
+            result = await self._logic_resolver_iibb(cond_norm, existing_cursor)
         else:
-            with get_db_cursor(dictionary=True) as cursor:
-                result = self._logic_resolver_iibb(cond_norm, cursor)
+            async with get_db_cursor(dictionary=True) as cursor:
+                result = await self._logic_resolver_iibb(cond_norm, cursor)
 
         self._cache_iibb[cond_norm] = result
         return result
 
-    def _logic_resolver_iibb(self, cond_norm, cursor):
-        cursor.execute("""
+    async def _logic_resolver_iibb(self, cond_norm, cursor):
+        await cursor.execute("""
             SELECT
                 ri.jurisdiccion_codigo, ri.jurisdiccion_nombre, ri.usa_padron,
                 ri.regimen, ri.limite_cm_pct, ri.coef_minimo_cm, ri.alicuota_override,
@@ -330,7 +330,7 @@ class TaxEngine:
               AND ri.activo = 1
             ORDER BY es_propio DESC, ri.jurisdiccion_codigo ASC
         """, (self.enterprise_id, self.enterprise_id, self.enterprise_id, cond_norm))
-        rows = cursor.fetchall()
+        rows = await cursor.fetchall()
         return [
             {
                 'codigo': r['jurisdiccion_codigo'], 'nombre': r['jurisdiccion_nombre'],
@@ -343,22 +343,22 @@ class TaxEngine:
             for r in rows
         ]
 
-    def _get_alicuotas_vigentes(self, existing_cursor=None) -> dict:
+    async def _get_alicuotas_vigentes(self, existing_cursor=None) -> dict:
         if self._cache_alicuotas is not None:
             return self._cache_alicuotas
 
         if existing_cursor:
-            result = self._logic_get_alicuotas_vigentes(existing_cursor)
+            result = await self._logic_get_alicuotas_vigentes(existing_cursor)
         else:
-            with get_db_cursor(dictionary=True) as cursor:
-                result = self._logic_get_alicuotas_vigentes(cursor)
+            async with get_db_cursor(dictionary=True) as cursor:
+                result = await self._logic_get_alicuotas_vigentes(cursor)
 
         self._cache_alicuotas = result
         return result
 
-    def _logic_get_alicuotas_vigentes(self, cursor):
+    async def _logic_get_alicuotas_vigentes(self, cursor):
         hoy = datetime.date.today().isoformat()
-        cursor.execute("""
+        await cursor.execute("""
             SELECT ti.codigo, ta.alicuota, ta.base_calculo,
                 CASE WHEN ta.enterprise_id = %s THEN 1 ELSE 0 END as es_propio
             FROM tax_alicuotas ta
@@ -369,7 +369,7 @@ class TaxEngine:
               AND (ta.vigencia_hasta IS NULL OR ta.vigencia_hasta >= %s)
             ORDER BY es_propio DESC, ta.vigencia_desde DESC
         """, (self.enterprise_id, self.enterprise_id, self.enterprise_id, hoy, hoy))
-        rows = cursor.fetchall()
+        rows = await cursor.fetchall()
         result = {}
         for r in rows:
             if r['codigo'] not in result:
@@ -435,14 +435,14 @@ class TaxEngine:
     # ADMINISTRACIÓN: obtener/actualizar alícuotas de una empresa
     # ─────────────────────────────────────────────────────────────────────────
 
-    def get_config_completa(self) -> dict:
+    async def get_config_completa(self) -> dict:
         """
         Retorna la configuración fiscal completa de la empresa para la UI de administración.
         Incluye todas las reglas y alícuotas, indicando si son propias o heredadas.
         """
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Reglas agrupadas por operación
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT
                     tr.operacion,
                     tr.tipo_responsable,
@@ -460,10 +460,10 @@ class TaxEngine:
                   AND tr.activo = 1
                 ORDER BY tr.operacion, tr.tipo_responsable, tr.condicion_iibb, ti.orden_display
             """, (self.enterprise_id, self.enterprise_id))
-            reglas = cursor.fetchall()
+            reglas = await cursor.fetchall()
 
             # Alícuotas
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT
                     ti.codigo, ti.nombre, ti.tipo,
                     ta.alicuota, ta.base_calculo,
@@ -475,7 +475,7 @@ class TaxEngine:
                   AND ta.activo = 1
                 ORDER BY ti.orden_display
             """, (self.enterprise_id, self.enterprise_id))
-            alicuotas = cursor.fetchall()
+            alicuotas = await cursor.fetchall()
 
         # Agrupar reglas por operación
         por_operacion = {}
@@ -491,7 +491,7 @@ class TaxEngine:
             'alicuotas': [dict(a) for a in alicuotas],
         }
 
-    def actualizar_alicuota(self, codigo_impuesto: str, nueva_alicuota: float,
+    async def actualizar_alicuota(self, codigo_impuesto: str, nueva_alicuota: float,
                              base_calculo: str = 'NETO_GRAVADO',
                              vigencia_desde: str = None) -> bool:
         """
@@ -500,15 +500,15 @@ class TaxEngine:
         """
         hoy = vigencia_desde or datetime.date.today().isoformat()
 
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Obtener impuesto_id (puede ser global id=0 o propio)
-            cursor.execute("SELECT id FROM tax_impuestos WHERE codigo = %s AND (enterprise_id = 0 OR enterprise_id = %s) ORDER BY enterprise_id DESC LIMIT 1", (codigo_impuesto, self.enterprise_id))
-            imp = cursor.fetchone()
+            await cursor.execute("SELECT id FROM tax_impuestos WHERE codigo = %s AND (enterprise_id = 0 OR enterprise_id = %s) ORDER BY enterprise_id DESC LIMIT 1", (codigo_impuesto, self.enterprise_id))
+            imp = await cursor.fetchone()
             if not imp:
                 return False
 
             # Cerrar alícuota vigente anterior (si existe)
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE tax_alicuotas
                 SET vigencia_hasta = %s, activo = 0
                 WHERE enterprise_id = %s AND impuesto_id = %s
@@ -517,7 +517,7 @@ class TaxEngine:
             """, (hoy, self.enterprise_id, imp['id'], hoy))
 
             # Insertar nueva alícuota
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO tax_alicuotas
                     (enterprise_id, impuesto_id, alicuota, base_calculo, vigencia_desde)
                 VALUES (%s, %s, %s, %s, %s)
@@ -527,33 +527,33 @@ class TaxEngine:
         self._cache_alicuotas = None
         
         # Opcional: Auto-versionar si se desea
-        # self.create_version(f"Actualización alícuota {codigo_impuesto}", user_id=None)
+        # await self.create_version(f"Actualización alícuota {codigo_impuesto}", user_id=None)
         
         return True
 
-    def create_version(self, descripcion: str, user_id: int = None) -> str:
+    async def create_version(self, descripcion: str, user_id: int = None) -> str:
         """
         Genera una nueva versión completa del motor fiscal.
         Guarda toda la configuración actual (reglas y alicuotas) en un snapshot.
         """
         try:
-            with get_db_cursor(dictionary=True) as cursor:
+            async with get_db_cursor(dictionary=True) as cursor:
                 # 1. Obtener reglas actuales
-                cursor.execute("SELECT * FROM tax_reglas WHERE enterprise_id IN (0, %s) AND activo = 1", (self.enterprise_id,))
-                reglas = cursor.fetchall()
+                await cursor.execute("SELECT * FROM tax_reglas WHERE enterprise_id IN (0, %s) AND activo = 1", (self.enterprise_id,))
+                reglas = await cursor.fetchall()
                 
                 # 2. Obtener alicuotas actuales
-                cursor.execute("SELECT * FROM tax_alicuotas WHERE enterprise_id IN (0, %s) AND activo = 1", (self.enterprise_id,))
-                alicuotas = cursor.fetchall()
+                await cursor.execute("SELECT * FROM tax_alicuotas WHERE enterprise_id IN (0, %s) AND activo = 1", (self.enterprise_id,))
+                alicuotas = await cursor.fetchall()
                 
                 # 3. Determinar codigo versión (incrementar)
-                cursor.execute("""
+                await cursor.execute("""
                     SELECT version_code 
                     FROM tax_engine_versions 
                     WHERE enterprise_id = %s 
                     ORDER BY id DESC LIMIT 1
                 """, (self.enterprise_id,))
-                last_ver = cursor.fetchone()
+                last_ver = await cursor.fetchone()
                 
                 new_ver_code = "1.0"
                 if last_ver:
@@ -564,7 +564,7 @@ class TaxEngine:
                         new_ver_code = f"{last_ver['version_code']}.1"
                 
                 # 4. Insertar Versión
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO tax_engine_versions (enterprise_id, version_code, descripcion, usuario_id)
                     VALUES (%s, %s, %s, %s)
                 """, (self.enterprise_id, new_ver_code, descripcion, user_id))
@@ -575,7 +575,7 @@ class TaxEngine:
                 reglas_json = json.dumps(reglas, default=str, ensure_ascii=False)
                 alicuotas_json = json.dumps(alicuotas, default=str, ensure_ascii=False)
                 
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO tax_engine_snapshots (enterprise_id, version_id, reglas_json, alicuotas_json)
                     VALUES (%s, %s, %s, %s)
                 """, (self.enterprise_id, version_id, reglas_json, alicuotas_json))

@@ -157,7 +157,11 @@
                                                 class="fas fa-info-circle me-2"></i>Datos Básicos</h6>
                                     </div>
                                     <div class="card-body">
-                                        <p><strong>CUIT/DNI:</strong> {{ cliente.cuit }}</p>
+                                        <p><strong>CUIT/DNI:</strong> {{ cliente.cuit }} 
+                                            <button class="btn btn-xs btn-outline-danger ms-2 py-0 px-1" onclick="scanApoc('{{ cliente.id }}')" title="Verificar Apócrifos en AFIP">
+                                                <i class="fas fa-user-secret"></i> Scan
+                                            </button>
+                                        </p>
                                         <p><strong>Email Principal:</strong> {{ cliente.email or 'N/D' }}</p>
                                         <p><strong>Teléfono Principal:</strong> {{ cliente.telefono or 'N/D' }}</p>
                                         <hr>
@@ -1661,5 +1665,65 @@
             const chk = document.getElementById('chk_habilita_cta_cte');
             if (chk) toggleMontoCta(chk.checked);
         });
+
+        async function scanApoc(clientId) {
+            Swal.fire({
+                title: 'Conectando con AFIP...',
+                text: 'Consultando base de contribuyentes apócrifos (APOC)',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const response = await fetch(`/api/ventas/cliente/${clientId}/check-apoc`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    Swal.fire({
+                        title: 'Error de Auditoría',
+                        text: data.message || 'No se pudo completar la consulta con AFIP.',
+                        icon: 'error',
+                        confirmButtonColor: '#d33'
+                    });
+                    return;
+                }
+
+                const result = data.data;
+                const isApoc = result.is_apoc;
+                
+                let icon = isApoc ? 'warning' : 'success';
+                let title = isApoc ? 'CONTRIBUYENTE APÓCRIFO DETECTADO' : 'Contribuyente Limpio';
+                let color = isApoc ? '#d33' : '#28a745';
+
+                let html = `
+                    <div class="text-start">
+                        <p class="mb-2"><strong>CUIT:</strong> ${result.cuit}</p>
+                        <p class="mb-2"><strong>Resultado:</strong> <span class="badge bg-${isApoc ? 'danger' : 'success'}">${isApoc ? 'ENCONTRADO EN BASE APOC' : 'No figura en base APOC'}</span></p>
+                        <hr>
+                        <div class="small text-muted mb-3">
+                            <i class="fas fa-info-circle me-1"></i> ${isApoc ? 'Este contribuyente figura en el listado de facturación apócrifa de AFIP. No se recomienda operar con este CUIT ya que sus facturas podrían ser impugnadas.' : 'No se encontraron registros de irregularidades en el padrón APOC de AFIP. El contribuyente se encuentra habilitado para la emisión/recepción de comprobantes standard.'}
+                        </div>
+                    </div>
+                `;
+
+                Swal.fire({
+                    title: title,
+                    icon: icon,
+                    html: html,
+                    confirmButtonText: 'Cerrar',
+                    confirmButtonColor: color,
+                    customClass: {
+                        popup: 'premium-modal shadow-lg'
+                    }
+                });
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error de Conexión', 'No se pudo contactar con el servidor de auditoría central.', 'error');
+            }
+        }
     </script>
     {% endblock %}

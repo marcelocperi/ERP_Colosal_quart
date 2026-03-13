@@ -1,5 +1,5 @@
 
-from flask import render_template, request, jsonify, g, flash, redirect, url_for
+from quart import render_template, request, jsonify, g, flash, redirect, url_for
 from core.decorators import login_required, permission_required
 from database import get_db_cursor
 from services.consignment_service import ConsignmentService
@@ -16,25 +16,25 @@ def register_fazon_routes(bp):
     @bp.route('/compras/fazon/dashboard', methods=['GET'])
     @login_required
     @permission_required('view_compras')
-    def fazon_dashboard():
+    async def fazon_dashboard():
         """Tablero de Control de Stock Externo (Fazón/Consignación)."""
         ent_id = g.user['enterprise_id']
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Traer depósitos de tipo FAZON o CONSIGNACION
-            cursor.execute('''
+            await cursor.execute('''
                 SELECT d.*, t.nombre as tercero_nombre 
                 FROM stk_depositos d
                 LEFT JOIN erp_terceros t ON d.tercero_id = t.id
                 WHERE d.enterprise_id = %s AND d.tipo_propiedad != 'PROPIO'
                 ORDER BY d.nombre ASC
             ''', (ent_id,))
-            depositos_externos = cursor.fetchall()
+            depositos_externos = await cursor.fetchall()
             
             # 2. Resumen de stock en consignación
-            stock_consignado = ConsignmentService.get_stock_en_consignacion(ent_id)
+            stock_consignado = await ConsignmentService.get_stock_en_consignacion(ent_id)
             
             # 3. Liquidaciones pendientes de facturar
-            cursor.execute('''
+            await cursor.execute('''
                 SELECT l.*, t.nombre as tercero_nombre, d.nombre as deposito_nombre
                 FROM stk_liquidaciones_consignacion l
                 JOIN erp_terceros t ON l.tercero_id = t.id
@@ -42,9 +42,9 @@ def register_fazon_routes(bp):
                 WHERE l.enterprise_id = %s AND l.estado = 'PENDIENTE_FACTURACION'
                 ORDER BY l.fecha_reporte DESC
             ''', (ent_id,))
-            liquidaciones_pendientes = cursor.fetchall()
+            liquidaciones_pendientes = await cursor.fetchall()
 
-        return render_template('compras/fazon/dashboard.html', 
+        return await render_template('compras/fazon/dashboard.html', 
                              depositos=depositos_externos, 
                              stock=stock_consignado, 
                              liquidaciones=liquidaciones_pendientes)
@@ -52,9 +52,9 @@ def register_fazon_routes(bp):
     @bp.route('/compras/fazon/api/reportar-consumo', methods=['POST'])
     @login_required
     @permission_required('compras.facturar_compras')
-    def api_fazon_reportar_consumo():
+    async def api_fazon_reportar_consumo():
         """Registra el consumo reportado por el tercero y genera la liquidación."""
-        data = request.json
+        data = (await request.json)
         ent_id = g.user['enterprise_id']
         uid = g.user['id']
         
@@ -66,9 +66,9 @@ def register_fazon_routes(bp):
             return jsonify({'success': False, 'message': 'Datos incompletos'}), 400
             
         try:
-            with get_db_cursor() as cursor:
+            async with get_db_cursor() as cursor:
                 # 1. Crear liquidación cabecera
-                cursor.execute('''
+                await cursor.execute('''
                     INSERT INTO stk_liquidaciones_consignacion 
                     (enterprise_id, tercero_id, deposito_id, estado, user_id)
                     VALUES (%s, %s, %s, 'PENDIENTE_FACTURACION', %s)
@@ -77,7 +77,7 @@ def register_fazon_routes(bp):
                 
                 # 2. Insertar detalles
                 for it in items:
-                    cursor.execute('''
+                    await cursor.execute('''
                         INSERT INTO stk_liquidaciones_consignacion_det 
                         (liquidacion_id, articulo_id, cantidad_consumida, precio_pactado)
                         VALUES (%s, %s, %s, %s)
@@ -85,7 +85,7 @@ def register_fazon_routes(bp):
                     
                     # 3. Descontar stock del depósito externo
                     # Nota: Aquí se debería invocar al StockService para registrar el egreso por consumo
-                    cursor.execute('''
+                    await cursor.execute('''
                         UPDATE stk_existencias 
                         SET cantidad = cantidad - %s 
                         WHERE enterprise_id = %s AND deposito_id = %s AND articulo_id = %s

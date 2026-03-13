@@ -150,14 +150,14 @@ def dashboard():
             elif any(p.startswith('admin') or p in ['admin_users', 'admin_roles'] for p in perms):
                 return redirect(url_for('core.admin_users'))
             elif any(p.startswith('patrons') or p.startswith('biblioteca') for p in perms):
-                return render_template('dashboard.html')
+                return await render_template('dashboard.html')
                 
             # Si llegamos aquí y hay permisos, permitimos ver el dashboard básico por defecto
             if perms:
-                return render_template('dashboard.html')
+                return await render_template('dashboard.html')
         except Exception as e:
             logger.error(f"DISPATCH ERROR: {e}")
-            return render_template('dashboard.html')
+            return await render_template('dashboard.html')
     
         # Fallback final solo si realmente no tiene nada
         flash("Configuración de acceso incompleta. Contacte a soporte.", "warning")
@@ -166,7 +166,7 @@ def dashboard():
         import traceback
         traceback.print_exc()
         flash(f"Error general en el dashboard: {str(e)}", "danger")
-        return render_template('dashboard.html')
+        return await render_template('dashboard.html')
 
 
 @biblioteca_bp.route('/api/dolar/refresh')
@@ -197,7 +197,7 @@ def usuarios():
     for r in rows:
         final_users.append({'id': r[0], 'nombre': r[1], 'apellido': r[2], 'telefono': r[3], 'email': r[4]})
         
-    return render_template('usuarios.html', usuarios=final_users)
+    return await render_template('usuarios.html', usuarios=final_users)
 
 @biblioteca_bp.route('/usuarios/agregar', methods=['POST'])
 @login_required
@@ -267,7 +267,7 @@ def prestamos():
         cursor.execute("SELECT id, nombre, codigo as isbn FROM stk_articulos WHERE enterprise_id = %s ORDER BY nombre", (g.user['enterprise_id'],))
         libros_list = cursor.fetchall()
         
-    return render_template('prestamos.html', prestamos=prestamos, usuarios=usuarios_list, libros=libros_list)
+    return await render_template('prestamos.html', prestamos=prestamos, usuarios=usuarios_list, libros=libros_list)
 
 @biblioteca_bp.route('/prestamos/buscar')
 @login_required

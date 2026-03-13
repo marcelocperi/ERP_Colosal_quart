@@ -16,7 +16,7 @@ class VesselTrackingService:
     API_KEY = "PLACEHOLDER_KEY" # Se debe configurar via variable de entorno en producción
 
     @classmethod
-    def track_vessel_by_mmsi(cls, enterprise_id, orden_id, mmsi, user_id):
+    async def track_vessel_by_mmsi(cls, enterprise_id, orden_id, mmsi, user_id):
         """
         Consulta la posición y estado de un buque por su número MMSI.
         Fase 1: Conectividad y Persistencia.
@@ -36,8 +36,8 @@ class VesselTrackingService:
 
         # Guardar en la tabla imp_vessel_tracking
         try:
-            with get_db_cursor() as cursor:
-                cursor.execute("""
+            async with get_db_cursor() as cursor:
+                await cursor.execute("""
                     INSERT INTO imp_vessel_tracking (
                         enterprise_id, orden_compra_id, vessel_mmsi, vessel_name,
                         last_lat, last_lon, eta_predicted, vessel_status,
@@ -51,7 +51,7 @@ class VesselTrackingService:
                 tracking_id = cursor.lastrowid
                 
                 # Sincronizar nombre del buque en la tabla de despacho
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE imp_despachos SET vessel_name = %s 
                     WHERE orden_compra_id = %s AND enterprise_id = %s
                 """, (data['name'], orden_id, enterprise_id))
@@ -66,15 +66,15 @@ class VesselTrackingService:
             return {'success': False, 'message': str(e)}
 
     @classmethod
-    def get_last_tracking(cls, orden_id, enterprise_id):
+    async def get_last_tracking(cls, orden_id, enterprise_id):
         """Recupera la última posición conocida del buque para una orden."""
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 SELECT * FROM imp_vessel_tracking 
                 WHERE orden_compra_id = %s AND enterprise_id = %s
                 ORDER BY created_at DESC LIMIT 1
             """, (orden_id, enterprise_id))
-            return cursor.fetchone()
+            return await cursor.fetchone()
 
     @classmethod
     def _simulate_api_response(cls, mmsi):

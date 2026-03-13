@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, g, flash, redirect, url_for, jsonify
+from quart import Blueprint, render_template, request, g, flash, redirect, url_for, jsonify
 from core.decorators import login_required, permission_required
 from database import get_db_cursor, atomic_transaction
 import json
@@ -25,7 +25,7 @@ register_fazon_routes(stock_bp)
 @stock_bp.route('/dashboard')
 @login_required
 @permission_required('view_articulos')
-def dashboard():
+async def dashboard():
     """Tablero principal de Inventario y existencias
     NOTA: No actualizar este dashboard por ahora (pendiente para otra etapa)
     """
@@ -34,10 +34,10 @@ def dashboard():
         search_query = request.args.get('q', '')
         deposito_id = request.args.get('deposito_id')
         
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Depósitos (Warehouse)
-            cursor.execute("SELECT id, nombre FROM stk_depositos WHERE enterprise_id = %s AND activo = 1", (ent_id,))
-            depositos = cursor.fetchall()
+            await cursor.execute("SELECT id, nombre FROM stk_depositos WHERE enterprise_id = %s AND activo = 1", (ent_id,))
+            depositos = await cursor.fetchall()
             
             # 2. Resumen de Existencias
             sql = """
@@ -63,14 +63,14 @@ def dashboard():
                 
             sql += " ORDER BY stk_articulos.nombre ASC"
             
-            cursor.execute(sql, tuple(params))
-            items = cursor.fetchall()
+            await cursor.execute(sql, tuple(params))
+            items = await cursor.fetchall()
             
             # Estadísticas rápidas
-            cursor.execute("SELECT SUM(cantidad) as total FROM stk_existencias WHERE enterprise_id = %s", (ent_id,))
-            total_stock = cursor.fetchone()['total'] or 0
+            await cursor.execute("SELECT SUM(cantidad) as total FROM stk_existencias WHERE enterprise_id = %s", (ent_id,))
+            total_stock = await cursor.fetchone()['total'] or 0
     
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT COUNT(*) as low_stock_count
                 FROM (
                     SELECT stk_articulos.id
@@ -82,9 +82,9 @@ def dashboard():
                        AND stk_articulos.stock_minimo > 0
                 ) as low_stock
             """, (ent_id,))
-            low_stock_count = cursor.fetchone()['low_stock_count'] or 0
+            low_stock_count = await cursor.fetchone()['low_stock_count'] or 0
                 
-        return render_template('stock/dashboard.html', 
+        return await render_template('stock/dashboard.html', 
                                depositos=depositos, 
                                items=items, 
                                total_stock=total_stock,
@@ -92,36 +92,36 @@ def dashboard():
     except Exception as e:
         import traceback
         traceback.print_exc()
-        flash(f"Error al cargar el dashboard de stock: {str(e)}", "danger")
+        await flash(f"Error al cargar el dashboard de stock: {str(e)}", "danger")
         return redirect('/')
 
 @stock_bp.route('/movimientos/nuevo', methods=['GET', 'POST'])
 @login_required
 @atomic_transaction('stock', severity=7, impact_category='Operational')
-def movimiento_crear():
+async def movimiento_crear():
     """Registro de movimientos de stock (Entrada, Salida, Transferencia)"""
     ent_id = g.user['enterprise_id']
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         if request.method == 'POST':
-            motivo_id = request.form.get('motivo_id')
-            dep_origen = request.form.get('dep_origen')
-            dep_destino = request.form.get('dep_destino')
-            tercero_id = request.form.get('tercero_id')
-            articulo_id = request.form.get('articulo_id')
-            cantidad = int(request.form.get('cantidad', 0))
-            observaciones = request.form.get('observaciones')
+            motivo_id = (await request.form).get('motivo_id')
+            dep_origen = (await request.form).get('dep_origen')
+            dep_destino = (await request.form).get('dep_destino')
+            tercero_id = (await request.form).get('tercero_id')
+            articulo_id = (await request.form).get('articulo_id')
+            cantidad = int((await request.form).get('cantidad', 0))
+            observaciones = (await request.form).get('observaciones')
             
             # SoD Control: El bypass solo es válido si el usuario tiene el permiso específico
             has_bypass_permission = 'safety_bypass' in g.permissions or 'all' in g.permissions
             
             if not articulo_id or cantidad <= 0:
-                flash("Artículo y cantidad son requeridos.", "warning")
+                await flash("Artículo y cantidad son requeridos.", "warning")
             else:
                 try:
                     # Datos del motivo
-                    cursor.execute("SELECT tipo, nombre FROM stk_motivos WHERE id = %s AND enterprise_id = %s", (motivo_id, ent_id))
-                    motivo = cursor.fetchone()
+                    await cursor.execute("SELECT tipo, nombre FROM stk_motivos WHERE id = %s AND enterprise_id = %s", (motivo_id, ent_id))
+                    motivo = await cursor.fetchone()
                     if not motivo: raise Exception("Motivo inválido o no pertenece a la empresa.")
                     
                     tipo = motivo['tipo']
@@ -138,27 +138,27 @@ def movimiento_crear():
 
                     # --- SEGURIDAD INDUSTRIAL: Chequeo de Incompatibilidades ---
                     if dep_destino:
-                         cursor.execute("""
+                         await cursor.execute("""
                              SELECT stk_articulos_seguridad.*, stk_articulos.nombre as nombre_comun 
                              FROM stk_articulos_seguridad
                              JOIN stk_articulos ON stk_articulos_seguridad.articulo_id = stk_articulos.id
                              WHERE stk_articulos_seguridad.articulo_id = %s AND stk_articulos_seguridad.enterprise_id = %s
                          """, (articulo_id, ent_id))
-                         incoming_s = cursor.fetchone()
+                         incoming_s = await cursor.fetchone()
                          
                          if incoming_s:
                              if incoming_s['pictogramas_json']:
                                  incoming_s['pictogramas_json'] = json.loads(incoming_s['pictogramas_json'])
                              
                              # Obtener lo que ya existe en el depósito de destino
-                             cursor.execute("""
+                             await cursor.execute("""
                                  SELECT stk_articulos_seguridad.*, stk_articulos.nombre as nombre_comun
                                  FROM stk_articulos_seguridad
                                  JOIN stk_existencias ON stk_articulos_seguridad.articulo_id = stk_existencias.articulo_id AND stk_articulos_seguridad.enterprise_id = stk_existencias.enterprise_id
                                  JOIN stk_articulos ON stk_articulos_seguridad.articulo_id = stk_articulos.id
                                  WHERE stk_existencias.deposito_id = %s AND stk_existencias.cantidad > 0 AND stk_articulos_seguridad.enterprise_id = %s
                              """, (dep_destino, ent_id))
-                             existing_s = cursor.fetchall()
+                             existing_s = await cursor.fetchall()
                              
                              for item in existing_s:
                                  if item['pictogramas_json']:
@@ -168,24 +168,24 @@ def movimiento_crear():
 
                              if safety_alerts:
                                  for alert in safety_alerts:
-                                     flash(alert["message"], "danger" if alert["severity"] == "DANGER" else "warning")
+                                     await flash(alert["message"], "danger" if alert["severity"] == "DANGER" else "warning")
                                      if alert["severity"] == "DANGER":
-                                         if request.form.get("safety_bypass") == "on":
+                                         if (await request.form).get("safety_bypass") == "on":
                                              if not ("safety_bypass" in g.permissions or "all" in g.permissions):
                                                  raise Exception(f"ACCESO DENEGADO (SoD): No tiene permiso 'safety_bypass' para omitir el bloqueo de: {alert['message']}")
                                          else:
                                              raise Exception(f"BLOQUEO DE SEGURIDAD INDUSTRIAL: {alert['message']}")
                     # Insertar Cabecera
-                    cursor.execute("""
+                    await cursor.execute("""
                         INSERT INTO stk_movimientos (enterprise_id, fecha, motivo_id, deposito_origen_id, deposito_destino_id, tercero_id, user_id, observaciones)
                         VALUES (%s, NOW(), %s, %s, %s, %s, %s, %s)
                     """, (ent_id, motivo_id, dep_origen or None, dep_destino or None, tercero_id or None, g.user['id'], observaciones))
                     
-                    cursor.execute("SELECT LAST_INSERT_ID() as id")
-                    mov_id = cursor.fetchone()['id']
+                    await cursor.execute("SELECT LAST_INSERT_ID() as id")
+                    mov_id = await cursor.fetchone()['id']
                     
                     # Insertar Detalle
-                    cursor.execute("""
+                    await cursor.execute("""
                         INSERT INTO stk_movimientos_detalle (enterprise_id, movimiento_id, articulo_id, cantidad, user_id)
                         VALUES (%s, %s, %s, %s, %s)
                     """, (ent_id, mov_id, articulo_id, cantidad, g.user['id']))
@@ -193,42 +193,42 @@ def movimiento_crear():
                     # ACTUALIZAR EXISTENCIAS
                     # Restar de Origen
                     if tipo in ['SALIDA', 'TRANSFERENCIA'] and dep_origen:
-                        cursor.execute("""
+                        await cursor.execute("""
                             UPDATE stk_existencias SET cantidad = cantidad - %s, last_updated = NOW(), user_id_update = %s
                             WHERE deposito_id = %s AND articulo_id = %s AND enterprise_id = %s
                         """, (cantidad, g.user['id'], dep_origen, articulo_id, ent_id))
                         if cursor.rowcount == 0:
-                            cursor.execute("INSERT INTO stk_existencias (enterprise_id, deposito_id, articulo_id, cantidad) VALUES (%s, %s, %s, %s)", (ent_id, dep_origen, articulo_id, -cantidad))
+                            await cursor.execute("INSERT INTO stk_existencias (enterprise_id, deposito_id, articulo_id, cantidad) VALUES (%s, %s, %s, %s)", (ent_id, dep_origen, articulo_id, -cantidad))
 
                     # Sumar a Destino
                     if tipo in ['ENTRADA', 'TRANSFERENCIA'] and dep_destino:
-                        cursor.execute("""
+                        await cursor.execute("""
                             UPDATE stk_existencias SET cantidad = cantidad + %s, last_updated = NOW()
                             WHERE deposito_id = %s AND articulo_id = %s AND enterprise_id = %s
                         """, (cantidad, dep_destino, articulo_id, ent_id))
                         if cursor.rowcount == 0:
-                            cursor.execute("INSERT INTO stk_existencias (enterprise_id, deposito_id, articulo_id, cantidad) VALUES (%s, %s, %s, %s)", (ent_id, dep_destino, articulo_id, cantidad))
+                            await cursor.execute("INSERT INTO stk_existencias (enterprise_id, deposito_id, articulo_id, cantidad) VALUES (%s, %s, %s, %s)", (ent_id, dep_destino, articulo_id, cantidad))
 
-                    flash(f"Movimiento '{motivo['nombre']}' registrado con éxito.", "success")
+                    await flash(f"Movimiento '{motivo['nombre']}' registrado con éxito.", "success")
                     return redirect(url_for('stock.dashboard'))
 
                 except Exception as e:
-                    flash(f"Error: {e}", "danger")
+                    await flash(f"Error: {e}", "danger")
 
         # Carga de combos para el formulario
-        cursor.execute("SELECT id, nombre, tipo FROM stk_motivos WHERE enterprise_id = %s ORDER BY nombre", (ent_id,))
-        motivos = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre, tipo FROM stk_motivos WHERE enterprise_id = %s ORDER BY nombre", (ent_id,))
+        motivos = await cursor.fetchall()
         
-        cursor.execute("SELECT id, nombre FROM stk_depositos WHERE enterprise_id = %s AND activo = 1", (ent_id,))
-        depositos = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre FROM stk_depositos WHERE enterprise_id = %s AND activo = 1", (ent_id,))
+        depositos = await cursor.fetchall()
         
-        cursor.execute("SELECT id, nombre as titulo, codigo as isbn FROM stk_articulos WHERE enterprise_id = %s ORDER BY nombre", (ent_id,))
-        articulos = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre as titulo, codigo as isbn FROM stk_articulos WHERE enterprise_id = %s ORDER BY nombre", (ent_id,))
+        articulos = await cursor.fetchall()
         
-        cursor.execute("SELECT id, nombre, es_cliente, es_proveedor FROM erp_terceros WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
-        terceros = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre, es_cliente, es_proveedor FROM erp_terceros WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
+        terceros = await cursor.fetchall()
         
-    return render_template('stock/movimiento_form.html', 
+    return await render_template('stock/movimiento_form.html', 
                            motivos=motivos, 
                            depositos=depositos, 
                            articulos=articulos,
@@ -236,13 +236,13 @@ def movimiento_crear():
 @stock_bp.route('/movimientos')
 @login_required
 @permission_required('view_movimientos')
-def movimientos_historial():
+async def movimientos_historial():
     """Historial de movimientos de stock"""
     ent_id = g.user['enterprise_id']
     
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT 
                     stk_movimientos.id, stk_movimientos.fecha, stk_motivos.nombre as motivo, stk_motivos.tipo,
                     do.nombre as origen, dd.nombre as destino,
@@ -257,23 +257,23 @@ def movimientos_historial():
                 ORDER BY stk_movimientos.fecha DESC
                 LIMIT 100
             """, (ent_id,))
-            movimientos = cursor.fetchall()
+            movimientos = await cursor.fetchall()
             
-        return render_template('stock/movimientos_historial.html', movimientos=movimientos)
+        return await render_template('stock/movimientos_historial.html', movimientos=movimientos)
     except Exception as e:
-        flash(f"Error cargando historial: {e}", "danger")
+        await flash(f"Error cargando historial: {e}", "danger")
         return redirect(url_for('stock.dashboard'))
 
 @stock_bp.route('/movimientos/detalle/<int:id>')
 @login_required
-def movimiento_detalle(id):
+async def movimiento_detalle(id):
     """Ver detalle de un movimiento específico"""
     ent_id = g.user['enterprise_id']
     
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Cabecera
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT 
                     stk_movimientos.id, stk_movimientos.fecha, stk_motivos.nombre as motivo, stk_motivos.tipo,
                     do.nombre as origen, dd.nombre as destino,
@@ -286,44 +286,44 @@ def movimiento_detalle(id):
                 LEFT JOIN erp_terceros ON stk_movimientos.tercero_id = erp_terceros.id
                 WHERE stk_movimientos.id = %s AND stk_movimientos.enterprise_id = %s
             """, (id, ent_id))
-            mov = cursor.fetchone()
+            mov = await cursor.fetchone()
             
             if not mov:
-                flash("Movimiento no encontrado.", "danger")
+                await flash("Movimiento no encontrado.", "danger")
                 return redirect(url_for('stock.movimientos_historial'))
                 
             # Detalle de items
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT stk_articulos.nombre as articulo, stk_articulos.codigo as isbn, stk_movimientos_detalle.cantidad
                 FROM stk_movimientos_detalle
                 JOIN stk_articulos ON stk_movimientos_detalle.articulo_id = stk_articulos.id
                 WHERE stk_movimientos_detalle.movimiento_id = %s
             """, (id,))
-            detalles = cursor.fetchall()
+            detalles = await cursor.fetchall()
             
-        return render_template('stock/movimiento_detalle.html', mov=mov, detalles=detalles)
+        return await render_template('stock/movimiento_detalle.html', mov=mov, detalles=detalles)
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('stock.movimientos_historial'))
 
 @stock_bp.route('/historial/<int:id>')
 @login_required
-def articulo_historial(id):
+async def articulo_historial(id):
     """Historial de movimientos para un artículo específico"""
     ent_id = g.user['enterprise_id']
     
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Info del artículo
-            cursor.execute("SELECT nombre, codigo as isbn FROM stk_articulos WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-            articulo = cursor.fetchone()
+            await cursor.execute("SELECT nombre, codigo as isbn FROM stk_articulos WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+            articulo = await cursor.fetchone()
             
             if not articulo:
-                flash("Artículo no encontrado.", "danger")
+                await flash("Artículo no encontrado.", "danger")
                 return redirect(url_for('stock.articulos'))
                 
             # Movimientos vinculados
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT 
                     stk_movimientos.id as movimiento_id, stk_movimientos.fecha, stk_motivos.nombre as motivo, stk_motivos.tipo,
                     do.nombre as origen, dd.nombre as destino,
@@ -340,18 +340,18 @@ def articulo_historial(id):
                 ORDER BY stk_movimientos.fecha DESC
                 LIMIT 200
             """, (id, ent_id))
-            historial = cursor.fetchall()
+            historial = await cursor.fetchall()
             
-        return render_template('stock/articulo_historial.html', 
+        return await render_template('stock/articulo_historial.html', 
                              articulo=articulo, 
                              historial=historial)
     except Exception as e:
-        flash(f"Error cargando historial del artículo: {e}", "danger")
+        await flash(f"Error cargando historial del artículo: {e}", "danger")
         return redirect(url_for('stock.articulos'))
 
 @stock_bp.route('/articulos')
 @login_required
-def articulos():
+async def articulos():
     """Maestro de Artículos desde la perspectiva de Stock (con funcionalidad de Biblioteca)"""
     ent_id = g.user['enterprise_id']
     # Filtros avanzados
@@ -371,7 +371,7 @@ def articulos():
     offset = (page - 1) * per_page
     
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Query base para contar total de registros
             count_sql = """
                 SELECT COUNT(*) as total
@@ -472,16 +472,16 @@ def articulos():
                 count_sql += clause
             
             # Obtener total de registros
-            cursor.execute(count_sql, tuple(count_params))
-            total_items = cursor.fetchone()['total']
+            await cursor.execute(count_sql, tuple(count_params))
+            total_items = await cursor.fetchone()['total']
             total_pages = (total_items + per_page - 1) // per_page  # Ceiling division
             
             # Agregar ORDER BY, LIMIT y OFFSET
             sql += " ORDER BY stk_articulos.nombre ASC LIMIT %s OFFSET %s"
             params.extend([per_page, offset])
             
-            cursor.execute(sql, tuple(params))
-            articulos_data = cursor.fetchall()
+            await cursor.execute(sql, tuple(params))
+            articulos_data = await cursor.fetchall()
 
             # Limpiar descripciones que vienen como objetos JSON (ej: Open Library)
             for a in articulos_data:
@@ -494,8 +494,8 @@ def articulos():
 
             # Obtener Tipos para el modal
             # Select specific columns to ensure clean JSON serialization
-            cursor.execute("SELECT id, nombre, custom_fields_schema, naturaleza FROM stk_tipos_articulo WHERE enterprise_id = %s OR enterprise_id = 0 ORDER BY nombre", (ent_id,))
-            tipos = cursor.fetchall()
+            await cursor.execute("SELECT id, nombre, custom_fields_schema, naturaleza FROM stk_tipos_articulo WHERE enterprise_id = %s OR enterprise_id = 0 ORDER BY nombre", (ent_id,))
+            tipos = await cursor.fetchall()
             
             # Serialize for JS
             tipos_list = []
@@ -520,36 +520,36 @@ def articulos():
             tipos_json = json.dumps(tipos_list)
             
             # Obtener usuarios para préstamos (SOCIOS/CLIENTES)
-            cursor.execute("SELECT id, nombre, apellido, email FROM usuarios WHERE enterprise_id = %s ORDER BY apellido LIMIT 100", (ent_id,))
-            usuarios = cursor.fetchall()
+            await cursor.execute("SELECT id, nombre, apellido, email FROM usuarios WHERE enterprise_id = %s ORDER BY apellido LIMIT 100", (ent_id,))
+            usuarios = await cursor.fetchall()
             
             # Obtener valores distintos para los filtros
-            cursor.execute("SELECT DISTINCT modelo FROM stk_articulos WHERE enterprise_id = %s AND modelo IS NOT NULL ORDER BY modelo", (ent_id,))
-            autores = [r['modelo'] for r in cursor.fetchall()]
+            await cursor.execute("SELECT DISTINCT modelo FROM stk_articulos WHERE enterprise_id = %s AND modelo IS NOT NULL ORDER BY modelo", (ent_id,))
+            autores = [r['modelo'] for r in await cursor.fetchall()]
             
-            cursor.execute("SELECT DISTINCT marca FROM stk_articulos WHERE enterprise_id = %s AND marca IS NOT NULL ORDER BY marca", (ent_id,))
-            editoriales = [r['marca'] for r in cursor.fetchall()]
+            await cursor.execute("SELECT DISTINCT marca FROM stk_articulos WHERE enterprise_id = %s AND marca IS NOT NULL ORDER BY marca", (ent_id,))
+            editoriales = [r['marca'] for r in await cursor.fetchall()]
             
             # Obtener valores distintos para los filtros (Optimizado con columnas virtuales)
-            cursor.execute("SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.genero')) as genero FROM stk_articulos WHERE enterprise_id = %s ORDER BY genero", (ent_id,))
-            generos = [r['genero'] for r in cursor.fetchall() if r['genero']]
+            await cursor.execute("SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.genero')) as genero FROM stk_articulos WHERE enterprise_id = %s ORDER BY genero", (ent_id,))
+            generos = [r['genero'] for r in await cursor.fetchall() if r['genero']]
             
-            cursor.execute("SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.lengua')) as lengua FROM stk_articulos WHERE enterprise_id = %s ORDER BY lengua", (ent_id,))
-            lenguas = [r['lengua'] for r in cursor.fetchall() if r['lengua']]
+            await cursor.execute("SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.lengua')) as lengua FROM stk_articulos WHERE enterprise_id = %s ORDER BY lengua", (ent_id,))
+            lenguas = [r['lengua'] for r in await cursor.fetchall() if r['lengua']]
             
-            cursor.execute("SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.origen')) as origen FROM stk_articulos WHERE enterprise_id = %s ORDER BY origen", (ent_id,))
-            origenes = [r['origen'] for r in cursor.fetchall() if r['origen']]
+            await cursor.execute("SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.origen')) as origen FROM stk_articulos WHERE enterprise_id = %s ORDER BY origen", (ent_id,))
+            origenes = [r['origen'] for r in await cursor.fetchall() if r['origen']]
             
             # Count pending enrichment for the UI button badge (Based on missing cover_url or descripcion in metadata)
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT COUNT(*) as pending 
                 FROM stk_articulos 
                 WHERE enterprise_id = %s 
                 AND (JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.cover_url')) IS NULL OR JSON_UNQUOTE(JSON_EXTRACT(metadata_json, '$.cover_url')) = '')
             """, (ent_id,))
-            pending_count = cursor.fetchone()['pending'] or 0
+            pending_count = await cursor.fetchone()['pending'] or 0
             
-        return render_template('stock/articulos.html', 
+        return await render_template('stock/articulos.html', 
                              articulos=articulos_data, 
                              pending_count=pending_count,
                              autores=autores,
@@ -577,36 +577,36 @@ def articulos():
                              tipos=tipos,
                              tipos_json=tipos_json) # Pass full types config for JS
     except Exception as e:
-        flash(f"Error cargando artículos: {e}", "danger")
+        await flash(f"Error cargando artículos: {e}", "danger")
         return redirect(url_for('stock.dashboard'))
 
 @stock_bp.route('/articulos/guardar', methods=['POST'])
 @login_required
 @permission_required('books_add')
 @atomic_transaction('stock', severity=5, impact_category='Technical')
-def articulo_guardar():
+async def articulo_guardar():
     """Crear o actualizar un artículo (Producto, Servicio, Abono)"""
     ent_id = g.user['enterprise_id']
-    id_articulo = request.form.get('id')
+    id_articulo = (await request.form).get('id')
     
     try:
-        nombre = request.form.get('nombre', '')
-        autor = request.form.get('autor', '')
-        isbn = request.form.get('isbn', '')
-        genero = request.form.get('genero')
-        precio = request.form.get('precio')
-        editorial = request.form.get('editorial')
-        tipo_id = request.form.get('tipo_articulo_id', 1) 
-        fecha_pub = request.form.get('fecha_publicacion')
-        desc_nueva = request.form.get('descripcion')
+        nombre = (await request.form).get('nombre', '')
+        autor = (await request.form).get('autor', '')
+        isbn = (await request.form).get('isbn', '')
+        genero = (await request.form).get('genero')
+        precio = (await request.form).get('precio')
+        editorial = (await request.form).get('editorial')
+        tipo_id = (await request.form).get('tipo_articulo_id', 1) 
+        fecha_pub = (await request.form).get('fecha_publicacion')
+        desc_nueva = (await request.form).get('descripcion')
         
         # Financial Fields
-        costo = request.form.get('costo', 0)
-        costo_reposicion = request.form.get('costo_reposicion', 0)
-        metodo_costeo = request.form.get('metodo_costeo', 'CPP')
-        punto_pedido = request.form.get('punto_pedido', 0)
-        stock_minimo = request.form.get('stock_minimo', 0)
-        cant_min_pedido = request.form.get('cant_min_pedido', 1)
+        costo = (await request.form).get('costo', 0)
+        costo_reposicion = (await request.form).get('costo_reposicion', 0)
+        metodo_costeo = (await request.form).get('metodo_costeo', 'CPP')
+        punto_pedido = (await request.form).get('punto_pedido', 0)
+        stock_minimo = (await request.form).get('stock_minimo', 0)
+        cant_min_pedido = (await request.form).get('cant_min_pedido', 1)
         
         try:
             punto_pedido = int(punto_pedido) if punto_pedido else 0
@@ -617,20 +617,20 @@ def articulo_guardar():
             pass
             
         # New Fields
-        naturaleza = request.form.get('naturaleza', 'PRODUCTO')
-        requiere_serie = request.form.get('requiere_serie') == 'on'
-        patron_serie = request.form.get('patron_serie')
-        genera_serie = request.form.get('genera_serie_automatica') == '1'
-        sku_origen = request.form.get('sku_origen', 'PROPIO')
+        naturaleza = (await request.form).get('naturaleza', 'PRODUCTO')
+        requiere_serie = (await request.form).get('requiere_serie') == 'on'
+        patron_serie = (await request.form).get('patron_serie')
+        genera_serie = (await request.form).get('genera_serie_automatica') == '1'
+        sku_origen = (await request.form).get('sku_origen', 'PROPIO')
         
         # Service Config
         config_servicio = None
         es_recurrente = 0
         
         if naturaleza in ('SERVICIO', 'ABONO'):
-            recurrencia = request.form.get('service_recurrencia', 'EVENTUAL')
-            duracion = request.form.get('service_duracion', 0)
-            es_recurrente_chk = request.form.get('es_recurrente') == 'on'
+            recurrencia = (await request.form).get('service_recurrencia', 'EVENTUAL')
+            duracion = (await request.form).get('service_duracion', 0)
+            es_recurrente_chk = (await request.form).get('es_recurrente') == 'on'
             
             config_servicio = json.dumps({
                 'recurrencia': recurrencia,
@@ -639,12 +639,12 @@ def articulo_guardar():
             })
             es_recurrente = 1 if es_recurrente_chk else 0
 
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # metadata preparation
             if id_articulo:
                 # Update existing
-                cursor.execute("SELECT metadata_json FROM stk_articulos WHERE id=%s AND enterprise_id=%s", (id_articulo, ent_id))
-                row = cursor.fetchone()
+                await cursor.execute("SELECT metadata_json FROM stk_articulos WHERE id=%s AND enterprise_id=%s", (id_articulo, ent_id))
+                row = await cursor.fetchone()
                 metadata = json.loads(row[0]) if row and row[0] else {}
             else:
                 # New
@@ -656,13 +656,13 @@ def articulo_guardar():
             if desc_nueva is not None: metadata['descripcion'] = desc_nueva
 
             # Process Custom Fields (Campos Propietarios)
-            cust_json = request.form.get('custom_fields_json')
+            cust_json = (await request.form).get('custom_fields_json')
             if cust_json:
                 try:
                     cust_data = json.loads(cust_json)
                     if isinstance(cust_data, dict):
                         # Merge custom fields into metadata
-                        metadata.update(cust_data)
+                        await metadata.update(cust_data)
                         
                         # Extra logic: Map certain metadata keys back to physical columns if they exist in schema
                         if 'modelo' in cust_data: autor = cust_data['modelo']
@@ -675,7 +675,7 @@ def articulo_guardar():
                     print(f"Error parsing custom fields: {e}")
 
             if id_articulo: # UPDATE
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_articulos SET 
                         nombre=%s, modelo=%s, codigo=%s, marca=%s, precio_venta=%s, metadata_json=%s, tipo_articulo_id=%s,
                         naturaleza=%s, es_recurrente=%s, config_servicio_json=%s,
@@ -695,10 +695,10 @@ def articulo_guardar():
                 ))
                 
                 # --- Seguridad Industrial (Fase 5.1) ---
-                if request.form.get('has_safety_data') == 'on':
+                if (await request.form).get('has_safety_data') == 'on':
                     if 'industrial_safety' in g.permissions or 'all' in g.permissions:
-                        pictos = request.form.getlist('ghs_pictos') # Lista de códigos GHSXX
-                        cursor.execute("""
+                        pictos = (await request.form).getlist('ghs_pictos') # Lista de códigos GHSXX
+                        await cursor.execute("""
                             INSERT INTO stk_articulos_seguridad 
                             (articulo_id, enterprise_id, numero_un, clase_riesgo, nombre_tecnico, 
                              instrucciones_estibaje, frases_h, frases_p, pictogramas_json, forma_estibaje, incompatibilidades)
@@ -708,18 +708,18 @@ def articulo_guardar():
                             instrucciones_estibaje=VALUES(instrucciones_estibaje), frases_h=VALUES(frases_h), frases_p=VALUES(frases_p),
                             pictogramas_json=VALUES(pictogramas_json), forma_estibaje=VALUES(forma_estibaje), incompatibilidades=VALUES(incompatibilidades)
                         """, (
-                            id_articulo, ent_id, request.form.get('sec_un'), request.form.get('sec_clase'),
-                            request.form.get('sec_nombre_tecnico'), request.form.get('sec_instrucciones'),
-                            request.form.get('sec_frases_h'), request.form.get('sec_frases_p'),
-                            json.dumps(pictos), request.form.get('sec_estibaje'), request.form.get('sec_incompat')
+                            id_articulo, ent_id, (await request.form).get('sec_un'), (await request.form).get('sec_clase'),
+                            (await request.form).get('sec_nombre_tecnico'), (await request.form).get('sec_instrucciones'),
+                            (await request.form).get('sec_frases_h'), (await request.form).get('sec_frases_p'),
+                            json.dumps(pictos), (await request.form).get('sec_estibaje'), (await request.form).get('sec_incompat')
                         ))
                     else:
-                        flash("No tiene permisos para modificar datos de seguridad industrial.", "warning")
+                        await flash("No tiene permisos para modificar datos de seguridad industrial.", "warning")
                 
-                flash(f"{naturaleza.capitalize()} actualizado", "success")
+                await flash(f"{naturaleza.capitalize()} actualizado", "success")
 
             else: # CREATE
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_articulos (
                         enterprise_id, nombre, modelo, codigo, marca, precio_venta, 
                         metadata_json, tipo_articulo, tipo_articulo_id,
@@ -740,41 +740,41 @@ def articulo_guardar():
                 new_id = cursor.lastrowid
                 
                 # --- Seguridad Industrial (Fase 5.1) ---
-                if request.form.get('has_safety_data') == 'on':
+                if (await request.form).get('has_safety_data') == 'on':
                     if 'industrial_safety' in g.permissions or 'all' in g.permissions:
-                        pictos = request.form.getlist('ghs_pictos')
-                        cursor.execute("""
+                        pictos = (await request.form).getlist('ghs_pictos')
+                        await cursor.execute("""
                             INSERT INTO stk_articulos_seguridad 
                             (articulo_id, enterprise_id, numero_un, clase_riesgo, nombre_tecnico, 
                              instrucciones_estibaje, frases_h, frases_p, pictogramas_json, forma_estibaje, incompatibilidades)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """, (
-                            new_id, ent_id, request.form.get('sec_un'), request.form.get('sec_clase'),
-                            request.form.get('sec_nombre_tecnico'), request.form.get('sec_instrucciones'),
-                            request.form.get('sec_frases_h'), request.form.get('sec_frases_p'),
-                            json.dumps(pictos), request.form.get('sec_estibaje'), request.form.get('sec_incompat')
+                            new_id, ent_id, (await request.form).get('sec_un'), (await request.form).get('sec_clase'),
+                            (await request.form).get('sec_nombre_tecnico'), (await request.form).get('sec_instrucciones'),
+                            (await request.form).get('sec_frases_h'), (await request.form).get('sec_frases_p'),
+                            json.dumps(pictos), (await request.form).get('sec_estibaje'), (await request.form).get('sec_incompat')
                         ))
                     else:
-                        flash("Se creó el artículo pero se omitieron datos de seguridad por falta de permisos.", "warning")
+                        await flash("Se creó el artículo pero se omitieron datos de seguridad por falta de permisos.", "warning")
                 
-                flash(f"{naturaleza.capitalize()} agregado exitosamente", "success")
+                await flash(f"{naturaleza.capitalize()} agregado exitosamente", "success")
 
     except Exception as e:
-        flash(f"Error al guardar artículo: {e}", "danger")
+        await flash(f"Error al guardar artículo: {e}", "danger")
     
     return redirect(url_for('stock.articulos'))
 
 @stock_bp.route('/api/articulos/<int:articulo_id>/seguridad', methods=['GET'])
 @login_required
-def api_get_safety_data(articulo_id):
+async def api_get_safety_data(articulo_id):
     """Obtiene los datos de seguridad industrial de un artículo"""
     # Control de acceso a datos sensibles de seguridad
     if 'view_articulos' not in g.permissions and 'industrial_safety' not in g.permissions and 'all' not in g.permissions:
         return jsonify({"success": False, "message": "Acceso insuficiente para datos de seguridad"}), 403
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM stk_articulos_seguridad WHERE articulo_id = %s AND enterprise_id = %s", (articulo_id, ent_id))
-        data = cursor.fetchone()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM stk_articulos_seguridad WHERE articulo_id = %s AND enterprise_id = %s", (articulo_id, ent_id))
+        data = await cursor.fetchone()
     
     if data and data['pictogramas_json']:
         try:
@@ -787,21 +787,21 @@ def api_get_safety_data(articulo_id):
 @stock_bp.route('/articulos/importar', methods=['GET', 'POST'])
 @login_required
 @permission_required('books_import')
-def articulos_importar():
+async def articulos_importar():
     if request.method == 'POST':
         try:
-            idioma = request.form.get('idioma')
-            cantidad = int(request.form.get('cantidad', 10))
-            source = request.form.get('source', 'openlibrary')
+            idioma = (await request.form).get('idioma')
+            cantidad = int((await request.form).get('cantidad', 10))
+            source = (await request.form).get('source', 'openlibrary')
             libros_externos = library_api_service.search_books_by_language(idioma, cantidad, source=source)
             altas, duplicados = 0, 0
             libros_agregados = []
             
-            with get_db_cursor() as cursor:
+            async with get_db_cursor() as cursor:
                 for lib in libros_externos:
                     isbn = lib['isbn']
-                    cursor.execute("SELECT id FROM stk_articulos WHERE codigo = %s AND enterprise_id = %s", (isbn, g.user['enterprise_id']))
-                    if cursor.fetchone():
+                    await cursor.execute("SELECT id FROM stk_articulos WHERE codigo = %s AND enterprise_id = %s", (isbn, g.user['enterprise_id']))
+                    if await cursor.fetchone():
                         duplicados += 1
                         continue
                     
@@ -813,64 +813,64 @@ def articulos_importar():
                         "paginas": lib['pages']
                     }
                     
-                    cursor.execute(
+                    await cursor.execute(
                         "INSERT INTO stk_articulos (enterprise_id, nombre, modelo, codigo, marca, precio_venta, lengua, origen, api_checked, metadata_json, tipo_articulo, tipo_articulo_id) VALUES (%s, %s, %s, %s, %s, 0, %s, %s, 1, %s, 'mercaderia', 1)",
                         (g.user['enterprise_id'], lib['title'], lib['author'], isbn, lib['publisher'], lengua, origen, json.dumps(metadata))
                     )
                     altas += 1
                     libros_agregados.append(lib)
-            flash(f"Importación: {altas} altas, {duplicados} duplicados.", "success")
-            return render_template('stock/importar_articulos.html', resultados={'altas': altas, 'duplicados': duplicados}, libros_agregados=libros_agregados)
-        except Exception as e: flash(str(e), "danger")
-    return render_template('stock/importar_articulos.html')
+            await flash(f"Importación: {altas} altas, {duplicados} duplicados.", "success")
+            return await render_template('stock/importar_articulos.html', resultados={'altas': altas, 'duplicados': duplicados}, libros_agregados=libros_agregados)
+        except Exception as e: await flash(str(e), "danger")
+    return await render_template('stock/importar_articulos.html')
 
 @stock_bp.route('/articulos/upload', methods=['POST'])
 @login_required
 @permission_required('books_import')
-def articulos_upload_csv():
+async def articulos_upload_csv():
     ent_id = g.user['enterprise_id']
-    if 'file' not in request.files: return redirect(url_for('stock.articulos'))
-    file = request.files['file']
+    if 'file' not in (await request.files): return redirect(url_for('stock.articulos'))
+    file = (await request.files)['file']
     if file and file.filename.endswith('.csv'):
         try:
-            stream = file.read().decode("utf-8").splitlines()
+            stream = await file.read().decode("utf-8").splitlines()
             lector = csv.DictReader(stream)
             count = 0
-            with get_db_cursor() as cursor:
+            async with get_db_cursor() as cursor:
                 for fila in lector:
                     isbn = fila.get('isbn', '').strip()
                     if not isbn: continue
-                    cursor.execute("SELECT id FROM stk_articulos WHERE codigo = %s AND enterprise_id = %s", (isbn, ent_id))
-                    if cursor.fetchone(): continue
-                    cursor.execute("INSERT INTO stk_articulos (enterprise_id, nombre, modelo, codigo, precio_venta, api_checked, tipo_articulo) VALUES (%s,%s,%s,%s,%s, 0, 'mercaderia')",
+                    await cursor.execute("SELECT id FROM stk_articulos WHERE codigo = %s AND enterprise_id = %s", (isbn, ent_id))
+                    if await cursor.fetchone(): continue
+                    await cursor.execute("INSERT INTO stk_articulos (enterprise_id, nombre, modelo, codigo, precio_venta, api_checked, tipo_articulo) VALUES (%s,%s,%s,%s,%s, 0, 'mercaderia')",
                                    (ent_id, fila.get('nombre'), fila.get('autor'), isbn, fila.get('precio', 0)))
                     count += 1
-            flash(f"CSV procesado: {count} artículos importados.", "success")
-        except Exception as e: flash(str(e), "danger")
+            await flash(f"CSV procesado: {count} artículos importados.", "success")
+        except Exception as e: await flash(str(e), "danger")
     return redirect(url_for('stock.articulos'))
 
 @stock_bp.route('/articulos/enrich', methods=['POST'])
 @login_required
-def enrich_bulk():
+async def enrich_bulk():
     """Ejecuta el enriquecimiento masivo en segundo plano"""
     with open("route_hit.log", "a") as f:
-        f.write(f"[{datetime.now()}] enrich_bulk HIT. deep={request.args.get('deep')}, strategy={request.form.get('strategy')}\n")
+        f.write(f"[{datetime.now()}] enrich_bulk HIT. deep={request.args.get('deep')}, strategy={(await request.form).get('strategy')}\n")
     
     import threading
     import os
     
     deep = request.args.get('deep') == '1'
-    strategy = request.form.get('strategy', 'conservative')
+    strategy = (await request.form).get('strategy', 'conservative')
     ent_id = g.user['enterprise_id']
     from core.concurrency import get_active_tasks, clear_stop_signal
     
     # Check if a task is already running
-    if f"enrich_{ent_id}" in get_active_tasks():
-        flash("Ya hay un proceso de enriquecimiento en curso. Por favor espere.", "warning")
+    if f"enrich_{ent_id}" in await get_active_tasks():
+        await flash("Ya hay un proceso de enriquecimiento en curso. Por favor espere.", "warning")
         return redirect(url_for('stock.articulos'))
 
     # Asegurar señal limpia antes de disparar
-    clear_stop_signal(f"enrich_{ent_id}")
+    await clear_stop_signal(f"enrich_{ent_id}")
     
     # ENRIQUECIMIENTO REACTIVADO
     import subprocess
@@ -880,26 +880,26 @@ def enrich_bulk():
     creationflags = 0x08000000 if os.name == 'nt' else 0
     subprocess.Popen(cmd, cwd=os.getcwd(), creationflags=creationflags)
     
-    flash("Enriquecimiento iniciado en segundo plano. Puede monitorear el progreso en la tabla de artículos.", "success")
+    await flash("Enriquecimiento iniciado en segundo plano. Puede monitorear el progreso en la tabla de artículos.", "success")
     return redirect(url_for('stock.articulos'))
 
 @stock_bp.route('/depositos')
 @login_required
-def depositos_lista():
+async def depositos_lista():
     """Listado de Depósitos/Almacenes"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM stk_depositos WHERE enterprise_id = %s", (ent_id,))
-            depositos = cursor.fetchall()
-        return render_template('stock/depositos.html', depositos=depositos)
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT * FROM stk_depositos WHERE enterprise_id = %s", (ent_id,))
+            depositos = await cursor.fetchall()
+        return await render_template('stock/depositos.html', depositos=depositos)
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('stock.dashboard'))
 
 @stock_bp.route('/api/pending-count')
 @login_required
-def api_pending_count():
+async def api_pending_count():
     """Retorna contadores simplificados mientras el enriquecimiento está en pausa"""
     return jsonify({
         "pending": 0, 
@@ -912,14 +912,14 @@ def api_pending_count():
 
 @stock_bp.route('/articulos/enrich/last-report')
 @login_required
-def enrich_last_report():
+async def enrich_last_report():
     import os
     import glob
-    from flask import send_file
+    from quart import send_file
 
     files = glob.glob(os.path.join(os.getcwd(), "libros_enriquecidos_*.xlsx"))
     if not files:
-        flash("No se encontró ningún reporte generado.", "info")
+        await flash("No se encontró ningún reporte generado.", "info")
         return redirect(url_for('stock.articulos'))
 
     # Get the latest file
@@ -928,122 +928,122 @@ def enrich_last_report():
     try:
         return send_file(latest_file, as_attachment=True)
     except Exception as e:
-        flash(f"Error al descargar reporte: {e}", "danger")
+        await flash(f"Error al descargar reporte: {e}", "danger")
         return redirect(url_for('stock.articulos'))
 
 @stock_bp.route('/depositos/nuevo', methods=['GET', 'POST'])
 @login_required
-def deposito_nuevo():
+async def deposito_nuevo():
     """Crear nuevo depósito"""
     ent_id = g.user['enterprise_id']
     if request.method == 'POST':
-        nombre = request.form['nombre']
-        tipo = request.form.get('tipo', 'INTERNO')
-        tercero_id = request.form.get('tercero_id')
+        nombre = (await request.form)['nombre']
+        tipo = (await request.form).get('tipo', 'INTERNO')
+        tercero_id = (await request.form).get('tercero_id')
         if not tercero_id: tercero_id = None
         
-        calle = request.form.get('calle', '')
-        numero = request.form.get('numero', '')
-        localidad = request.form.get('localidad', '')
-        provincia = request.form.get('provincia', '')
-        cod_postal = request.form.get('cod_postal', '')
+        calle = (await request.form).get('calle', '')
+        numero = (await request.form).get('numero', '')
+        localidad = (await request.form).get('localidad', '')
+        provincia = (await request.form).get('provincia', '')
+        cod_postal = (await request.form).get('cod_postal', '')
         direccion = f"{calle} {numero} - {localidad}, {provincia}"
-        es_principal = 1 if 'es_principal' in request.form else 0
+        es_principal = 1 if 'es_principal' in (await request.form) else 0
         
         try:
-            with get_db_cursor(dictionary=True) as cursor:
+            async with get_db_cursor(dictionary=True) as cursor:
                 if es_principal:
-                    cursor.execute("UPDATE stk_depositos SET es_principal = 0 WHERE enterprise_id = %s", (ent_id,))
+                    await cursor.execute("UPDATE stk_depositos SET es_principal = 0 WHERE enterprise_id = %s", (ent_id,))
                 
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_depositos (enterprise_id, nombre, tipo, tercero_id, direccion, calle, numero, localidad, provincia, cod_postal, es_principal)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (ent_id, nombre, tipo, tercero_id, direccion, calle, numero, localidad, provincia, cod_postal, es_principal))
-                flash(f"Depósito '{nombre}' creado con éxito.", "success")
+                await flash(f"Depósito '{nombre}' creado con éxito.", "success")
                 return redirect(url_for('stock.depositos_lista'))
         except Exception as e:
-            flash(f"Error al crear: {e}", "danger")
+            await flash(f"Error al crear: {e}", "danger")
             
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT id, nombre, cuit FROM erp_terceros WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
-        terceros = cursor.fetchall()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT id, nombre, cuit FROM erp_terceros WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
+        terceros = await cursor.fetchall()
         
-    provincias = GeorefService.get_provincias()
-    return render_template('stock/deposito_form.html', provincias=provincias, terceros=terceros)
+    provincias = await GeorefService.get_provincias()
+    return await render_template('stock/deposito_form.html', provincias=provincias, terceros=terceros)
 
 @stock_bp.route('/depositos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
-def deposito_editar(id):
+async def deposito_editar(id):
     """Editar depósito existente"""
     ent_id = g.user['enterprise_id']
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         if request.method == 'POST':
-            nombre = request.form['nombre']
-            tipo = request.form.get('tipo', 'INTERNO')
-            tercero_id = request.form.get('tercero_id')
+            nombre = (await request.form)['nombre']
+            tipo = (await request.form).get('tipo', 'INTERNO')
+            tercero_id = (await request.form).get('tercero_id')
             if not tercero_id: tercero_id = None
             
-            calle = request.form.get('calle', '')
-            numero = request.form.get('numero', '')
-            localidad = request.form.get('localidad', '')
-            provincia = request.form.get('provincia', '')
-            cod_postal = request.form.get('cod_postal', '')
+            calle = (await request.form).get('calle', '')
+            numero = (await request.form).get('numero', '')
+            localidad = (await request.form).get('localidad', '')
+            provincia = (await request.form).get('provincia', '')
+            cod_postal = (await request.form).get('cod_postal', '')
             direccion = f"{calle} {numero} - {localidad}, {provincia}"
-            es_principal = 1 if 'es_principal' in request.form else 0
-            activo = 1 if 'activo' in request.form else 0
+            es_principal = 1 if 'es_principal' in (await request.form) else 0
+            activo = 1 if 'activo' in (await request.form) else 0
 
             try:
                 if es_principal:
-                    cursor.execute("UPDATE stk_depositos SET es_principal = 0 WHERE enterprise_id = %s", (ent_id,))
+                    await cursor.execute("UPDATE stk_depositos SET es_principal = 0 WHERE enterprise_id = %s", (ent_id,))
                 
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_depositos SET 
                         nombre=%s, tipo=%s, tercero_id=%s, direccion=%s, calle=%s, numero=%s, localidad=%s, 
                         provincia=%s, cod_postal=%s, es_principal=%s, activo=%s
                     WHERE id=%s AND enterprise_id=%s
                 """, (nombre, tipo, tercero_id, direccion, calle, numero, localidad, provincia, cod_postal, es_principal, activo, id, ent_id))
-                flash("Depósito actualizado.", "success")
+                await flash("Depósito actualizado.", "success")
                 return redirect(url_for('stock.depositos_lista'))
             except Exception as e:
-                flash(f"Error al actualizar: {e}", "danger")
+                await flash(f"Error al actualizar: {e}", "danger")
 
-        cursor.execute("SELECT * FROM stk_depositos WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-        deposito = cursor.fetchone()
+        await cursor.execute("SELECT * FROM stk_depositos WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+        deposito = await cursor.fetchone()
         if not deposito:
-            flash("Depósito no encontrado.", "danger")
+            await flash("Depósito no encontrado.", "danger")
             return redirect(url_for('stock.depositos_lista'))
             
-        cursor.execute("SELECT id, nombre, cuit FROM erp_terceros WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
-        terceros = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre, cuit FROM erp_terceros WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
+        terceros = await cursor.fetchall()
         
-    provincias = GeorefService.get_provincias()
-    return render_template('stock/deposito_form.html', deposito=deposito, provincias=provincias, terceros=terceros)
+    provincias = await GeorefService.get_provincias()
+    return await render_template('stock/deposito_form.html', deposito=deposito, provincias=provincias, terceros=terceros)
 @stock_bp.route('/tipos')
 @login_required
-def tipos_articulo():
+async def tipos_articulo():
     """ABM de Tipos de Artículo con Configuración de Servicios"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Obtener Tipos
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT t.*, 
                        (CASE WHEN t.usa_api_libros = 1 THEN 'Open Library [Legacy]' ELSE 'Nativo' END) as modo_legacy
                 FROM stk_tipos_articulo t 
                 WHERE t.enterprise_id = %s OR t.enterprise_id = 0
             """, (ent_id,))
-            tipos = cursor.fetchall()
+            tipos = await cursor.fetchall()
             
             # 2. Obtener Servicios Configurados para cada tipo
             for t in tipos:
-                cursor.execute("""
+                await cursor.execute("""
                     SELECT s.id, s.nombre, s.tipo_servicio, s.modo_captura, s.url_objetivo
                     FROM stk_tipos_articulo_servicios tas
                     JOIN sys_external_services s ON tas.servicio_id = s.id
                     WHERE tas.tipo_articulo_id = %s AND tas.enterprise_id = %s AND tas.es_primario = 1
                 """, (t['id'], ent_id))
-                svc = cursor.fetchone()
+                svc = await cursor.fetchone()
                 if svc:
                     t['servicio_activo'] = svc['nombre']
                     t['servicio_activo_id'] = svc['id']
@@ -1056,38 +1056,38 @@ def tipos_articulo():
                     t['url_objetivo'] = None
 
             # 3. Obtener lista de servicios disponibles para el modal
-            cursor.execute("SELECT id, nombre, tipo_servicio, modo_captura, url_objetivo FROM sys_external_services WHERE enterprise_id = %s AND activo = 1", (ent_id,))
-            servicios_disponibles = cursor.fetchall()
+            await cursor.execute("SELECT id, nombre, tipo_servicio, modo_captura, url_objetivo FROM sys_external_services WHERE enterprise_id = %s AND activo = 1", (ent_id,))
+            servicios_disponibles = await cursor.fetchall()
 
-        return render_template('stock/tipos_articulo.html', tipos=tipos, servicios=servicios_disponibles)
+        return await render_template('stock/tipos_articulo.html', tipos=tipos, servicios=servicios_disponibles)
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('stock.dashboard'))
 
 @stock_bp.route('/tipos/guardar', methods=['POST'])
 @login_required
-def tipos_articulo_guardar():
+async def tipos_articulo_guardar():
     """Guardar o actualizar Tipo de Artículo y su Servicio Asociado"""
     ent_id = g.user['enterprise_id']
-    t_id = request.form.get('id')
-    nombre = request.form['nombre']
-    descripcion = request.form.get('descripcion', '')
-    naturaleza = request.form.get('naturaleza', 'PRODUCTO')
-    servicio_id = request.form.get('servicio_id') # ID from sys_external_services or empty for Native
-    custom_schema = request.form.get('custom_fields_schema', '')
+    t_id = (await request.form).get('id')
+    nombre = (await request.form)['nombre']
+    descripcion = (await request.form).get('descripcion', '')
+    naturaleza = (await request.form).get('naturaleza', 'PRODUCTO')
+    servicio_id = (await request.form).get('servicio_id') # ID from sys_external_services or empty for Native
+    custom_schema = (await request.form).get('custom_fields_schema', '')
     
     # Legacy flags for compatibility
     usa_api = 1 if servicio_id else 0 
     
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             new_id = t_id
             
             if t_id:
                 # REGLA DE INTEGRIDAD: No permitir eliminar atributos si ya fueron usados en operaciones
                 try:
-                    cursor.execute("SELECT custom_fields_schema FROM stk_tipos_articulo WHERE id = %s", (t_id,))
-                    old_data = cursor.fetchone()
+                    await cursor.execute("SELECT custom_fields_schema FROM stk_tipos_articulo WHERE id = %s", (t_id,))
+                    old_data = await cursor.fetchone()
                     old_schema_str = old_data[0] if old_data else '[]'
                     
                     old_schema = json.loads(old_schema_str or '[]')
@@ -1100,7 +1100,7 @@ def tipos_articulo_guardar():
                     if removed:
                         # Verificar si hay artículos de este tipo con operaciones
                         # Revisamos comprobantes, movimientos de stock, transferencias y solicitudes de devolución
-                        cursor.execute("""
+                        await cursor.execute("""
                             SELECT 
                                 (SELECT COUNT(*) FROM erp_comprobantes_detalle d 
                                  JOIN stk_articulos a ON d.articulo_id = a.id 
@@ -1116,20 +1116,20 @@ def tipos_articulo_guardar():
                                  WHERE a.tipo_articulo_id = %s)
                             as total_ops
                         """, (t_id, t_id, t_id, t_id))
-                        res_ops = cursor.fetchone()
+                        res_ops = await cursor.fetchone()
                         if res_ops and res_ops[0] > 0:
-                            flash(f"Error: Los atributos {list(removed)} no pueden eliminarse porque el tipo de artículo ya tiene operaciones registradas. Puede modificar su etiqueta o contenido, pero el atributo debe permanecer.", "danger")
+                            await flash(f"Error: Los atributos {list(removed)} no pueden eliminarse porque el tipo de artículo ya tiene operaciones registradas. Puede modificar su etiqueta o contenido, pero el atributo debe permanecer.", "danger")
                             return redirect(url_for('stock.tipos_articulo'))
                 except Exception as ve:
                     print(f"Error en validación de integridad de esquema: {ve}")
 
                 # Logica unificada (Permitimos editar tipos propios y de sistema si se requiere globalmente)
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_tipos_articulo SET nombre=%s, descripcion=%s, usa_api_libros=%s, custom_fields_schema=%s, naturaleza=%s
                     WHERE id=%s AND (enterprise_id=%s OR enterprise_id=0)
                 """, (nombre, descripcion, usa_api, custom_schema, naturaleza, t_id, ent_id))
             else:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_tipos_articulo (enterprise_id, nombre, descripcion, usa_api_libros, custom_fields_schema, naturaleza)
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """, (ent_id, nombre, descripcion, usa_api, custom_schema, naturaleza))
@@ -1139,25 +1139,25 @@ def tipos_articulo_guardar():
             
             # Update Service Link configuration
             # 1. Clear existing primary link
-            cursor.execute("DELETE FROM stk_tipos_articulo_servicios WHERE tipo_articulo_id = %s AND enterprise_id = %s", (new_id, ent_id))
+            await cursor.execute("DELETE FROM stk_tipos_articulo_servicios WHERE tipo_articulo_id = %s AND enterprise_id = %s", (new_id, ent_id))
             
             # 2. Add new link if service selected
             if servicio_id and servicio_id != 'native':
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_tipos_articulo_servicios (enterprise_id, tipo_articulo_id, servicio_id, es_primario)
                     VALUES (%s, %s, %s, 1)
                 """, (ent_id, new_id, servicio_id))
                 
-        flash("Configuración de Tipo de Artículo guardada.", "success")
+        await flash("Configuración de Tipo de Artículo guardada.", "success")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
     return redirect(url_for('stock.tipos_articulo'))
 
 # --- API ---
 
 @stock_bp.route('/api/articulos/search')
 @login_required
-def api_search():
+async def api_search():
     try:
         q = request.args.get('q', '')
         nombre = request.args.get('nombre', '')
@@ -1229,8 +1229,8 @@ def api_search():
             query += " AND JSON_EXTRACT(metadata_json, '$.paginas') <= %s"
             params.append(int(paginas_max))
             
-        from flask import jsonify
-        with get_db_cursor(dictionary=True) as cursor:
+        from quart import jsonify
+        async with get_db_cursor(dictionary=True) as cursor:
             # Query optimizada con CTEs para evitar N+1
             optimized_query = f"""
                 WITH StockCounts AS (
@@ -1300,17 +1300,17 @@ def api_search():
                 final_params.append(f"%{isbn}%")
             
             # Ejecutar query completa
-            cursor.execute(optimized_query + sql_filters + " LIMIT 50", final_params)
-            libros = cursor.fetchall()
+            await cursor.execute(optimized_query + sql_filters + " LIMIT 50", final_params)
+            libros = await cursor.fetchall()
 
             for l in libros:
                 # Fix next return date only for those without stock
                 if l['disponibles'] <= 0 and l['prestados'] > 0:
-                    cursor.execute("""
+                    await cursor.execute("""
                         SELECT MIN(fecha_devol_esperada) FROM prestamos 
                         WHERE libro_id = %s AND fecha_devolucion_real IS NULL AND enterprise_id = %s
                     """, (l['id'], g.user['enterprise_id']))
-                    res = cursor.fetchone()
+                    res = await cursor.fetchone()
                     l['proxima_devolucion'] = str(res['MIN(fecha_devol_esperada)']) if res and res['MIN(fecha_devol_esperada)'] else None
                 else:
                     l['proxima_devolucion'] = None
@@ -1329,17 +1329,17 @@ def api_search():
 
 @stock_bp.route('/api/prestamos/libro/<int:id>')
 @login_required
-def api_prestamos_libro(id):
+async def api_prestamos_libro(id):
     try:
-        from flask import jsonify
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        from quart import jsonify
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 SELECT u.nombre, u.apellido, p.fecha_devol_esperada 
                 FROM prestamos p 
                 JOIN usuarios u ON p.usuario_id = u.id AND u.enterprise_id = p.enterprise_id
                 WHERE p.libro_id = %s AND p.fecha_devolucion_real IS NULL AND p.enterprise_id = %s
             """, (id, g.user['enterprise_id']))
-            rows = cursor.fetchall()
+            rows = await cursor.fetchall()
             res = [{'usuario': f"{r[0]} {r[1]}", 'fecha': str(r[2])} for r in rows]
             return jsonify({'prestamos': res})
     except Exception as e:
@@ -1348,29 +1348,29 @@ def api_prestamos_libro(id):
 @stock_bp.route('/api/stock/stats')
 @login_required
 @permission_required('stock_view')
-def api_stock_stats():
+async def api_stock_stats():
     try:
-        from flask import jsonify
-        with get_db_cursor() as cursor:
-            cursor.execute("SELECT IFNULL(SUM(a.cantidad), 0) FROM stk_movimientos_detalle a JOIN stk_movimientos m ON a.movimiento_id = m.id WHERE m.enterprise_id = %s", (g.user['enterprise_id'],))
-            total_movs = cursor.fetchone()[0]
+        from quart import jsonify
+        async with get_db_cursor() as cursor:
+            await cursor.execute("SELECT IFNULL(SUM(a.cantidad), 0) FROM stk_movimientos_detalle a JOIN stk_movimientos m ON a.movimiento_id = m.id WHERE m.enterprise_id = %s", (g.user['enterprise_id'],))
+            total_movs = await cursor.fetchone()[0]
             return jsonify({'total_movimientos': total_movs})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @stock_bp.route('/api/enrichment/service-efficiency')
 @login_required
-def api_service_efficiency():
+async def api_service_efficiency():
     """API endpoint para obtener estadísticas de eficiencia de servicios de enriquecimiento"""
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT service_name, hits_count, fields_provided, ebooks_provided
                 FROM service_efficiency 
                 ORDER BY fields_provided DESC, hits_count DESC
                 LIMIT 10
             """)
-            services = cursor.fetchall()
+            services = await cursor.fetchall()
             
             # Calcular promedio de campos por hit
             for s in services:
@@ -1382,12 +1382,12 @@ def api_service_efficiency():
 
 @stock_bp.route('/download/ebook/<int:articulo_id>')
 @login_required
-def download_ebook(articulo_id):
+async def download_ebook(articulo_id):
     """Descargar archivo digital asociado al artículo"""
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Verificar enterprise_id por seguridad
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT stk_archivos_digitales.contenido, stk_archivos_digitales.formato, 
                        stk_archivos_digitales.nombre_archivo, stk_articulos.nombre, stk_articulos.codigo 
                 FROM stk_archivos_digitales
@@ -1395,13 +1395,13 @@ def download_ebook(articulo_id):
                 WHERE stk_archivos_digitales.articulo_id = %s AND stk_articulos.enterprise_id = %s
             """, (articulo_id, g.user['enterprise_id']))
             
-            file_data = cursor.fetchone()
+            file_data = await cursor.fetchone()
             
             if not file_data:
-                flash("No se encontró archivo digital para este libro.", "warning")
+                await flash("No se encontró archivo digital para este libro.", "warning")
                 return redirect(url_for('stock.articulos'))
                 
-            from flask import send_file
+            from quart import send_file
             import io
             import re
             
@@ -1430,34 +1430,34 @@ def download_ebook(articulo_id):
                 download_name=fname
             )
     except Exception as e:
-        flash(f"Error al descargar archivo: {str(e)}", "error")
+        await flash(f"Error al descargar archivo: {str(e)}", "error")
         return redirect(url_for('stock.articulos'))
 
 @stock_bp.route('/api/series/<int:articulo_id>')
 @login_required
-def api_get_series(articulo_id):
+async def api_get_series(articulo_id):
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Recuperar series con info básica. Podríamos hacer JOIN con ubicaciones si existiera tabla de ubicaciones definida.
-        cursor.execute("""
+        await cursor.execute("""
             SELECT id, numero_serie, estado, ubicacion_id
             FROM stk_numeros_serie
             WHERE articulo_id = %s AND enterprise_id = %s
             ORDER BY estado ASC, numero_serie ASC
         """, (articulo_id, ent_id))
-        series = cursor.fetchall()
+        series = await cursor.fetchall()
     return jsonify(series)
 
 # --- TRANSFERENCIAS Y COT ---
 
 @stock_bp.route('/transferencias')
 @login_required
-def transferencias_lista():
+async def transferencias_lista():
     """Lista de transferencias entre depósitos"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT t.*, 
                        do.nombre as origen_nombre, 
                        dd.nombre as destino_nombre,
@@ -1468,25 +1468,25 @@ def transferencias_lista():
                 WHERE t.enterprise_id = %s
                 ORDER BY t.fecha DESC
             """, (ent_id,))
-            transferencias = cursor.fetchall()
-        return render_template('stock/transferencias.html', transferencias=transferencias)
+            transferencias = await cursor.fetchall()
+        return await render_template('stock/transferencias.html', transferencias=transferencias)
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('stock.dashboard'))
 
 @stock_bp.route('/transferencias/nueva')
 @login_required
-def transferencia_nueva():
+async def transferencia_nueva():
     """Formulario para nueva transferencia"""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT id, nombre, tipo FROM stk_depositos WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
-        depositos = cursor.fetchall()
-        cursor.execute("SELECT id, nombre, codigo FROM stk_articulos WHERE enterprise_id = %s ORDER BY nombre", (ent_id,))
-        articulos = cursor.fetchall()
-        cursor.execute("SELECT id, nombre FROM stk_logisticas WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
-        logisticas = cursor.fetchall()
-    return render_template('stock/transferencia_form.html', 
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT id, nombre, tipo FROM stk_depositos WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
+        depositos = await cursor.fetchall()
+        await cursor.execute("SELECT id, nombre, codigo FROM stk_articulos WHERE enterprise_id = %s ORDER BY nombre", (ent_id,))
+        articulos = await cursor.fetchall()
+        await cursor.execute("SELECT id, nombre FROM stk_logisticas WHERE enterprise_id = %s AND activo = 1 ORDER BY nombre", (ent_id,))
+        logisticas = await cursor.fetchall()
+    return await render_template('stock/transferencia_form.html', 
                            depositos=depositos, 
                            articulos=articulos, 
                            logisticas=logisticas)
@@ -1494,13 +1494,13 @@ def transferencia_nueva():
 @stock_bp.route('/api/transferencia/guardar', methods=['POST'])
 @login_required
 @atomic_transaction('stock', severity=8, impact_category='Financial')
-def api_guardar_transferencia():
+async def api_guardar_transferencia():
     """Guardar cabecera e items de una transferencia"""
-    data = request.json
+    data = (await request.json)
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO stk_transferencias (
                     enterprise_id, origen_id, destino_id, logistica_id, tipo_transporte, 
                     destino_final_direccion, motivo, patente_vehiculo, usuario_id, estado
@@ -1520,7 +1520,7 @@ def api_guardar_transferencia():
             trans_id = cursor.lastrowid
             
             for item in data['items']:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_items_transferencia (enterprise_id, transferencia_id, articulo_id, cantidad)
                     VALUES (%s, %s, %s, %s)
                 """, (ent_id, trans_id, int(item['id']), float(item['cant'])))
@@ -1531,19 +1531,19 @@ def api_guardar_transferencia():
 
 @stock_bp.route('/api/transferencia/<int:id>/solicitar-cot', methods=['POST'])
 @login_required
-def api_solicitar_cot(id):
+async def api_solicitar_cot(id):
     """Simulación de solicitud de COT a ARBA/AGIP"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM stk_transferencias WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-            trans = cursor.fetchone()
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT * FROM stk_transferencias WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+            trans = await cursor.fetchone()
             if not trans: return jsonify({'success': False, 'message': 'No encontrada'})
             
             import random, string
             fake_cot = f"{datetime.now().strftime('%Y%m%d')}-{''.join(random.choices(string.ascii_uppercase + string.digits, k=6))}"
             
-            cursor.execute("UPDATE stk_transferencias SET cot_numero = %s, cot_estado = 'ACTIVO' WHERE id = %s", (fake_cot, id))
+            await cursor.execute("UPDATE stk_transferencias SET cot_numero = %s, cot_estado = 'ACTIVO' WHERE id = %s", (fake_cot, id))
             return jsonify({'success': True, 'cot_numero': fake_cot})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -1551,25 +1551,25 @@ def api_solicitar_cot(id):
 @stock_bp.route('/api/transferencia/<int:id>/despachar', methods=['POST'])
 @login_required
 @atomic_transaction('stock', severity=8, impact_category='Financial')
-def api_despachar_transferencia(id):
+async def api_despachar_transferencia(id):
     """Ejecutar el movimiento físico de stock (Salida)"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM stk_transferencias WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-            trans = cursor.fetchone()
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT * FROM stk_transferencias WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+            trans = await cursor.fetchone()
             if trans['estado'] != 'PENDIENTE': return jsonify({'success': False, 'message': 'Ya fue despachada'})
             
-            cursor.execute("SELECT * FROM stk_items_transferencia WHERE transferencia_id = %s", (id,))
-            items = cursor.fetchall()
+            await cursor.execute("SELECT * FROM stk_items_transferencia WHERE transferencia_id = %s", (id,))
+            items = await cursor.fetchall()
             
             for item in items:
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_existencias SET cantidad = cantidad - %s, last_updated = NOW()
                     WHERE deposito_id = %s AND articulo_id = %s AND enterprise_id = %s
                 """, (item['cantidad'], trans['origen_id'], item['articulo_id'], ent_id))
             
-            cursor.execute("UPDATE stk_transferencias SET estado = 'EN_TRANSITO' WHERE id = %s", (id))
+            await cursor.execute("UPDATE stk_transferencias SET estado = 'EN_TRANSITO' WHERE id = %s", (id))
             return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -1579,12 +1579,12 @@ def api_despachar_transferencia(id):
 
 @stock_bp.route('/inventarios')
 @login_required
-def inventarios_lista():
+async def inventarios_lista():
     """Listado de controles de inventario"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT i.*, d.nombre as deposito_nombre,
                        (SELECT COUNT(*) FROM stk_items_inventario ii WHERE ii.inventario_id = i.id) as total_items,
                        (SELECT COUNT(*) FROM stk_items_inventario ii WHERE ii.inventario_id = i.id AND ii.stock_fisico > 0) as items_contados
@@ -1593,30 +1593,30 @@ def inventarios_lista():
                 WHERE i.enterprise_id = %s
                 ORDER BY i.fecha_inicio DESC
             """, (ent_id,))
-            inventarios = cursor.fetchall()
+            inventarios = await cursor.fetchall()
             for inv in inventarios:
                 inv['progreso'] = round((inv['items_contados'] / inv['total_items'] * 100), 1) if inv['total_items'] > 0 else 0
                 
-            cursor.execute("SELECT id, nombre FROM stk_depositos WHERE enterprise_id = %s AND activo = 1", (ent_id,))
-            depositos = cursor.fetchall()
+            await cursor.execute("SELECT id, nombre FROM stk_depositos WHERE enterprise_id = %s AND activo = 1", (ent_id,))
+            depositos = await cursor.fetchall()
             
-        return render_template('stock/inventario.html', inventarios=inventarios, depositos=depositos)
+        return await render_template('stock/inventario.html', inventarios=inventarios, depositos=depositos)
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('stock.dashboard'))
 
 @stock_bp.route('/api/inventario/crear', methods=['POST'])
 @login_required
-def api_inventario_crear():
+async def api_inventario_crear():
     """Iniciar una nueva auditoría de inventario"""
     ent_id = g.user['enterprise_id']
-    deposito_id = request.form['deposito_id']
-    tipo = request.form['tipo']
-    criteria = request.form.get('criteria')
+    deposito_id = (await request.form)['deposito_id']
+    tipo = (await request.form)['tipo']
+    criteria = (await request.form).get('criteria')
     
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO stk_inventarios (enterprise_id, deposito_id, tipo, estado, responsable_id, criteria_json)
                 VALUES (%s, %s, %s, 'BORRADOR', %s, %s)
             """, (ent_id, deposito_id, tipo, g.user['id'], criteria))
@@ -1639,57 +1639,57 @@ def api_inventario_crear():
                 # Tomar 20 artículos al azar para control cíclico
                 sql_poblar += " ORDER BY RAND() LIMIT 20"
             
-            cursor.execute(sql_poblar, tuple(params))
-            cursor.execute("UPDATE stk_inventarios SET estado = 'EN_PROCESO' WHERE id = %s", (inv_id,))
+            await cursor.execute(sql_poblar, tuple(params))
+            await cursor.execute("UPDATE stk_inventarios SET estado = 'EN_PROCESO' WHERE id = %s", (inv_id,))
             
-        flash("Inventario iniciado correctamente.", "success")
+        await flash("Inventario iniciado correctamente.", "success")
         return redirect(url_for('stock.inventario_toma', id=inv_id))
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('stock.inventarios_lista'))
 
 @stock_bp.route('/inventario/toma/<int:id>')
 @login_required
-def inventario_toma(id):
+async def inventario_toma(id):
     """Página de toma de inventario"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT i.*, d.nombre as deposito_nombre
                 FROM stk_inventarios i
                 JOIN stk_depositos d ON i.deposito_id = d.id
                 WHERE i.id = %s AND i.enterprise_id = %s
             """, (id, ent_id))
-            inv = cursor.fetchone()
+            inv = await cursor.fetchone()
             
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT ii.*, a.nombre as articulo_nombre, a.codigo
                 FROM stk_items_inventario ii
                 JOIN stk_articulos a ON ii.articulo_id = a.id
                 WHERE ii.inventario_id = %s
                 ORDER BY a.nombre ASC
             """, (id,))
-            items = cursor.fetchall()
+            items = await cursor.fetchall()
             
             # Re-calcular progreso para la cabecera
             total = len(items)
             contados = sum(1 for x in items if float(x['stock_fisico']) > 0)
             inv['progreso'] = round((contados / total * 100), 1) if total > 0 else 0
             
-        return render_template('stock/inventario_toma.html', inv=inv, items=items)
+        return await render_template('stock/inventario_toma.html', inv=inv, items=items)
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('stock.inventarios_lista'))
 
 @stock_bp.route('/api/inventario/item/<int:id>/update', methods=['POST'])
 @login_required
-def api_inventario_item_update(id):
+async def api_inventario_item_update(id):
     """Actualizar conteo físico de un item de inventario"""
-    fisico = request.json.get('fisico')
+    fisico = (await request.json).get('fisico')
     try:
-        with get_db_cursor() as cursor:
-            cursor.execute("UPDATE stk_items_inventario SET stock_fisico = %s WHERE id = %s", (fisico, id))
+        async with get_db_cursor() as cursor:
+            await cursor.execute("UPDATE stk_items_inventario SET stock_fisico = %s WHERE id = %s", (fisico, id))
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -1697,28 +1697,28 @@ def api_inventario_item_update(id):
 @stock_bp.route('/api/inventario/<int:id>/cerrar', methods=['POST'])
 @login_required
 @atomic_transaction('stock', severity=9, impact_category='Integrity')
-def api_inventario_cerrar(id):
+async def api_inventario_cerrar(id):
     """Cerrar inventario y realizar ajustes de stock automáticos"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM stk_inventarios WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-            inv = cursor.fetchone()
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT * FROM stk_inventarios WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+            inv = await cursor.fetchone()
             
-            cursor.execute("SELECT * FROM stk_items_inventario WHERE inventario_id = %s", (id,))
-            items = cursor.fetchall()
+            await cursor.execute("SELECT * FROM stk_items_inventario WHERE inventario_id = %s", (id,))
+            items = await cursor.fetchall()
             
             for item in items:
                 # Ajustar stock del ERP para que coincida con el físico
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_existencias 
                     SET cantidad = %s, last_updated = NOW()
                     WHERE deposito_id = %s AND articulo_id = %s AND enterprise_id = %s
                 """, (item['stock_fisico'], inv['deposito_id'], item['articulo_id'], ent_id))
                 
-                cursor.execute("UPDATE stk_items_inventario SET ajustado = 1 WHERE id = %s", (item['id'],))
+                await cursor.execute("UPDATE stk_items_inventario SET ajustado = 1 WHERE id = %s", (item['id'],))
             
-            cursor.execute("UPDATE stk_inventarios SET estado = 'CERRADO', fecha_cierre = NOW() WHERE id = %s", (id,))
+            await cursor.execute("UPDATE stk_inventarios SET estado = 'CERRADO', fecha_cierre = NOW() WHERE id = %s", (id,))
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -1727,85 +1727,85 @@ def api_inventario_cerrar(id):
 
 @stock_bp.route('/logisticas')
 @login_required
-def logisticas_lista():
+async def logisticas_lista():
     """Listado de empresas logísticas"""
     ent_id = g.user['enterprise_id']
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM stk_logisticas WHERE enterprise_id = %s ORDER BY nombre", (ent_id,))
-            logisticas = cursor.fetchall()
-        return render_template('stock/logisticas.html', logisticas=logisticas)
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT * FROM stk_logisticas WHERE enterprise_id = %s ORDER BY nombre", (ent_id,))
+            logisticas = await cursor.fetchall()
+        return await render_template('stock/logisticas.html', logisticas=logisticas)
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        await flash(f"Error: {e}", "danger")
         return redirect(url_for('stock.dashboard'))
 
 @stock_bp.route('/logistica/nueva', methods=['GET', 'POST'])
 @login_required
-def logistica_nueva():
+async def logistica_nueva():
     """Crear nueva empresa logística"""
     ent_id = g.user['enterprise_id']
     if request.method == 'POST':
-        nombre = request.form['nombre']
-        cuit = request.form.get('cuit', '')
-        calle = request.form.get('calle', '')
-        numero = request.form.get('numero', '')
-        localidad = request.form.get('localidad', '')
-        provincia = request.form.get('provincia', '')
-        email = request.form.get('email', '')
-        telefono = request.form.get('telefono', '')
-        activo = 1 if 'activo' in request.form else 0
+        nombre = (await request.form)['nombre']
+        cuit = (await request.form).get('cuit', '')
+        calle = (await request.form).get('calle', '')
+        numero = (await request.form).get('numero', '')
+        localidad = (await request.form).get('localidad', '')
+        provincia = (await request.form).get('provincia', '')
+        email = (await request.form).get('email', '')
+        telefono = (await request.form).get('telefono', '')
+        activo = 1 if 'activo' in (await request.form) else 0
         cuit = format_cuit(cuit)
         direccion = f"{calle} {numero} - {localidad}, {provincia}"
 
         try:
-            with get_db_cursor() as cursor:
-                cursor.execute("""
+            async with get_db_cursor() as cursor:
+                await cursor.execute("""
                     INSERT INTO stk_logisticas (enterprise_id, nombre, cuit, calle, numero, localidad, provincia, direccion, email, telefono, activo)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (ent_id, nombre, cuit, calle, numero, localidad, provincia, direccion, email, telefono, activo))
-                flash(f"Logística '{nombre}' creada.", "success")
+                await flash(f"Logística '{nombre}' creada.", "success")
                 return redirect(url_for('stock.logisticas_lista'))
         except Exception as e:
-            flash(f"Error al crear: {e}", "danger")
+            await flash(f"Error al crear: {e}", "danger")
 
-    provincias = GeorefService.get_provincias()
-    return render_template('stock/logistica_form.html', provincias=provincias)
+    provincias = await GeorefService.get_provincias()
+    return await render_template('stock/logistica_form.html', provincias=provincias)
 
 @stock_bp.route('/logistica/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
-def logistica_editar(id):
+async def logistica_editar(id):
     """Editar empresa logística"""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         if request.method == 'POST':
-            nombre = request.form['nombre']
-            cuit = request.form.get('cuit', '')
-            calle = request.form.get('calle', '')
-            numero = request.form.get('numero', '')
-            localidad = request.form.get('localidad', '')
-            provincia = request.form.get('provincia', '')
-            email = request.form.get('email', '')
-            telefono = request.form.get('telefono', '')
-            activo = 1 if 'activo' in request.form else 0
+            nombre = (await request.form)['nombre']
+            cuit = (await request.form).get('cuit', '')
+            calle = (await request.form).get('calle', '')
+            numero = (await request.form).get('numero', '')
+            localidad = (await request.form).get('localidad', '')
+            provincia = (await request.form).get('provincia', '')
+            email = (await request.form).get('email', '')
+            telefono = (await request.form).get('telefono', '')
+            activo = 1 if 'activo' in (await request.form) else 0
             cuit = format_cuit(cuit)
             direccion = f"{calle} {numero} - {localidad}, {provincia}"
 
             try:
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_logisticas 
                     SET nombre=%s, cuit=%s, calle=%s, numero=%s, localidad=%s, provincia=%s, direccion=%s, email=%s, telefono=%s, activo=%s
                     WHERE id=%s AND enterprise_id=%s
                 """, (nombre, cuit, calle, numero, localidad, provincia, direccion, email, telefono, activo, id, ent_id))
-                flash(f"Logística '{nombre}' actualizada.", "success")
+                await flash(f"Logística '{nombre}' actualizada.", "success")
                 return redirect(url_for('stock.logisticas_lista'))
             except Exception as e:
-                flash(f"Error al actualizar: {e}", "danger")
+                await flash(f"Error al actualizar: {e}", "danger")
 
-        cursor.execute("SELECT * FROM stk_logisticas WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-        logistica = cursor.fetchone()
+        await cursor.execute("SELECT * FROM stk_logisticas WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+        logistica = await cursor.fetchone()
         
-    provincias = GeorefService.get_provincias()
-    return render_template('stock/logistica_form.html', logistica=logistica, provincias=provincias)
+    provincias = await GeorefService.get_provincias()
+    return await render_template('stock/logistica_form.html', logistica=logistica, provincias=provincias)
 
 
 # ----------------------------------------------------------------------
@@ -1815,16 +1815,16 @@ def logistica_editar(id):
 @stock_bp.route('/api/articulos/<int:articulo_id>/barcodes', methods=['GET'])
 @login_required
 @permission_required('view_stock')
-def api_get_barcodes(articulo_id):
+async def api_get_barcodes(articulo_id):
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT id, codigo, tipo_codigo, factor_conversion
             FROM stk_articulos_codigos
             WHERE articulo_id = %s AND enterprise_id = %s AND is_active = 1
             ORDER BY id ASC
         """, (articulo_id, ent_id))
-        rows = cursor.fetchall()
+        rows = await cursor.fetchall()
         
     return jsonify({'success': True, 'barcodes': rows})
 
@@ -1832,9 +1832,9 @@ def api_get_barcodes(articulo_id):
 @login_required
 @permission_required('books_add')
 @atomic_transaction('stock')
-def api_add_barcode(articulo_id):
+async def api_add_barcode(articulo_id):
     ent_id = g.user['enterprise_id']
-    data = request.json
+    data = (await request.json)
     cod = data.get('codigo', '').strip()
     tipo = data.get('tipo_codigo', 'GTIN')
     factor = float(data.get('factor_conversion', 1.0))
@@ -1842,19 +1842,19 @@ def api_add_barcode(articulo_id):
     if not cod:
         return jsonify({'success': False, 'message': 'Código vacío.'})
         
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO stk_articulos_codigos (enterprise_id, articulo_id, codigo, tipo_codigo, factor_conversion)
                 VALUES (%s, %s, %s, %s, %s)
             """, (ent_id, articulo_id, cod, tipo, factor))
             b_id = cursor.lastrowid
             
             # Si el código se carga por primera vez y el artículo no tiene EAN base/ISBN, podríamos actualizarlo también (opcional)
-            cursor.execute("SELECT isbn FROM stk_articulos WHERE id = %s", (articulo_id,))
-            a_row = cursor.fetchone()
+            await cursor.execute("SELECT isbn FROM stk_articulos WHERE id = %s", (articulo_id,))
+            a_row = await cursor.fetchone()
             if a_row and not a_row[0]:
-                cursor.execute("UPDATE stk_articulos SET isbn = %s WHERE id = %s", (cod, articulo_id))
+                await cursor.execute("UPDATE stk_articulos SET isbn = %s WHERE id = %s", (cod, articulo_id))
 
             return jsonify({'success': True, 'id': b_id})
         except Exception as e:
@@ -1863,23 +1863,23 @@ def api_add_barcode(articulo_id):
 @stock_bp.route('/api/articulos/barcodes/<int:codigo_id>', methods=['DELETE'])
 @login_required
 @permission_required('books_add')
-def api_delete_barcode(codigo_id):
+async def api_delete_barcode(codigo_id):
     ent_id = g.user['enterprise_id']
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
-            cursor.execute("DELETE FROM stk_articulos_codigos WHERE id = %s AND enterprise_id = %s", (codigo_id, ent_id))
+            await cursor.execute("DELETE FROM stk_articulos_codigos WHERE id = %s AND enterprise_id = %s", (codigo_id, ent_id))
             return jsonify({'success': True})
         except Exception as e:
             return jsonify({'success': False, 'message': str(e)})
 
 # FASE 1.2: Etiquetado de Códigos en Recepción - Multi modo
-def _get_default_printer(cursor, ent_id):
+async def _get_default_printer(cursor, ent_id):
     """Helper: obtiene impresora predeterminada o fallback."""
-    cursor.execute(
+    await cursor.execute(
         "SELECT * FROM stk_impresoras_config WHERE enterprise_id = %s AND es_predeterminada = 1 AND activo = 1 LIMIT 1",
         (ent_id,)
     )
-    p = cursor.fetchone()
+    p = await cursor.fetchone()
     return p or {
         'ancho_mm': 100.0, 'alto_mm': 50.0, 'marca': 'Generico',
         'nombre': 'Default (Sin Configurar)', 'tipo_conexion': 'BROWSER_DIALOG',
@@ -1890,15 +1890,15 @@ def _get_default_printer(cursor, ent_id):
 @stock_bp.route('/api/articulos/<int:articulo_id>/print_label', methods=['GET'])
 @login_required
 @permission_required('view_stock')
-def print_label(articulo_id):
+async def print_label(articulo_id):
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT id, nombre, isbn FROM stk_articulos WHERE id = %s AND enterprise_id = %s", (articulo_id, ent_id))
-        articulo = cursor.fetchone()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT id, nombre, isbn FROM stk_articulos WHERE id = %s AND enterprise_id = %s", (articulo_id, ent_id))
+        articulo = await cursor.fetchone()
         
         # --- Seguridad Industrial ---
-        cursor.execute("SELECT * FROM stk_articulos_seguridad WHERE articulo_id = %s AND enterprise_id = %s", (articulo_id, ent_id))
-        seguridad = cursor.fetchone()
+        await cursor.execute("SELECT * FROM stk_articulos_seguridad WHERE articulo_id = %s AND enterprise_id = %s", (articulo_id, ent_id))
+        seguridad = await cursor.fetchone()
         
         if seguridad and seguridad['pictogramas_json']:
             try:
@@ -1906,7 +1906,7 @@ def print_label(articulo_id):
             except:
                 seguridad['pictogramas_json'] = []
         
-        printer = _get_default_printer(cursor, ent_id)
+        printer = await _get_default_printer(cursor, ent_id)
 
     if not articulo:
         return "Artículo no encontrado o acceso denegado.", 404
@@ -1917,21 +1917,21 @@ def print_label(articulo_id):
         'printer': printer,
         'seguridad': seguridad
     }
-    return render_template('stock/print_label.html', articulo=articulo, data=data)
+    return await render_template('stock/print_label.html', articulo=articulo, data=data)
 
 
 @stock_bp.route('/api/articulos/<int:articulo_id>/print_zpl', methods=['POST'])
 @login_required
 @permission_required('view_stock')
-def print_zpl_network(articulo_id):
+async def print_zpl_network(articulo_id):
     """Opción C: envía ZPL crudo por socket TCP a una impresora de red."""
     import socket
     ent_id = g.user['enterprise_id']
 
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT id, nombre, isbn FROM stk_articulos WHERE id = %s AND enterprise_id = %s", (articulo_id, ent_id))
-        articulo = cursor.fetchone()
-        printer = _get_default_printer(cursor, ent_id)
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT id, nombre, isbn FROM stk_articulos WHERE id = %s AND enterprise_id = %s", (articulo_id, ent_id))
+        articulo = await cursor.fetchone()
+        printer = await _get_default_printer(cursor, ent_id)
 
     if not articulo:
         return jsonify({'success': False, 'message': 'Artículo no encontrado.'})
@@ -1971,82 +1971,82 @@ def print_zpl_network(articulo_id):
 
 @stock_bp.route('/api/impresoras/default', methods=['GET'])
 @login_required
-def api_get_default_printer():
+async def api_get_default_printer():
     """Devuelve config de impresora predeterminada para que el JS configure QZ Tray."""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        printer = _get_default_printer(cursor, ent_id)
+    async with get_db_cursor(dictionary=True) as cursor:
+        printer = await _get_default_printer(cursor, ent_id)
     return jsonify({'success': True, 'printer': printer})
 
 # FASE 1.2: CRUD Impresoras
 @stock_bp.route('/impresoras', methods=['GET'])
 @login_required
 @permission_required('system_settings')
-def impresoras_lista():
+async def impresoras_lista():
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM stk_impresoras_config WHERE enterprise_id = %s ORDER BY es_predeterminada DESC, id DESC", (ent_id,))
-        impresoras = cursor.fetchall()
-    return render_template('stock/impresoras.html', impresoras=impresoras)
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM stk_impresoras_config WHERE enterprise_id = %s ORDER BY es_predeterminada DESC, id DESC", (ent_id,))
+        impresoras = await cursor.fetchall()
+    return await render_template('stock/impresoras.html', impresoras=impresoras)
 
 @stock_bp.route('/impresoras/guardar', methods=['POST'])
 @login_required
 @permission_required('system_settings')
-def impresora_guardar():
+async def impresora_guardar():
     ent_id = g.user['enterprise_id']
-    id = request.form.get('id')
-    nombre = request.form.get('nombre', '')
-    marca = request.form.get('marca', 'Zebra')
-    modelo = request.form.get('modelo', '')
-    ancho = float(request.form.get('ancho_mm', 100.0))
-    alto = float(request.form.get('alto_mm', 0.0)) # 0 means continuous or paper default
-    tipo_con = request.form.get('tipo_conexion', 'BROWSER_DIALOG')
+    id = (await request.form).get('id')
+    nombre = (await request.form).get('nombre', '')
+    marca = (await request.form).get('marca', 'Zebra')
+    modelo = (await request.form).get('modelo', '')
+    ancho = float((await request.form).get('ancho_mm', 100.0))
+    alto = float((await request.form).get('alto_mm', 0.0)) # 0 means continuous or paper default
+    tipo_con = (await request.form).get('tipo_conexion', 'BROWSER_DIALOG')
     
     # Manejo de IP y Puerto según modo
-    ip_red = request.form.get('ip_red') if tipo_con == 'IP_RED' else request.form.get('ip_red_qz')
-    puerto_red = request.form.get('puerto_red' if tipo_con == 'IP_RED' else 'puerto_red_qz', 9100)
-    qz_name = request.form.get('nombre_sistema_qz') if tipo_con == 'QZ_TRAY_USB' else None
+    ip_red = (await request.form).get('ip_red') if tipo_con == 'IP_RED' else (await request.form).get('ip_red_qz')
+    puerto_red = (await request.form).get('puerto_red' if tipo_con == 'IP_RED' else 'puerto_red_qz', 9100)
+    qz_name = (await request.form).get('nombre_sistema_qz') if tipo_con == 'QZ_TRAY_USB' else None
     
-    es_predeterminada = 1 if request.form.get('es_predeterminada') else 0
-    activo = 1 if request.form.get('activo') else 0
+    es_predeterminada = 1 if (await request.form).get('es_predeterminada') else 0
+    activo = 1 if (await request.form).get('activo') else 0
     
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
             if es_predeterminada == 1:
-                cursor.execute("UPDATE stk_impresoras_config SET es_predeterminada = 0 WHERE enterprise_id = %s", (ent_id,))
+                await cursor.execute("UPDATE stk_impresoras_config SET es_predeterminada = 0 WHERE enterprise_id = %s", (ent_id,))
                 
             if id:
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_impresoras_config 
                     SET nombre=%s, marca=%s, modelo=%s, ancho_mm=%s, alto_mm=%s, 
                         tipo_conexion=%s, ip_red=%s, puerto_red=%s, nombre_sistema_qz=%s,
                         es_predeterminada=%s, activo=%s
                     WHERE id=%s AND enterprise_id=%s
                 """, (nombre, marca, modelo, ancho, alto, tipo_con, ip_red, puerto_red, qz_name, es_predeterminada, activo, id, ent_id))
-                flash("Perfil de impresora actualizado.", "success")
+                await flash("Perfil de impresora actualizado.", "success")
             else:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_impresoras_config 
                     (enterprise_id, nombre, marca, modelo, ancho_mm, alto_mm, tipo_conexion, ip_red, puerto_red, nombre_sistema_qz, es_predeterminada, activo)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (ent_id, nombre, marca, modelo, ancho, alto, tipo_con, ip_red, puerto_red, qz_name, es_predeterminada, activo))
-                flash("Nueva impresora agregada.", "success")
+                await flash("Nueva impresora agregada.", "success")
         except Exception as e:
-            flash(f"Error al guardar impresora: {e}", "danger")
+            await flash(f"Error al guardar impresora: {e}", "danger")
             
     return redirect(url_for('stock.impresoras_lista'))
 
 @stock_bp.route('/impresoras/eliminar/<int:id>', methods=['POST'])
 @login_required
 @permission_required('system_settings')
-def impresora_eliminar(id):
+async def impresora_eliminar(id):
     ent_id = g.user['enterprise_id']
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
-            cursor.execute("DELETE FROM stk_impresoras_config WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-            flash("Impresora eliminada.", "success")
+            await cursor.execute("DELETE FROM stk_impresoras_config WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+            await flash("Impresora eliminada.", "success")
         except Exception as e:
-            flash(f"Error al eliminar: {e}", "danger")
+            await flash(f"Error al eliminar: {e}", "danger")
     return redirect(url_for('stock.impresoras_lista'))
 
 
@@ -2054,64 +2054,64 @@ def impresora_eliminar(id):
 @stock_bp.route('/balanzas', methods=['GET'])
 @login_required
 @permission_required('system_settings')
-def balanzas_lista():
+async def balanzas_lista():
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM stk_balanzas_config WHERE enterprise_id = %s ORDER BY es_predeterminada DESC, id DESC", (ent_id,))
-        balanzas = cursor.fetchall()
-    return render_template('stock/balanzas.html', balanzas=balanzas)
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM stk_balanzas_config WHERE enterprise_id = %s ORDER BY es_predeterminada DESC, id DESC", (ent_id,))
+        balanzas = await cursor.fetchall()
+    return await render_template('stock/balanzas.html', balanzas=balanzas)
 
 @stock_bp.route('/balanzas/guardar', methods=['POST'])
 @login_required
 @permission_required('system_settings')
-def balanza_guardar():
+async def balanza_guardar():
     ent_id = g.user['enterprise_id']
-    id = request.form.get('id')
-    nombre = request.form.get('nombre', '')
-    marca = request.form.get('marca', 'Systel')
-    modelo = request.form.get('modelo', '')
-    numero_serie = request.form.get('numero_serie', '')
-    tipo_conexion = request.form.get('tipo_conexion', 'IP_RED')
-    ip_red = request.form.get('ip_red', '')
-    puerto_red = int(request.form.get('puerto_red', 9100) or 9100)
-    es_predeterminada = 1 if request.form.get('es_predeterminada') else 0
-    activo = 1 if request.form.get('activo') else 0
+    id = (await request.form).get('id')
+    nombre = (await request.form).get('nombre', '')
+    marca = (await request.form).get('marca', 'Systel')
+    modelo = (await request.form).get('modelo', '')
+    numero_serie = (await request.form).get('numero_serie', '')
+    tipo_conexion = (await request.form).get('tipo_conexion', 'IP_RED')
+    ip_red = (await request.form).get('ip_red', '')
+    puerto_red = int((await request.form).get('puerto_red', 9100) or 9100)
+    es_predeterminada = 1 if (await request.form).get('es_predeterminada') else 0
+    activo = 1 if (await request.form).get('activo') else 0
     
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
             if es_predeterminada == 1:
-                cursor.execute("UPDATE stk_balanzas_config SET es_predeterminada = 0 WHERE enterprise_id = %s", (ent_id,))
+                await cursor.execute("UPDATE stk_balanzas_config SET es_predeterminada = 0 WHERE enterprise_id = %s", (ent_id,))
                 
             if id:
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_balanzas_config 
                     SET nombre=%s, marca=%s, modelo=%s, numero_serie=%s, tipo_conexion=%s, ip_red=%s, puerto_red=%s, es_predeterminada=%s, activo=%s
                     WHERE id=%s AND enterprise_id=%s
                 """, (nombre, marca, modelo, numero_serie, tipo_conexion, ip_red, puerto_red, es_predeterminada, activo, id, ent_id))
-                flash("Perfil de balanza actualizado.", "success")
+                await flash("Perfil de balanza actualizado.", "success")
             else:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_balanzas_config 
                     (enterprise_id, nombre, marca, modelo, numero_serie, tipo_conexion, ip_red, puerto_red, es_predeterminada, activo)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (ent_id, nombre, marca, modelo, numero_serie, tipo_conexion, ip_red, puerto_red, es_predeterminada, activo))
-                flash("Nueva balanza agregada.", "success")
+                await flash("Nueva balanza agregada.", "success")
         except Exception as e:
-            flash(f"Error al guardar balanza: {e}", "danger")
+            await flash(f"Error al guardar balanza: {e}", "danger")
             
     return redirect(url_for('stock.balanzas_lista'))
 
 @stock_bp.route('/balanzas/eliminar/<int:id>', methods=['POST'])
 @login_required
 @permission_required('system_settings')
-def balanza_eliminar(id):
+async def balanza_eliminar(id):
     ent_id = g.user['enterprise_id']
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
-            cursor.execute("DELETE FROM stk_balanzas_config WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-            flash("Balanza eliminada.", "success")
+            await cursor.execute("DELETE FROM stk_balanzas_config WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+            await flash("Balanza eliminada.", "success")
         except Exception as e:
-            flash(f"Error al eliminar: {e}", "danger")
+            await flash(f"Error al eliminar: {e}", "danger")
     return redirect(url_for('stock.balanzas_lista'))
 
 
@@ -2121,7 +2121,7 @@ def balanza_eliminar(id):
 
 @stock_bp.route('/api/lookup', methods=['GET'])
 @login_required
-def sku_dual_lookup():
+async def sku_dual_lookup():
     """Búsqueda bidireccional: SKU Propietario o SKU Proveedor/GTIN."""
     q = request.args.get('q', '').strip()
     ent_id = g.user['enterprise_id']
@@ -2129,9 +2129,9 @@ def sku_dual_lookup():
 
     from utils.barcode_parser import parse_dynamic_barcode
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # FASE 2.2: Intento de parseo dinámico (Balanza/EAN-13 Variable)
-        parsed = parse_dynamic_barcode(q, ent_id, cursor)
+        parsed = await parse_dynamic_barcode(q, ent_id, cursor)
         search_query = q
         found_dynamic = False
         dynamic_value = None
@@ -2143,7 +2143,7 @@ def sku_dual_lookup():
             dynamic_value = parsed['valor']
 
         # Buscar por SKU Propietario (erp-style) o Código de Barras Alias (proveedor)
-        cursor.execute("""
+        await cursor.execute("""
             SELECT stk_articulos.id, stk_articulos.nombre, stk_articulos.codigo AS sku_propietario, 
                    stk_articulos_codigos.codigo AS sku_proveedor, stk_articulos_codigos.tipo_codigo, 
                    stk_articulos.requiere_serie, stk_articulos.unidad_medida,
@@ -2160,7 +2160,7 @@ def sku_dual_lookup():
               AND (stk_articulos.codigo = %s OR stk_articulos_codigos.codigo = %s OR stk_articulos.nombre LIKE %s)
             LIMIT 20
         """, (ent_id, search_query, search_query, f'%{search_query}%'))
-        results = cursor.fetchall()
+        results = await cursor.fetchall()
 
         # Inyectar metadatos de balanza si corresponde
         if found_dynamic and results:
@@ -2175,13 +2175,13 @@ def sku_dual_lookup():
 
 @stock_bp.route('/api/seriales/validar-devolucion', methods=['POST'])
 @login_required
-def serial_validar_devolucion():
+async def serial_validar_devolucion():
     """
     Valida si un serial puede ser devuelto por un cliente.
     Fase 1.3: Control de que la devolución sea el mismo serial vendido.
     """
     ent_id = g.user['enterprise_id']
-    data = request.json
+    data = (await request.json)
     numero = data.get('numero_serie', '').strip()
     cliente_id = data.get('cliente_id') # erp_terceros.id
     articulo_id = data.get('articulo_id')
@@ -2189,15 +2189,15 @@ def serial_validar_devolucion():
     if not numero or not cliente_id:
         return jsonify({'success': False, 'message': 'Faltan datos (serie o cliente).'})
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # 1. Buscar el serial
-        cursor.execute("""
+        await cursor.execute("""
             SELECT s.*, a.nombre as articulo_nombre
             FROM stk_numeros_serie s
             JOIN stk_articulos a ON s.articulo_id = a.id
             WHERE s.numero_serie = %s AND s.enterprise_id = %s
         """, (numero, ent_id))
-        serie = cursor.fetchone()
+        serie = await cursor.fetchone()
 
         if not serie:
             return jsonify({
@@ -2231,14 +2231,14 @@ def serial_validar_devolucion():
 @stock_bp.route('/api/seriales/procesar-devolucion', methods=['POST'])
 @login_required
 @permission_required('books_add')
-def serial_procesar_devolucion():
+async def serial_procesar_devolucion():
     """
     Procesa la devolución física de un serial.
     Actualiza estado y graba LOG con FECHA EFECTIVA del comprobante.
     """
     ent_id = g.user['enterprise_id']
     user_id = g.user['id']
-    data = request.json
+    data = (await request.json)
     numero = data.get('numero_serie', '').strip()
     nc_id = data.get('nc_id') 
     articulo_id = data.get('articulo_id')
@@ -2247,32 +2247,32 @@ def serial_procesar_devolucion():
     if not numero or not nc_id or not articulo_id:
         return jsonify({'success': False, 'message': 'Faltan parámetros.'})
 
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
             # 1. Obtener ID del cliente y FECHA EFECTIVA desde la NC
-            cursor.execute("SELECT tercero_id, fecha_emision FROM erp_comprobantes WHERE id = %s", (nc_id,))
-            doc_row = cursor.fetchone()
+            await cursor.execute("SELECT tercero_id, fecha_emision FROM erp_comprobantes WHERE id = %s", (nc_id,))
+            doc_row = await cursor.fetchone()
             cliente_id = doc_row[0] if doc_row else None
             fecha_efectiva = doc_row[1] if doc_row else datetime.now().date()
 
             # 2. Actualizar serial
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE stk_numeros_serie 
                 SET estado = %s, comprobante_nc_id = %s, fecha_devolucion = %s, comprobante_venta_id = NULL
                 WHERE numero_serie = %s AND enterprise_id = %s
             """, (estado_final, nc_id, fecha_efectiva, numero, ent_id))
 
             if cursor.rowcount == 0:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_numeros_serie (enterprise_id, articulo_id, numero_serie, origen, estado, comprobante_nc_id, fecha_devolucion)
                     VALUES (%s, %s, %s, 'MANUAL_SCAN', %s, %s, %s)
                 """, (ent_id, articulo_id, numero, estado_final, nc_id, fecha_efectiva))
             
-            cursor.execute("SELECT id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (numero, ent_id))
-            serie_id = cursor.fetchone()[0]
+            await cursor.execute("SELECT id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (numero, ent_id))
+            serie_id = await cursor.fetchone()[0]
 
             # 3. GRABAR MOVIMIENTO CON FECHA EFECTIVA
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO stk_series_trazabilidad 
                 (enterprise_id, serie_id, tipo_evento, fecha_efectiva, tercero_id, comprobante_id, user_id, estado_resultante, notas)
                 VALUES (%s, %s, 'DEVOLUCION', %s, %s, %s, %s, %s, 'Reingreso al stock por Devolución')
@@ -2286,29 +2286,29 @@ def serial_procesar_devolucion():
 @stock_bp.route('/api/seriales/procesar-venta', methods=['POST'])
 @login_required
 @permission_required('books_add')
-def serial_procesar_venta():
+async def serial_procesar_venta():
     """
     Procesa el egreso de un serial por venta (Factura/Remito).
     """
     ent_id = g.user['enterprise_id']
     user_id = g.user['id']
-    data = request.json
+    data = (await request.json)
     numero = data.get('numero_serie', '').strip()
     factura_id = data.get('comprobante_id') 
 
     if not numero or not factura_id:
         return jsonify({'success': False, 'message': 'Faltan parámetros.'})
 
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
             # 1. Obtener datos de la factura
-            cursor.execute("SELECT tercero_id, fecha_emision FROM erp_comprobantes WHERE id = %s", (factura_id,))
-            doc_row = cursor.fetchone()
+            await cursor.execute("SELECT tercero_id, fecha_emision FROM erp_comprobantes WHERE id = %s", (factura_id,))
+            doc_row = await cursor.fetchone()
             cliente_id = doc_row[0] if doc_row else None
             fecha_efectiva = doc_row[1] if doc_row else datetime.now().date()
 
             # 2. Marcar como VENDIDO
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE stk_numeros_serie 
                 SET estado = 'VENDIDO', comprobante_venta_id = %s, tercero_id = %s, fecha_egreso = %s, comprobante_nc_id = NULL
                 WHERE numero_serie = %s AND enterprise_id = %s
@@ -2317,11 +2317,11 @@ def serial_procesar_venta():
             if cursor.rowcount == 0:
                 return jsonify({'success': False, 'message': 'La serie no existe o ya no está disponible.'})
 
-            cursor.execute("SELECT id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (numero, ent_id))
-            serie_id = cursor.fetchone()[0]
+            await cursor.execute("SELECT id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (numero, ent_id))
+            serie_id = await cursor.fetchone()[0]
 
             # 3. Log de Venta
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO stk_series_trazabilidad 
                 (enterprise_id, serie_id, tipo_evento, fecha_efectiva, tercero_id, comprobante_id, user_id, estado_resultante, notas)
                 VALUES (%s, %s, 'VENTA', %s, %s, %s, %s, 'VENDIDO', 'Egreso por venta de mercadería')
@@ -2335,14 +2335,14 @@ def serial_procesar_venta():
 @stock_bp.route('/api/seriales/registrar-hecho', methods=['POST'])
 @login_required
 @permission_required('books_add')
-def serial_registrar_hecho():
+async def serial_registrar_hecho():
     """
     Registra un hecho económico o de inventario genérico para un serial.
     Involucra: Traslados, Ajustes, Bajas, etc.
     """
     ent_id = g.user['enterprise_id']
     user_id = g.user['id']
-    data = request.json
+    data = (await request.json)
     
     # Parámetros básicos
     numero = data.get('numero_serie', '').strip()
@@ -2360,11 +2360,11 @@ def serial_registrar_hecho():
     if not numero or not tipo_evento:
         return jsonify({'success': False, 'message': 'Faltan campos obligatorios (serie y tipo evento).'})
 
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
             # 1. Buscar o Crear Serie
-            cursor.execute("SELECT id, articulo_id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (numero, ent_id))
-            serie_row = cursor.fetchone()
+            await cursor.execute("SELECT id, articulo_id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (numero, ent_id))
+            serie_row = await cursor.fetchone()
             
             if not serie_row:
                 # Si es un ajuste de ingreso, la creamos
@@ -2372,7 +2372,7 @@ def serial_registrar_hecho():
                     articulo_id = data.get('articulo_id')
                     if not articulo_id: return jsonify({'success': False, 'message': 'Se requiere articulo_id para registrar serie nueva.'})
                     
-                    cursor.execute("""
+                    await cursor.execute("""
                         INSERT INTO stk_numeros_serie (enterprise_id, articulo_id, numero_serie, origen, estado)
                         VALUES (%s, %s, %s, 'MANUAL_SCAN', %s)
                     """, (ent_id, articulo_id, numero, estado_final or 'EN_STOCK'))
@@ -2383,10 +2383,10 @@ def serial_registrar_hecho():
                 serie_id = serie_row[0]
                 # Actualizar estado si se provee
                 if estado_final:
-                    cursor.execute("UPDATE stk_numeros_serie SET estado = %s WHERE id = %s", (estado_final, serie_id))
+                    await cursor.execute("UPDATE stk_numeros_serie SET estado = %s WHERE id = %s", (estado_final, serie_id))
 
             # 2. SELLAR EL HECHO EN EL LOG (Pedigree)
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO stk_series_trazabilidad 
                 (enterprise_id, serie_id, tipo_evento, fecha_efectiva, tercero_id, deposito_id, 
                  comprobante_id, referencia_identificador, user_id, estado_resultante, notas)
@@ -2402,14 +2402,14 @@ def serial_registrar_hecho():
 @stock_bp.route('/api/seriales/vincular-caja', methods=['POST'])
 @login_required
 @permission_required('books_add')
-def serial_vincular_caja():
+async def serial_vincular_caja():
     """
     Agregación: Vincula múltiples seriales (Hijos) a un Serial Contenedor (Padre/Caja).
     Fase 1.4: Master Box Consolidation.
     """
     ent_id = g.user['enterprise_id']
     user_id = g.user['id']
-    data = request.json
+    data = (await request.json)
     
     parent_serie_nro = data.get('parent_serie', '').strip()
     children_series = data.get('children_series', []) # Lista de strings
@@ -2417,11 +2417,11 @@ def serial_vincular_caja():
     if not parent_serie_nro or not children_series:
         return jsonify({'success': False, 'message': 'Se requiere serie de la caja y lista de unidades.'})
 
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
             # 1. Asegurar existencia de la caja
-            cursor.execute("SELECT id, articulo_id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (parent_serie_nro, ent_id))
-            parent_row = cursor.fetchone()
+            await cursor.execute("SELECT id, articulo_id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (parent_serie_nro, ent_id))
+            parent_row = await cursor.fetchone()
             if not parent_row:
                 return jsonify({'success': False, 'message': f'La caja {parent_serie_nro} no existe.'})
             
@@ -2429,7 +2429,7 @@ def serial_vincular_caja():
             articulo_id = parent_row[1]
 
             # Marcar como contenedor
-            cursor.execute("UPDATE stk_numeros_serie SET es_contenedor = 1 WHERE id = %s", (parent_id,))
+            await cursor.execute("UPDATE stk_numeros_serie SET es_contenedor = 1 WHERE id = %s", (parent_id,))
 
             # 2. Vincular hijos
             vinculados = 0
@@ -2437,7 +2437,7 @@ def serial_vincular_caja():
                 sn = sn.strip()
                 if not sn: continue
                 # Actualizar hijo
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE stk_numeros_serie 
                     SET parent_id = %s 
                     WHERE numero_serie = %s AND enterprise_id = %s
@@ -2446,9 +2446,9 @@ def serial_vincular_caja():
                 if cursor.rowcount > 0:
                     vinculados += 1
                     # Log de trazabilidad para el hijo
-                    cursor.execute("SELECT id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (sn, ent_id))
-                    sid = cursor.fetchone()[0]
-                    cursor.execute("""
+                    await cursor.execute("SELECT id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (sn, ent_id))
+                    sid = await cursor.fetchone()[0]
+                    await cursor.execute("""
                         INSERT INTO stk_series_trazabilidad (enterprise_id, serie_id, tipo_evento, user_id, notas)
                         VALUES (%s, %s, 'AJUSTE', %s, %s)
                     """, (ent_id, sid, user_id, f'Vinculado al Master Box {parent_serie_nro}'))
@@ -2460,33 +2460,33 @@ def serial_vincular_caja():
 
 @stock_bp.route('/api/seriales/desvincular-caja', methods=['POST'])
 @login_required
-def serial_desvincular_caja():
+async def serial_desvincular_caja():
     """
     Desconsolidación: Libera los seriales contenidos en un Master Box.
     Fase 1.4: Master Box Unpacking.
     """
     ent_id = g.user['enterprise_id']
     user_id = g.user['id']
-    parent_serie = request.json.get('parent_serie', '').strip()
+    parent_serie = (await request.json).get('parent_serie', '').strip()
 
     if not parent_serie: return jsonify({'success': False, 'message': 'Serie de caja requerida.'})
 
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
-            cursor.execute("SELECT id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (parent_serie, ent_id))
-            p_row = cursor.fetchone()
+            await cursor.execute("SELECT id FROM stk_numeros_serie WHERE numero_serie = %s AND enterprise_id = %s", (parent_serie, ent_id))
+            p_row = await cursor.fetchone()
             if not p_row: return jsonify({'success': False, 'message': 'Caja no encontrada.'})
             
             p_id = p_row[0]
             
             # Grabar log antes de desvincular
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO stk_series_trazabilidad (enterprise_id, serie_id, tipo_evento, user_id, notas)
                 SELECT enterprise_id, id, 'AJUSTE', %s, %s FROM stk_numeros_serie WHERE parent_id = %s
             """, (user_id, f'Desvinculado del Master Box {parent_serie} (Desconsolidación)', p_id))
 
             # Desvincular
-            cursor.execute("UPDATE stk_numeros_serie SET parent_id = NULL WHERE parent_id = %s", (p_id,))
+            await cursor.execute("UPDATE stk_numeros_serie SET parent_id = NULL WHERE parent_id = %s", (p_id,))
             
             return jsonify({'success': True, 'message': 'Contenido de la caja liberado individualmente.'})
         except Exception as e:
@@ -2495,11 +2495,11 @@ def serial_desvincular_caja():
 
 @stock_bp.route('/api/seriales/<int:serie_id>/pedigree', methods=['GET'])
 @login_required
-def serial_pedigree(serie_id):
+async def serial_pedigree(serie_id):
     """Retorna la historia completa (Pedigree) de un serial."""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT t.*, u.username as usuario, 
                    c.tipo_comprobante, c.punto_venta, c.numero as comp_nro,
                    ter.nombre as tercero_nombre,
@@ -2512,41 +2512,41 @@ def serial_pedigree(serie_id):
             WHERE t.serie_id = %s AND t.enterprise_id = %s
             ORDER BY t.fecha_efectiva DESC, t.fecha DESC
         """, (serie_id, ent_id))
-        history = cursor.fetchall()
+        history = await cursor.fetchall()
     return jsonify(history)
 
 
 @stock_bp.route('/seriales/<int:articulo_id>', methods=['GET'])
 @login_required
 @permission_required('view_stock')
-def seriales_articulo(articulo_id):
+async def seriales_articulo(articulo_id):
     """Pantalla principal de gestión de series de un artículo."""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute(
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute(
             "SELECT id, nombre, isbn, requiere_serie FROM stk_articulos WHERE id = %s AND enterprise_id = %s",
             (articulo_id, ent_id)
         )
-        articulo = cursor.fetchone()
+        articulo = await cursor.fetchone()
         if not articulo:
-            flash('Artículo no encontrado.', 'danger')
+            await flash('Artículo no encontrado.', 'danger')
             return redirect(url_for('stock.articulos'))
 
-        cursor.execute(
+        await cursor.execute(
             "SELECT * FROM stk_numeros_serie WHERE articulo_id = %s AND enterprise_id = %s ORDER BY id DESC LIMIT 200",
             (articulo_id, ent_id)
         )
-        series = cursor.fetchall()
+        series = await cursor.fetchall()
 
-        cursor.execute(
+        await cursor.execute(
             "SELECT ultimo_correlativo, prefijo FROM stk_series_counter WHERE articulo_id = %s AND enterprise_id = %s",
             (articulo_id, ent_id)
         )
-        counter = cursor.fetchone() or {'ultimo_correlativo': 0, 'prefijo': None}
+        counter = await cursor.fetchone() or {'ultimo_correlativo': 0, 'prefijo': None}
 
-        printer = _get_default_printer(cursor, ent_id)
+        printer = await _get_default_printer(cursor, ent_id)
 
-    return render_template(
+    return await render_template(
         'stock/seriales.html',
         articulo=articulo,
         series=series,
@@ -2559,9 +2559,9 @@ def seriales_articulo(articulo_id):
 @stock_bp.route('/api/seriales/<int:articulo_id>/scan', methods=['POST'])
 @login_required
 @permission_required('books_add')
-def serial_scan(articulo_id):
+async def serial_scan(articulo_id):
     ent_id = g.user['enterprise_id']
-    data = request.json
+    data = (await request.json)
     numero = (data.get('numero_serie') or '').strip()
     lote = data.get('lote', '')
     notas = data.get('notas', '')
@@ -2569,9 +2569,9 @@ def serial_scan(articulo_id):
     if not numero:
         return jsonify({'success': False, 'message': 'Número de serie vacío.'})
 
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO stk_numeros_serie (enterprise_id, articulo_id, numero_serie, origen, estado, lote, notas)
                 VALUES (%s, %s, %s, 'MANUAL_SCAN', 'EN_STOCK', %s, %s)
             """, (ent_id, articulo_id, numero, lote, notas))
@@ -2588,17 +2588,17 @@ def serial_scan(articulo_id):
 @stock_bp.route('/api/seriales/<int:articulo_id>/import', methods=['POST'])
 @login_required
 @permission_required('books_add')
-def serial_import(articulo_id):
+async def serial_import(articulo_id):
     ent_id = g.user['enterprise_id']
-    file = request.files.get('file')
-    column = request.form.get('columna', '0')  # column name or index
-    lote = request.form.get('lote', '')
+    file = (await request.files).get('file')
+    column = (await request.form).get('columna', '0')  # column name or index
+    lote = (await request.form).get('lote', '')
 
     if not file:
         return jsonify({'success': False, 'message': 'No se recibió archivo.'})
 
     try:
-        content = file.read().decode('utf-8', errors='ignore')
+        content = await file.read().decode('utf-8', errors='ignore')
         reader = csv.reader(io.StringIO(content))
         rows = list(reader)
     except Exception as e:
@@ -2616,7 +2616,7 @@ def serial_import(articulo_id):
     duplicates = []
     errors = []
 
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         for row in rows[1:]:  # skip header
             if not row or col_idx >= len(row):
                 continue
@@ -2624,7 +2624,7 @@ def serial_import(articulo_id):
             if not numero:
                 continue
             try:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT IGNORE INTO stk_numeros_serie
                     (enterprise_id, articulo_id, numero_serie, origen, estado, lote)
                     VALUES (%s, %s, %s, 'IMPORTACION', 'EN_STOCK', %s)
@@ -2649,9 +2649,9 @@ def serial_import(articulo_id):
 @stock_bp.route('/api/seriales/<int:articulo_id>/autogenerar', methods=['POST'])
 @login_required
 @permission_required('books_add')
-def serial_autogenerar(articulo_id):
+async def serial_autogenerar(articulo_id):
     ent_id = g.user['enterprise_id']
-    data = request.json
+    data = (await request.json)
     cantidad = int(data.get('cantidad', 1))
     prefijo = data.get('prefijo', '').strip() or None
     imprimir = data.get('imprimir', False)
@@ -2661,13 +2661,13 @@ def serial_autogenerar(articulo_id):
         return jsonify({'success': False, 'message': 'Cantidad debe estar entre 1 y 500.'})
 
     generados = []
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         # Get or create counter
-        cursor.execute(
+        await cursor.execute(
             "SELECT ultimo_correlativo, prefijo FROM stk_series_counter WHERE articulo_id = %s AND enterprise_id = %s",
             (articulo_id, ent_id)
         )
-        row = cursor.fetchone()
+        row = await cursor.fetchone()
         start = (row[0] if row else 0)
         pfx = prefijo or (row[1] if row else f'SKU{articulo_id:04d}')
 
@@ -2676,7 +2676,7 @@ def serial_autogenerar(articulo_id):
             # Format: PREFIX-000001 (EAN-friendly, 6 digits)
             serie_num = f"{pfx}-{n:06d}"
             try:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO stk_numeros_serie
                     (enterprise_id, articulo_id, numero_serie, origen, estado, lote)
                     VALUES (%s, %s, %s, 'AUTOGENERADO', 'EN_STOCK', %s)
@@ -2687,7 +2687,7 @@ def serial_autogenerar(articulo_id):
 
         # Update counter
         nuevo_correlativo = start + len(generados)
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO stk_series_counter (enterprise_id, articulo_id, ultimo_correlativo, prefijo)
             VALUES (%s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE ultimo_correlativo = %s, prefijo = %s
@@ -2707,11 +2707,11 @@ def serial_autogenerar(articulo_id):
 @stock_bp.route('/api/seriales/<int:serie_id>/eliminar', methods=['DELETE'])
 @login_required
 @permission_required('books_add')
-def serial_eliminar(serie_id):
+async def serial_eliminar(serie_id):
     ent_id = g.user['enterprise_id']
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         try:
-            cursor.execute(
+            await cursor.execute(
                 "DELETE FROM stk_numeros_serie WHERE id = %s AND enterprise_id = %s",
                 (serie_id, ent_id)
             )
@@ -2723,16 +2723,16 @@ def serial_eliminar(serie_id):
 # ---- API: listar series de un artículo ----
 @stock_bp.route('/api/seriales/<int:articulo_id>/list', methods=['GET'])
 @login_required
-def serial_list_api(articulo_id):
+async def serial_list_api(articulo_id):
     ent_id = g.user['enterprise_id']
     estado = request.args.get('estado', '')
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         q = "SELECT * FROM stk_numeros_serie WHERE articulo_id = %s AND enterprise_id = %s"
         params = [articulo_id, ent_id]
         if estado:
             q += " AND estado = %s"
             params.append(estado)
         q += " ORDER BY id DESC LIMIT 300"
-        cursor.execute(q, params)
-        rows = cursor.fetchall()
+        await cursor.execute(q, params)
+        rows = await cursor.fetchall()
     return jsonify({'success': True, 'series': rows, 'total': len(rows)})

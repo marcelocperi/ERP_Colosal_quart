@@ -1,6 +1,6 @@
 
 from functools import wraps
-from flask import g, request, redirect, url_for, flash, jsonify
+from quart import g, request, redirect, url_for, flash, jsonify
 
 def _is_ajax_or_fetch():
     """Detecta si la petición viene de fetch() o AJAX y espera JSON, no HTML."""
@@ -21,7 +21,7 @@ def _is_ajax_or_fetch():
         return True
     return False
 
-def _unauthorized_response(message="Sesión expirada o inválida. Recargue la página."):
+async def _unauthorized_response(message="Sesión expirada o inválida. Recargue la página."):
     """Respuesta apropiada para cuando el usuario no está autenticado, y loggea el incidente."""
     # Intentar loguear el 401 Unauthorized
     try:
@@ -29,26 +29,26 @@ def _unauthorized_response(message="Sesión expirada o inválida. Recargue la p�
         import json
         req_data = {}
         try:
-            if request.is_json: req_data = request.json
-            elif request.form: req_data = dict(request.form)
+            if request.is_json: req_data = await request.json
+            elif (await request.form): req_data = dict(await request.form)
         except: pass
         clob = {
             'request_path': request.path,
             'referrer': request.referrer,
             'reason': message
         }
-        ent_id = request.form.get('enterprise_id') or request.args.get('enterprise_id') or 0
+        ent_id = (await request.form).get('enterprise_id') or request.args.get('enterprise_id') or 0
         try: ent_id = int(ent_id)
         except: ent_id = 0
             
-        from flask import session, g
+        from quart import session, g
         sid = getattr(g, 'sid', None) or session.get('session_id')
             
-        with get_db_cursor() as log_cursor:
-            log_cursor.execute("SHOW COLUMNS FROM sys_transaction_logs LIKE 'clob_data'")
-            has_clob = bool(log_cursor.fetchone())
+        async with get_db_cursor() as log_cursor:
+            await log_cursor.execute("SHOW COLUMNS FROM sys_transaction_logs LIKE 'clob_data'")
+            has_clob = bool(await log_cursor.fetchone())
             col = 'clob_data' if has_clob else 'error_traceback'
-            log_cursor.execute(f"""
+            await log_cursor.execute(f"""
                 INSERT INTO sys_transaction_logs 
                 (enterprise_id, user_id, session_id, module, endpoint, request_method, request_data, 
                  status, severity, impact_category, failure_mode, error_message, {col})
@@ -64,30 +64,24 @@ def _unauthorized_response(message="Sesión expirada o inválida. Recargue la p�
 import inspect
 
 def login_required(view):
-    if inspect.iscoroutinefunction(view):
-        @wraps(view)
-        async def wrapped_view(**kwargs):
-            if g.user is None:
-                return _unauthorized_response()
+    @wraps(view)
+    async def wrapped_view(**kwargs):
+        if g.user is None:
+            return await _unauthorized_response()
+        if inspect.iscoroutinefunction(view):
             return await view(**kwargs)
-        return wrapped_view
-    else:
-        @wraps(view)
-        def wrapped_view(**kwargs):
-            if g.user is None:
-                return _unauthorized_response()
-            return view(**kwargs)
-        return wrapped_view
+        return view(**kwargs)
+    return wrapped_view
 
-def _log_forbidden_try(permission_code, user_msg):
+async def _log_forbidden_try(permission_code, user_msg):
     try:
         from database import get_db_cursor
         import json, traceback
         
         req_data = {}
         try:
-            if request.is_json: req_data = request.json
-            elif request.form: req_data = dict(request.form)
+            if request.is_json: req_data = await request.json
+            elif (await request.form): req_data = dict(await request.form)
         except: pass
         
         clob = {
@@ -100,14 +94,14 @@ def _log_forbidden_try(permission_code, user_msg):
         user_id = getattr(g, 'user', {}).get('id') if getattr(g, 'user', None) else None
         ent_id = getattr(g, 'user', {}).get('enterprise_id', 0) if getattr(g, 'user', None) else 0
 
-        from flask import session, g
+        from quart import session, g
         sid = getattr(g, 'sid', None) or session.get('session_id')
 
-        with get_db_cursor() as log_cursor:
-            log_cursor.execute("SHOW COLUMNS FROM sys_transaction_logs LIKE 'clob_data'")
-            has_clob = bool(log_cursor.fetchone())
+        async with get_db_cursor() as log_cursor:
+            await log_cursor.execute("SHOW COLUMNS FROM sys_transaction_logs LIKE 'clob_data'")
+            has_clob = bool(await log_cursor.fetchone())
             col = 'clob_data' if has_clob else 'error_traceback'
-            log_cursor.execute(f"""
+            await log_cursor.execute(f"""
                 INSERT INTO sys_transaction_logs 
                 (enterprise_id, user_id, session_id, module, endpoint, request_method, request_data, 
                  status, severity, impact_category, failure_mode, error_message, {col})
@@ -119,71 +113,46 @@ def _log_forbidden_try(permission_code, user_msg):
 
 def permission_required(permission_code):
     def decorator(view):
-        if inspect.iscoroutinefunction(view):
-            @wraps(view)
-            async def wrapped_view(**kwargs):
-                if g.user is None:
-                    return _unauthorized_response()
-                
-                # superadmin bypass
-                if str(g.user.get('username', '')).lower() == 'superadmin':
+        @wraps(view)
+        async def wrapped_view(**kwargs):
+            if g.user is None:
+                return await _unauthorized_response()
+            
+            # superadmin bypass
+            if str(g.user.get('username', '')).lower() == 'superadmin':
+                if inspect.iscoroutinefunction(view):
                     return await view(**kwargs)
-
-                if permission_code == 'sysadmin':
-                    if 'sysadmin' not in g.permissions:
-                         msg = "Acceso Denegado. Se requiere nivel Super Administrador."
-                         _log_forbidden_try('sysadmin', msg)
-                         if _is_ajax_or_fetch():
-                             return jsonify({"error": msg}), 403
-                         flash(f"Acceso Denegado: Se requiere nivel Super Administrador.", "danger")
-                         return redirect(url_for('biblioteca.dashboard'))
-                    return await view(**kwargs)
-
-                if 'all' in g.permissions:
-                    return await view(**kwargs)
-                
-                if permission_code not in g.permissions:
-                    msg = f"Acceso Denegado: Se requiere permiso '{permission_code}'"
-                    _log_forbidden_try(permission_code, msg)
-                    if _is_ajax_or_fetch():
-                        return jsonify({"error": msg}), 403
-                    flash(msg, "danger")
-                    if request.endpoint == 'biblioteca.dashboard' or request.endpoint == 'dashboard':
-                        return "Acceso insuficiente. Contacte al administrador.", 403
-                    return redirect(url_for('biblioteca.dashboard'))
-                return await view(**kwargs)
-            return wrapped_view
-        else:
-            @wraps(view)
-            def wrapped_view(**kwargs):
-                if g.user is None:
-                    return _unauthorized_response()
-                
-                if str(g.user.get('username', '')).lower() == 'superadmin':
-                    return view(**kwargs)
-
-                if permission_code == 'sysadmin':
-                    if 'sysadmin' not in g.permissions:
-                         msg = "Acceso Denegado. Se requiere nivel Super Administrador."
-                         _log_forbidden_try('sysadmin', msg)
-                         if _is_ajax_or_fetch():
-                             return jsonify({"error": msg}), 403
-                         flash(f"Acceso Denegado: Se requiere nivel Super Administrador.", "danger")
-                         return redirect(url_for('biblioteca.dashboard'))
-                    return view(**kwargs)
-
-                if 'all' in g.permissions:
-                    return view(**kwargs)
-                
-                if permission_code not in g.permissions:
-                    msg = f"Acceso Denegado: Se requiere permiso '{permission_code}'"
-                    _log_forbidden_try(permission_code, msg)
-                    if _is_ajax_or_fetch():
-                        return jsonify({"error": msg}), 403
-                    flash(msg, "danger")
-                    if request.endpoint == 'biblioteca.dashboard' or request.endpoint == 'dashboard':
-                        return "Acceso insuficiente. Contacte al administrador.", 403
-                    return redirect(url_for('biblioteca.dashboard'))
                 return view(**kwargs)
-            return wrapped_view
+
+            if permission_code == 'sysadmin':
+                if 'sysadmin' not in g.permissions:
+                     msg = "Acceso Denegado. Se requiere nivel Super Administrador."
+                     await _log_forbidden_try('sysadmin', msg)
+                     if _is_ajax_or_fetch():
+                         return jsonify({"error": msg}), 403
+                     await flash(f"Acceso Denegado: Se requiere nivel Super Administrador.", "danger")
+                     return redirect(url_for('ventas.dashboard'))
+                if inspect.iscoroutinefunction(view):
+                    return await view(**kwargs)
+                return view(**kwargs)
+
+            if 'all' in g.permissions:
+                if inspect.iscoroutinefunction(view):
+                    return await view(**kwargs)
+                return view(**kwargs)
+            
+            if permission_code not in g.permissions:
+                msg = f"Acceso Denegado: Se requiere permiso '{permission_code}'"
+                await _log_forbidden_try(permission_code, msg)
+                if _is_ajax_or_fetch():
+                    return jsonify({"error": msg}), 403
+                await flash(msg, "danger")
+                if request.endpoint == 'ventas.dashboard' or request.endpoint == 'dashboard':
+                    return "Acceso insuficiente. Contacte al administrador.", 403
+                return redirect(url_for('ventas.dashboard'))
+            
+            if inspect.iscoroutinefunction(view):
+                return await view(**kwargs)
+            return view(**kwargs)
+        return wrapped_view
     return decorator

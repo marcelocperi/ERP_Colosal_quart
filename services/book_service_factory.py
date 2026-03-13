@@ -9,13 +9,13 @@ class BookServiceFactory:
     """
     
     @staticmethod
-    def get_service_for_type(tipo_articulo_id, enterprise_id):
+    async def get_service_for_type(tipo_articulo_id, enterprise_id):
         # 1. Look up configuration in DB
         try:
             conn = mariadb.connect(**DB_CONFIG)
             cursor = conn.cursor(dictionary=True)
             
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT s.nombre, s.tipo_servicio, s.clase_implementacion, s.config_json, s.activo
                 FROM stk_tipos_articulo_servicios tas
                 JOIN sys_external_services s ON tas.servicio_id = s.id
@@ -23,7 +23,7 @@ class BookServiceFactory:
                   AND s.activo = 1
             """, (tipo_articulo_id, enterprise_id))
             
-            config = cursor.fetchone()
+            config = await cursor.fetchone()
             conn.close()
             
             if not config:

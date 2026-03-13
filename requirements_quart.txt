@@ -1,0 +1,58 @@
+# Colosal ERP - Quart Async Requirements
+
+# ── Core Framework ─────────────────────────────────────────────────────
+quart>=0.19.0
+werkzeug>=3.0.0
+python-dotenv>=1.0.0
+itsdangerous>=2.0.0
+jinja2>=3.1.0
+click>=8.0.0
+# quart-auth is useful for replacing flask-login in the future
+quart-auth>=0.10.0
+
+# ── Database ───────────────────────────────────────────────────────────
+SQLAlchemy>=2.0.0
+PyMySQL>=1.1.0
+mariadb>=1.1.0
+# Async DB Driver
+aiomysql>=0.2.0
+
+# ── HTTP / APIs ────────────────────────────────────────────────────────
+requests>=2.32.0
+httpx>=0.28.0
+urllib3>=2.0.0
+certifi>=2024.0.0
+
+# ── AFIP & SOAP ────────────────────────────────────────────────────────
+zeep>=4.3.0
+cryptography>=44.0.0
+lxml>=5.3.0
+pyOpenSSL>=24.0.0
+
+# ── Firma Digital (pyHanko — firma de PDFs) ───────────────────────────
+pyHanko>=0.26.0
+pyhanko-certvalidator>=0.26.0
+
+# ── Scraping & Datos ──────────────────────────────────────────────────
+beautifulsoup4>=4.13.0
+html5lib>=1.1
+openpyxl>=3.1.0
+PyYAML>=6.0.0
+
+# ── PDF & Imágenes ─────────────────────────────────────────────────────
+xhtml2pdf>=0.2.0
+Pillow>=10.0.0
+reportlab>=4.0.0
+PyPDF2>=3.0.0
+pdfplumber>=0.11.0
+pdfminer.six>=20221105
+PyMuPDF>=1.24.0
+svglib>=1.5.0
+
+# ── Fechas & Zonas Horarias ───────────────────────────────────────────
+pytz>=2024.0
+tzdata>=2024.0
+tzlocal>=5.0
+
+# ── Cross Platform ASGI Server ──────────────────────────────────────────
+hypercorn>=0.16.0

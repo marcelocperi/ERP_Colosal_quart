@@ -2,7 +2,7 @@ import shutil
 import mariadb
 from database import DB_CONFIG
 
-def get_db_health():
+async def get_db_health():
     """
     Obtiene métricas de salud de la base de datos y espacio en disco.
     """
@@ -26,8 +26,8 @@ def get_db_health():
             FROM information_schema.TABLES
             WHERE table_schema = ?
         """
-        cursor.execute(query, (db_name,))
-        res = cursor.fetchone()
+        await cursor.execute(query, (db_name,))
+        res = await cursor.fetchone()
         if res:
             health["db_size_mb"] = res[0] or 0
         conn.close()

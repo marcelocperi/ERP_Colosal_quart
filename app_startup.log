@@ -612,3 +612,677 @@
 2026-03-06 10:04:49,098 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
 2026-03-06 10:04:55,921 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
 2026-03-06 10:09:33,790 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 11:25:37,382 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 7304). Limpiando...
+2026-03-06 11:25:37,624 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 7304 desalojado exitosamente.
+2026-03-06 11:25:37,665 - __main__ - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 11:25:37,712 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 11:25:37,740 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 11:25:37,746 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 11:29:01,627 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 7304). Limpiando...
+2026-03-06 11:29:01,879 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 7304 desalojado exitosamente.
+2026-03-06 11:29:01,945 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 11:29:01,946 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 11:29:01,950 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 11:29:02,230 - __main__ - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 11:35:39,068 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 7304). Limpiando...
+2026-03-06 11:35:39,277 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 7304 desalojado exitosamente.
+2026-03-06 11:35:39,340 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 11:35:39,342 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 11:35:39,345 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 11:35:39,681 - __main__ - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 11:36:29,658 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 7304). Limpiando...
+2026-03-06 11:36:29,853 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 7304 desalojado exitosamente.
+2026-03-06 11:36:30,047 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 8492). Limpiando...
+2026-03-06 11:36:30,235 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 8492 desalojado exitosamente.
+2026-03-06 11:36:30,292 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 11:36:30,294 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 11:36:30,297 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 11:36:30,334 - __main__ - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 11:37:14,274 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 7304). Limpiando...
+2026-03-06 11:37:14,472 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 7304 desalojado exitosamente.
+2026-03-06 11:37:14,674 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 23732). Limpiando...
+2026-03-06 11:37:14,871 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 23732 desalojado exitosamente.
+2026-03-06 11:37:14,957 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 11:37:14,958 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 11:37:14,964 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 11:37:14,965 - __main__ - INFO - ✅ DB Pool pre-inicializado correctamente en background.
+2026-03-06 11:47:33,781 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 24316). Limpiando...
+2026-03-06 11:47:33,989 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 24316 desalojado exitosamente.
+2026-03-06 11:47:34,252 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 7304). Limpiando...
+2026-03-06 11:47:34,464 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 7304 desalojado exitosamente.
+2026-03-06 11:47:34,494 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado correctamente.
+2026-03-06 11:47:34,496 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 11:51:36,391 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 23984). Limpiando...
+2026-03-06 11:51:36,601 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 23984 desalojado exitosamente.
+2026-03-06 13:03:34,751 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 13:03:34,801 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 13:03:34,837 - services.erp_master_service - ERROR - Error inicializando DB ERP: '_asyncio.Future' object is not subscriptable
+2026-03-06 13:03:34,838 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 13:03:34,840 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 13:05:31,263 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 25436). Limpiando...
+2026-03-06 13:05:31,476 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 25436 desalojado exitosamente.
+2026-03-06 13:05:31,493 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 13:05:31,500 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 13:05:31,502 - services.erp_master_service - ERROR - Error inicializando DB ERP: '_asyncio.Future' object is not subscriptable
+2026-03-06 13:05:31,503 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 13:05:31,504 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 13:05:43,137 - app - ERROR - Exception on request HEAD /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1374, in _wrapper
+    await self.ensure_async(func)(*args, **kwargs)
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 304, in notify_superadmin
+    success, err = email_service._enviar_email(
+    ^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable coroutine object
+2026-03-06 13:07:04,577 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 13:07:04,589 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 13:07:04,599 - services.erp_master_service - ERROR - Error inicializando DB ERP: '_asyncio.Future' object is not subscriptable
+2026-03-06 13:07:04,599 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 13:07:04,612 - asyncio - INFO - <Server sockets=(<asyncio.TransportSocket fd=836, family=2, type=1, proto=0, laddr=('0.0.0.0', 80)>,)> is serving
+2026-03-06 13:07:04,613 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 13:07:15,923 - app - ERROR - Exception on request GET /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1374, in _wrapper
+    await self.ensure_async(func)(*args, **kwargs)
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 304, in notify_superadmin
+    success, err = email_service._enviar_email(
+    ^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable coroutine object
+2026-03-06 13:07:44,492 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 13844). Limpiando...
+2026-03-06 13:07:44,708 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 13844 desalojado exitosamente.
+2026-03-06 13:07:44,725 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 13:07:44,729 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 13:07:44,732 - services.erp_master_service - ERROR - Error inicializando DB ERP: '_asyncio.Future' object is not subscriptable
+2026-03-06 13:07:44,732 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 13:07:44,733 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 13:09:22,289 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:10:13,283 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 18724). Limpiando...
+2026-03-06 13:10:13,481 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 18724 desalojado exitosamente.
+2026-03-06 13:10:13,501 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 13:10:13,508 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 13:10:13,513 - services.erp_master_service - ERROR - Error inicializando DB ERP: '_asyncio.Future' object is not subscriptable
+2026-03-06 13:10:13,513 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 13:10:13,515 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 13:10:41,680 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:11:08,488 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:11:14,869 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:11:16,041 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:11:21,041 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:11:22,149 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:13:57,287 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 17948). Limpiando...
+2026-03-06 13:13:57,487 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 17948 desalojado exitosamente.
+2026-03-06 13:13:57,514 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 13:13:57,522 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 13:13:57,525 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 13:13:57,525 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 13:13:57,527 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 13:14:11,044 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:15:00,102 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:15:05,190 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:15:12,588 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:15:13,719 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:15:25,933 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:15:26,984 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:16:18,685 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:18:12,274 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 24632). Limpiando...
+2026-03-06 13:18:24,936 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 13:18:24,941 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 13:18:24,943 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 13:18:24,943 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 13:18:24,944 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 13:18:31,060 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:18:32,985 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:18:39,110 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:18:50,352 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 13:18:50,357 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:21:13,065 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 14:21:13,097 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 14:21:13,126 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 14:21:13,126 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 14:21:13,127 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 14:21:16,694 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:21:21,158 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:21:26,307 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:21:27,315 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:22:27,255 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:22:35,557 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:22:36,579 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:24:12,761 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 19684). Limpiando...
+2026-03-06 14:24:12,976 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 19684 desalojado exitosamente.
+2026-03-06 14:24:12,997 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 14:24:13,004 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 14:24:13,006 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 14:24:13,007 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 14:24:13,008 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 14:24:34,119 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:25:09,949 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:27:42,818 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:29:42,430 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 21680). Limpiando...
+2026-03-06 14:29:42,614 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 21680 desalojado exitosamente.
+2026-03-06 14:29:42,636 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 14:29:42,642 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 14:29:42,644 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 14:29:42,645 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 14:29:42,646 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 14:29:58,814 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:30:09,355 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:30:10,347 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:30:19,607 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:30:20,710 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:30:27,536 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:32:40,607 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:36:40,906 - app - ERROR - Exception on request GET /ventas/dashboard
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1374, in _wrapper
+    await self.ensure_async(func)(*args, **kwargs)
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 304, in notify_superadmin
+    success, err = email_service._enviar_email(
+    ^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable coroutine object
+2026-03-06 14:37:19,118 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:38:21,059 - app - ERROR - Exception on request GET /ventas/dashboard
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1374, in _wrapper
+    await self.ensure_async(func)(*args, **kwargs)
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 304, in notify_superadmin
+    success, err = email_service._enviar_email(
+    ^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable coroutine object
+2026-03-06 14:40:36,410 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 18688). Limpiando...
+2026-03-06 14:40:36,610 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 18688 desalojado exitosamente.
+2026-03-06 14:40:36,623 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-06 14:40:36,629 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-06 14:40:36,631 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-06 14:40:36,632 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-06 14:40:36,633 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-06 14:40:43,711 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:40:48,003 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:40:54,847 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:40:55,907 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-06 14:42:30,282 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 12:38:35,925 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 22912). Limpiando...
+2026-03-11 12:38:36,190 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 22912 desalojado exitosamente.
+2026-03-11 12:38:36,332 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 12:38:36,361 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 12:38:36,410 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 12:38:36,411 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 12:38:36,412 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 15:19:59,160 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-11 15:19:59,198 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 15:19:59,217 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 15:19:59,220 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 15:19:59,221 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 15:19:59,222 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 16:32:28,484 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:32:33,901 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:32:35,250 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:32:42,054 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:32:43,216 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:33:18,358 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:33:21,878 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:33:22,679 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-11 16:33:22,717 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-11 16:33:28,453 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:33:36,346 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:33:37,705 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:35:02,250 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:35:07,060 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:35:08,098 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:36:23,222 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-11 16:36:23,277 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 16:36:23,302 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 16:36:23,318 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 16:36:23,318 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 16:36:23,319 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 16:36:25,681 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:36:30,668 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:36:32,253 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:37:03,965 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:38:33,688 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:40:40,922 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:40:46,545 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:40:47,714 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:45:20,755 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:45:31,630 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:45:37,655 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:45:38,947 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:46:12,982 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:46:12,990 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:46:26,227 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:46:26,237 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:50:11,995 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:50:12,093 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:52:36,236 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:52:36,328 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:56:21,249 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-11 16:56:21,303 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 16:56:21,329 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 16:56:21,336 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 16:56:21,336 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 16:56:21,337 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 16:56:22,326 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:56:35,179 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:56:36,346 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:58:22,807 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:58:31,038 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:58:32,234 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:58:34,257 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 16:58:34,268 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:01:12,268 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:01:12,307 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:06:50,741 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-11 17:06:50,840 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 17:06:50,864 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 17:06:50,891 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 17:06:50,891 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 17:06:50,892 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 17:07:14,464 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:07:20,110 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:07:21,367 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:15:29,489 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-11 17:15:30,432 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 17:15:30,478 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 17:15:30,511 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 17:15:30,511 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 17:15:30,514 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 17:15:36,103 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:15:44,590 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:15:45,874 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:17:29,234 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:17:29,258 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:18:18,881 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:18:18,890 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:20:52,038 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-11 17:20:52,127 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 17:20:52,153 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 17:20:52,166 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 17:20:52,166 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 17:20:52,167 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 17:21:02,454 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:21:13,595 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:21:14,854 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:21:54,287 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 17:21:54,295 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 17:21:54,300 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 17:21:54,300 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 17:21:54,301 - hypercorn.error - INFO - Running on http://127.0.0.1:5001 (CTRL + C to quit)
+2026-03-11 17:23:53,079 - app - ERROR - Exception on request GET /login
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1374, in _wrapper
+    await self.ensure_async(func)(*args, **kwargs)
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 304, in notify_superadmin
+    success, err = email_service._enviar_email(
+    ^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable coroutine object
+2026-03-11 17:23:53,099 - app - ERROR - Exception on request POST /login
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1374, in _wrapper
+    await self.ensure_async(func)(*args, **kwargs)
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 304, in notify_superadmin
+    success, err = email_service._enviar_email(
+    ^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable coroutine object
+2026-03-11 17:25:08,887 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:25:08,919 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:25:39,020 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-11 17:25:39,072 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 17:25:39,096 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 17:25:39,105 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 17:25:39,105 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 17:25:39,106 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 17:25:41,872 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:25:47,944 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:25:49,157 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:26:13,599 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:27:03,337 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:27:03,349 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:27:40,716 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:27:46,567 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-11 17:27:46,624 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-11 17:27:46,656 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-11 17:27:46,666 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-11 17:27:46,667 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-11 17:27:46,669 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-11 17:27:49,572 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:27:50,634 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-11 17:29:36,148 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-11 17:29:36,157 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-11 17:51:33,477 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 17:51:34,480 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 17:51:34,555 - waitress - ERROR - Exception while serving /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 17:52:35,043 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 17:52:35,075 - waitress - ERROR - Exception while serving /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 18:06:24,587 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 18:06:24,634 - waitress - ERROR - Exception while serving /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-11 19:03:31,685 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-11 19:03:31,690 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-11 19:06:22,320 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-11 19:06:22,326 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-12 11:30:24,976 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-12 11:30:24,981 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-13 00:16:20,575 - production_server - INFO - Iniciando Servidor Waitress en 0.0.0.0:80...
+2026-03-13 00:16:20,589 - waitress - INFO - Serving on http://0.0.0.0:80
+2026-03-13 00:16:21,119 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-13 00:16:21,992 - waitress - ERROR - Exception while serving /
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-13 00:16:22,099 - waitress - ERROR - Exception while serving /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\channel.py", line 430, in service
+    task.service()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 167, in service
+    self.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\task.py", line 435, in execute
+    app_iter = self.channel.server.application(environ, start_response)
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\waitress\proxy_headers.py", line 64, in translate_proxy_headers
+    return app(environ, start_response)
+TypeError: Quart.__call__() missing 1 required positional argument: 'send'
+2026-03-13 00:19:05,704 - hypercorn_server - INFO - Iniciando Servidor Hypercorn (Quart) en 0.0.0.0:80...
+2026-03-13 00:19:05,722 - app - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-13 00:19:05,740 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-13 00:19:05,755 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-13 00:19:05,755 - app - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-13 00:19:05,756 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-13 00:19:25,562 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 00:19:34,624 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 00:19:47,246 - app - ERROR - Exception on request GET /api/erp/areas
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1374, in _wrapper
+    await self.ensure_async(func)(*args, **kwargs)
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 304, in notify_superadmin
+    success, err = email_service._enviar_email(
+    ^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable coroutine object
+2026-03-13 00:49:47,624 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 7728). Limpiando...
+2026-03-13 00:49:47,863 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 7728 desalojado exitosamente.
+2026-03-13 00:49:47,881 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-13 00:49:47,888 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-13 00:49:47,891 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-13 00:49:47,892 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-13 00:49:47,893 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-13 00:49:54,470 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 00:50:02,022 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 00:50:09,311 - app - ERROR - Exception on request GET /api/erp/areas
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1374, in _wrapper
+    await self.ensure_async(func)(*args, **kwargs)
+  File "C:\Users\marce\Documents\GitHub\quart\app.py", line 304, in notify_superadmin
+    success, err = email_service._enviar_email(
+    ^^^^^^^^^^^^
+TypeError: cannot unpack non-iterable coroutine object
+2026-03-13 00:55:00,653 - __main__ - INFO - [AUTO-REMEDICACION] Puerto 80 ocupado por Desconocido (PID: 7728). Limpiando...
+2026-03-13 00:55:00,875 - __main__ - INFO - [AUTO-REMEDICACION] Proceso 7728 desalojado exitosamente.
+2026-03-13 00:55:00,891 - __main__ - INFO - ✅ DB Pool asíncrono pre-inicializado.
+2026-03-13 00:55:00,898 - services.georef_service - INFO - Tablas de Georef local verificadas/creadas.
+2026-03-13 00:55:00,902 - services.erp_master_service - INFO - Tablas maestras ERP inicializadas.
+2026-03-13 00:55:00,902 - __main__ - INFO - ✅ Servicios Georef/ERP inicializados.
+2026-03-13 00:55:00,904 - hypercorn.error - INFO - Running on http://0.0.0.0:80 (CTRL + C to quit)
+2026-03-13 00:55:10,540 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 00:55:10,963 - app - ERROR - Exception on request GET /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1464, in handle_request
+    return await self.full_dispatch_request(request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1503, in full_dispatch_request
+    return await self.finalize_request(result, request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1628, in finalize_request
+    response = await self.make_response(result)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1447, in make_response
+    raise TypeError(
+        f"The response value type ({type(value).__name__}) is not valid"
+    )
+TypeError: The response value type (coroutine) is not valid
+2026-03-13 00:55:15,745 - __main__ - ERROR - ❌ FALLO al enviar email de alerta: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2beab555c44sm1071772eec.25 - gsmtp')
+2026-03-13 00:55:17,745 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 00:55:18,008 - core.routes - ERROR - LOGIN ERROR: 'coroutine' object has no attribute 'set_cookie'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\core\routes.py", line 119, in login
+    resp.set_cookie(f'bind_{new_sid}', bind_token, max_age=30, httponly=False, samesite='Lax')
+    ^^^^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'set_cookie'
+
+2026-03-13 00:55:18,163 - app - ERROR - Exception on request GET /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1464, in handle_request
+    return await self.full_dispatch_request(request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1503, in full_dispatch_request
+    return await self.finalize_request(result, request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1628, in finalize_request
+    response = await self.make_response(result)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1447, in make_response
+    raise TypeError(
+        f"The response value type ({type(value).__name__}) is not valid"
+    )
+TypeError: The response value type (coroutine) is not valid
+2026-03-13 00:55:22,013 - __main__ - ERROR - ❌ FALLO al enviar email de alerta: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2beab55603asm936270eec.26 - gsmtp')
+2026-03-13 00:58:43,862 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 00:58:44,081 - core.routes - ERROR - LOGIN ERROR: 'coroutine' object has no attribute 'set_cookie'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\core\routes.py", line 119, in login
+    resp.set_cookie(f'bind_{new_sid}', bind_token, max_age=30, httponly=False, samesite='Lax')
+    ^^^^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'set_cookie'
+
+2026-03-13 00:58:44,192 - app - ERROR - Exception on request GET /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1464, in handle_request
+    return await self.full_dispatch_request(request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1503, in full_dispatch_request
+    return await self.finalize_request(result, request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1628, in finalize_request
+    response = await self.make_response(result)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1447, in make_response
+    raise TypeError(
+        f"The response value type ({type(value).__name__}) is not valid"
+    )
+TypeError: The response value type (coroutine) is not valid
+2026-03-13 00:58:47,224 - __main__ - ERROR - ❌ FALLO al enviar email de alerta: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2beab3eec8fsm933093eec.13 - gsmtp')
+2026-03-13 01:02:01,026 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 01:02:01,130 - app - ERROR - Exception on request GET /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1464, in handle_request
+    return await self.full_dispatch_request(request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1503, in full_dispatch_request
+    return await self.finalize_request(result, request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1628, in finalize_request
+    response = await self.make_response(result)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1447, in make_response
+    raise TypeError(
+        f"The response value type ({type(value).__name__}) is not valid"
+    )
+TypeError: The response value type (coroutine) is not valid
+2026-03-13 01:02:05,103 - __main__ - ERROR - ❌ FALLO al enviar email de alerta: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-128f6385030sm689068c88.10 - gsmtp')
+2026-03-13 01:02:10,097 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 01:02:10,324 - core.routes - ERROR - LOGIN ERROR: 'coroutine' object has no attribute 'set_cookie'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\core\routes.py", line 119, in login
+    resp.set_cookie(f'bind_{new_sid}', bind_token, max_age=30, httponly=False, samesite='Lax')
+    ^^^^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'set_cookie'
+
+2026-03-13 01:02:10,460 - app - ERROR - Exception on request GET /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1464, in handle_request
+    return await self.full_dispatch_request(request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1503, in full_dispatch_request
+    return await self.finalize_request(result, request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1628, in finalize_request
+    response = await self.make_response(result)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1447, in make_response
+    raise TypeError(
+        f"The response value type ({type(value).__name__}) is not valid"
+    )
+TypeError: The response value type (coroutine) is not valid
+2026-03-13 01:02:13,493 - __main__ - ERROR - ❌ FALLO al enviar email de alerta: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2beab3a12e2sm1022209eec.2 - gsmtp')
+2026-03-13 01:03:25,691 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 01:03:25,920 - core.routes - ERROR - LOGIN ERROR: 'coroutine' object has no attribute 'set_cookie'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\core\routes.py", line 119, in login
+    resp.set_cookie(f'bind_{new_sid}', bind_token, max_age=30, httponly=False, samesite='Lax')
+    ^^^^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'set_cookie'
+
+2026-03-13 01:03:26,048 - app - ERROR - Exception on request GET /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1464, in handle_request
+    return await self.full_dispatch_request(request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1503, in full_dispatch_request
+    return await self.finalize_request(result, request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1628, in finalize_request
+    response = await self.make_response(result)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1447, in make_response
+    raise TypeError(
+        f"The response value type ({type(value).__name__}) is not valid"
+    )
+TypeError: The response value type (coroutine) is not valid
+2026-03-13 01:03:29,084 - __main__ - ERROR - ❌ FALLO al enviar email de alerta: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-128f62b2100sm752538c88.8 - gsmtp')
+2026-03-13 01:03:34,676 - core.routes - INFO - LOGIN: Fetching enterprises. Show Master: False, Found: 1
+2026-03-13 01:03:35,087 - core.routes - ERROR - LOGIN ERROR: 'coroutine' object has no attribute 'set_cookie'
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\core\routes.py", line 119, in login
+    resp.set_cookie(f'bind_{new_sid}', bind_token, max_age=30, httponly=False, samesite='Lax')
+    ^^^^^^^^^^^^^^^
+AttributeError: 'coroutine' object has no attribute 'set_cookie'
+
+2026-03-13 01:03:35,265 - app - ERROR - Exception on request GET /favicon.ico
+Traceback (most recent call last):
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1464, in handle_request
+    return await self.full_dispatch_request(request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1503, in full_dispatch_request
+    return await self.finalize_request(result, request_context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1628, in finalize_request
+    response = await self.make_response(result)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\marce\Documents\GitHub\quart\venv\Lib\site-packages\quart\app.py", line 1447, in make_response
+    raise TypeError(
+        f"The response value type ({type(value).__name__}) is not valid"
+    )
+TypeError: The response value type (coroutine) is not valid
+2026-03-13 01:03:38,329 - __main__ - ERROR - ❌ FALLO al enviar email de alerta: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5a478bee46e88-2beab527170sm934376eec.21 - gsmtp')

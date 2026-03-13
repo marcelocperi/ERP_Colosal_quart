@@ -14,26 +14,26 @@ class BaseRepository:
             query = query.filter_by(**filters)
         return query.all()
 
-    def create(self, **data):
+    async def create(self, **data):
         instance = self.model(**data)
         self.session.add(instance)
-        self.session.commit()
+        await self.await session.commit()
         self.session.refresh(instance)
         return instance
 
-    def update(self, id: int, **data):
+    async def update(self, id: int, **data):
         instance = self.get_by_id(id)
         if instance:
             for key, value in data.items():
                 setattr(instance, key, value)
-            self.session.commit()
+            await self.await session.commit()
             self.session.refresh(instance)
         return instance
 
-    def delete(self, id: int):
+    async def delete(self, id: int):
         instance = self.get_by_id(id)
         if instance:
-            self.session.delete(instance)
-            self.session.commit()
+            await self.await session.delete(instance)
+            await self.await session.commit()
             return True
         return False

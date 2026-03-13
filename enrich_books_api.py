@@ -27,7 +27,7 @@ from core.concurrency import should_stop, update_heartbeat, unregister_thread, r
 
 from services.enrichment.processor import BookEnrichmentProcessor
 
-def process_books_batch(limit=100, deep_scan=False, enterprise_id=1, strategy='conservative', global_processed=0):
+async def process_books_batch(limit=100, deep_scan=False, enterprise_id=1, strategy='conservative', global_processed=0):
     conn = None
     try:
         conn = get_db_pool().get_connection()
@@ -57,10 +57,10 @@ def process_books_batch(limit=100, deep_scan=False, enterprise_id=1, strategy='c
         for i, lib in enumerate(libros):
             # Heartbeat & Stop signals
             if i % 5 == 0: # Cada 5 libros para balancear performance
-                if should_stop(task_id):
+                if await should_stop(task_id):
                     logger.info("Stop signal detected. Terminating batch...")
                     break
-                update_heartbeat(task_id)
+                await update_heartbeat(task_id)
 
             libro_nombre = lib.get('nombre', 'Sin título')
             logger.info(f"[{i+1}/{len(libros)}] Procesando: {libro_nombre}")
@@ -99,7 +99,7 @@ def process_books_batch(limit=100, deep_scan=False, enterprise_id=1, strategy='c
             time.sleep(0.2)
         
         # Ciclo de aprendizaje
-        efficiency_mgr.rotate_learning_cycle()
+        await efficiency_mgr.rotate_learning_cycle()
         
         return len(libros)
     except Exception as e:
@@ -223,7 +223,7 @@ def export_to_excel(enterprise_id=1):
         logger.error(traceback.format_exc())
         return None
 
-def process_until_finished(batch_size=100, deep_scan=False, enterprise_id=1, strategy='conservative'):
+async def process_until_finished(batch_size=100, deep_scan=False, enterprise_id=1, strategy='conservative'):
     scan_type = f"PROFUNDO ({strategy.upper()})" if deep_scan else "NORMAL"
     logger.info(f"{'='*60}")
     logger.info(f"Iniciando proceso {scan_type} de enriquecimiento para Empresa ID: {enterprise_id}...")
@@ -244,7 +244,7 @@ def process_until_finished(batch_size=100, deep_scan=False, enterprise_id=1, str
     from core.concurrency import should_stop, unregister_thread, register_thread, get_active_tasks
     
     # Check if already running (with stale protection)
-    active_tasks = get_active_tasks(enterprise_id=enterprise_id)
+    active_tasks = await get_active_tasks(enterprise_id=enterprise_id)
     task_id = f"enrich_{enterprise_id}"
     if task_id in active_tasks:
         task_info = active_tasks[task_id]
@@ -252,14 +252,14 @@ def process_until_finished(batch_size=100, deep_scan=False, enterprise_id=1, str
         # Wait, if it's the same PID, it's definitely us.
         if task_info.get('status') == 'STOPPING':
             logger.info(f"⚠ La tarea {task_id} está en estado STOPPING. Forzando limpieza para iniciar nueva.")
-            unregister_thread(task_id)
+            await unregister_thread(task_id)
         else:
             logger.warning(f"!!! Task {task_id} is already running. Aborting count.")
             return
 
     total_processed = 0
     batch_num = 1
-    register_thread(
+    await register_thread(
         f"enrich_{enterprise_id}", 
         f"Catálogo completo (Ent: {enterprise_id})",
         process_name=f"Enriquecimiento {scan_type}",
@@ -270,15 +270,15 @@ def process_until_finished(batch_size=100, deep_scan=False, enterprise_id=1, str
     
     try:
         while True:
-            if should_stop(f"enrich_{enterprise_id}"):
+            if await should_stop(f"enrich_{enterprise_id}"):
                 logger.info(f"!!! STOP SIGNAL RECEIVED for Enterprise {enterprise_id}. Terminating...")
                 break
             
             from core.concurrency import update_heartbeat
-            update_heartbeat(f"enrich_{enterprise_id}", status="RUNNING")
+            await update_heartbeat(f"enrich_{enterprise_id}", status="RUNNING")
                 
             logger.info(f"Intentando procesar lote #{batch_num}...")
-            processed = process_books_batch(batch_size, deep_scan, enterprise_id, strategy=strategy, global_processed=total_processed)
+            processed = await process_books_batch(batch_size, deep_scan, enterprise_id, strategy=strategy, global_processed=total_processed)
             if processed == 0:
                 logger.info("No hay más libros pendientes")
                 break
@@ -293,7 +293,7 @@ def process_until_finished(batch_size=100, deep_scan=False, enterprise_id=1, str
             batch_num += 1
             time.sleep(2)
     finally:
-        unregister_thread(f"enrich_{enterprise_id}")
+        await unregister_thread(f"enrich_{enterprise_id}")
     
     logger.info(f"\n{'='*60}")
     logger.info(f"Proceso finalizado. Total procesados: {total_processed} libros")
@@ -328,10 +328,11 @@ if __name__ == "__main__":
     if args.export:
         export_to_excel(args.enterprise)
     else:
-        process_until_finished(
+        import asyncio
+        asyncio.run(process_until_finished(
             batch_size=args.limit, 
             deep_scan=args.deep, 
             enterprise_id=args.enterprise, 
             strategy=args.strategy
-        )
+        ))
 

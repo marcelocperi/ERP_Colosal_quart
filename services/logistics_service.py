@@ -11,13 +11,13 @@ class LogisticsService:
     """
 
     @staticmethod
-    def solicitar_cot(enterprise_id, comprobante_id):
+    async def solicitar_cot(enterprise_id, comprobante_id):
         """
         Determina si el comprobante requiere COT y lo solicita al organismo correspondiente.
         """
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Traer datos del comprobante y cliente para evaluar reglas
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT c.*, t.nombre as cliente_nombre, t.cuit as cliente_cuit,
                        d.localidad, d.provincia, tc.es_logistica
                 FROM erp_comprobantes c
@@ -26,7 +26,7 @@ class LogisticsService:
                 JOIN sys_tipos_comprobante tc ON c.tipo_comprobante = tc.codigo
                 WHERE c.id = %s AND c.enterprise_id = %s
             """, (comprobante_id, enterprise_id))
-            comp = cursor.fetchone()
+            comp = await cursor.fetchone()
 
             if not comp or not comp['es_logistica']:
                 return {"success": False, "message": "El comprobante no es de tipo logístico."}
@@ -41,17 +41,17 @@ class LogisticsService:
             es_pba = any(p in provincia_destino for p in ['BUENOS AIRES', 'PBA', 'BS AS', 'BS. AS.'])
             
             if es_pba:
-                return LogisticsService._solicitar_arba_cot_api(enterprise_id, comp)
+                return await LogisticsService._solicitar_arba_cot_api(enterprise_id, comp)
             
             # --- REGLAS PARA AGIP (CABA) ---
             es_caba = any(p in provincia_destino for p in ['CABA', 'CIUDAD AUTONOMA', 'CAPITAL FEDERAL'])
             if es_caba:
-                return LogisticsService._solicitar_agip_cot_api(enterprise_id, comp)
+                return await LogisticsService._solicitar_agip_cot_api(enterprise_id, comp)
 
             return {"success": False, "message": "No se requiere COT para este destino."}
 
     @staticmethod
-    def _solicitar_arba_cot_api(enterprise_id, comp):
+    async def _solicitar_arba_cot_api(enterprise_id, comp):
         """
         Simulación de llamada al API de ARBA para obtener el COT.
         En producción esto enviaría un XML vía SOAP o JSON vía REST.
@@ -66,14 +66,14 @@ class LogisticsService:
         nuevo_cot = f"ARBA-{secrets.token_hex(6).upper()}"
         
         try:
-            with get_db_cursor() as cursor:
-                cursor.execute("UPDATE erp_comprobantes SET cot = %s WHERE id = %s", (nuevo_cot, comp['id']))
+            async with get_db_cursor() as cursor:
+                await cursor.execute("UPDATE erp_comprobantes SET cot = %s WHERE id = %s", (nuevo_cot, comp['id']))
             return {"success": True, "cot": nuevo_cot, "organismo": "ARBA"}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
     @staticmethod
-    def _solicitar_agip_cot_api(enterprise_id, comp):
+    async def _solicitar_agip_cot_api(enterprise_id, comp):
         """
         Simulación de llamada al API de AGIP (CABA).
         """
@@ -81,8 +81,8 @@ class LogisticsService:
         nuevo_cot = f"AGIP-{secrets.token_hex(6).upper()}"
         
         try:
-            with get_db_cursor() as cursor:
-                cursor.execute("UPDATE erp_comprobantes SET cot = %s WHERE id = %s", (nuevo_cot, comp['id']))
+            async with get_db_cursor() as cursor:
+                await cursor.execute("UPDATE erp_comprobantes SET cot = %s WHERE id = %s", (nuevo_cot, comp['id']))
             return {"success": True, "cot": nuevo_cot, "organismo": "AGIP"}
         except Exception as e:
             return {"success": False, "error": str(e)}

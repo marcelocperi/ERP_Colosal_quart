@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, g
+from quart import Blueprint, jsonify, g
 from core.decorators import login_required
 from database import get_db_cursor
 
@@ -6,9 +6,9 @@ cm05_api_bp = Blueprint('cm05_api', __name__)
 
 @cm05_api_bp.route('/api/terceros/<int:tercero_id>/cm05-log')
 @login_required
-def get_cm05_log(tercero_id):
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+async def get_cm05_log(tercero_id):
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT log_erp_terceros_cm05.*, sys_users.username as user_name, sys_provincias.nombre as provincia_nombre
             FROM log_erp_terceros_cm05
             LEFT JOIN sys_users ON log_erp_terceros_cm05.user_action = sys_users.id
@@ -16,7 +16,7 @@ def get_cm05_log(tercero_id):
             WHERE log_erp_terceros_cm05.tercero_id = %s
             ORDER BY log_erp_terceros_cm05.fecha_efectiva DESC
         """, (tercero_id,))
-        logs = cursor.fetchall()
+        logs = await cursor.fetchall()
         
         # Format the response
         formatted_logs = []

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, g, flash, redirect, url_for, jsonify
+from quart import Blueprint, render_template, request, g, flash, redirect, url_for, jsonify
 from core.decorators import login_required, permission_required
 from database import get_db_cursor, atomic_transaction
 from services.tercero_service import TerceroService
@@ -33,19 +33,19 @@ register_fazon_routes(compras_bp)
 @compras_bp.route('/compras/reposicion', methods=['GET'])
 @login_required
 @permission_required('compras.gestionar_reposicion')
-def reposicion_dashboard():
+async def reposicion_dashboard():
     """Tablero de Detección de Faltantes agrupado por proveedor."""
     ent_id = g.user['enterprise_id']
     origen_id_filter = request.args.get('origen_id', '')
     proveedor_id_filter = request.args.get('proveedor_id', '')
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # 1. Cargar comboBox para filtros
-        cursor.execute("SELECT id, nombre FROM cmp_sourcing_origenes WHERE activo = 1 ORDER BY nombre")
-        origenes = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre FROM cmp_sourcing_origenes WHERE activo = 1 ORDER BY nombre")
+        origenes = await cursor.fetchall()
         
-        cursor.execute("SELECT id, nombre FROM erp_terceros WHERE (enterprise_id = %s OR enterprise_id = 0) AND es_proveedor = 1 ORDER BY nombre", (ent_id,))
-        proveedores_dd = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre FROM erp_terceros WHERE (enterprise_id = %s OR enterprise_id = 0) AND es_proveedor = 1 ORDER BY nombre", (ent_id,))
+        proveedores_dd = await cursor.fetchall()
 
         # 2. Construir Query de faltantes con filtros
         filtros_sql = ""
@@ -77,8 +77,8 @@ def reposicion_dashboard():
                AND stk_articulos.punto_pedido > 0
             ORDER BY erp_terceros.nombre, (stk_articulos.punto_pedido - COALESCE(SUM(stk_existencias.cantidad), 0)) DESC
         """
-        cursor.execute(sql, tuple(params))
-        faltantes = cursor.fetchall()
+        await cursor.execute(sql, tuple(params))
+        faltantes = await cursor.fetchall()
         
     # 3. Agrupar por proveedor en Python
     grupos = {}
@@ -99,7 +99,7 @@ def reposicion_dashboard():
     # Convertir dictionary en array para que jinja lo itere mas facil
     grupos_list = sorted(grupos.values(), key=lambda x: (x['id'] == 0, x['nombre']))
         
-    return render_template('compras/reposicion_dashboard.html', 
+    return await render_template('compras/reposicion_dashboard.html', 
                             grupos=grupos_list, 
                             origenes=origenes, 
                             proveedores_dd=proveedores_dd,
@@ -110,9 +110,9 @@ def reposicion_dashboard():
 @login_required
 @permission_required('compras.gestionar_reposicion')
 @atomic_transaction('COMPRAS')
-def api_reposicion_generar_cotizacion_lote():
+async def api_reposicion_generar_cotizacion_lote():
     """Genera una Solicitud de Cotización (RFQ) con varios artículos de un mismo proveedor."""
-    data = request.json or {}
+    data = (await request.json) or {}
     proveedor_id = data.get('proveedor_id')
     items = data.get('items', [])
     fecha_vencimiento = data.get('fecha_vencimiento') 
@@ -126,13 +126,13 @@ def api_reposicion_generar_cotizacion_lote():
     ent_id = g.user['enterprise_id']
     uid = g.user['id']
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         from services.quotation_mailer import QuotationMailer
         mailer = QuotationMailer(ent_id)
         
         # Check if provider has an email
-        cursor.execute("SELECT codigo, nombre, email FROM erp_terceros WHERE id = %s", (proveedor_id,))
-        prov = cursor.fetchone()
+        await cursor.execute("SELECT codigo, nombre, email FROM erp_terceros WHERE id = %s", (proveedor_id,))
+        prov = await cursor.fetchone()
         
         if not prov or not prov['email']:
             nombre_prov = prov['nombre'] if prov else f"Proveedor {proveedor_id}"
@@ -143,16 +143,16 @@ def api_reposicion_generar_cotizacion_lote():
                 'nombre_proveedor': nombre_prov
             }), 400
 
-        sec_hash = mailer.generate_security_hash(prov['codigo'] if prov else f"PROV{proveedor_id}")
+        sec_hash = await mailer.generate_security_hash(prov['codigo'] if prov else f"PROV{proveedor_id}")
         
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cmp_cotizaciones (enterprise_id, proveedor_id, fecha_envio, fecha_vencimiento, estado, security_hash, user_id)
             VALUES (%s, %s, NOW(), %s, 'ENVIADA', %s, %s)
         """, (ent_id, proveedor_id, fecha_vencimiento, sec_hash, uid))
         cot_id = cursor.lastrowid
         
         for it in items:
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO cmp_items_cotizacion (enterprise_id, cotizacion_id, articulo_id, cantidad, user_id)
                 VALUES (%s, %s, %s, %s, %s)
             """, (ent_id, cot_id, it['articulo_id'], it['cantidad'], uid))
@@ -166,19 +166,19 @@ def api_reposicion_generar_cotizacion_lote():
 @login_required
 @permission_required('compras.gestionar_reposicion')
 @atomic_transaction('COMPRAS')
-def api_reposicion_rechazar():
+async def api_reposicion_rechazar():
     """Loguea el rechazo de una sugerencia de compra con su motivo."""
-    data = request.json or {}
+    data = (await request.json) or {}
     articulo_id = data.get('articulo_id')
     motivo = data.get('motivo')
     
     if not articulo_id or not motivo:
         return jsonify({'success': False, 'message': 'Faltan datos.'}), 400
         
-        from flask import session, g
+        from quart import session, g
         sid = getattr(g, 'sid', None) or session.get('session_id')
-        with get_db_cursor() as cursor:
-            cursor.execute("""
+        async with get_db_cursor() as cursor:
+            await cursor.execute("""
                 INSERT INTO sys_transaction_logs (enterprise_id, user_id, session_id, module, endpoint, request_method, status, severity, impact_category, error_message)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (g.user['enterprise_id'], g.user['id'], sid, 'COMPRAS', '/compras/api/reposicion/rechazar', 'POST', 
@@ -190,9 +190,9 @@ def api_reposicion_rechazar():
 @login_required
 @permission_required('compras.gestionar_reposicion')
 @atomic_transaction('COMPRAS')
-def api_reposicion_generar_np():
+async def api_reposicion_generar_np():
     """Crea una Solicitud de Reposición formal a partir de una sugerencia del dashboard."""
-    data = request.json or {}
+    data = (await request.json) or {}
     articulo_id = data.get('articulo_id')
     cantidad = data.get('cantidad')
     
@@ -202,16 +202,16 @@ def api_reposicion_generar_np():
     ent_id = g.user['enterprise_id']
     uid = g.user['id']
     
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         # 1. Crear la cabecera de la solicitud (Nota de Pedido interna)
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cmp_solicitudes_reposicion (enterprise_id, fecha, solicitante_id, estado, prioridad, observaciones)
             VALUES (%s, NOW(), %s, 'PENDIENTE_AJUSTE', 2, 'Generado desde Dashboard de Reposición')
         """, (ent_id, uid))
         solicitud_id = cursor.lastrowid
         
         # 2. Insertar el detalle
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cmp_detalles_solicitud (enterprise_id, solicitud_id, articulo_id, cantidad_sugerida, user_id)
             VALUES (%s, %s, %s, %s, %s)
         """, (ent_id, solicitud_id, articulo_id, cantidad, uid))
@@ -223,7 +223,7 @@ def api_reposicion_generar_np():
     })
 
 
-def _generar_asiento_contable_compra(cursor, comprobante_id, enterprise_id, user_id=None, items=None):
+async def _generar_asiento_contable_compra(cursor, comprobante_id, enterprise_id, user_id=None, items=None):
 
     """
     REFACTORIZADO: En lugar de generar el asiento contable inmediatamente,
@@ -244,7 +244,7 @@ def _generar_asiento_contable_compra(cursor, comprobante_id, enterprise_id, user
                 })
             
             # Generar propuestas pendientes
-            PricingService.generar_propuestas_desde_costo(
+            await PricingService.generar_propuestas_desde_costo(
                 enterprise_id, 'FACTURA_LOCAL', comprobante_id, items_pricing, user_id
             )
             print(f"[COMPRAS] Propuestas de precios generadas para comprobante {comprobante_id}")
@@ -260,11 +260,11 @@ def _generar_asiento_contable_compra(cursor, comprobante_id, enterprise_id, user
 @compras_bp.route('/compras/solicitudes', methods=['GET'])
 @login_required
 @permission_required('compras.gestionar_reposicion')
-def solicitudes_lista():
+async def solicitudes_lista():
     """Listado de Solicitudes de Reposición (NPs) generadas."""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT cmp_solicitudes_reposicion.*, sys_users.username as solicitante_nombre,
                    (SELECT COUNT(*) FROM cmp_detalles_solicitud WHERE solicitud_id = cmp_solicitudes_reposicion.id) as items_cnt
             FROM cmp_solicitudes_reposicion
@@ -272,16 +272,16 @@ def solicitudes_lista():
             WHERE cmp_solicitudes_reposicion.enterprise_id = %s
             ORDER BY cmp_solicitudes_reposicion.fecha DESC
         """, (ent_id,))
-        solicitudes = cursor.fetchall()
-    return render_template('compras/solicitudes_lista.html', solicitudes=solicitudes)
+        solicitudes = await cursor.fetchall()
+    return await render_template('compras/solicitudes_lista.html', solicitudes=solicitudes)
 
 @compras_bp.route('/compras/solicitud/<int:id>/cotizar', methods=['POST'])
 @login_required
 @permission_required('compras.solicitar_cotizacion')
 @atomic_transaction('COMPRAS')
-def api_solicitud_cotizar(id):
+async def api_solicitud_cotizar(id):
     """Convierte una Solicitud (NP) en una Solicitud de Cotización (RFQ) para un proveedor."""
-    data = request.json or {}
+    data = (await request.json) or {}
     proveedor_id = data.get('proveedor_id')
     fecha_vencimiento = data.get('fecha_vencimiento') # La fecha limite definida por el comprador
     
@@ -291,10 +291,10 @@ def api_solicitud_cotizar(id):
     ent_id = g.user['enterprise_id']
     uid = g.user['id']
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # 1. Obtener items de la solicitud
-        cursor.execute("SELECT * FROM cmp_detalles_solicitud WHERE solicitud_id = %s AND enterprise_id = %s", (id, ent_id))
-        items = cursor.fetchall()
+        await cursor.execute("SELECT * FROM cmp_detalles_solicitud WHERE solicitud_id = %s AND enterprise_id = %s", (id, ent_id))
+        items = await cursor.fetchall()
         if not items:
             return jsonify({'success': False, 'message': 'La solicitud no tiene ítems.'}), 400
             
@@ -303,11 +303,11 @@ def api_solicitud_cotizar(id):
         from services.quotation_mailer import QuotationMailer
         mailer = QuotationMailer(ent_id)
         
-        cursor.execute("SELECT codigo FROM erp_terceros WHERE id = %s", (proveedor_id,))
-        prov = cursor.fetchone()
-        sec_hash = mailer.generate_security_hash(prov['codigo'] if prov else f"PROV{proveedor_id}")
+        await cursor.execute("SELECT codigo FROM erp_terceros WHERE id = %s", (proveedor_id,))
+        prov = await cursor.fetchone()
+        sec_hash = await mailer.generate_security_hash(prov['codigo'] if prov else f"PROV{proveedor_id}")
         
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cmp_cotizaciones (enterprise_id, proveedor_id, fecha_envio, fecha_vencimiento, estado, security_hash, user_id)
             VALUES (%s, %s, NOW(), %s, 'ENVIADA', %s, %s)
         """, (ent_id, proveedor_id, fecha_vencimiento, sec_hash, uid))
@@ -315,18 +315,18 @@ def api_solicitud_cotizar(id):
         
         # 3. Insertar los items en la cotización
         for it in items:
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO cmp_items_cotizacion (enterprise_id, cotizacion_id, articulo_id, cantidad, user_id)
                 VALUES (%s, %s, %s, %s, %s)
             """, (ent_id, cot_id, it['articulo_id'], it['cantidad_sugerida'], uid))
             
         # 4. Actualizar estado de la solicitud
-        cursor.execute("UPDATE cmp_solicitudes_reposicion SET estado = 'COTIZANDO' WHERE id = %s", (id,))
+        await cursor.execute("UPDATE cmp_solicitudes_reposicion SET estado = 'COTIZANDO' WHERE id = %s", (id,))
 
-        from flask import session, g
+        from quart import session, g
         sid = getattr(g, 'sid', None) or session.get('session_id')
         # 5. Log de Auditoría
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO sys_transaction_logs (enterprise_id, user_id, session_id, module, endpoint, request_method, status, severity, impact_category, error_message)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (ent_id, uid, sid, 'COMPRAS', f'/compras/solicitud/{id}/cotizar', 'POST', 
@@ -338,23 +338,23 @@ def api_solicitud_cotizar(id):
     })
 
 
-def _generar_asiento_orden_pago(cursor, orden_pago_id, enterprise_id, user_id=None):
+async def _generar_asiento_orden_pago(cursor, orden_pago_id, enterprise_id, user_id=None):
 
     """Genera el asiento contable para la cancelación de pasivos (Órdenes de Pago) y emite pasivos fiscales por Retenciones."""
     try:
         # Recuperar OP y proveedor
-        cursor.execute("""
+        await cursor.execute("""
             SELECT fin_ordenes_pago.*, erp_terceros.nombre as proveedor_nombre 
             FROM fin_ordenes_pago 
             JOIN erp_terceros ON fin_ordenes_pago.tercero_id = erp_terceros.id 
             WHERE fin_ordenes_pago.id = %s AND fin_ordenes_pago.enterprise_id = %s
         """, (orden_pago_id, enterprise_id))
-        op = cursor.fetchone()
+        op = await cursor.fetchone()
         if not op: return None
 
         # MAPEAR CUENTA DE PROVEEDOR, RETENCIONES Y ANTICIPOS
-        cursor.execute("SELECT id, codigo FROM cont_plan_cuentas WHERE enterprise_id = %s AND codigo IN ('2.1.01', '2.2.05', '1.3.05')", (enterprise_id,))
-        cuentas = {row['codigo']: row['id'] for row in cursor.fetchall()}
+        await cursor.execute("SELECT id, codigo FROM cont_plan_cuentas WHERE enterprise_id = %s AND codigo IN ('2.1.01', '2.2.05', '1.3.05')", (enterprise_id,))
+        cuentas = {row['codigo']: row['id'] for row in await cursor.fetchall()}
         
         # Validar 
         cta_proveedores = cuentas.get('2.1.01')
@@ -365,14 +365,14 @@ def _generar_asiento_orden_pago(cursor, orden_pago_id, enterprise_id, user_id=No
             return None
 
         # Asignar próximo_nro
-        cursor.execute("SELECT COALESCE(MAX(numero_asiento), 0) + 1 as proximo FROM cont_asientos WHERE enterprise_id = %s", (enterprise_id,))
-        row_n = cursor.fetchone()
+        await cursor.execute("SELECT COALESCE(MAX(numero_asiento), 0) + 1 as proximo FROM cont_asientos WHERE enterprise_id = %s", (enterprise_id,))
+        row_n = await cursor.fetchone()
         proximo_nro_asiento = row_n['proximo'] if row_n else 1
 
         concepto = f"Orden de Pago a {op['proveedor_nombre'][:30]} OP-{op['numero']}"
 
         # CABECERA ASIENTO
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cont_asientos (enterprise_id, fecha, concepto, modulo_origen, comprobante_id, numero_asiento, user_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (enterprise_id, op['fecha'], concepto, 'PAGOS', orden_pago_id, proximo_nro_asiento, user_id))
@@ -392,12 +392,12 @@ def _generar_asiento_orden_pago(cursor, orden_pago_id, enterprise_id, user_id=No
             detalles_asiento.append((cta_retenciones, 0.0, monto_retenciones))
             
         # HABER (Descargo): Medios de Pago usados (Caja, Banco, Cheques) extraídos del snapshot
-        cursor.execute("""
+        await cursor.execute("""
             SELECT cuenta_contable_snapshot_id, importe 
             FROM fin_ordenes_pago_medios 
             WHERE orden_pago_id = %s
         """, (orden_pago_id,))
-        for mp in cursor.fetchall():
+        for mp in await cursor.fetchall():
             if mp['cuenta_contable_snapshot_id']:
                 # El importe de caja/banco sale (Haber)
                 detalles_asiento.append((mp['cuenta_contable_snapshot_id'], 0.0, float(mp['importe'])))
@@ -407,7 +407,7 @@ def _generar_asiento_orden_pago(cursor, orden_pago_id, enterprise_id, user_id=No
         # INSERTAR DETALLES 
         for cta_id, debe, haber in detalles_asiento:
             if cta_id and (debe > 0 or haber > 0):
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO cont_asientos_detalle (asiento_id, cuenta_id, debe, haber, enterprise_id)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (asiento_id, cta_id, debe, haber, enterprise_id))
@@ -421,22 +421,22 @@ def _generar_asiento_orden_pago(cursor, orden_pago_id, enterprise_id, user_id=No
 @compras_bp.route('/compras/dashboard')
 @login_required
 @permission_required('view_compras')
-def dashboard():
+async def dashboard():
     try:
         kpi = {
             'enviadas': 0, 'recibidas': 0, 'efectividad': 0, 
             'items_no_provistos': 0, 'valor_no_provisto': 0
         }
         
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # 1. Total Enviadas
-            cursor.execute("SELECT COUNT(*) as total FROM cmp_cotizaciones WHERE estado != 'BORRADOR' AND enterprise_id = %s", (g.user['enterprise_id'],))
-            row = cursor.fetchone()
+            await cursor.execute("SELECT COUNT(*) as total FROM cmp_cotizaciones WHERE estado != 'BORRADOR' AND enterprise_id = %s", (g.user['enterprise_id'],))
+            row = await cursor.fetchone()
             kpi['enviadas'] = row['total'] if row else 0
             
             # 2. Total Recibidas
-            cursor.execute("SELECT COUNT(*) as total FROM cmp_cotizaciones WHERE estado IN ('RECIBIDA_PARCIAL', 'RECIBIDA_TOTAL', 'CONFIRMADA') AND enterprise_id = %s", (g.user['enterprise_id'],))
-            row = cursor.fetchone()
+            await cursor.execute("SELECT COUNT(*) as total FROM cmp_cotizaciones WHERE estado IN ('RECIBIDA_PARCIAL', 'RECIBIDA_TOTAL', 'CONFIRMADA') AND enterprise_id = %s", (g.user['enterprise_id'],))
+            row = await cursor.fetchone()
             kpi['recibidas'] = row['total'] if row else 0
             
             # 3. Efectividad %
@@ -446,7 +446,7 @@ def dashboard():
             # 4. Material No Provisto (Items en Cotizaciones Cerradas con cantidad_ofrecida=0 o NULL)
             # Asumiendo costo en stk_articulos.costo (o costo_reposicion, standard_cost...)
             # Si no existe costo, usar 0.
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT COUNT(*) as count, SUM(cmp_items_cotizacion.cantidad * COALESCE(stk_articulos.costo, 0)) as valor
                 FROM cmp_items_cotizacion
                 JOIN cmp_cotizaciones ON cmp_items_cotizacion.cotizacion_id = cmp_cotizaciones.id
@@ -455,23 +455,23 @@ def dashboard():
                   AND (cmp_items_cotizacion.cantidad_ofrecida IS NULL OR cmp_items_cotizacion.cantidad_ofrecida = 0)
                   AND cmp_cotizaciones.enterprise_id = %s AND cmp_items_cotizacion.enterprise_id = %s
             """, (g.user['enterprise_id'], g.user['enterprise_id']))
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
             if row:
                 kpi['items_no_provistos'] = row['count']
                 kpi['valor_no_provisto'] = row['valor'] if row['valor'] else 0
     
             # Load Recent Lists
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT cmp_cotizaciones.*, cmp_cotizaciones.fecha_envio as fecha, erp_terceros.nombre as razon_social, (SELECT COUNT(*) FROM cmp_items_cotizacion WHERE cotizacion_id=cmp_cotizaciones.id AND enterprise_id = %s) as items_cnt
                 FROM cmp_cotizaciones
                 JOIN erp_terceros ON cmp_cotizaciones.proveedor_id = erp_terceros.id
                 WHERE cmp_cotizaciones.enterprise_id = %s
                 ORDER BY cmp_cotizaciones.fecha_envio DESC LIMIT 10
             """, (g.user['enterprise_id'], g.user['enterprise_id']))
-            cotizaciones = cursor.fetchall()
+            cotizaciones = await cursor.fetchall()
             
             # Alert List (Unprovided)
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT cmp_items_cotizacion.*, stk_articulos.nombre as articulo, stk_articulos.codigo, cmp_cotizaciones.fecha_envio as fecha, erp_terceros.nombre as razon_social
                 FROM cmp_items_cotizacion
                 JOIN cmp_cotizaciones ON cmp_items_cotizacion.cotizacion_id = cmp_cotizaciones.id
@@ -482,22 +482,22 @@ def dashboard():
                 AND cmp_cotizaciones.enterprise_id = %s AND cmp_items_cotizacion.enterprise_id = %s
                 ORDER BY cmp_cotizaciones.fecha_envio DESC LIMIT 20
             """, (g.user['enterprise_id'], g.user['enterprise_id']))
-            alertas = cursor.fetchall()
+            alertas = await cursor.fetchall()
     
-        return render_template('compras/dashboard.html', kpi=kpi, cotizaciones=cotizaciones, alertas=alertas)
+        return await render_template('compras/dashboard.html', kpi=kpi, cotizaciones=cotizaciones, alertas=alertas)
     except Exception as e:
         import traceback
         traceback.print_exc()
-        flash(f"Error al cargar el dashboard de compras: {str(e)}", "danger")
+        await flash(f"Error al cargar el dashboard de compras: {str(e)}", "danger")
         return redirect('/')
 
 @compras_bp.route('/compras/comprobantes')
 @login_required
 @permission_required('view_proveedores')
-def comprobantes():
+async def comprobantes():
     """Listado completo de comprobantes de compra (Facturas, NC, ND)."""
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT erp_comprobantes.*, erp_terceros.nombre as proveedor_nombre, sys_tipos_comprobante.letra, sys_tipos_comprobante.descripcion as tipo_nombre
             FROM erp_comprobantes
             JOIN erp_terceros ON erp_comprobantes.tercero_id = erp_terceros.id
@@ -505,15 +505,15 @@ def comprobantes():
             WHERE erp_comprobantes.enterprise_id = %s AND erp_comprobantes.tipo_operacion = 'COMPRA'
             ORDER BY erp_comprobantes.fecha_emision DESC, erp_comprobantes.numero DESC
         """, (g.user['enterprise_id'],))
-        lista = cursor.fetchall()
-    return render_template('compras/comprobantes.html', comprobantes=lista)
+        lista = await cursor.fetchall()
+    return await render_template('compras/comprobantes.html', comprobantes=lista)
 
 @compras_bp.route('/compras/cotizaciones')
 @login_required
 @permission_required('compras.ver_reportes')
-def cotizaciones():
+async def cotizaciones():
     estado = request.args.get('estado')
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         query = """
             SELECT cmp_cotizaciones.*, erp_terceros.nombre as razon_social, 
                    (SELECT COUNT(*) FROM cmp_items_cotizacion WHERE cotizacion_id=cmp_cotizaciones.id AND enterprise_id = %s) as items_cnt
@@ -526,61 +526,61 @@ def cotizaciones():
             query += " AND cmp_cotizaciones.estado = %s"
             params.append(estado)
         query += " ORDER BY cmp_cotizaciones.fecha_envio DESC"
-        cursor.execute(query, tuple(params))
-        rows = cursor.fetchall()
-    return render_template('compras/cotizaciones_lista.html', cotizaciones=rows)
+        await cursor.execute(query, tuple(params))
+        rows = await cursor.fetchall()
+    return await render_template('compras/cotizaciones_lista.html', cotizaciones=rows)
 
 @compras_bp.route('/compras/cotizacion/<int:id>', methods=['GET', 'POST'])
 @login_required
 @permission_required('compras.ver_reportes')
-def cotizacion_detalle(id):
-    with get_db_cursor(dictionary=True) as cursor:
+async def cotizacion_detalle(id):
+    async with get_db_cursor(dictionary=True) as cursor:
         if request.method == 'POST':
             # Manual update by admin (e.g. if supplier sent a PDF/email)
-            for key, value in request.form.items():
+            for key, value in (await request.form).items():
                 if key.startswith('cant_'):
                     item_id = key.split('_')[1]
                     cant = float(value) if value else 0
-                    price = float(request.form.get(f'price_{item_id}', 0))
+                    price = float((await request.form).get(f'price_{item_id}', 0))
                     
-                    cursor.execute("""
+                    await cursor.execute("""
                         UPDATE cmp_items_cotizacion 
                         SET cantidad_ofrecida = %s, precio_cotizado = %s 
                         WHERE id = %s AND cotizacion_id = %s AND enterprise_id = %s
                     """, (cant, price, item_id, id, g.user['enterprise_id']))
             
             # Update quotation status to RESPONDIDA if it was ENVIADA
-            cursor.execute("UPDATE cmp_cotizaciones SET estado = 'RESPONDIDA' WHERE id = %s AND enterprise_id = %s AND estado = 'ENVIADA'", (id, g.user['enterprise_id']))
-            flash("Cotización actualizada manualmente.", "success")
+            await cursor.execute("UPDATE cmp_cotizaciones SET estado = 'RESPONDIDA' WHERE id = %s AND enterprise_id = %s AND estado = 'ENVIADA'", (id, g.user['enterprise_id']))
+            await flash("Cotización actualizada manualmente.", "success")
             return redirect(url_for('compras.cotizacion_detalle', id=id))
 
-        cursor.execute("""
+        await cursor.execute("""
             SELECT cmp_cotizaciones.*, erp_terceros.nombre as razon_social, erp_terceros.email as proveedor_email, erp_terceros.telefono as proveedor_tel
             FROM cmp_cotizaciones
             JOIN erp_terceros ON cmp_cotizaciones.proveedor_id = erp_terceros.id
             WHERE cmp_cotizaciones.id = %s AND cmp_cotizaciones.enterprise_id = %s
         """, (id, g.user['enterprise_id']))
-        cot = cursor.fetchone()
+        cot = await cursor.fetchone()
         
         if not cot:
-            flash("Cotización no encontrada.", "danger")
+            await flash("Cotización no encontrada.", "danger")
             return redirect(url_for('compras.dashboard'))
 
-        cursor.execute("""
+        await cursor.execute("""
             SELECT cmp_items_cotizacion.*, stk_articulos.nombre as articulo_nombre, stk_articulos.codigo as articulo_codigo
             FROM cmp_items_cotizacion
             JOIN stk_articulos ON cmp_items_cotizacion.articulo_id = stk_articulos.id
             WHERE cmp_items_cotizacion.cotizacion_id = %s AND cmp_items_cotizacion.enterprise_id = %s
         """, (id, g.user['enterprise_id']))
-        items = cursor.fetchall()
+        items = await cursor.fetchall()
         
-    return render_template('compras/cotizacion_detalle.html', cot=cot, items=items)
+    return await render_template('compras/cotizacion_detalle.html', cot=cot, items=items)
 
 @compras_bp.route('/compras/alertas-detalle')
 @login_required
-def alertas_detalle():
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+async def alertas_detalle():
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT cmp_items_cotizacion.*, stk_articulos.nombre as articulo, stk_articulos.codigo, cmp_cotizaciones.fecha_envio as fecha, erp_terceros.nombre as razon_social, cmp_cotizaciones.id as cotizacion_id
             FROM cmp_items_cotizacion
             JOIN cmp_cotizaciones ON cmp_items_cotizacion.cotizacion_id = cmp_cotizaciones.id
@@ -591,25 +591,25 @@ def alertas_detalle():
               AND cmp_cotizaciones.enterprise_id = %s AND cmp_items_cotizacion.enterprise_id = %s
             ORDER BY cmp_cotizaciones.fecha_envio DESC
         """, (g.user['enterprise_id'], g.user['enterprise_id']))
-        alertas = cursor.fetchall()
-    return render_template('compras/alertas_detalle.html', alertas=alertas)
+        alertas = await cursor.fetchall()
+    return await render_template('compras/alertas_detalle.html', alertas=alertas)
 
 @compras_bp.route('/compras/proveedores/nuevo', methods=['GET', 'POST'])
 @login_required
 @atomic_transaction('compras')
 async def nuevo_proveedor():
     if request.method == 'POST':
-        codigo = request.form.get('codigo', '')
-        nombre = request.form['nombre']
-        cuit = request.form['cuit']
-        email = request.form['email']
-        tipo = request.form['tipo_responsable']
-        observaciones = request.form.get('observaciones', '')
+        codigo = (await request.form).get('codigo', '')
+        nombre = (await request.form)['nombre']
+        cuit = (await request.form)['cuit']
+        email = (await request.form)['email']
+        tipo = (await request.form)['tipo_responsable']
+        observaciones = (await request.form).get('observaciones', '')
         
         from services.validation_service import validar_cuit, format_cuit
         if not validar_cuit(cuit):
-            flash("Error: El CUIT ingresado no es válido.", "danger")
-            return render_template('compras/proveedor_form.html')
+            await flash("Error: El CUIT ingresado no es válido.", "danger")
+            return await render_template('compras/proveedor_form.html')
         
         cuit = format_cuit(cuit)
         ent_id = g.user['enterprise_id']
@@ -618,92 +618,92 @@ async def nuevo_proveedor():
         # 1. FEDummy: Verificación de Túneles
         scout = await AfipService.fe_dummy()
         if not scout['success']:
-            AfipService.registrar_bitacora(ent_id, "TUNEL_BLOQUEADO", "WARNING", f"FEDummy interceptado: {scout['error']}")
-            flash("⚠️ Los túneles de AFIP parecen estar bloqueados por Sentinels. Se procederá con validación manual.", "info")
+            await AfipService.registrar_bitacora(ent_id, "TUNEL_BLOQUEADO", "WARNING", f"FEDummy interceptado: {scout['error']}")
+            await flash("⚠️ Los túneles de AFIP parecen estar bloqueados por Sentinels. Se procederá con validación manual.", "info")
         
         # 2. Scanner APOC: Detección de Traidores
         apoc = await AfipService.consultar_base_apoc(ent_id, cuit)
         if apoc.get('es_apocrifo'):
-            AfipService.registrar_bitacora(ent_id, "INTRUSO_APOCRIFO", "CRITICAL", f"Intento de registro de CUIT apócrifo: {cuit}")
-            flash(f"🚨 PROTOCOLO DE DEFENSA: El CUIT {cuit} figura en la base APOC de AFIP. No se permite su ingreso a la Matrix.", "danger")
-            return render_template('compras/proveedor_form.html')
+            await AfipService.registrar_bitacora(ent_id, "INTRUSO_APOCRIFO", "CRITICAL", f"Intento de registro de CUIT apócrifo: {cuit}")
+            await flash(f"🚨 PROTOCOLO DE DEFENSA: El CUIT {cuit} figura en la base APOC de AFIP. No se permite su ingreso a la Matrix.", "danger")
+            return await render_template('compras/proveedor_form.html')
 
         # 3. Niobe (A10) & wconsucuit (A13): Identificación de Sujetos
         niobe = await AfipService.consultar_datos_a10(ent_id, cuit)
         if niobe['success']:
             official_name = niobe.get('nombre')
             if official_name and official_name != 'Desconocido' and official_name.upper() != nombre.upper():
-                flash(f"🔍 Discrepancia detectada: El nombre oficial en AFIP es '{official_name}'. Verifique antes de continuar.", "warning")
-            AfipService.registrar_bitacora(ent_id, "ID_VALIDADA_A10", "INFO", f"Niobe validó al proveedor {cuit}")
+                await flash(f"🔍 Discrepancia detectada: El nombre oficial en AFIP es '{official_name}'. Verifique antes de continuar.", "warning")
+            await AfipService.registrar_bitacora(ent_id, "ID_VALIDADA_A10", "INFO", f"Niobe validó al proveedor {cuit}")
         else:
             # Reintento con wconsucuit si A10 falla
             scout_a13 = await AfipService.consultar_cuit(ent_id, cuit)
             if scout_a13['success']:
-                AfipService.registrar_bitacora(ent_id, "ID_VALIDADA_A13", "INFO", f"wconsucuit validó al proveedor {cuit}")
+                await AfipService.registrar_bitacora(ent_id, "ID_VALIDADA_A13", "INFO", f"wconsucuit validó al proveedor {cuit}")
             else:
-                AfipService.registrar_bitacora(ent_id, "SUJETO_NO_IDENTIFICADO", "ALERT", f"No se pudo validar identidad de {cuit} via AFIP")
-                flash("⚠️ Advertencia: No se pudo verificar la identidad del proveedor en los registros de AFIP.", "warning")
+                await AfipService.registrar_bitacora(ent_id, "SUJETO_NO_IDENTIFICADO", "ALERT", f"No se pudo validar identidad de {cuit} via AFIP")
+                await flash("⚠️ Advertencia: No se pudo verificar la identidad del proveedor en los registros de AFIP.", "warning")
         try:
-            with get_db_cursor(dictionary=True) as cursor:
-                cursor.execute("SELECT id FROM erp_terceros WHERE cuit = %s AND enterprise_id = %s", (cuit, g.user['enterprise_id']))
-                if cursor.fetchone():
-                    flash("Error: Ya existe un proveedor con ese CUIT ("+cuit+").", "danger")
+            async with get_db_cursor(dictionary=True) as cursor:
+                await cursor.execute("SELECT id FROM erp_terceros WHERE cuit = %s AND enterprise_id = %s", (cuit, g.user['enterprise_id']))
+                if await cursor.fetchone():
+                    await flash("Error: Ya existe un proveedor con ese CUIT ("+cuit+").", "danger")
                 else:
                     # Generar código si no se proveyó
                     if not codigo:
-                        codigo = TerceroService.generar_siguiente_codigo(g.user['enterprise_id'], 'PRO')
+                        codigo = await TerceroService.generar_siguiente_codigo(g.user['enterprise_id'], 'PRO')
 
-                    cursor.execute("""
+                    await cursor.execute("""
                         INSERT INTO erp_terceros (enterprise_id, codigo, nombre, cuit, email, observaciones, es_cliente, es_proveedor, tipo_responsable, naturaleza)
                         VALUES (%s, %s, %s, %s, %s, %s, 0, 1, %s, 'PRO')
                     """, (g.user['enterprise_id'], codigo, nombre, cuit, email, observaciones, tipo))
-                    flash(f"Proveedor registrado exitosamente con el número {codigo}. Complete los detalles ahora.", "success")
-                    cursor.execute("SELECT LAST_INSERT_ID() as last_id")
-                    new_id = cursor.fetchone()['last_id']
+                    await flash(f"Proveedor registrado exitosamente con el número {codigo}. Complete los detalles ahora.", "success")
+                    await cursor.execute("SELECT LAST_INSERT_ID() as last_id")
+                    new_id = await cursor.fetchone()['last_id']
                     return redirect(url_for('compras.perfil_proveedor', id=new_id))
         except Exception as e:
             err_msg = str(e)
-            AfipService.registrar_bitacora(ent_id, "FALLO_SISTEMA_COMPRAS", "ERROR", f"Error en registro de proveedor: {err_msg}")
-            flash(f"Error: {err_msg}", "danger")
+            await AfipService.registrar_bitacora(ent_id, "FALLO_SISTEMA_COMPRAS", "ERROR", f"Error en registro de proveedor: {err_msg}")
+            await flash(f"Error: {err_msg}", "danger")
             
-    return render_template('compras/proveedor_form.html')
+    return await render_template('compras/proveedor_form.html')
 
 @compras_bp.route('/compras/proveedores/editar/<int:id>', methods=['POST'])
 @login_required
-def editar_proveedor(id):
-    nombre = request.form['nombre']
-    cuit = request.form['cuit']
-    email = request.form['email']
-    tipo = request.form['tipo_responsable']
-    observaciones = request.form.get('observaciones', '')
-    telefono = request.form.get('telefono', '')
-    codigo = request.form.get('codigo', '')
+async def editar_proveedor(id):
+    nombre = (await request.form)['nombre']
+    cuit = (await request.form)['cuit']
+    email = (await request.form)['email']
+    tipo = (await request.form)['tipo_responsable']
+    observaciones = (await request.form).get('observaciones', '')
+    telefono = (await request.form).get('telefono', '')
+    codigo = (await request.form).get('codigo', '')
 
     from services.validation_service import validar_cuit, format_cuit
     if not validar_cuit(cuit):
-        flash("Error: El CUIT ingresado no es válido.", "danger")
+        await flash("Error: El CUIT ingresado no es válido.", "danger")
         return redirect(url_for('compras.perfil_proveedor', id=id))
     
     cuit = format_cuit(cuit)
 
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 UPDATE erp_terceros 
                 SET codigo=%s, nombre=%s, cuit=%s, email=%s, tipo_responsable=%s, observaciones=%s, telefono=%s, user_id_update=%s
                 WHERE id=%s AND enterprise_id=%s
             """, (codigo, nombre, cuit, email, tipo, observaciones, telefono, g.user['id'], id, g.user['enterprise_id']))
-            flash("Datos del proveedor actualizados.", "success")
+            await flash("Datos del proveedor actualizados.", "success")
     except Exception as e:
-        flash(f"Error al actualizar: {str(e)}", "danger")
+        await flash(f"Error al actualizar: {str(e)}", "danger")
     
     return redirect(url_for('compras.perfil_proveedor', id=id))
 
 @compras_bp.route('/compras/proveedores')
 @login_required
-def proveedores():
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+async def proveedores():
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT erp_terceros.*, erp_direcciones.calle, erp_direcciones.numero, erp_direcciones.localidad, erp_direcciones.provincia 
             FROM erp_terceros
             LEFT JOIN erp_direcciones ON erp_terceros.id = erp_direcciones.tercero_id AND erp_direcciones.es_fiscal = 1
@@ -711,47 +711,47 @@ def proveedores():
             GROUP BY erp_terceros.id
             ORDER BY erp_terceros.nombre
         """, (g.user['enterprise_id'],))
-        proveedores = cursor.fetchall()
-    return render_template('compras/proveedores.html', proveedores=proveedores)
+        proveedores = await cursor.fetchall()
+    return await render_template('compras/proveedores.html', proveedores=proveedores)
 
 @compras_bp.route('/compras/proveedores/perfil/<int:id>')
 @login_required
-def perfil_proveedor(id):
+async def perfil_proveedor(id):
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Step 1: Basic Info
-            cursor.execute("SELECT * FROM erp_terceros WHERE id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
-            proveedor = cursor.fetchone()
+            await cursor.execute("SELECT * FROM erp_terceros WHERE id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
+            proveedor = await cursor.fetchone()
             if not proveedor:
-                flash("Proveedor no encontrado.", "danger")
+                await flash("Proveedor no encontrado.", "danger")
                 return redirect(url_for('compras.proveedores'))
                 
             # Step 2: Direcciones
-            cursor.execute("SELECT * FROM erp_direcciones WHERE tercero_id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
-            direcciones = cursor.fetchall()
+            await cursor.execute("SELECT * FROM erp_direcciones WHERE tercero_id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
+            direcciones = await cursor.fetchall()
             
             # Step 3: Contactos
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT erp_contactos.*, erp_puestos.nombre as puesto_nombre 
                 FROM erp_contactos
                 LEFT JOIN erp_puestos ON erp_contactos.puesto_id = erp_puestos.id
                 WHERE erp_contactos.tercero_id = %s AND erp_contactos.enterprise_id = %s
             """, (id, g.user['enterprise_id']))
-            contactos = cursor.fetchall()
+            contactos = await cursor.fetchall()
             
             # Step 4: Datos Fiscales
-            cursor.execute("SELECT * FROM erp_datos_fiscales WHERE tercero_id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
-            fiscales = cursor.fetchall()
+            await cursor.execute("SELECT * FROM erp_datos_fiscales WHERE tercero_id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
+            fiscales = await cursor.fetchall()
             
             # Step 5: Coeficientes CM05
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT erp_terceros_cm05.*, sys_provincias.nombre as provincia_nombre
                 FROM erp_terceros_cm05
                 LEFT JOIN sys_provincias ON BINARY erp_terceros_cm05.jurisdiccion_code = BINARY LPAD(sys_provincias.id, 3, '0')
                 WHERE erp_terceros_cm05.tercero_id = %s AND erp_terceros_cm05.enterprise_id = %s
                 ORDER BY erp_terceros_cm05.periodo_anio DESC, erp_terceros_cm05.jurisdiccion_code ASC
             """, (id, g.user['enterprise_id']))
-            coeficientes_cm = cursor.fetchall()
+            coeficientes_cm = await cursor.fetchall()
             
             # Fallback
             for c in coeficientes_cm:
@@ -759,9 +759,9 @@ def perfil_proveedor(id):
                     c['provincia_nombre'] = f"Jurisdicción {c['jurisdiccion_code']}"
                     
             # Step 6: Provincias
-            provincias = GeorefService.get_provincias()
+            provincias = await GeorefService.get_provincias()
             
-        return render_template('compras/perfil_proveedor.html', proveedor=proveedor, direcciones=direcciones, contactos=contactos, fiscales=fiscales, provincias=provincias, coeficientes_cm=coeficientes_cm)
+        return await render_template('compras/perfil_proveedor.html', proveedor=proveedor, direcciones=direcciones, contactos=contactos, fiscales=fiscales, provincias=provincias, coeficientes_cm=coeficientes_cm)
     except Exception as e:
         import traceback
         print(f"ERROR IN PERFIL_PROVEEDOR: {e}")
@@ -777,9 +777,9 @@ async def api_proveedor_audit(id):
     Invoca a Niobe (A10), wconsucuit (A13) y el Scanner APOC.
     """
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT cuit, nombre FROM erp_terceros WHERE id = %s AND enterprise_id = %s", (id, ent_id))
-        prov = cursor.fetchone()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT cuit, nombre FROM erp_terceros WHERE id = %s AND enterprise_id = %s", (id, ent_id))
+        prov = await cursor.fetchone()
     
     if not prov:
         return jsonify({'success': False, 'error': 'Proveedor no encontrado.'}), 404
@@ -793,9 +793,9 @@ async def api_proveedor_audit(id):
     status = "CLEAN"
     if results['apoc'].get('es_apocrifo'):
         status = "TRAITOR"
-        AfipService.registrar_bitacora(ent_id, "AUDITORIA_VULNERABILIDAD", "CRITICAL", f"Auditoría reveló que {prov['nombre']} ({cuit}) es APÓCRIFO.")
+        await AfipService.registrar_bitacora(ent_id, "AUDITORIA_VULNERABILIDAD", "CRITICAL", f"Auditoría reveló que {prov['nombre']} ({cuit}) es APÓCRIFO.")
     else:
-        AfipService.registrar_bitacora(ent_id, "AUDITORIA_PROVEEDOR", "INFO", f"Auditoría profunda completada para {prov['nombre']} ({cuit}).")
+        await AfipService.registrar_bitacora(ent_id, "AUDITORIA_PROVEEDOR", "INFO", f"Auditoría profunda completada para {prov['nombre']} ({cuit}).")
 
     return jsonify({
         'success': True,
@@ -808,27 +808,27 @@ async def api_proveedor_audit(id):
 
 @compras_bp.route('/compras/proveedores/toggle-convenio/<int:id>', methods=['POST'])
 @login_required
-def toggle_convenio(id):
-    es_convenio = 1 if 'es_convenio' in request.form else 0
-    with get_db_cursor() as cursor:
-        cursor.execute("UPDATE erp_terceros SET es_convenio_multilateral = %s WHERE id = %s AND enterprise_id = %s", (es_convenio, id, g.user['enterprise_id']))
-    flash("Configuración de convenio multilateral actualizada.", "success")
+async def toggle_convenio(id):
+    es_convenio = 1 if 'es_convenio' in (await request.form) else 0
+    async with get_db_cursor() as cursor:
+        await cursor.execute("UPDATE erp_terceros SET es_convenio_multilateral = %s WHERE id = %s AND enterprise_id = %s", (es_convenio, id, g.user['enterprise_id']))
+    await flash("Configuración de convenio multilateral actualizada.", "success")
     return redirect(url_for('compras.perfil_proveedor', id=id))
 
 from services.cm05_service import CM05Service
 
 @compras_bp.route('/compras/proveedores/agregar-cm05/<int:id>', methods=['POST'])
 @login_required
-def agregar_cm05(id):
-    jurisdiccion = request.form['jurisdiccion_code']
-    periodo_anio = request.form['periodo_anio']
-    coeficiente = request.form['coeficiente']
+async def agregar_cm05(id):
+    jurisdiccion = (await request.form)['jurisdiccion_code']
+    periodo_anio = (await request.form)['periodo_anio']
+    coeficiente = (await request.form)['coeficiente']
 
     try:
-        CM05Service.upsert_coeficiente(g.user['enterprise_id'], id, jurisdiccion, periodo_anio, coeficiente, g.user['id'])
-        flash("Coeficiente guardado correctamente.", "success")
+        await CM05Service.upsert_coeficiente(g.user['enterprise_id'], id, jurisdiccion, periodo_anio, coeficiente, g.user['id'])
+        await flash("Coeficiente guardado correctamente.", "success")
     except Exception as e:
-        flash(f"Error al guardar coeficiente: {e}", "danger")
+        await flash(f"Error al guardar coeficiente: {e}", "danger")
     
     return redirect(url_for('compras.perfil_proveedor', id=id))
 
@@ -837,14 +837,14 @@ from werkzeug.utils import secure_filename
 
 @compras_bp.route('/compras/proveedores/upload-cm05/<int:id>', methods=['POST'])
 @login_required
-def upload_cm05(id):
-    if 'archivo_cm05' not in request.files:
-        flash('No se seleccionó ningún archivo.', 'warning')
+async def upload_cm05(id):
+    if 'archivo_cm05' not in (await request.files):
+        await flash('No se seleccionó ningún archivo.', 'warning')
         return redirect(url_for('compras.perfil_proveedor', id=id))
         
-    file = request.files['archivo_cm05']
+    file = (await request.files)['archivo_cm05']
     if file.filename == '':
-        flash('No se seleccionó ningún archivo.', 'warning')
+        await flash('No se seleccionó ningún archivo.', 'warning')
         return redirect(url_for('compras.perfil_proveedor', id=id))
         
     if file and file.filename.lower().endswith('.pdf'):
@@ -852,134 +852,134 @@ def upload_cm05(id):
         upload_folder = os.path.join(os.getcwd(), 'static', 'uploads', 'cm05')
         os.makedirs(upload_folder, exist_ok=True)
         file_path = os.path.join(upload_folder, filename)
-        file.save(file_path)
+        await file.save(file_path)
         
         # Guardar solo la ruta relativa
         rel_path = f"uploads/cm05/{filename}"
         
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             try:
-                cursor.execute("UPDATE erp_terceros SET archivo_cm05_path = %s WHERE id = %s", (rel_path, id))
+                await cursor.execute("UPDATE erp_terceros SET archivo_cm05_path = %s WHERE id = %s", (rel_path, id))
             except BaseException:
                 # Add column if it doesn't exist
-                cursor.execute("ALTER TABLE erp_terceros ADD COLUMN archivo_cm05_path VARCHAR(255) NULL")
-                cursor.execute("UPDATE erp_terceros SET archivo_cm05_path = %s WHERE id = %s", (rel_path, id))
+                await cursor.execute("ALTER TABLE erp_terceros ADD COLUMN archivo_cm05_path VARCHAR(255) NULL")
+                await cursor.execute("UPDATE erp_terceros SET archivo_cm05_path = %s WHERE id = %s", (rel_path, id))
         
-        flash("Archivo subido correctamente.", "success")
+        await flash("Archivo subido correctamente.", "success")
     else:
-        flash("Formato de archivo inválido. Solo PDF.", "danger")
+        await flash("Formato de archivo inválido. Solo PDF.", "danger")
         
     return redirect(url_for('compras.perfil_proveedor', id=id))
 
 @compras_bp.route('/compras/proveedores/agregar-direccion/<int:id>', methods=['POST'])
 @login_required
-def agregar_direccion(id):
-    item_id = request.form.get('item_id')
-    etiqueta = request.form['etiqueta']
-    calle = request.form['calle']
-    numero = request.form['numero']
-    piso = request.form.get('piso', '')
-    depto = request.form.get('depto', '')
-    localidad = request.form['localidad']
-    provincia = request.form['provincia']
-    cp = request.form['cod_postal']
-    es_fiscal = 1 if 'es_fiscal' in request.form else 0
-    es_entrega = 1 if 'es_entrega' in request.form else 0
-    with get_db_cursor(dictionary=True) as cursor:
+async def agregar_direccion(id):
+    item_id = (await request.form).get('item_id')
+    etiqueta = (await request.form)['etiqueta']
+    calle = (await request.form)['calle']
+    numero = (await request.form)['numero']
+    piso = (await request.form).get('piso', '')
+    depto = (await request.form).get('depto', '')
+    localidad = (await request.form)['localidad']
+    provincia = (await request.form)['provincia']
+    cp = (await request.form)['cod_postal']
+    es_fiscal = 1 if 'es_fiscal' in (await request.form) else 0
+    es_entrega = 1 if 'es_entrega' in (await request.form) else 0
+    async with get_db_cursor(dictionary=True) as cursor:
         if item_id:
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE erp_direcciones 
                 SET etiqueta=%s, calle=%s, numero=%s, piso=%s, depto=%s, localidad=%s, provincia=%s, cod_postal=%s, es_fiscal=%s, es_entrega=%s, user_id_update=%s
                 WHERE id=%s AND tercero_id=%s AND enterprise_id=%s
             """, (etiqueta, calle, numero, piso, depto, localidad, provincia, cp, es_fiscal, es_entrega, g.user['id'], item_id, id, g.user['enterprise_id']))
-            flash("Dirección actualizada.", "success")
+            await flash("Dirección actualizada.", "success")
         else:
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO erp_direcciones (enterprise_id, tercero_id, etiqueta, calle, numero, piso, depto, localidad, provincia, cod_postal, es_fiscal, es_entrega, user_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (g.user['enterprise_id'], id, etiqueta, calle, numero, piso, depto, localidad, provincia, cp, es_fiscal, es_entrega, g.user['id']))
-            flash("Dirección agregada.", "success")
+            await flash("Dirección agregada.", "success")
     
     return redirect(url_for('compras.perfil_proveedor', id=id))
 
 @compras_bp.route('/compras/proveedores/agregar-contacto/<int:id>', methods=['POST'])
 @login_required
-def agregar_contacto(id):
-    item_id = request.form.get('item_id')
-    nombre = request.form['nombre']
-    puesto = request.form['puesto']
-    tipo = request.form['tipo_contacto']
-    telefono = request.form['telefono']
-    email = request.form['email']
+async def agregar_contacto(id):
+    item_id = (await request.form).get('item_id')
+    nombre = (await request.form)['nombre']
+    puesto = (await request.form)['puesto']
+    tipo = (await request.form)['tipo_contacto']
+    telefono = (await request.form)['telefono']
+    email = (await request.form)['email']
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Resolver puesto a ID si existe
-        cursor.execute("SELECT id FROM erp_puestos WHERE nombre = %s AND enterprise_id = %s LIMIT 1", (puesto, g.user['enterprise_id']))
-        puesto_row = cursor.fetchone()
+        await cursor.execute("SELECT id FROM erp_puestos WHERE nombre = %s AND enterprise_id = %s LIMIT 1", (puesto, g.user['enterprise_id']))
+        puesto_row = await cursor.fetchone()
         puesto_id = puesto_row['id'] if puesto_row else None
 
         if item_id:
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE erp_contactos SET nombre=%s, puesto_id=%s, tipo_contacto=%s, telefono=%s, email=%s
                 WHERE id=%s AND tercero_id=%s AND enterprise_id=%s
             """, (nombre, puesto_id, tipo, telefono, email, item_id, id, g.user['enterprise_id']))
-            flash("Contacto actualizado.", "success")
+            await flash("Contacto actualizado.", "success")
         else:
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO erp_contactos (enterprise_id, tercero_id, nombre, puesto_id, tipo_contacto, telefono, email)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (g.user['enterprise_id'], id, nombre, puesto_id, tipo, telefono, email))
-            flash("Contacto agregado.", "success")
+            await flash("Contacto agregado.", "success")
     
     return redirect(url_for('compras.perfil_proveedor', id=id))
 
 @compras_bp.route('/compras/proveedores/agregar-fiscal/<int:id>', methods=['POST'])
 @login_required
-def agregar_fiscal(id):
-    item_id = request.form.get('item_id')
-    impuesto = request.form['impuesto']
-    jurisdiccion = request.form['jurisdiccion']
-    condicion = request.form['condicion']
-    inscripcion = request.form['numero_inscripcion']
-    alicuota = request.form.get('alicuota', 0)
+async def agregar_fiscal(id):
+    item_id = (await request.form).get('item_id')
+    impuesto = (await request.form)['impuesto']
+    jurisdiccion = (await request.form)['jurisdiccion']
+    condicion = (await request.form)['condicion']
+    inscripcion = (await request.form)['numero_inscripcion']
+    alicuota = (await request.form).get('alicuota', 0)
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Validar alícuota numérica
         try: alicuota = float(alicuota)
         except: alicuota = 0
 
         if item_id:
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE erp_datos_fiscales SET impuesto=%s, jurisdiccion=%s, condicion=%s, numero_inscripcion=%s, alicuota=%s
                 WHERE id=%s AND tercero_id=%s AND enterprise_id=%s
             """, (impuesto, jurisdiccion, condicion, inscripcion, alicuota, item_id, id, g.user['enterprise_id']))
-            flash("Dato fiscal actualizado.", "success")
+            await flash("Dato fiscal actualizado.", "success")
         else:
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO erp_datos_fiscales (enterprise_id, tercero_id, impuesto, jurisdiccion, condicion, numero_inscripcion, alicuota)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (g.user['enterprise_id'], id, impuesto, jurisdiccion, condicion, inscripcion, alicuota))
-            flash("Dato fiscal agregado.", "success")
+            await flash("Dato fiscal agregado.", "success")
     
     return redirect(url_for('compras.perfil_proveedor', id=id))
 
 @compras_bp.route('/compras/proveedores/eliminar-detalle/<string:tabla>/<int:item_id>/<int:id>')
 @login_required
-def eliminar_detalle(tabla, item_id, id):
+async def eliminar_detalle(tabla, item_id, id):
     # Validar que la tabla sea una de las permitidas para evitar inyección
     tablas_permitidas = ['erp_direcciones', 'erp_contactos', 'erp_datos_fiscales', 'erp_terceros_cm05']
     if tabla not in tablas_permitidas:
-        flash("Operación no permitida.", "danger")
+        await flash("Operación no permitida.", "danger")
         return redirect(url_for('compras.perfil_proveedor', id=id))
 
     if tabla == 'erp_terceros_cm05':
         from services.cm05_service import CM05Service
-        CM05Service.delete_coeficiente(g.user['enterprise_id'], item_id, g.user['id'])
+        await CM05Service.delete_coeficiente(g.user['enterprise_id'], item_id, g.user['id'])
     else:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Verificar que el item pertenezca al tercero y que el tercero sea de la empresa correcta
-            cursor.execute(f"DELETE FROM {tabla} WHERE id = %s AND tercero_id = %s AND enterprise_id = %s", (item_id, id, g.user['enterprise_id']))
-    flash("Registro eliminado.", "info")
+            await cursor.execute(f"DELETE FROM {tabla} WHERE id = %s AND tercero_id = %s AND enterprise_id = %s", (item_id, id, g.user['enterprise_id']))
+    await flash("Registro eliminado.", "info")
     return redirect(url_for('compras.perfil_proveedor', id=id))
 
 # --- GENERAR PO DESDE COTIZACION ---
@@ -987,31 +987,31 @@ def eliminar_detalle(tabla, item_id, id):
 @compras_bp.route('/compras/cotizacion/<int:id>/generar_po', methods=['POST'])
 @login_required
 @atomic_transaction('compras')
-def generar_po(id):
+async def generar_po(id):
     """Crea la Orden de Compra a partir de una Cotización RESPONDIDA y notifica al proveedor."""
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Verificar que la cotización pertenece a la empresa y está en estado correcto
-        cursor.execute(
+        await cursor.execute(
             "SELECT id, estado, proveedor_id FROM cmp_cotizaciones WHERE id = %s AND enterprise_id = %s",
             (id, g.user['enterprise_id'])
         )
-        cot = cursor.fetchone()
+        cot = await cursor.fetchone()
 
     if not cot:
-        flash("Cotización no encontrada.", "danger")
+        await flash("Cotización no encontrada.", "danger")
         return redirect(url_for('compras.cotizaciones'))
 
     if cot['estado'] not in ('RESPONDIDA', 'RECIBIDA_PARCIAL', 'RECIBIDA_TOTAL'):
-        flash(f"La cotización debe estar en estado RESPONDIDA para generar una PO. Estado actual: {cot['estado']}", "warning")
+        await flash(f"La cotización debe estar en estado RESPONDIDA para generar una PO. Estado actual: {cot['estado']}", "warning")
         return redirect(url_for('compras.cotizacion_detalle', id=id))
 
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             mailer = PurchaseOrderMailer(g.user['enterprise_id'])
-            po_data, error = mailer.create_order_from_quotation(id, existing_cursor=cursor)
+            po_data, error = await mailer.create_order_from_quotation(id, existing_cursor=cursor)
 
             if error:
-                flash(f"Error al crear la PO: {error}", "danger")
+                await flash(f"Error al crear la PO: {error}", "danger")
                 return redirect(url_for('compras.cotizacion_detalle', id=id))
 
             po_id   = po_data['po_id']
@@ -1019,31 +1019,31 @@ def generar_po(id):
             items   = po_data['items']
 
         # Intentar enviar email con Excel adjunto
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT nombre, email FROM erp_terceros WHERE id = %s", (cot['proveedor_id'],))
-            prov = cursor.fetchone()
-            cursor.execute("SELECT nombre FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
-            empresa = cursor.fetchone()
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT nombre, email FROM erp_terceros WHERE id = %s", (cot['proveedor_id'],))
+            prov = await cursor.fetchone()
+            await cursor.execute("SELECT nombre FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
+            empresa = await cursor.fetchone()
 
         email_ok = False
         if prov and prov.get('email') and items:
-            excel_path = mailer.generate_excel_po(po_id, prov['nombre'], items, po_hash)
+            excel_path = await mailer.generate_excel_po(po_id, prov['nombre'], items, po_hash)
             empresa_nombre = empresa['nombre'] if empresa else ''
-            email_ok = mailer.send_po_email(prov['email'], po_id, po_hash, excel_path, empresa_nombre)
+            email_ok = await mailer.send_po_email(prov['email'], po_id, po_hash, excel_path, empresa_nombre)
 
         # Marcar cotización como CONFIRMADA
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute(
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute(
                 "UPDATE cmp_cotizaciones SET estado = 'CONFIRMADA' WHERE id = %s AND enterprise_id = %s",
                 (id, g.user['enterprise_id'])
             )
 
         msg_email = f" Email enviado a {prov['email']}." if email_ok else " (Email no enviado — revisar configuración de correo.)"
-        flash(f"✅ Orden de Compra #{po_id} creada exitosamente y enviada a aprobación.{msg_email}", "success")
+        await flash(f"✅ Orden de Compra #{po_id} creada exitosamente y enviada a aprobación.{msg_email}", "success")
         return redirect(url_for('compras.aprobar_po_detalle', id=po_id))
 
     except Exception as e:
-        flash(f"Error inesperado al generar la PO: {str(e)}", "danger")
+        await flash(f"Error inesperado al generar la PO: {str(e)}", "danger")
         return redirect(url_for('compras.cotizacion_detalle', id=id))
 
 
@@ -1051,170 +1051,170 @@ def generar_po(id):
 
 @compras_bp.route('/compras/ordenes', endpoint='ordenes')
 @login_required
-def ordenes():
+async def ordenes():
     """Listado completo de Órdenes de Compra (Histórico)."""
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT o.*, p.nombre as proveedor_nombre, p.codigo as proveedor_codigo 
             FROM cmp_ordenes_compra o
             JOIN erp_terceros p ON o.proveedor_id = p.id
             WHERE o.enterprise_id = %s
             ORDER BY o.fecha_emision DESC
         """, (g.user['enterprise_id'],))
-        ordenes = cursor.fetchall()
-    return render_template('compras/ordenes_lista.html', ordenes=ordenes)
+        ordenes = await cursor.fetchall()
+    return await render_template('compras/ordenes_lista.html', ordenes=ordenes)
 
 
 @compras_bp.route('/compras/aprobaciones')
 @login_required
 @permission_required('compras.aprobar_po')
-def aprobaciones():
+async def aprobaciones():
     """Listado de POs esperando aprobación del Gerente de Compras."""
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT o.*, p.nombre as proveedor_nombre, p.codigo as proveedor_codigo 
             FROM cmp_ordenes_compra o
             JOIN erp_terceros p ON o.proveedor_id = p.id
             WHERE o.estado = 'PENDIENTE_APROBACION_COMPRAS' AND o.enterprise_id = %s
             ORDER BY o.fecha_emision DESC
         """, (g.user['enterprise_id'],))
-        ordenes = cursor.fetchall()
-    return render_template('compras/aprobaciones.html', ordenes=ordenes)
+        ordenes = await cursor.fetchall()
+    return await render_template('compras/aprobaciones.html', ordenes=ordenes)
 
 # --- NUEVA ORDEN (MANUAL) ---
 
 @compras_bp.route('/compras/orden_nueva', methods=['GET', 'POST'])
 @login_required
 @atomic_transaction('compras')
-def orden_nueva():
+async def orden_nueva():
     if request.method == 'POST':
-        prov_id = request.form.get('proveedor_id')
-        fecha_emision = request.form.get('fecha_emision')
-        obs = request.form.get('observaciones')
-        cc_id = request.form.get('centro_costo_id')
+        prov_id = (await request.form).get('proveedor_id')
+        fecha_emision = (await request.form).get('fecha_emision')
+        obs = (await request.form).get('observaciones')
+        cc_id = (await request.form).get('centro_costo_id')
         
         if not prov_id or not cc_id:
-            flash("Debe seleccionar un proveedor y un Centro de Costos.", "warning")
+            await flash("Debe seleccionar un proveedor y un Centro de Costos.", "warning")
             return redirect(url_for('compras.orden_nueva'))
 
         try:
-            with get_db_cursor() as cursor:
+            async with get_db_cursor() as cursor:
                 # Generar hash unico para link externo (opcional)
                 po_hash = f"PO_{g.user['enterprise_id']}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
                 
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO cmp_ordenes_compra 
                     (enterprise_id, proveedor_id, centro_costo_id, estado, fecha_emision, observaciones, security_hash, total_estimado, user_id)
                     VALUES (%s, %s, %s, 'PENDIENTE_APROBACION_COMPRAS', %s, %s, %s, 0, %s)
                 """, (g.user['enterprise_id'], prov_id, cc_id, fecha_emision, obs, po_hash, g.user['id']))
                 po_id = cursor.lastrowid
                 
-            flash(f"Orden de Compra #{po_id} creada. Ahora agregue los ítems.", "success")
+            await flash(f"Orden de Compra #{po_id} creada. Ahora agregue los ítems.", "success")
             return redirect(url_for('compras.aprobar_po_detalle', id=po_id))
             
         except Exception as e:
-            flash(f"Error creando orden: {e}", "danger")
+            await flash(f"Error creando orden: {e}", "danger")
             return redirect(url_for('compras.orden_nueva'))
 
     # GET: Mostrar formulario
     hoy = datetime.date.today().strftime('%Y-%m-%d')
-    proveedores = TerceroService.get_proveedores_for_selector(g.user['enterprise_id'])
-    centros_costo = BudgetService.get_cost_centers(g.user['enterprise_id'])
+    proveedores = await TerceroService.get_proveedores_for_selector(g.user['enterprise_id'])
+    centros_costo = await BudgetService.get_cost_centers(g.user['enterprise_id'])
         
-    return render_template('compras/orden_nueva.html', proveedores=proveedores, centros_costo=centros_costo, hoy=hoy)
+    return await render_template('compras/orden_nueva.html', proveedores=proveedores, centros_costo=centros_costo, hoy=hoy)
 
 @compras_bp.route('/compras/orden/<int:id>/agregar_item', methods=['POST'])
 @login_required
-def agregar_item_po(id):
+async def agregar_item_po(id):
     """Agrega un ítem a una PO existente en estado borrador/pendiente."""
-    articulo_id = request.form.get('articulo_id')
-    cantidad = request.form.get('cantidad', 1)
+    articulo_id = (await request.form).get('articulo_id')
+    cantidad = (await request.form).get('cantidad', 1)
     
     if not articulo_id:
-        flash("Seleccione un artículo.", "warning")
+        await flash("Seleccione un artículo.", "warning")
         return redirect(url_for('compras.aprobar_po_detalle', id=id))
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Verificar estado PO
-        cursor.execute("SELECT estado FROM cmp_ordenes_compra WHERE id=%s AND enterprise_id=%s", (id, g.user['enterprise_id']))
-        po = cursor.fetchone()
+        await cursor.execute("SELECT estado FROM cmp_ordenes_compra WHERE id=%s AND enterprise_id=%s", (id, g.user['enterprise_id']))
+        po = await cursor.fetchone()
         if not po or po['estado'] not in ('PENDIENTE_APROBACION_COMPRAS', 'RECHAZADA_TESORERIA', 'RECHAZADA_COMPRAS'):
-             flash("No se pueden agregar ítems a esta PO en su estado actual.", "warning")
+             await flash("No se pueden agregar ítems a esta PO en su estado actual.", "warning")
              return redirect(url_for('compras.aprobar_po_detalle', id=id))
 
         # Obtener costo estandar del articulo como precio inicial
         # Prioridad: 1. Costo Reposición, 2. Costo Base (Lista), 3. Costo Promedio
-        cursor.execute("SELECT costo_reposicion, costo, costo_promedio FROM stk_articulos WHERE id=%s", (articulo_id,))
-        art = cursor.fetchone()
+        await cursor.execute("SELECT costo_reposicion, costo, costo_promedio FROM stk_articulos WHERE id=%s", (articulo_id,))
+        art = await cursor.fetchone()
         if art:
             precio = art['costo_reposicion'] or art['costo'] or art['costo_promedio'] or 0
         else:
             precio = 0
 
-        cursor.execute("""
+        await cursor.execute("""
             INSERT INTO cmp_detalles_orden (enterprise_id, orden_id, articulo_id, cantidad_solicitada, precio_unitario, user_id_update)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (g.user['enterprise_id'], id, articulo_id, cantidad, precio, g.user['id']))
         
         # Recalcular total (simple sum)
-        cursor.execute("""
+        await cursor.execute("""
             UPDATE cmp_ordenes_compra SET total_estimado = (
                 SELECT SUM(cantidad_solicitada * precio_unitario) FROM cmp_detalles_orden WHERE orden_id=%s
             ) WHERE id=%s
         """, (id, id))
 
-    flash("Ítem agregado.", "success")
+    await flash("Ítem agregado.", "success")
     return redirect(url_for('compras.aprobar_po_detalle', id=id))
 
 @compras_bp.route('/compras/aprobar_po/<int:id>', methods=['GET'])
 @login_required
 @permission_required('compras.aprobar_po')
-def aprobar_po_detalle(id):
+async def aprobar_po_detalle(id):
     """Vista detallada para que el Gerente corrija, agregue items y apruebe la PO."""
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT o.*, p.nombre as proveedor_nombre, p.codigo as proveedor_codigo, p.email as proveedor_email, p.cuit as proveedor_cuit
             FROM cmp_ordenes_compra o
             JOIN erp_terceros p ON o.proveedor_id = p.id
             WHERE o.id = %s AND o.enterprise_id = %s
         """, (id, g.user['enterprise_id']))
-        po = cursor.fetchone()
+        po = await cursor.fetchone()
         
         if not po:
-            flash("Orden no encontrada.", "danger")
+            await flash("Orden no encontrada.", "danger")
             return redirect(url_for('compras.aprobaciones'))
 
         # Items de la PO
-        cursor.execute("""
+        await cursor.execute("""
             SELECT d.id, d.articulo_id, d.cantidad_solicitada as cantidad, d.precio_unitario, 
                    a.nombre as articulo_nombre, a.codigo as articulo_codigo
             FROM cmp_detalles_orden d
             JOIN stk_articulos a ON d.articulo_id = a.id
             WHERE d.orden_id = %s AND d.enterprise_id = %s
         """, (id, g.user['enterprise_id']))
-        items = cursor.fetchall()
+        items = await cursor.fetchall()
 
         # Lista de Artículos para agregar (Buscador)
-        cursor.execute("SELECT id, nombre, codigo FROM stk_articulos WHERE enterprise_id = %s ORDER BY nombre", (g.user['enterprise_id'],))
-        articulos = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre, codigo FROM stk_articulos WHERE enterprise_id = %s ORDER BY nombre", (g.user['enterprise_id'],))
+        articulos = await cursor.fetchall()
 
         # PRESUPUESTO INFO (Fase 2)
         budget_status = None
         if po.get('centro_costo_id'):
             now = datetime.datetime.now()
-            budget_status = BudgetService.get_budget_status(g.user['enterprise_id'], po['centro_costo_id'], now.year, now.month)
+            budget_status = await BudgetService.get_budget_status(g.user['enterprise_id'], po['centro_costo_id'], now.year, now.month)
             # Agregar nombre de centro de costos al objeto po para mostrarlo en cabecera
-            cursor.execute("SELECT name, code FROM sys_cost_centers WHERE id = %s", (po['centro_costo_id'],))
-            cc_data = cursor.fetchone()
+            await cursor.execute("SELECT name, code FROM sys_cost_centers WHERE id = %s", (po['centro_costo_id'],))
+            cc_data = await cursor.fetchone()
             if cc_data:
                 po['cost_center_name'] = cc_data['name']
                 po['cost_center_code'] = cc_data['code']
 
         # WORKFLOW INFO (Auditoria)
-        wf_state = WorkflowService.get_approval_state(g.user['enterprise_id'], 'CMP_PO', id)
-        wf_history = WorkflowService.get_workflow_history(g.user['enterprise_id'], 'CMP_PO', id)
+        wf_state = await WorkflowService.get_approval_state(g.user['enterprise_id'], 'CMP_PO', id)
+        wf_history = await WorkflowService.get_workflow_history(g.user['enterprise_id'], 'CMP_PO', id)
 
-    return render_template('compras/aprobar_po_detalle.html', 
+    return await render_template('compras/aprobar_po_detalle.html', 
                           po=po, items=items, articulos=articulos, 
                           wf_state=wf_state, wf_history=wf_history,
                           budget_status=budget_status)
@@ -1222,31 +1222,31 @@ def aprobar_po_detalle(id):
 @compras_bp.route('/compras/post_aprobacion_po/<int:id>', methods=['POST'])
 @login_required
 @permission_required('compras.aprobar_po')
-def post_aprobacion_po(id):
+async def post_aprobacion_po(id):
     """Procesa la aprobación/corrección de la PO por el Gerente."""
-    action = request.form.get('action') # 'approve' or 'reject'
-    observaciones = request.form.get('observaciones', '')
+    action = (await request.form).get('action') # 'approve' or 'reject'
+    observaciones = (await request.form).get('observaciones', '')
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # --- SEGREGACIÓN DE FUNCIONES (SoD) ---
-        cursor.execute("SELECT user_id, centro_costo_id FROM cmp_ordenes_compra WHERE id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
-        po_meta = cursor.fetchone()
+        await cursor.execute("SELECT user_id, centro_costo_id FROM cmp_ordenes_compra WHERE id = %s AND enterprise_id = %s", (id, g.user['enterprise_id']))
+        po_meta = await cursor.fetchone()
         if po_meta and po_meta['user_id'] == g.user['id']:
-            flash("Seguridad CISA: No puede aprobar una orden creada por usted mismo (Segregación de Funciones).", "danger")
+            await flash("Seguridad CISA: No puede aprobar una orden creada por usted mismo (Segregación de Funciones).", "danger")
             return redirect(url_for('compras.aprobar_po_detalle', id=id))
 
         if action == 'approve':
             # 1. Calcular total y actualizar ítems
             total_estimado = 0
-            for key, value in request.form.items():
+            for key, value in (await request.form).items():
                 if key.startswith('cant_'):
                     item_id = key.split('_')[1]
                     try:
                         cant = float(value)
-                        u_price = float(request.form.get(f'price_{item_id}', 0))
+                        u_price = float((await request.form).get(f'price_{item_id}', 0))
                         total_estimado += cant * u_price
                         
-                        cursor.execute("""
+                        await cursor.execute("""
                             UPDATE cmp_detalles_orden 
                             SET cantidad_solicitada = %s, precio_unitario = %s, user_id_update = %s 
                             WHERE id = %s AND orden_id = %s AND enterprise_id = %s
@@ -1255,16 +1255,16 @@ def post_aprobacion_po(id):
 
             # --- CONTROL DE PRESUPUESTO (FASE 2) ---
             if po_meta and po_meta['centro_costo_id']:
-                budget_check = BudgetService.check_funds_for_po(g.user['enterprise_id'], po_meta['centro_costo_id'], total_estimado)
+                budget_check = await BudgetService.check_funds_for_po(g.user['enterprise_id'], po_meta['centro_costo_id'], total_estimado)
                 if not budget_check['success']:
-                    flash(f"Bloqueo de Presupuesto: {budget_check['message']}", "danger")
+                    await flash(f"Bloqueo de Presupuesto: {budget_check['message']}", "danger")
                     return redirect(url_for('compras.aprobar_po_detalle', id=id))
 
             # 2. Asegurar que el workflow esté iniciado
-            WorkflowService.start_workflow(g.user['enterprise_id'], 'CMP_PO', id, total_estimado)
+            await WorkflowService.start_workflow(g.user['enterprise_id'], 'CMP_PO', id, total_estimado)
             
             # 3. Procesar paso del workflow
-            res = WorkflowService.approve_step(
+            res = await WorkflowService.approve_step(
                 g.user['enterprise_id'], 
                 'CMP_PO', 
                 id, 
@@ -1279,9 +1279,9 @@ def post_aprobacion_po(id):
                     
                     # Comprometer Fondos Reales
                     if po_meta and po_meta['centro_costo_id']:
-                        BudgetService.commit_funds(g.user['enterprise_id'], 'PO', id, po_meta['centro_costo_id'], total_estimado)
+                        await BudgetService.commit_funds(g.user['enterprise_id'], 'PO', id, po_meta['centro_costo_id'], total_estimado)
 
-                    cursor.execute("""
+                    await cursor.execute("""
                         UPDATE cmp_ordenes_compra 
                         SET estado = 'ENVIADA_TESORERIA', 
                             total_estimado = %s,
@@ -1291,32 +1291,32 @@ def post_aprobacion_po(id):
                             user_id_update = %s
                         WHERE id = %s AND enterprise_id = %s
                     """, (total_estimado, g.user['id'], g.user['id'], id, g.user['enterprise_id']))
-                    flash(f"PO #{id}: {res['message']} Fondos comprometidos exitosamente.", "success")
+                    await flash(f"PO #{id}: {res['message']} Fondos comprometidos exitosamente.", "success")
                 else:
                     # Falta algún nivel o firma
-                    cursor.execute("""
+                    await cursor.execute("""
                         UPDATE cmp_ordenes_compra 
                         SET total_estimado = %s, user_id_update = %s
                         WHERE id = %s AND enterprise_id = %s
                     """, (total_estimado, g.user['id'], id, g.user['enterprise_id']))
-                    flash(f"PO #{id}: {res['message']}", "info")
+                    await flash(f"PO #{id}: {res['message']}", "info")
             else:
-                flash(res['message'], "warning")
+                await flash(res['message'], "warning")
             
         elif action == 'reject':
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE cmp_ordenes_compra 
                 SET estado = 'RECHAZADA_COMPRAS',
                     observaciones_rechazo = %s
                 WHERE id = %s AND enterprise_id = %s
             """, (observaciones, id, g.user['enterprise_id']))
-            flash(f"PO #{id} rechazada.", "warning")
+            await flash(f"PO #{id} rechazada.", "warning")
 
     return redirect(url_for('compras.aprobaciones'))
 
 @compras_bp.route('/compras/api/buscar-proveedores')
 @login_required
-def api_buscar_proveedores():
+async def api_buscar_proveedores():
     """Búsqueda dinámica de proveedores para selectores inteligentes.
     Parámetro: q (texto a buscar por código, nombre, CUIT, email o localidad).
     Devuelve JSON con id, codigo, nombre, cuit, localidad, tipo_responsable, condicion_iibb, iibb_condicion.
@@ -1324,10 +1324,10 @@ def api_buscar_proveedores():
     q = request.args.get('q', '').strip()
     enterprise_id = g.user['enterprise_id']
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         if q and len(q) >= 2:
             like = f'%{q}%'
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT t.id, t.codigo, t.nombre, t.cuit,
                        COALESCE(d.localidad, '') as localidad,
                        t.tipo_responsable, t.condicion_iibb, t.iibb_condicion,
@@ -1349,7 +1349,7 @@ def api_buscar_proveedores():
                 LIMIT 30
             """, (enterprise_id, like, like, like, like, like))
         else:
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT t.id, t.codigo, t.nombre, t.cuit,
                        COALESCE(d.localidad, '') as localidad,
                        t.tipo_responsable, t.condicion_iibb, t.iibb_condicion,
@@ -1363,18 +1363,18 @@ def api_buscar_proveedores():
                 ORDER BY t.nombre
                 LIMIT 30
             """, (enterprise_id,))
-        rows = cursor.fetchall()
+        rows = await cursor.fetchall()
 
     return jsonify(rows)
 
 
 @compras_bp.route('/compras/api/ordenes-para-facturar', methods=['GET'])
 @login_required
-def api_ordenes_para_facturar():
+async def api_ordenes_para_facturar():
     """Lista POs en estado RECIBIDA o ENVIADA_TESORERIA para vincular con factura."""
     prov_id = request.args.get('proveedor_id')
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         query = """
             SELECT id, fecha_emision, total_estimado as total, estado
             FROM cmp_ordenes_compra
@@ -1386,66 +1386,66 @@ def api_ordenes_para_facturar():
             params.append(prov_id)
             
         query += " ORDER BY fecha_emision DESC LIMIT 50"
-        cursor.execute(query, tuple(params))
-        ordenes = cursor.fetchall()
+        await cursor.execute(query, tuple(params))
+        ordenes = await cursor.fetchall()
         
     return jsonify(ordenes)
 
 
 @compras_bp.route('/compras/api/get_po_details/<int:id>', methods=['GET'])
 @login_required
-def api_get_po_details(id):
+async def api_get_po_details(id):
     """Retorna los detalles de una PO para auto-completar la factura."""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT o.*, p.nombre as proveedor_nombre, p.id as proveedor_id, p.tipo_responsable, p.condicion_iibb
             FROM cmp_ordenes_compra o
             JOIN erp_terceros p ON o.proveedor_id = p.id
             WHERE o.id = %s AND o.enterprise_id = %s
         """, (id, ent_id))
-        po = cursor.fetchone()
+        po = await cursor.fetchone()
         
         if not po:
             return jsonify({'success': False, 'message': 'Orden no encontrada'}), 404
             
-        cursor.execute("""
+        await cursor.execute("""
             SELECT d.*, a.nombre as articulo_nombre, a.codigo as articulo_codigo
             FROM cmp_detalles_orden d
             JOIN stk_articulos a ON d.articulo_id = a.id
             WHERE d.orden_id = %s AND d.enterprise_id = %s
         """, (id, ent_id))
-        items = cursor.fetchall()
+        items = await cursor.fetchall()
         
         return jsonify({'success': True, 'po': po, 'items': items})
 
 
 @compras_bp.route('/compras/facturar', methods=['GET'])
 @login_required
-def facturar():
-    with get_db_cursor(dictionary=True) as cursor:
+async def facturar():
+    async with get_db_cursor(dictionary=True) as cursor:
         # Proveedores
-        cursor.execute("SELECT id, codigo, nombre, cuit, tipo_responsable, condicion_iibb, iibb_condicion FROM erp_terceros WHERE enterprise_id = %s AND es_proveedor = 1 AND activo = 1", (g.user['enterprise_id'],))
-        proveedores = cursor.fetchall()
+        await cursor.execute("SELECT id, codigo, nombre, cuit, tipo_responsable, condicion_iibb, iibb_condicion FROM erp_terceros WHERE enterprise_id = %s AND es_proveedor = 1 AND activo = 1", (g.user['enterprise_id'],))
+        proveedores = await cursor.fetchall()
         
         # Tipos de Comprobante
-        cursor.execute("SELECT codigo, descripcion FROM sys_tipos_comprobante")
-        tipos = cursor.fetchall()
+        await cursor.execute("SELECT codigo, descripcion FROM sys_tipos_comprobante")
+        tipos = await cursor.fetchall()
         
         # Depósitos
-        cursor.execute("SELECT id, nombre FROM stk_depositos WHERE enterprise_id = %s AND activo = 1", (g.user['enterprise_id'],))
-        depositos = cursor.fetchall()
+        await cursor.execute("SELECT id, nombre FROM stk_depositos WHERE enterprise_id = %s AND activo = 1", (g.user['enterprise_id'],))
+        depositos = await cursor.fetchall()
 
         # Jurisdicciones
-        cursor.execute("SELECT codigo, nombre FROM sys_jurisdicciones ORDER BY codigo")
-        jurisdicciones = cursor.fetchall()
+        await cursor.execute("SELECT codigo, nombre FROM sys_jurisdicciones ORDER BY codigo")
+        jurisdicciones = await cursor.fetchall()
 
         # Artículos (para costeo directo desde factura local)
-        cursor.execute("SELECT id, codigo, nombre FROM stk_articulos WHERE enterprise_id = %s AND activo = 1", (g.user['enterprise_id'],))
-        articulos = cursor.fetchall()
+        await cursor.execute("SELECT id, codigo, nombre FROM stk_articulos WHERE enterprise_id = %s AND activo = 1", (g.user['enterprise_id'],))
+        articulos = await cursor.fetchall()
 
     import datetime
-    return render_template('compras/facturar.html', 
+    return await render_template('compras/facturar.html', 
                           proveedores=proveedores, 
                           tipos_comprobante=tipos, 
                           depositos=depositos, 
@@ -1455,11 +1455,11 @@ def facturar():
 
 @compras_bp.route('/compras/api/guardar-comprobante', methods=['POST'])
 @login_required
-def guardar_comprobante_api():
-    from flask import jsonify
-    data = request.json
+async def guardar_comprobante_api():
+    from quart import jsonify
+    data = (await request.json)
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # Calcular totales globales
             neto_total = data.get('neto_21', 0) + data.get('neto_10_5', 0) + data.get('neto_27', 0)
             iva_total = data.get('iva_21', 0) + data.get('iva_10_5', 0) + data.get('iva_27', 0)
@@ -1471,23 +1471,23 @@ def guardar_comprobante_api():
             # Validar si viene una condición de pago y calcular fecha vencimiento
             cond_pago = data.get('condicion_pago_id')
             if cond_pago:
-                cursor.execute("SELECT dias_vencimiento FROM fin_condiciones_pago WHERE id = %s", (cond_pago,))
-                cond_row = cursor.fetchone()
+                await cursor.execute("SELECT dias_vencimiento FROM fin_condiciones_pago WHERE id = %s", (cond_pago,))
+                cond_row = await cursor.fetchone()
                 if cond_row and cond_row['dias_vencimiento'] is not None:
                     fv = datetime.date.fromisoformat(data['fecha']) + datetime.timedelta(days=int(cond_row['dias_vencimiento']))
                     fecha_vencimiento = fv.isoformat()
 
             # Cabecera
             # Obtener CUIT de la empresa (Receptor) y del proveedor (Emisor)
-            cursor.execute("SELECT cuit FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
-            ent_row = cursor.fetchone()
+            await cursor.execute("SELECT cuit FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
+            ent_row = await cursor.fetchone()
             ent_cuit = ent_row['cuit'] if ent_row else ''
 
-            cursor.execute("SELECT cuit FROM erp_terceros WHERE id = %s", (data['proveedor_id'],))
-            prov_row = cursor.fetchone()
+            await cursor.execute("SELECT cuit FROM erp_terceros WHERE id = %s", (data['proveedor_id'],))
+            prov_row = await cursor.fetchone()
             prov_cuit = prov_row['cuit'] if prov_row else ''
 
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO erp_comprobantes (
                     enterprise_id, modulo, tipo_operacion, emisor_cuit, receptor_cuit,
                     tercero_id, orden_compra_id, tipo_comprobante, punto_venta, numero, fecha_emision, fecha_vencimiento, 
@@ -1517,7 +1517,7 @@ def guardar_comprobante_api():
             items_enviados = data.get('items', [])
             if items_enviados:
                 for it in items_enviados:
-                    cursor.execute("""
+                    await cursor.execute("""
                         INSERT INTO erp_comprobantes_detalle (enterprise_id, comprobante_id, articulo_id, detalle_po_id, cantidad, precio_unitario, alicuota_iva, subtotal_neto, subtotal_total)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """, (g.user['enterprise_id'], comp_id, it['articulo_id'], it.get('detalle_po_id'), it['cantidad'], it['precio_unitario'], it['alicuota_iva'], 
@@ -1528,12 +1528,12 @@ def guardar_comprobante_api():
             match_msg = ""
             if po_id:
                 from services.receiving_service import ReceivingService
-                match_res = ReceivingService.match_invoice_vs_receipt(g.user['enterprise_id'], po_id, items_enviados)
+                match_res = await ReceivingService.match_invoice_vs_receipt(g.user['enterprise_id'], po_id, items_enviados)
                 if not match_res['success']:
                     match_msg = " | ⚠️ ATENCIÓN: Discrepancias en 3-Way Match: " + "; ".join(match_res['discrepancies'])
                 else:
                     # Si no hay discrepancias, marcar PO como FACTURADA
-                    cursor.execute("UPDATE cmp_ordenes_compra SET estado = 'FACTURADA' WHERE id = %s", (po_id,))
+                    await cursor.execute("UPDATE cmp_ordenes_compra SET estado = 'FACTURADA' WHERE id = %s", (po_id,))
             else:
                 # Fallback: Detalle por Alícuota (Solo si hay importe en ese neto)
                 tasas = [
@@ -1543,7 +1543,7 @@ def guardar_comprobante_api():
                 ]
                 for tasa, neto, iva in tasas:
                     if neto > 0 or iva > 0:
-                        cursor.execute("""
+                        await cursor.execute("""
                             INSERT INTO erp_comprobantes_detalle (enterprise_id, comprobante_id, descripcion, cantidad, precio_unitario, alicuota_iva, subtotal_neto, importe_iva, subtotal_total)
                             VALUES (%s, %s, %s, 1, %s, %s, %s, %s, %s)
                         """, (g.user['enterprise_id'], comp_id, f"Compra Mercadería / Serv. - Tasa {tasa}%", neto, tasa, neto, iva, neto + iva))
@@ -1556,16 +1556,16 @@ def guardar_comprobante_api():
             if data.get('perc_iva', 0) > 0: impuestos_a_insertar.append(('PERCEPCION IVA', 'NACIONAL', data['perc_iva']))
             
             for tipo, juris, importe in impuestos_a_insertar:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO erp_comprobantes_impuestos (enterprise_id, comprobante_id, jurisdiccion, importe, user_id, created_at)
                     VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                 """, (g.user['enterprise_id'], comp_id, juris, importe, g.user['id']))
             
             # --- GENERAR ASIENTO CONTABLE O PROPUESTAS DE PRECIOS ---
             # Ahora _generar_asiento_contable_compra decide si genera asiento o deferencia a Pricing
-            asiento_id = _generar_asiento_contable_compra(cursor, comp_id, g.user['enterprise_id'], g.user['id'], items=items_enviados)
+            asiento_id = await _generar_asiento_contable_compra(cursor, comp_id, g.user['enterprise_id'], g.user['id'], items=items_enviados)
             if asiento_id:
-                cursor.execute("UPDATE erp_comprobantes SET asiento_id = %s WHERE id = %s", (asiento_id, comp_id))
+                await cursor.execute("UPDATE erp_comprobantes SET asiento_id = %s WHERE id = %s", (asiento_id, comp_id))
             
         return jsonify({'success': True, 'message': 'Comprobante guardado' + match_msg})
     except Exception as e:
@@ -1573,35 +1573,35 @@ def guardar_comprobante_api():
 
 @compras_bp.route('/compras/pagar', methods=['GET'])
 @login_required
-def pagar():
+async def pagar():
     # Proveedores desde servicio centralizado
-    proveedores = TerceroService.get_proveedores_for_selector(g.user['enterprise_id'])
+    proveedores = await TerceroService.get_proveedores_for_selector(g.user['enterprise_id'])
 
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Medios de Pago
-        cursor.execute("""
+        await cursor.execute("""
             SELECT id, nombre, tipo 
             FROM fin_medios_pago 
             WHERE enterprise_id = %s AND activo = 1 
             AND tipo NOT IN ('RETENCION', 'PERCEPCION')
             ORDER BY nombre
         """, (g.user['enterprise_id'],))
-        medios_pago = cursor.fetchall()
+        medios_pago = await cursor.fetchall()
 
     import datetime
-    return render_template('compras/pagar.html', 
+    return await render_template('compras/pagar.html', 
                           proveedores=proveedores, 
                           medios_pago=medios_pago,
                           now=datetime.date.today().isoformat())
 
 @compras_bp.route('/compras/api/facturas-pendientes-proveedor/<int:proveedor_id>')
 @login_required
-def api_facturas_pendientes_proveedor(proveedor_id):
+async def api_facturas_pendientes_proveedor(proveedor_id):
     import datetime
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Obtener facturas con saldo pendiente
         # Calculamos saldo como Total - Pagado
-        cursor.execute("""
+        await cursor.execute("""
             SELECT c.*, tc.descripcion as tipo_nombre,
                    (c.importe_total - COALESCE(
                        (SELECT SUM(importe_pagado) FROM fin_ordenes_pago_comprobantes WHERE comprobante_id = c.id AND enterprise_id = c.enterprise_id), 0
@@ -1616,7 +1616,7 @@ def api_facturas_pendientes_proveedor(proveedor_id):
                    )) > 0.05
             ORDER BY c.fecha_emision
         """, (proveedor_id, g.user['enterprise_id']))
-        facturas = cursor.fetchall()
+        facturas = await cursor.fetchall()
         
     return jsonify(facturas)
 
@@ -1624,20 +1624,20 @@ def api_facturas_pendientes_proveedor(proveedor_id):
 @login_required
 @atomic_transaction('compras', severity=9, impact_category='Financial')
 async def api_procesar_orden_pago():
-    from flask import jsonify
-    data = request.json
+    from quart import jsonify
+    data = (await request.json)
     try:
-        with get_db_cursor(dictionary=True) as cursor:
+        async with get_db_cursor(dictionary=True) as cursor:
             # --- CIRUGÍA DE SEGURIDAD: CONTROL DE TRAIDORES (APOC) ---
             ent_id = g.user['enterprise_id']
             proveedor_id = data.get('proveedor_id')
             
-            cursor.execute("SELECT cuit, nombre FROM erp_terceros WHERE id = %s AND enterprise_id = %s", (proveedor_id, ent_id))
-            prov_data = cursor.fetchone()
+            await cursor.execute("SELECT cuit, nombre FROM erp_terceros WHERE id = %s AND enterprise_id = %s", (proveedor_id, ent_id))
+            prov_data = await cursor.fetchone()
             if prov_data:
                 apoc = await AfipService.consultar_base_apoc(ent_id, prov_data['cuit'])
                 if apoc.get('es_apocrifo'):
-                    AfipService.registrar_bitacora(ent_id, "INTENTO_PAGO_TRAIDOR", "CRITICAL", f"SE BLOQUEÓ PAGO a {prov_data['nombre']}. Sujeto marcado como APÓCRIFO.")
+                    await AfipService.registrar_bitacora(ent_id, "INTENTO_PAGO_TRAIDOR", "CRITICAL", f"SE BLOQUEÓ PAGO a {prov_data['nombre']}. Sujeto marcado como APÓCRIFO.")
                     return jsonify({
                         'success': False, 
                         'error': f"🛑 BLOQUEO DE SEGURIDAD: El proveedor {prov_data['nombre']} ha sido detectado como COMPROMETIDO (APÓCRIFO) en la Matrix AFIP. No se pueden procesar pagos."
@@ -1645,27 +1645,27 @@ async def api_procesar_orden_pago():
 
             # 1. Obtener Próximo Número
             from services.numeration_service import NumerationService
-            nro_op = NumerationService.get_next_number(ent_id, 'ORDEN_PAGO', 'OP', 1)
+            nro_op = await NumerationService.get_next_number(ent_id, 'ORDEN_PAGO', 'OP', 1)
             
             total_op = sum([float(f['importe']) for f in data['facturas']])
             total_ret = sum([float(r['importe']) for r in data['retenciones']])
             
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT INTO fin_ordenes_pago (enterprise_id, numero, fecha, tercero_id, importe_total, importe_retenciones, user_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (ent_id, nro_op, data['fecha'], data['proveedor_id'], total_op, total_ret, g.user['id']))
             op_id = cursor.lastrowid
             
             # Actualizar numeración
-            NumerationService.update_last_number(ent_id, 'ORDEN_PAGO', 'OP', 1, nro_op)
+            await NumerationService.update_last_number(ent_id, 'ORDEN_PAGO', 'OP', 1, nro_op)
             
             for f in data['facturas']:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO fin_ordenes_pago_comprobantes (enterprise_id, orden_pago_id, comprobante_id, importe_pagado, user_id)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (ent_id, op_id, f['id'], f['importe'], g.user['id']))
                 
-                cursor.execute("""
+                await cursor.execute("""
                     UPDATE erp_comprobantes 
                     SET estado_pago = IF(
                         (importe_total - COALESCE((SELECT SUM(importe_pagado) FROM fin_ordenes_pago_comprobantes WHERE comprobante_id = %s AND enterprise_id = %s), 0)) < 0.05,
@@ -1675,54 +1675,54 @@ async def api_procesar_orden_pago():
                 """, (f['id'], f['id'], ent_id, f['id'], ent_id))
 
             for m in data['medios']:
-                cursor.execute("SELECT cuenta_contable_id FROM fin_medios_pago WHERE id = %s", (m['id'],))
-                mp_row = cursor.fetchone()
+                await cursor.execute("SELECT cuenta_contable_id FROM fin_medios_pago WHERE id = %s", (m['id'],))
+                mp_row = await cursor.fetchone()
                 cuenta_snapshot_id = mp_row['cuenta_contable_id'] if mp_row else None
 
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO fin_ordenes_pago_medios (enterprise_id, orden_pago_id, medio_pago_id, cuenta_contable_snapshot_id, importe, es_echeck, debin_id, banco_id, nro_cheque, fecha_pago, user_id)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (ent_id, op_id, m['id'], cuenta_snapshot_id, m['monto'], m.get('es_echeck', 0), m.get('debin_id'), m.get('banco_id'), m.get('nro_cheque'), m.get('fecha_pago'), g.user['id']))
 
             for r in data['retenciones']:
                 if float(r['importe']) > 0:
-                    cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 as proximo FROM fin_retenciones_emitidas")
-                    next_id = cursor.fetchone()['proximo']
+                    await cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 as proximo FROM fin_retenciones_emitidas")
+                    next_id = await cursor.fetchone()['proximo']
                     nro_cert = f"CRT-{r['tipo']}-{str(next_id).zfill(6)}"
                     
-                    cursor.execute("""
+                    await cursor.execute("""
                         INSERT INTO fin_retenciones_emitidas (enterprise_id, comprobante_pago_id, tipo_retencion, numero_certificado, fecha, tercero_id, importe_retencion, user_id)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     """, (ent_id, op_id, r['tipo'], nro_cert, data['fecha'], data['proveedor_id'], r['importe'], g.user['id']))
 
             # 3.b. Generar Asiento de OP
-            asiento_op_id = _generar_asiento_orden_pago(cursor, op_id, ent_id, g.user['id'])
+            asiento_op_id = await _generar_asiento_orden_pago(cursor, op_id, ent_id, g.user['id'])
             if asiento_op_id:
                 pass 
 
         # 4. Enviar Mail con Certificados (si hay retenciones)
         if data['retenciones']:
             try:
-                with get_db_cursor(dictionary=True) as cursor:
-                    cursor.execute("SELECT nombre, email FROM erp_terceros WHERE id = %s AND enterprise_id = %s", (data['proveedor_id'], ent_id))
-                    prov = cursor.fetchone()
+                async with get_db_cursor(dictionary=True) as cursor:
+                    await cursor.execute("SELECT nombre, email FROM erp_terceros WHERE id = %s AND enterprise_id = %s", (data['proveedor_id'], ent_id))
+                    prov = await cursor.fetchone()
                     
                     if prov and prov['email']:
-                        cursor.execute("""
+                        await cursor.execute("""
                             SELECT c.fecha_emision, c.punto_venta, c.numero, tc.descripcion as tipo_nombre, fopc.importe_pagado
                             FROM fin_ordenes_pago_comprobantes fopc
                             JOIN erp_comprobantes c ON fopc.comprobante_id = c.id
                             JOIN sys_tipos_comprobante tc ON c.tipo_comprobante = tc.codigo
                             WHERE fopc.orden_pago_id = %s
                         """, (op_id,))
-                        facturas_det = cursor.fetchall()
+                        facturas_det = await cursor.fetchall()
 
                         for r in data['retenciones']:
                             if float(r['importe']) > 0:
-                                cursor.execute("SELECT * FROM fin_retenciones_emitidas WHERE comprobante_pago_id = %s AND tipo_retencion = %s AND enterprise_id = %s", (op_id, r['tipo'], ent_id))
-                                cert_db = cursor.fetchone()
+                                await cursor.execute("SELECT * FROM fin_retenciones_emitidas WHERE comprobante_pago_id = %s AND tipo_retencion = %s AND enterprise_id = %s", (op_id, r['tipo'], ent_id))
+                                cert_db = await cursor.fetchone()
                                 
-                                cursor.execute("""
+                                await cursor.execute("""
                                     SELECT r.*, t.nombre as sujeto_nombre, t.cuit as sujeto_cuit, t.tipo_responsable as sujeto_iva,
                                     d.calle, d.numero, d.localidad, d.provincia
                                     FROM fin_retenciones_emitidas r
@@ -1730,24 +1730,24 @@ async def api_procesar_orden_pago():
                                     LEFT JOIN erp_direcciones d ON t.id = d.tercero_id AND d.es_fiscal = 1
                                     WHERE r.id = %s AND r.enterprise_id = %s
                                 """, (cert_db['id'], ent_id))
-                                ret_full = cursor.fetchone()
+                                ret_full = await cursor.fetchone()
                                 
-                                cursor.execute("SELECT * FROM sys_enterprises WHERE id = %s", (ent_id,))
-                                empresa = cursor.fetchone()
+                                await cursor.execute("SELECT * FROM sys_enterprises WHERE id = %s", (ent_id,))
+                                empresa = await cursor.fetchone()
 
-                                html_pdf = render_template('compras/certificado_retencion.html', ret=ret_full, empresa=empresa)
+                                html_pdf = await render_template('compras/certificado_retencion.html', ret=ret_full, empresa=empresa)
                                 
                                 pdf_out = io.BytesIO()
                                 pisa.CreatePDF(io.StringIO(html_pdf), dest=pdf_out)
                                 pdf_content = pdf_out.getvalue()
                                 
-                                subject, html_body = enviar_notificacion_retencion(
+                                subject, html_body = await enviar_notificacion_retencion(
                                     prov['email'], prov['nombre'], cert_db['numero_certificado'], 
                                     r['tipo'], r['importe'], facturas_det, ent_id
                                 )
                                 
                                 pdf_filename = f"Certificado_{r['tipo']}_{cert_db['numero_certificado']}.pdf"
-                                _enviar_email(prov['email'], subject, html_body, [(pdf_filename, pdf_content)], enterprise_id=ent_id)
+                                await _enviar_email(prov['email'], subject, html_body, [(pdf_filename, pdf_content)], enterprise_id=ent_id)
             except Exception as mail_err:
                 print(f"Error enviando notificaciones: {mail_err}")
 
@@ -1759,18 +1759,18 @@ async def api_procesar_orden_pago():
 
 @compras_bp.route('/compras/ordenes-pago')
 @login_required
-def ordenes_pago():
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+async def ordenes_pago():
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT o.*, t.nombre as proveedor_nombre
             FROM fin_ordenes_pago o
             JOIN erp_terceros t ON o.tercero_id = t.id
             WHERE o.enterprise_id = %s
             ORDER BY o.fecha DESC, o.numero DESC
         """, (g.user['enterprise_id'],))
-        ops = cursor.fetchall()
+        ops = await cursor.fetchall()
         
-        cursor.execute("""
+        await cursor.execute("""
             SELECT r.*, t.nombre as sujeto_nombre, op.numero as op_numero
             FROM fin_retenciones_emitidas r
             JOIN erp_terceros t ON r.tercero_id = t.id
@@ -1778,15 +1778,15 @@ def ordenes_pago():
             WHERE r.enterprise_id = %s
             ORDER BY r.fecha DESC
         """, (g.user['enterprise_id'],))
-        retenciones = cursor.fetchall()
+        retenciones = await cursor.fetchall()
 
-    return render_template('compras/ordenes_pago_lista.html', ops=ops, retenciones=retenciones)
+    return await render_template('compras/ordenes_pago_lista.html', ops=ops, retenciones=retenciones)
 
 @compras_bp.route('/compras/ver-retencion/<int:id>')
 @login_required
-def ver_retencion(id):
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+async def ver_retencion(id):
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT r.*, t.nombre as sujeto_nombre, t.cuit as sujeto_cuit, t.tipo_responsable as sujeto_iva,
             d.calle, d.numero, d.localidad, d.provincia
             FROM fin_retenciones_emitidas r
@@ -1794,12 +1794,12 @@ def ver_retencion(id):
             LEFT JOIN erp_direcciones d ON t.id = d.tercero_id AND d.es_fiscal = 1
             WHERE r.id = %s AND r.enterprise_id = %s
         """, (id, g.user['enterprise_id']))
-        ret = cursor.fetchone()
+        ret = await cursor.fetchone()
         
-        cursor.execute("SELECT * FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
-        empresa = cursor.fetchone()
+        await cursor.execute("SELECT * FROM sys_enterprises WHERE id = %s", (g.user['enterprise_id'],))
+        empresa = await cursor.fetchone()
         
-    return render_template('compras/certificado_retencion.html', ret=ret, empresa=empresa)
+    return await render_template('compras/certificado_retencion.html', ret=ret, empresa=empresa)
 
 # /compras/ordenes-compra is now an alias redirecting to the canonical ordenes endpoint
 @compras_bp.route('/compras/ordenes-compra', endpoint='ordenes_compra_alias')
@@ -1809,47 +1809,47 @@ def ordenes_compra_alias():
 
 @compras_bp.route('/compras/registro-afip', endpoint='registro_afip')
 @login_required
-def registro_afip():
-    flash("Módulo en construcción: Registro AFIP de Compras", "info")
+async def registro_afip():
+    await flash("Módulo en construcción: Registro AFIP de Compras", "info")
     return redirect(url_for('compras.dashboard'))
 
 @compras_bp.route('/compras/cotizacion/<int:id>/reenviar', methods=['POST'])
 @login_required
-def reenviar_cotizacion(id):
+async def reenviar_cotizacion(id):
     from services.quotation_mailer import QuotationMailer
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT c.*, p.nombre as razon_social, p.email as proveedor_email, e.nombre as empresa_nombre
                 FROM cmp_cotizaciones c
                 JOIN erp_terceros p ON c.proveedor_id = p.id
                 JOIN sys_enterprises e ON c.enterprise_id = e.id
                 WHERE c.id = %s AND c.enterprise_id = %s
             """, (id, g.user['enterprise_id']))
-            cot = cursor.fetchone()
+            cot = await cursor.fetchone()
             
             if not cot:
-                flash("Cotización no encontrada.", "danger")
+                await flash("Cotización no encontrada.", "danger")
                 return redirect(url_for('compras.cotizaciones'))
 
             if not cot['proveedor_email']:
-                flash("El proveedor no tiene un correo electrónico configurado.", "warning")
+                await flash("El proveedor no tiene un correo electrónico configurado.", "warning")
                 return redirect(url_for('compras.cotizacion_detalle', id=id))
 
             # Obtener items
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT i.articulo_id, a.codigo as codigo_interno, a.nombre as nombre_articulo, i.cantidad
                 FROM cmp_items_cotizacion i
                 JOIN stk_articulos a ON i.articulo_id = a.id
                 WHERE i.cotizacion_id = %s AND i.enterprise_id = %s
             """, (id, g.user['enterprise_id']))
-            items = cursor.fetchall()
+            items = await cursor.fetchall()
 
         mailer = QuotationMailer(g.user['enterprise_id'])
         excel_path = mailer.generate_excel_attachment(id, cot['razon_social'], items, cot['security_hash'])
         html_body = mailer.generate_html_body(cot['empresa_nombre'], id, cot['security_hash'])
         
-        success, error = mailer.send_email_real(
+        success, error = await mailer.send_email_real(
             to_email=cot['proveedor_email'],
             subject=f"RE-ENVIO: Solicitud Cotización #{id} - REF: {cot['security_hash'][:10]}",
             body=html_body,
@@ -1857,52 +1857,52 @@ def reenviar_cotizacion(id):
         )
         
         if success:
-            flash(f"✅ Correo re-enviado con éxito a {cot['proveedor_email']}.", "success")
+            await flash(f"✅ Correo re-enviado con éxito a {cot['proveedor_email']}.", "success")
         else:
-            flash(f"⚠️ Error al re-enviar correo: '{error}'. Verifique la configuración de correo de la empresa o contacte al administrador.", "warning")
+            await flash(f"⚠️ Error al re-enviar correo: '{error}'. Verifique la configuración de correo de la empresa o contacte al administrador.", "warning")
             
     except Exception as e:
-        flash(f"Error inesperado: {str(e)}", "danger")
+        await flash(f"Error inesperado: {str(e)}", "danger")
         
     return redirect(url_for('compras.cotizacion_detalle', id=id))
 
 @compras_bp.route('/compras/po/<int:id>/reenviar', methods=['POST'])
 @login_required
-def reenviar_po(id):
+async def reenviar_po(id):
     from services.purchase_order_mailer import PurchaseOrderMailer
     from services.workflow_service import WorkflowService
     try:
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT o.*, p.nombre as proveedor_nombre, p.email as proveedor_email, e.nombre as empresa_nombre
                 FROM cmp_ordenes_compra o
                 JOIN erp_terceros p ON o.proveedor_id = p.id
                 JOIN sys_enterprises e ON o.enterprise_id = e.id
                 WHERE o.id = %s AND o.enterprise_id = %s
             """, (id, g.user['enterprise_id']))
-            po = cursor.fetchone()
+            po = await cursor.fetchone()
             
             if not po:
-                flash("Orden de compra no encontrada.", "danger")
+                await flash("Orden de compra no encontrada.", "danger")
                 return redirect(url_for('compras.aprobaciones'))
 
             if not po['proveedor_email']:
-                flash("El proveedor no tiene un correo electrónico configurado.", "warning")
+                await flash("El proveedor no tiene un correo electrónico configurado.", "warning")
                 return redirect(url_for('compras.aprobar_po_detalle', id=id))
 
             # Obtener items
-            cursor.execute("""
+            await cursor.execute("""
                 SELECT i.*, a.codigo as articulo_codigo, a.nombre as articulo_nombre
                 FROM cmp_detalles_orden i
                 JOIN stk_articulos a ON i.articulo_id = a.id
                 WHERE i.orden_id = %s AND i.enterprise_id = %s
             """, (id, g.user['enterprise_id']))
-            items = cursor.fetchall()
+            items = await cursor.fetchall()
 
         mailer = PurchaseOrderMailer(g.user['enterprise_id'])
-        excel_path = mailer.generate_excel_po(id, po['proveedor_nombre'], items, po['security_hash'])
+        excel_path = await mailer.generate_excel_po(id, po['proveedor_nombre'], items, po['security_hash'])
         
-        success, error = mailer.send_po_email(
+        success, error = await mailer.send_po_email(
             to_email=po['proveedor_email'],
             po_id=id,
             po_hash=po['security_hash'],
@@ -1911,19 +1911,19 @@ def reenviar_po(id):
         )
         
         if success:
-            flash(f"✅ Correo de Orden de Compra re-enviado con éxito a {po['proveedor_email']}.", "success")
+            await flash(f"✅ Correo de Orden de Compra re-enviado con éxito a {po['proveedor_email']}.", "success")
         else:
-            flash(f"⚠️ Error al re-enviar correo: '{error}'. Verifique la configuración de correo de la empresa o contacte al administrador.", "warning")
+            await flash(f"⚠️ Error al re-enviar correo: '{error}'. Verifique la configuración de correo de la empresa o contacte al administrador.", "warning")
             
     except Exception as e:
-        flash(f"Error inesperado: {str(e)}", "danger")
+        await flash(f"Error inesperado: {str(e)}", "danger")
         
     return redirect(url_for('compras.aprobar_po_detalle', id=id))
 
 @compras_bp.route('/compras/api/verificar-cae', methods=['POST'])
 @login_required
-def api_verificar_cae():
-    data = request.json
+async def api_verificar_cae():
+    data = (await request.json)
     try:
         from services.afip_service import AfipService
         # En la vida real, AFIP no permite 'Consultar' facturas de terceros directamente por webservice WSFE 
@@ -1964,64 +1964,64 @@ def api_verificar_cae():
 @compras_bp.route('/compras/admin/workflows')
 @login_required
 @permission_required('admin_compras')
-def admin_workflows():
+async def admin_workflows():
     """Panel de configuración de reglas de aprobación para el dueño/administrador."""
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         # Traer reglas de la empresa o globales (0)
-        cursor.execute("""
+        await cursor.execute("""
             SELECT r.*, 
                    (SELECT COUNT(*) FROM sys_workflow_steps WHERE rule_id = r.id) as step_count
             FROM sys_workflow_rules r
             WHERE r.enterprise_id IN (%s, 0) AND r.module = 'COMPRAS'
             ORDER BY r.enterprise_id DESC, r.priority ASC
         """, (g.user['enterprise_id'],))
-        rules = cursor.fetchall()
+        rules = await cursor.fetchall()
         
         # Traer roles disponibles para el selector de pasos
-        cursor.execute("SELECT id, name FROM sys_roles WHERE enterprise_id IN (%s, 0)", (g.user['enterprise_id'],))
-        roles = cursor.fetchall()
+        await cursor.execute("SELECT id, name FROM sys_roles WHERE enterprise_id IN (%s, 0)", (g.user['enterprise_id'],))
+        roles = await cursor.fetchall()
 
-    return render_template('compras/admin_workflows.html', rules=rules, roles=roles)
+    return await render_template('compras/admin_workflows.html', rules=rules, roles=roles)
 
 @compras_bp.route('/compras/admin/workflows/rule/<int:rule_id>', methods=['GET'])
 @login_required
 @permission_required('admin_compras')
-def get_workflow_rule_details(rule_id):
+async def get_workflow_rule_details(rule_id):
     """Retorna los pasos y detalles de una regla para edición AJAX."""
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SELECT * FROM sys_workflow_rules WHERE id = %s", (rule_id,))
-        rule = cursor.fetchone()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SELECT * FROM sys_workflow_rules WHERE id = %s", (rule_id,))
+        rule = await cursor.fetchone()
         
-        cursor.execute("SELECT * FROM sys_workflow_steps WHERE rule_id = %s ORDER BY step_order", (rule_id,))
-        steps = cursor.fetchall()
+        await cursor.execute("SELECT * FROM sys_workflow_steps WHERE rule_id = %s ORDER BY step_order", (rule_id,))
+        steps = await cursor.fetchall()
         
     return jsonify({'rule': rule, 'steps': steps})
 
 @compras_bp.route('/compras/admin/workflows/save', methods=['POST'])
 @login_required
 @permission_required('admin_compras')
-def save_workflow_config():
+async def save_workflow_config():
     """Guarda la configuración de una regla (Montos y Pasos)."""
-    data = request.json
+    data = (await request.json)
     rule_id = data.get('rule_id')
     new_amount = data.get('condition_value')
     # steps es una lista de objetos: {step_order, role_id, description}
     steps_list = data.get('steps', []) 
 
     try:
-        with get_db_cursor() as cursor:
+        async with get_db_cursor() as cursor:
             # 1. Actualizar monto de la regla
-            cursor.execute("""
+            await cursor.execute("""
                 UPDATE sys_workflow_rules 
                 SET condition_value = %s, user_id_update = %s 
                 WHERE id = %s AND enterprise_id IN (%s, 0)
             """, (new_amount, g.user['id'], rule_id, g.user['enterprise_id']))
             
             # 2. Re-generar pasos (Borrar y re-insertar para simplicidad)
-            cursor.execute("DELETE FROM sys_workflow_steps WHERE rule_id = %s", (rule_id,))
+            await cursor.execute("DELETE FROM sys_workflow_steps WHERE rule_id = %s", (rule_id,))
             
             for s in steps_list:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT INTO sys_workflow_steps (enterprise_id, rule_id, step_order, role_id, description, min_approvals)
                     VALUES (%s, %s, %s, %s, %s, 1)
                 """, (g.user['enterprise_id'], rule_id, s['step_order'], s['role_id'], s['description']))
@@ -2037,11 +2037,11 @@ def save_workflow_config():
 @compras_bp.route('/compras/recepcion_ciega', methods=['GET'])
 @login_required
 @permission_required('view_compras')
-def recepcion_ciega_list():
+async def recepcion_ciega_list():
     """Listado de Órdenes Pendientes de Recebir por Depósito."""
     ent_id = g.user['enterprise_id']
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("""
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("""
             SELECT o.id, o.fecha_emision, p.nombre as proveedor_nombre, o.estado 
             FROM cmp_ordenes_compra o
             JOIN erp_terceros p ON o.proveedor_id = p.id
@@ -2049,26 +2049,26 @@ def recepcion_ciega_list():
               AND o.estado IN ('ENVIADA_PROVEEDOR', 'EN_TRANSITO', 'RECIBIDA_PARCIAL', 'ENVIADA_TESORERIA')
             ORDER BY o.fecha_emision DESC
         """, (ent_id,))
-        ordenes = cursor.fetchall()
+        ordenes = await cursor.fetchall()
 
-    return render_template('compras/recepcion_ciega_list.html', ordenes=ordenes)
+    return await render_template('compras/recepcion_ciega_list.html', ordenes=ordenes)
 
 @compras_bp.route('/compras/recepcion_ciega/<int:po_id>', methods=['GET', 'POST'])
 @login_required
 @permission_required('view_compras')
 @atomic_transaction('compras')
-def recepcion_ciega_procesar(po_id):
+async def recepcion_ciega_procesar(po_id):
     """Procesa el ingreso físico ocultando cantidades pedidas."""
     ent_id = g.user['enterprise_id']
     
     if request.method == 'POST':
         # Procesar Formulario Front
         data = {
-            'remito': request.form.get('numero_remito'),
-            'observaciones': request.form.get('observaciones'),
+            'remito': (await request.form).get('numero_remito'),
+            'observaciones': (await request.form).get('observaciones'),
             'items': {}
         }
-        for key, val in request.form.items():
+        for key, val in (await request.form).items():
             if key.startswith('cant_') and val.strip() != '':
                 try:
                     detalle_id = key.split('_')[1]
@@ -2079,28 +2079,28 @@ def recepcion_ciega_procesar(po_id):
                     pass
                     
         if not data['items']:
-            flash("Debe ingresar cantidad recibida en al menos un artículo.", "warning")
+            await flash("Debe ingresar cantidad recibida en al menos un artículo.", "warning")
             return redirect(url_for('compras.recepcion_ciega_procesar', po_id=po_id))
             
         try:
-            res = ReceivingService.process_blind_receipt(ent_id, g.user['id'], po_id, data)
+            res = await ReceivingService.process_blind_receipt(ent_id, g.user['id'], po_id, data)
             if res['discrepancy']:
-                flash("Remito procesado. ⚠️ IMPORTANTE: Se han detectado discrepancias entre lo pedido y lo recibido. Tesorería ha sido notificada (3-Way Match Block).", "warning")
+                await flash("Remito procesado. ⚠️ IMPORTANTE: Se han detectado discrepancias entre lo pedido y lo recibido. Tesorería ha sido notificada (3-Way Match Block).", "warning")
             else:
-                flash(f"Recepción procesada correctamente. <a href='#' onclick='window.open(\"/stock/dashboard?q=PO{po_id}\", \"_blank\"); return false;' class='btn btn-xs btn-outline-light ml-2'>Imprimir Etiquetas</a>", "success")
+                await flash(f"Recepción procesada correctamente. <a href='#' onclick='window.open(\"/stock/dashboard?q=PO{po_id}\", \"_blank\"); return false;' class='btn btn-xs btn-outline-light ml-2'>Imprimir Etiquetas</a>", "success")
                 
             return redirect(url_for('compras.recepcion_ciega_list'))
         except Exception as e:
-            flash(f"Error procesando recepción: {str(e)}", "danger")
+            await flash(f"Error procesando recepción: {str(e)}", "danger")
             return redirect(url_for('compras.recepcion_ciega_procesar', po_id=po_id))
 
     # GET
-    po_data = ReceivingService.get_po_for_blind_receiving(ent_id, po_id)
+    po_data = await ReceivingService.get_po_for_blind_receiving(ent_id, po_id)
     if not po_data:
-        flash("Orden no encontrada o no apta para recepción.", "warning")
+        await flash("Orden no encontrada o no apta para recepción.", "warning")
         return redirect(url_for('compras.recepcion_ciega_list'))
         
-    return render_template('compras/recepcion_ciega.html', po=po_data)
+    return await render_template('compras/recepcion_ciega.html', po=po_data)
 
 
 

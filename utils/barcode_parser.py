@@ -1,7 +1,7 @@
 import re
 from decimal import Decimal
 
-def parse_dynamic_barcode(code, enterprise_id, cursor):
+async def parse_dynamic_barcode(code, enterprise_id, cursor):
     """
     Intenta parsear un código de barras dinámico (ej: EAN-13 de balanza).
     
@@ -19,12 +19,12 @@ def parse_dynamic_barcode(code, enterprise_id, cursor):
         return None
 
     # Buscar reglas activas para esta empresa
-    cursor.execute("""
+    await cursor.execute("""
         SELECT prefijo, tipo_valor, pos_prod_inicio, pos_prod_fin, pos_val_inicio, pos_val_fin, divisor
         FROM stk_barcode_rules
         WHERE enterprise_id = %s AND activo = 1
     """, (enterprise_id,))
-    rules = cursor.fetchall()
+    rules = await cursor.fetchall()
 
     for rule in rules:
         prefijo, tipo_valor, p_prod_ini, p_prod_fin, p_val_ini, p_val_fin, divisor = rule

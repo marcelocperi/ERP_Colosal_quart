@@ -30,7 +30,7 @@ def load_init_config():
         return json.load(f)
 
 
-def initialize_tax_engine(enterprise_id: int, existing_cursor=None) -> dict:
+async def initialize_tax_engine(enterprise_id: int, existing_cursor=None) -> dict:
     """
     Copia las reglas fiscales del Tax Engine desde la plantilla global (enterprise_id=0)
     a la nueva empresa. El usuario podrá customizarlas luego desde Configuración > Impuestos.
@@ -56,24 +56,24 @@ def initialize_tax_engine(enterprise_id: int, existing_cursor=None) -> dict:
     }
 
     from database import get_db_cursor
-    with (get_db_cursor(dictionary=True) if not existing_cursor else existing_cursor) as cursor:
+    with (await get_db_cursor(dictionary=True) if not existing_cursor else existing_cursor) as cursor:
         for table, cols in TABLE_COLS.items():
             try:
                 # Verificar si ya tiene datos propios
-                cursor.execute(
+                await cursor.execute(
                     f"SELECT COUNT(*) as cnt FROM {table} WHERE enterprise_id = %s",
                     (enterprise_id,)
                 )
-                if cursor.fetchone()['cnt'] > 0:
+                if await cursor.fetchone()['cnt'] > 0:
                     logger.info(f"Tax Engine: {table} ya tiene datos para empresa {enterprise_id}, omitiendo.")
                     result['tables'][table] = {'status': 'skipped', 'reason': 'already_has_data'}
                     continue
 
                 # Leer plantilla global
-                cursor.execute(
+                await cursor.execute(
                     f"SELECT {', '.join(cols)} FROM {table} WHERE enterprise_id = 0"
                 )
-                rows = cursor.fetchall()
+                rows = await cursor.fetchall()
 
                 count = 0
                 for row in rows:
@@ -86,7 +86,7 @@ def initialize_tax_engine(enterprise_id: int, existing_cursor=None) -> dict:
 
                     placeholders = ', '.join(['%s'] * len(cols))
                     col_names    = ', '.join([f'`{c}`' for c in cols])
-                    cursor.execute(
+                    await cursor.execute(
                         f"INSERT INTO {table} ({col_names}) VALUES ({placeholders})",
                         vals
                     )
@@ -105,7 +105,7 @@ def initialize_tax_engine(enterprise_id: int, existing_cursor=None) -> dict:
     return result
 
 
-def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True, existing_cursor=None) -> dict:
+async def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True, existing_cursor=None) -> dict:
     """
     Inicializa los datos maestros para una nueva empresa.
     
@@ -138,7 +138,7 @@ def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True,
     tax_engine_done = False  # Para procesar las 3 tablas del Tax Engine solo una vez
 
     from database import get_db_cursor
-    with (get_db_cursor(dictionary=True) if not existing_cursor else existing_cursor) as cursor:
+    with (await get_db_cursor(dictionary=True) if not existing_cursor else existing_cursor) as cursor:
         logger.info(f"Iniciando inicialización de datos maestros para empresa {enterprise_id}")
 
         # Procesar tablas en el orden especificado
@@ -147,7 +147,7 @@ def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True,
             # ── Tax Engine: tratamiento especial ──────────────────────────────
             if table_name in TAX_ENGINE_TABLES:
                 if not tax_engine_done:
-                    tax_result = initialize_tax_engine(enterprise_id, existing_cursor=cursor)
+                    tax_result = await initialize_tax_engine(enterprise_id, existing_cursor=cursor)
                     for t, r in tax_result['tables'].items():
                         results['tables_copied'][t] = r
                     results['total_records'] += tax_result['total']
@@ -158,8 +158,8 @@ def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True,
 
             try:
                 # Obtener columnas de la tabla
-                cursor.execute(f"DESC {table_name}")
-                all_cols = [col['Field'] for col in cursor.fetchall()]
+                await cursor.execute(f"DESC {table_name}")
+                all_cols = [col['Field'] for col in await cursor.fetchall()]
                 cols = [col for col in all_cols if col != 'id']  # Excluir ID auto-increment
 
                 # Buscar configuración de la tabla
@@ -178,11 +178,11 @@ def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True,
                     continue
 
                 # Verificar si ya tiene datos
-                cursor.execute(
+                await cursor.execute(
                     f"SELECT COUNT(*) as count FROM {table_name} WHERE enterprise_id = %s",
                     (enterprise_id,)
                 )
-                existing_count = cursor.fetchone()['count']
+                existing_count = await cursor.fetchone()['count']
 
                 if existing_count > 0:
                     logger.warning(f"Tabla {table_name} ya tiene {existing_count} registros para empresa {enterprise_id}")
@@ -195,15 +195,15 @@ def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True,
 
                 # Lógica especial para tablas jerárquicas o con FKs
                 if table_name == 'cont_plan_cuentas':
-                    copied_count, table_map = _copy_hierarchical_table(cursor, table_name, enterprise_id, cols)
+                    copied_count, table_map = await _copy_hierarchical_table(cursor, table_name, enterprise_id, cols)
                     id_maps[table_name] = table_map
                 elif table_name in ['erp_cuentas_fondos', 'fin_medios_pago']:
-                    copied_count, table_map = _copy_table_with_account_mapping(
+                    copied_count, table_map = await _copy_table_with_account_mapping(
                         cursor, table_name, enterprise_id, cols, id_maps.get('cont_plan_cuentas', {})
                     )
                     id_maps[table_name] = table_map
                 else:
-                    copied_count, table_map = _copy_table_standard(cursor, table_name, enterprise_id, cols)
+                    copied_count, table_map = await _copy_table_standard(cursor, table_name, enterprise_id, cols)
                     id_maps[table_name] = table_map
 
                 results['tables_copied'][table_name] = {
@@ -231,7 +231,7 @@ def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True,
                 except ImportError:
                     from sod_service import initialize_sod_structure
 
-                initialize_sod_structure(enterprise_id)
+                await initialize_sod_structure(enterprise_id)
                 results['sod_initialized'] = True
                 logger.info("Estructura SoD inicializada correctamente")
             except Exception as e:
@@ -242,7 +242,7 @@ def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True,
 
         # Inicialización de Numeración (Puntos de Venta y Últimos Números)
         try:
-            num_res = initialize_enterprise_numeration(enterprise_id, existing_cursor=cursor)
+            num_res = await initialize_enterprise_numeration(enterprise_id, existing_cursor=cursor)
             results['numeration_initialized'] = num_res['status'] == 'success'
             results['total_records'] += num_res.get('records_created', 0)
         except Exception as e:
@@ -255,7 +255,7 @@ def initialize_enterprise_master_data(enterprise_id: int, init_sod: bool = True,
     return results
 
 
-def get_master_data_summary(enterprise_id: int) -> dict:
+async def get_master_data_summary(enterprise_id: int) -> dict:
     """
     Obtiene un resumen de los datos maestros de una empresa.
     
@@ -268,14 +268,14 @@ def get_master_data_summary(enterprise_id: int) -> dict:
     config = load_init_config()
     summary = {}
     
-    with get_db_cursor(dictionary=True) as cursor:
+    async with get_db_cursor(dictionary=True) as cursor:
         for category_name, category_tables in config['master_data_tables'].items():
             summary[category_name] = {}
             
             for table_name, table_config in category_tables.items():
                 try:
-                    cursor.execute(f"SELECT COUNT(*) as count FROM {table_name} WHERE enterprise_id = %s", (enterprise_id,))
-                    count = cursor.fetchone()['count']
+                    await cursor.execute(f"SELECT COUNT(*) as count FROM {table_name} WHERE enterprise_id = %s", (enterprise_id,))
+                    count = await cursor.fetchone()['count']
                     
                     summary[category_name][table_name] = {
                         'count': count,
@@ -290,14 +290,14 @@ def get_master_data_summary(enterprise_id: int) -> dict:
     
     return summary
 
-def _copy_hierarchical_table(cursor, table_name, enterprise_id, cols):
+async def _copy_hierarchical_table(cursor, table_name, enterprise_id, cols):
     """
     Copia una tabla que tiene una relación jerárquica consigo misma (padre_id).
     Garantiza que el nuevo árbol apunte a los nuevos IDs.
     """
     # 1. Obtener todos los registros globales
-    cursor.execute(f"SELECT * FROM {table_name} WHERE enterprise_id = 0 ORDER BY id ASC")
-    global_rows = cursor.fetchall()
+    await cursor.execute(f"SELECT * FROM {table_name} WHERE enterprise_id = 0 ORDER BY id ASC")
+    global_rows = await cursor.fetchall()
     
     id_map = {None: None}
     copied_count = 0
@@ -326,17 +326,17 @@ def _copy_hierarchical_table(cursor, table_name, enterprise_id, cols):
                 current_vals.append(row[col])
         
         sql = f"INSERT INTO {table_name} ({', '.join(current_cols)}) VALUES ({', '.join(placeholders)})"
-        cursor.execute(sql, current_vals)
+        await cursor.execute(sql, current_vals)
         new_id = cursor.lastrowid
         id_map[old_id] = new_id
         copied_count += 1
         
     return copied_count, id_map
 
-def _copy_table_standard(cursor, table_name, enterprise_id, cols):
+async def _copy_table_standard(cursor, table_name, enterprise_id, cols):
     """Copia estándar de una tabla plana"""
-    cursor.execute(f"SELECT * FROM {table_name} WHERE enterprise_id = 0")
-    rows = cursor.fetchall()
+    await cursor.execute(f"SELECT * FROM {table_name} WHERE enterprise_id = 0")
+    rows = await cursor.fetchall()
     
     id_map = {}
     copied_count = 0
@@ -356,17 +356,17 @@ def _copy_table_standard(cursor, table_name, enterprise_id, cols):
                 current_vals.append(row[col])
         
         sql = f"INSERT INTO {table_name} ({', '.join(current_cols)}) VALUES ({', '.join(placeholders)})"
-        cursor.execute(sql, current_vals)
+        await cursor.execute(sql, current_vals)
         new_id = cursor.lastrowid
         id_map[old_id] = new_id
         copied_count += 1
         
     return copied_count, id_map
 
-def _copy_table_with_account_mapping(cursor, table_name, enterprise_id, cols, account_map):
+async def _copy_table_with_account_mapping(cursor, table_name, enterprise_id, cols, account_map):
     """Copia de tablas que tienen cuenta_contable_id hacia el plan de cuentas"""
-    cursor.execute(f"SELECT * FROM {table_name} WHERE enterprise_id = 0")
-    rows = cursor.fetchall()
+    await cursor.execute(f"SELECT * FROM {table_name} WHERE enterprise_id = 0")
+    rows = await cursor.fetchall()
     
     id_map = {}
     copied_count = 0
@@ -389,7 +389,7 @@ def _copy_table_with_account_mapping(cursor, table_name, enterprise_id, cols, ac
                 current_vals.append(row[col])
         
         sql = f"INSERT INTO {table_name} ({', '.join(current_cols)}) VALUES ({', '.join(placeholders)})"
-        cursor.execute(sql, current_vals)
+        await cursor.execute(sql, current_vals)
         new_id = cursor.lastrowid
         id_map[old_id] = new_id
         copied_count += 1
@@ -397,7 +397,7 @@ def _copy_table_with_account_mapping(cursor, table_name, enterprise_id, cols, ac
     return copied_count, id_map
 
 
-def initialize_enterprise_numeration(enterprise_id: int, existing_cursor=None) -> dict:
+async def initialize_enterprise_numeration(enterprise_id: int, existing_cursor=None) -> dict:
     """
     Inicializa los parámetros de numeración para una nueva empresa.
     Crea una entrada en sys_enterprise_numeracion para cada tipo de comprobante activo.
@@ -405,15 +405,15 @@ def initialize_enterprise_numeration(enterprise_id: int, existing_cursor=None) -
     result = {'status': 'success', 'records_created': 0}
 
     from database import get_db_cursor
-    with (get_db_cursor(dictionary=True) if not existing_cursor else existing_cursor) as cursor:
+    with (await get_db_cursor(dictionary=True) if not existing_cursor else existing_cursor) as cursor:
         try:
             # 1. Obtener todos los tipos de comprobante
-            cursor.execute("SELECT codigo FROM sys_tipos_comprobante")
-            tipos = cursor.fetchall()
+            await cursor.execute("SELECT codigo FROM sys_tipos_comprobante")
+            tipos = await cursor.fetchall()
 
             count = 0
             for t in tipos:
-                cursor.execute("""
+                await cursor.execute("""
                     INSERT IGNORE INTO sys_enterprise_numeracion 
                     (enterprise_id, entidad_tipo, entidad_codigo, punto_venta, ultimo_numero)
                     VALUES (%s, 'COMPROBANTE', %s, 1, 0)
@@ -424,7 +424,7 @@ def initialize_enterprise_numeration(enterprise_id: int, existing_cursor=None) -
             # 2. Otros tipos (opcionalmente)
             # Recibos, Ordenes de Pago, etc. podrían tener su propia lógica.
             # Por ahora inicializamos Recibos genéricos
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT IGNORE INTO sys_enterprise_numeracion 
                 (enterprise_id, entidad_tipo, entidad_codigo, punto_venta, ultimo_numero)
                 VALUES (%s, 'RECIBO', 'RC', 1, 0)
@@ -443,20 +443,20 @@ def initialize_enterprise_numeration(enterprise_id: int, existing_cursor=None) -
     return result
 
 
-def sync_new_concept_to_all_enterprises(entidad_tipo: str, entidad_codigo: str) -> int:
+async def sync_new_concept_to_all_enterprises(entidad_tipo: str, entidad_codigo: str) -> int:
     """
     Cuando se crea un nuevo concepto maestro (tipo de comprobante, impuesto, etc.),
     se asegura de que cada empresa tenga su entrada en la tabla de numeración.
     """
     from database import get_db_cursor
     count = 0
-    with get_db_cursor() as cursor:
+    async with get_db_cursor() as cursor:
         # Obtener todas las empresas
-        cursor.execute("SELECT id FROM sys_enterprises")
-        enterprises = cursor.fetchall()
+        await cursor.execute("SELECT id FROM sys_enterprises")
+        enterprises = await cursor.fetchall()
         
         for (ent_id,) in enterprises:
-            cursor.execute("""
+            await cursor.execute("""
                 INSERT IGNORE INTO sys_enterprise_numeracion 
                 (enterprise_id, entidad_tipo, entidad_codigo, punto_venta, ultimo_numero)
                 VALUES (%s, %s, %s, 1, 0)
@@ -473,7 +473,7 @@ if __name__ == "__main__":
     print("Esta utilidad se usa automáticamente al crear una nueva empresa.")
     print("\nEjemplo de uso:")
     print("  from enterprise_init import initialize_enterprise_master_data")
-    print("  results = initialize_enterprise_master_data(new_enterprise_id)")
+    print("  results = await initialize_enterprise_master_data(new_enterprise_id)")
     print("\nPara ver el resumen de una empresa:")
     print("  from enterprise_init import get_master_data_summary")
-    print("  summary = get_master_data_summary(enterprise_id)")
+    print("  summary = await get_master_data_summary(enterprise_id)")

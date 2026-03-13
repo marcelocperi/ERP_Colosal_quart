@@ -59,17 +59,17 @@ def help_finanzas():
     print("5. El sistema limpia la deuda automáticamente.")
     input("\nPresione Enter para continuar...")
 
-def read_functional_manual():
+async def read_functional_manual():
     print("\n--- [EXTRACTO DE MANUAL FUNCIONAL DE PROCESOS] ---")
     path = os.path.join(project_root, 'backoffice', 'compras_funcional_manual.md')
     if os.path.exists(path):
         with open(path, 'r', encoding='utf-8') as f:
-            print(f.read())
+            print(await f.read())
     else:
         print("[!] Manual no encontrado.")
     input("\nPresione Enter para continuar...")
 
-def main():
+async def main():
     while True:
         clear_screen()
         show_menu()
@@ -79,9 +79,10 @@ def main():
         elif opcion == '2': help_ventas()
         elif opcion == '3': help_consignacion()
         elif opcion == '4': help_finanzas()
-        elif opcion == '5': read_functional_manual()
+        elif opcion == '5': await read_functional_manual()
         elif opcion == '0': break
         else: print("Opción no válida.")
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    await main()

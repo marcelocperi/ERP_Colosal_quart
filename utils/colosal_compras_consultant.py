@@ -29,11 +29,11 @@ def show_menu():
     print("="*50)
     return input("Seleccione una opción: ")
 
-def show_tables():
+async def show_tables():
     print("\n--- [Estructura de Tablas Compras] ---")
-    with get_db_cursor(dictionary=True) as cursor:
-        cursor.execute("SHOW TABLES LIKE 'cmp_%'")
-        tables = cursor.fetchall()
+    async with get_db_cursor(dictionary=True) as cursor:
+        await cursor.execute("SHOW TABLES LIKE 'cmp_%'")
+        tables = await cursor.fetchall()
         for t in tables:
             name = list(t.values())[0]
             print(f"- {name}")
@@ -46,19 +46,19 @@ def show_rollup_algo():
     print("4. Se aplican las mermas teóricas de `cmp_recetas_detalle`.")
     print("5. Se adicionan gastos de `cmp_articulos_costos_indirectos`.")
 
-def calculate_cost_standalone():
+async def calculate_cost_standalone():
     art_id = input("Ingrese el ID del artículo producido: ")
     try:
-        res = IndustrialCostingService.get_industrial_cost(0, int(art_id))
+        res = await IndustrialCostingService.get_industrial_cost(0, int(art_id))
         print(f"\nANÁLISIS DE COSTO PARA ART #{art_id}:")
         print(json.dumps(res, indent=4, ensure_ascii=False))
     except Exception as e:
         print(f"Error al calcular: {e}")
 
-def show_consignment_audit():
+async def show_consignment_audit():
     print("\n--- [AUDITORÍA CISA: Stock en Consignación] ---")
     try:
-        rows = ConsignmentService.get_stock_en_consignacion(0)
+        rows = await ConsignmentService.get_stock_en_consignacion(0)
         if not rows:
             print("No hay stock en consignación pendiente.")
         else:
@@ -69,24 +69,25 @@ def show_consignment_audit():
     except Exception as e:
         print(f"Error al auditar: {e}")
 
-def read_manual():
+async def read_manual():
     manual_path = os.path.join(project_root, 'backoffice', 'compras_technical_manual.md')
     if os.path.exists(manual_path):
         with open(manual_path, 'r', encoding='utf-8') as f:
-            print("\n" + f.read())
+            print("\n" + await f.read())
     else:
         print("Manual no encontrado.")
 
-def main():
+async def main():
     while True:
         opt = show_menu()
-        if opt == '1': show_tables()
+        if opt == '1': await show_tables()
         elif opt == '2': show_rollup_algo()
-        elif opt == '3': calculate_cost_standalone()
-        elif opt == '4': show_consignment_audit()
-        elif opt == '5': read_manual()
+        elif opt == '3': await calculate_cost_standalone()
+        elif opt == '4': await show_consignment_audit()
+        elif opt == '5': await read_manual()
         elif opt == '0': break
         else: print("Opción inválida.")
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    await main()

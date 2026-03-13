@@ -1,23 +1,20 @@
-import os
-import sys
-
-project_root = r"c:\Users\marce\Documents\GitHub\bibliotecaweb\multiMCP"
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
+import asyncio
 from database import get_db_cursor
 
-def check_schema():
-    with get_db_cursor(dictionary=True) as cursor:
-        for table in ['clientes', 'erp_terceros']:
-            print(f"--- Schema for {table} ---")
-            try:
-                cursor.execute(f"DESCRIBE {table}")
-                cols = cursor.fetchall()
-                for c in cols:
-                    print(f"{c['Field']} ({c['Type']})")
-            except Exception as e:
-                print(f"Error describing {table}: {e}")
+async def main():
+    try:
+        async with get_db_cursor() as cursor:
+            print("--- erp_comprobantes ---")
+            await cursor.execute("DESCRIBE erp_comprobantes")
+            rows = await cursor.fetchall()
+            for r in rows: print(r)
+            
+            print("\n--- fin_ordenes_pago ---")
+            await cursor.execute("DESCRIBE fin_ordenes_pago")
+            rows = await cursor.fetchall()
+            for r in rows: print(r)
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    check_schema()
+    asyncio.run(main())

@@ -26,13 +26,43 @@ class AfipService:
 
     # Diccionario de errores para traducción humana
     ERRORES_TRADUCCION = {
-        '10016': "Error de correlatividad: El número de comprobante no coincide con el siguiente esperado por AFIP. Use la función de sincronización.",
-        '10192': "Debe emitir Factura de Crédito Electrónica MiPyME (FCE) debido al monto y tipo de cliente.",
-        '10015': "El documento del receptor no es válido o no está activo en el padrón de AFIP.",
-        '500': "Error interno en los servidores de AFIP. Reintente en unos minutos.",
-        '501': "Error de base de datos en AFIP. Reintente en unos minutos.",
-        '502': "Saturación en servidores de AFIP (Transacción activa). Espere un momento.",
-        '10048': "El CUIT informado no se encuentra autorizado a emitir este tipo de comprobante.",
+        # Errores de Infraestructura / Sistema
+        "500": "Error interno del servidor de AFIP: El sistema de AFIP no responde temporalmente. Intente nuevamente en unos minutos.",
+        "501": "Error de infraestructura en AFIP (Internal Server Error).",
+        "502": "AFIP en mantenimiento o con alta demanda (Bad Gateway).",
+        "kcs": "Error de comunicación con el webservice de AFIP.",
+        
+        # Autorización de Comprobante (CAE)
+        "10016": "Error de Correlatividad: El número enviado no es el que AFIP espera como siguiente. Verifique que no se hayan emitido comprobantes por fuera del sistema.",
+        "10015": "El Punto de Venta informado no está habilitado para Facturación Electrónica en este tipo de comprobante.",
+        "100": "El emisor no está habilitado para emitir este tipo de comprobante. Revise su situación en el padrón de AFIP.",
+        "128": "El importe total del comprobante B supera el límite para receptores no identificados (DNI/CUIT).",
+        "130": "CUIT del emisor no habilitada para emitir comprobantes clase M.",
+        "136": "El Punto de Venta es inválido para el tipo de comprobante solicitado.",
+        "147": "Factura de Crédito MiPyME: La CUIT del emisor debe estar inscripta en el registro especial.",
+        "155": "La CUIT del receptor no se encuentra activa en los padrones de AFIP.",
+        "156": "El receptor no posee la categoría necesaria para recibir este comprobante (Ej: No es Responsable Inscripto).",
+        "159": "Debe informar un comprobante asociado (Factura original) para emitir esta Nota de Crédito/Débito.",
+        "162": "El importe del ajuste supera el monto original del comprobante asociado.",
+        "163": "Alerta: El receptor se encuentra registrado como Contribuyente Apócrifo en AFIP.",
+        "164": "La cotización de moneda informada difiere significativamente del valor oficial informado por AFIP.",
+        "165": "El comprobante debe estar asociado a una actividad económica válida y vigente por el emisor.",
+        "196": "La combinación de Tipo de Comprobante y Categoría de IVA del Receptor es incompatible.",
+        
+        # Validaciones de Datos
+        "10048": "Error en el cálculo de totales de IVA: La suma de alícuotas no coincide con el total neto.",
+        "10049": "Se han informado alícuotas de IVA duplicadas o inexistentes en el detalle.",
+        "10061": "Falta información: Para 'Servicios' se deben informar las fechas de inicio, fin y vencimiento de pago.",
+        "10013": "El CUIT del receptor es incorrecto o tiene un dígito verificador inválido.",
+        "10025": "El emisor tiene bloqueos administrativos o deudas que impiden la generación del CAE.",
+        "201": "Es obligatorio informar un CBU para este tipo de comprobante MiPyME.",
+        "504": "El código de barra/GTIN del producto no es válido según los estándares de AFIP.",
+        
+        # Errores Específicos de MTXCA
+        "337": "Motivo de excepción IVA inválido para este régimen.",
+        "10023": "Error estructural: La información enviada no cumple con el formato técnico XML de AFIP.",
+        
+        "default": "La operación fue rechazada por AFIP por validaciones de negocio. Por favor, revise los datos del cliente y los productos."
     }
 
     # Tope para Consumidor Final anónimo (Actualizable según RG)
@@ -91,17 +121,12 @@ class AfipService:
         return True, "OK"
 
     @staticmethod
-    def health_check(enterprise_id):
-        """
-        Diagnóstico de combate para el Operador.
-        """
-        config_check = AfipService.verificar_configuracion(enterprise_id)
     async def health_check(enterprise_id):
         """
         Diagnóstico de combate para el Operador.
         Incluye el escaneo del Señuelo Dummy para detectar túneles bloqueados.
         """
-        config_check = AfipService.verificar_configuracion(enterprise_id)
+        config_check = await AfipService.verificar_configuracion(enterprise_id)
         entorno = config_check.get('entorno', 'testing')
         
         # Lanzar el señuelo Dummy
@@ -155,7 +180,7 @@ class AfipService:
     }
 
     @staticmethod
-    def registrar_bitacora(enterprise_id, evento, tipo='INFO', detalle=None, data=None):
+    async def registrar_bitacora(enterprise_id, evento, tipo='INFO', detalle=None, data=None):
         """
         Vitácora de Vuelo: Registra eventos de seguridad y vulnerabilidades persistentes.
         Permite saber qué ha pasado durante la caza de intrusos.
@@ -163,8 +188,8 @@ class AfipService:
         try:
             import json
             data_json = json.dumps(data) if data else None
-            with get_db_cursor() as cur:
-                cur.execute("""
+            async with get_db_cursor() as cur:
+                await cur.execute("""
                     INSERT INTO fin_neb_bitacora (enterprise_id, evento, tipo, detalle, data_json)
                     VALUES (%s, %s, %s, %s, %s)
                 """, (enterprise_id, evento, tipo, detalle, data_json))
@@ -183,7 +208,7 @@ class AfipService:
             if not ticket:
                 return {"success": False, "error": "No hay pase para wconsucuit."}
             
-            config = AfipService.get_afip_config(enterprise_id)
+            config = await AfipService.get_afip_config(enterprise_id)
             wsdl = AfipService.WCONSUCUIT_WSDL.get(config['afip_entorno'])
             
             from zeep import AsyncClient
@@ -217,7 +242,7 @@ class AfipService:
                              "MONOTRIBUTO" if "Monotributo" in iva_desc else \
                              "IVA_EXENTO" if "Exento" in iva_desc else "CONSUMIDOR_FINAL"
 
-                    AfipService.registrar_bitacora(
+                    await AfipService.registrar_bitacora(
                         enterprise_id, "ESCANE_CUIT", "SECURITY", 
                         f"wconsucuit escaneó al sujeto {cuit_objetivo}: {nombre} ({iva_fmt})", 
                         {"cuit": cuit_objetivo, "nombre": nombre, "iva": iva_fmt}
@@ -227,7 +252,7 @@ class AfipService:
                 return {"success": False, "error": "Sujeto no identificado en la Matrix."}
         except Exception as e:
             err_msg = str(e)
-            AfipService.registrar_bitacora(enterprise_id, "VULNERABILIDAD_IDENTIFICADA", "ALERT", f"Fallo de wconsucuit: {err_msg}")
+            await AfipService.registrar_bitacora(enterprise_id, "VULNERABILIDAD_IDENTIFICADA", "ALERT", f"Fallo de wconsucuit: {err_msg}")
             return {"success": False, "error": err_msg}
 
     @staticmethod
@@ -242,7 +267,7 @@ class AfipService:
             if not ticket:
                 return {"success": False, "error": "No hay pase para A10."}
             
-            config = AfipService.get_afip_config(enterprise_id)
+            config = await AfipService.get_afip_config(enterprise_id)
             wsdl = AfipService.PADRON_A10_WSDL.get(config['afip_entorno'])
             
             from zeep import AsyncClient
@@ -279,7 +304,7 @@ class AfipService:
                     elif "Exento" in criterio: iva_fmt = "IVA_EXENTO"
                     elif "Consumidor Final" in criterio: iva_fmt = "CONSUMIDOR_FINAL"
                     
-                    AfipService.registrar_bitacora(
+                    await AfipService.registrar_bitacora(
                         enterprise_id, "AUDITORIA_INVITADOS", "INFO", 
                         f"A10 validando historial de {cuit_objetivo}: {nombre} ({iva_fmt})", 
                         {"cuit": cuit_objetivo, "nombre": nombre, "iva": iva_fmt}
@@ -289,7 +314,7 @@ class AfipService:
                 return {"success": False, "error": "Datos del intruso no encontrados en A10."}
         except Exception as e:
             err_msg = str(e)
-            AfipService.registrar_bitacora(enterprise_id, "FALLO_SCOUT_A10", "WARNING", f"Error en A10: {err_msg}")
+            await AfipService.registrar_bitacora(enterprise_id, "FALLO_SCOUT_A10", "WARNING", f"Error en A10: {err_msg}")
             return {"success": False, "error": err_msg}
 
     @staticmethod
@@ -321,7 +346,7 @@ class AfipService:
             return {"success": False, "error": f"Señuelo interceptado (AFIP caído): {str(e)}"}
 
     @staticmethod
-    def verificar_configuracion(enterprise_id):
+    async def verificar_configuracion(enterprise_id):
         """
         Verifica si los certificados cargados son válidos.
         """
@@ -332,9 +357,9 @@ class AfipService:
         except ImportError:
             return {"success": False, "error": "Librería cryptography no instalada"}
 
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT cuit, afip_crt, afip_key, afip_entorno FROM sys_enterprises WHERE id = %s", (enterprise_id,))
-            emp = cursor.fetchone()
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT cuit, afip_crt, afip_key, afip_entorno FROM sys_enterprises WHERE id = %s", (enterprise_id,))
+            emp = await cursor.fetchone()
         
         if not emp or not emp['afip_crt'] or not emp['afip_key']:
             return {"success": False, "error": "Faltan certificados"}
@@ -368,13 +393,13 @@ class AfipService:
         """
         # 1. Verificar caché en base de datos
         try:
-            with get_db_cursor(dictionary=True) as cur:
-                cur.execute("""
+            async with get_db_cursor(dictionary=True) as cur:
+                await cur.execute("""
                     SELECT token, sign, expira_en FROM fin_trinity_tokens 
                     WHERE enterprise_id = %s AND servicio = %s 
                     AND expira_en > DATE_ADD(NOW(), INTERVAL 10 MINUTE)
                 """, (enterprise_id, service))
-                cached = cur.fetchone()
+                cached = await cur.fetchone()
                 if cached:
                     print(f"DEBUG WSAA: Reutilizando ticket cacheado para {service} (expira {cached['expira_en']})")
                     return {"token": cached['token'], "sign": cached['sign']}
@@ -382,7 +407,7 @@ class AfipService:
             print(f"DEBUG WSAA: Error leyendo caché de tokens: {e}")
 
         # 2. No hay caché válido → pedir ticket nuevo a AFIP
-        config = AfipService.get_afip_config(enterprise_id)
+        config = await AfipService.get_afip_config(enterprise_id)
         if not config: return None
         
         entorno = config['afip_entorno']
@@ -430,8 +455,8 @@ class AfipService:
             
             # 3. Guardar en caché (UPSERT)
             try:
-                with get_db_cursor(dictionary=True) as cur:
-                    cur.execute("""
+                async with get_db_cursor(dictionary=True) as cur:
+                    await cur.execute("""
                         INSERT INTO fin_trinity_tokens (enterprise_id, servicio, token, sign, expira_en)
                         VALUES (%s, %s, %s, %s, %s)
                         ON DUPLICATE KEY UPDATE token=VALUES(token), sign=VALUES(sign), expira_en=VALUES(expira_en)
@@ -448,10 +473,10 @@ class AfipService:
 
 
     @staticmethod
-    def get_afip_config(enterprise_id):
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT cuit, afip_crt, afip_key, afip_entorno FROM sys_enterprises WHERE id = %s", (enterprise_id,))
-            return cursor.fetchone()
+    async def get_afip_config(enterprise_id):
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("SELECT cuit, afip_crt, afip_key, afip_entorno FROM sys_enterprises WHERE id = %s", (enterprise_id,))
+            return await cursor.fetchone()
 
     @staticmethod
     async def consultar_padron(enterprise_id, cuit_dni):
@@ -459,7 +484,7 @@ class AfipService:
         Consulta real al Padr\u00f3n de AFIP. (Async)
         """
         digits = "".join(filter(str.isdigit, str(cuit_dni)))
-        config = AfipService.get_afip_config(enterprise_id)
+        config = await AfipService.get_afip_config(enterprise_id)
         
         # Si no hay certificados activos, simulamos
         if not config or not config['afip_crt'] or not config['afip_key']:
@@ -588,7 +613,7 @@ class AfipService:
           1. Intenta hasta 3 veces con 5 segundos de pausa (Backoff).
           2. Si AFIP sigue caído, guarda en fin_cae_pendientes y avisa a la tripulación.
         """
-        config = AfipService.get_afip_config(enterprise_id)
+        config = await AfipService.get_afip_config(enterprise_id)
         if not config or not config['afip_crt']:
             return {"success": False, "error": "No hay certificados configurados para Factura Electrónica."}
 
@@ -601,7 +626,7 @@ class AfipService:
                 if cursor:
                     resultado = await AfipService._ejecutar_solicitud_cae(cursor, enterprise_id, comprobante, config)
                 else:
-                    with get_db_cursor(dictionary=True) as new_cursor:
+                    async with get_db_cursor(dictionary=True) as new_cursor:
                         resultado = await AfipService._ejecutar_solicitud_cae(new_cursor, enterprise_id, comprobante, config)
 
                 if resultado.get('success'):
@@ -631,8 +656,8 @@ class AfipService:
         comprobante_id = comprobante if isinstance(comprobante, int) else comprobante.get('id')
         if comprobante_id:
             try:
-                with get_db_cursor(dictionary=True) as q_cursor:
-                    q_cursor.execute("""
+                async with get_db_cursor() as q_cursor:
+                    await q_cursor.execute("""
                         INSERT IGNORE INTO fin_cae_pendientes
                         (enterprise_id, comprobante_id, intentos, ultimo_intento, proximo_intento, ultimo_error)
                         VALUES (%s, %s, %s, NOW(), DATE_ADD(NOW(), INTERVAL 10 MINUTE), %s)
@@ -657,19 +682,19 @@ class AfipService:
         try:
             if isinstance(comprobante, (int, str)):
                 # Cargar datos completos de la base de datos
-                cursor.execute("""
+                await cursor.execute("""
                     SELECT erp_comprobantes.*, erp_terceros.cuit as cliente_cuit 
                     FROM erp_comprobantes
                     JOIN erp_terceros ON erp_comprobantes.tercero_id = erp_terceros.id
                     WHERE erp_comprobantes.id = %s AND erp_comprobantes.enterprise_id = %s
                 """, (comprobante, enterprise_id))
-                data = cursor.fetchone()
+                data = await cursor.fetchone()
                 if not data:
                     return {"success": False, "error": "Comprobante no encontrado."}
                 
                 # Cargar detalles para agrupar IVA
-                cursor.execute("SELECT * FROM erp_comprobantes_detalle WHERE comprobante_id = %s AND enterprise_id = %s", (comprobante, enterprise_id))
-                detalles = cursor.fetchall()
+                await cursor.execute("SELECT * FROM erp_comprobantes_detalle WHERE comprobante_id = %s AND enterprise_id = %s", (comprobante, enterprise_id))
+                detalles = await cursor.fetchall()
                 
                 comprobante_data = {
                     'id': data['id'],
@@ -767,8 +792,8 @@ class AfipService:
                 # 4. Comprobantes Asociados (para NC/ND)
                 cbtes_asoc = []
                 if comprobante_data.get('comprobante_asociado_id'):
-                    cursor.execute("SELECT tipo_comprobante, punto_venta, numero FROM erp_comprobantes WHERE id = %s", (comprobante_data['comprobante_asociado_id'],))
-                    asoc = cursor.fetchone()
+                    await cursor.execute("SELECT tipo_comprobante, punto_venta, numero FROM erp_comprobantes WHERE id = %s", (comprobante_data['comprobante_asociado_id'],))
+                    asoc = await cursor.fetchone()
                     if asoc:
                         cbtes_asoc.append({
                             'Tipo': int(asoc['tipo_comprobante']),
@@ -798,9 +823,7 @@ class AfipService:
                 
                 # Fix for Zeep list structure dependency
                 feat_det['Iva'] = {'AlicIva': iva_list} if iva_list else None
-                if cbtes_asoc:
-                    feat_det['CbtesAsoc'] = {'CbteAsoc': cbtes_asoc}
-    
+                
                 request = {
                     'FeCabReq': {
                         'CantReg': 1,
@@ -815,7 +838,7 @@ class AfipService:
             if hasattr(res, 'FeDetResp') and res.FeDetResp:
                 det = res.FeDetResp.FECAEDetResponse[0]
                 if det.Resultado == 'A':
-                    cursor.execute("UPDATE erp_comprobantes SET cae = %s, vto_cae = %s, numero = %s WHERE id = %s", 
+                    await cursor.execute("UPDATE erp_comprobantes SET cae = %s, vto_cae = %s, numero = %s WHERE id = %s", 
                                    (det.CAE, det.CAEFchVto, prox_nro, comprobante_data.get('id')))
                     return {"success": True, "cae": det.CAE, "cae_vto": det.CAEFchVto, "nro": prox_nro}
                 else:
@@ -823,42 +846,44 @@ class AfipService:
                     error_codes = []
                     
                     if hasattr(det, 'Observaciones') and det.Observaciones:
-                        for o in det.Observaciones.Obs:
+                        obs_list = det.Observaciones.Obs if hasattr(det.Observaciones, 'Obs') else []
+                        for o in obs_list:
                             code = str(o.Code)
                             msg = AfipService.ERRORES_TRADUCCION.get(code, o.Msg)
-                            errors.append(f"[{code}] {msg}")
+                            errors.append(f"({code}) {msg}")
                             error_codes.append(code)
                             
                     if hasattr(res, 'Errors') and res.Errors:
-                        for e in res.Errors.Err:
+                        err_list = res.Errors.Err if hasattr(res.Errors, 'Err') else []
+                        for e in err_list:
                             code = str(e.Code)
                             msg = AfipService.ERRORES_TRADUCCION.get(code, e.Msg)
-                            errors.append(f"[{code}] {msg}")
+                            errors.append(f"({code}) {msg}")
                             error_codes.append(code)
 
-                    resultado_msg = " ".join(errors)
+                    resultado_msg = " | ".join(errors) if errors else "Rechazado por AFIP sin descripción de error."
                     
-                    # Si hay error de correlatividad (10016), sugerir acción
                     if '10016' in error_codes:
-                        resultado_msg += " (Sugerencia: Ejecute la rutina de sincronización de números desde el panel de control)."
+                        resultado_msg += " (Acción sugerida: Sincronice el número de comprobante con AFIP en la configuración)."
 
-                    return {"success": False, "error": f"Rechazado: {resultado_msg}", "codes": error_codes}
+                    return {"success": False, "error": resultado_msg, "codes": error_codes}
             
             return {"success": False, "error": "No hubo respuesta válida de AFIP"}
-                            
+                             
         except Exception as e:
-            return {"success": False, "error": f"Error AFIP: {str(e)}"}
+            return {"success": False, "error": f"Fallo en la comunicación: {str(e)}"}
+
 
     @staticmethod
     async def sincronizar_numeracion(enterprise_id, punto_venta, tipo_comprobante):
         """
         Consulta AFIP y devuelve el próximo número a utilizar, listo para actualizar en base local.
         """
-        config = AfipService.get_afip_config(enterprise_id)
+        config = await AfipService.get_afip_config(enterprise_id)
         if not config: return {"success": False, "error": "No hay configuración de AFIP."}
 
         try:
-            ticket = await AfipService._obtener_login_ticket(enterprise_id, service="wsfe")
+            ticket = await AfipService._the_key_maker(enterprise_id, service="wsfe")
             if not ticket: return {"success": False, "error": "WSAA Falló."}
 
             entorno = config['afip_entorno']
@@ -899,7 +924,7 @@ class AfipService:
         """
         El Bibliotecario (A100): Descarga tablas maestras (parámetros) de la Matrix AFIP.
         """
-        config_check = AfipService.verificar_configuracion(enterprise_id)
+        config_check = await AfipService.verificar_configuracion(enterprise_id)
         if not config_check['success']: return {"success": False, "error": "Configuración incompleta"}
         
         entorno = config_check.get('entorno', 'testing')
@@ -923,7 +948,7 @@ class AfipService:
         Sincroniza nombres y condiciones impositivas (tipo_responsable) desde la Matrix AFIP.
         """
         from database import get_db_cursor
-        AfipService.registrar_bitacora(enterprise_id, "BATCH_AUDITORIA_INICIO", "SECURITY", 
+        await AfipService.registrar_bitacora(enterprise_id, "BATCH_AUDITORIA_INICIO", "SECURITY", 
                                      f"Iniciando purga general. Update={'ON' if update_db else 'OFF'}")
         
         reporte = {
@@ -933,13 +958,13 @@ class AfipService:
             "iva_actualizado": 0
         }
         
-        with get_db_cursor(dictionary=True) as cursor:
-            cursor.execute("""
+        async with get_db_cursor(dictionary=True) as cursor:
+            await cursor.execute("""
                 SELECT id, cuit, nombre, tipo_responsable, es_cliente, es_proveedor 
                 FROM erp_terceros 
                 WHERE enterprise_id = %s AND activo = 1
             """, (enterprise_id,))
-            terceros = cursor.fetchall()
+            terceros = await cursor.fetchall()
             
             for t in terceros:
                 reporte["escaneados"] += 1
@@ -958,10 +983,10 @@ class AfipService:
                 if apoc.get('es_apocrifo'):
                     reporte["apocrifos"] += 1
                     print(f"      🚨 CRITICAL: Sujeto APÓCRIFO detectado. Ejecutando purga.")
-                    AfipService.registrar_bitacora(enterprise_id, "TRAIDOR_DETECTADO", "CRITICAL", 
+                    await AfipService.registrar_bitacora(enterprise_id, "TRAIDOR_DETECTADO", "CRITICAL", 
                                                 f"Sujeto {t['nombre']} ({cuit}) es APÓCRIFO.", apoc)
                     if update_db:
-                        cursor.execute("UPDATE erp_terceros SET activo = 0 WHERE id = %s", (t['id'],))
+                        await cursor.execute("UPDATE erp_terceros SET activo = 0 WHERE id = %s", (t['id'],))
 
                 # 2. Scout A10 (Niobe) - Sincronía
                 niobe = await AfipService.consultar_datos_a10(enterprise_id, cuit)
@@ -993,10 +1018,10 @@ class AfipService:
                     if update_db and updates:
                         params.append(t['id'])
                         query = f"UPDATE erp_terceros SET {', '.join(updates)}, actualizado_en = NOW() WHERE id = %s"
-                        cursor.execute(query, tuple(params))
+                        await cursor.execute(query, tuple(params))
             
             # Flush changes si no estamos en modo dry-run
-            AfipService.registrar_bitacora(enterprise_id, "BATCH_AUDITORIA_FIN", "SECURITY", 
+            await AfipService.registrar_bitacora(enterprise_id, "BATCH_AUDITORIA_FIN", "SECURITY", 
                                         f"Purga finalizada: {reporte}")
         
         return reporte
@@ -1007,7 +1032,7 @@ class AfipService:
         Escanea la Matrix en busca de traidores (Contribuyentes Apócrifos).
         Blindado contra Sentinels: maneja WSDL dinámico, métodos variables y respuestas inesperadas.
         """
-        config = AfipService.get_afip_config(enterprise_id)
+        config = await AfipService.get_afip_config(enterprise_id)
         if not config:
             return {"success": False, "error": "No hay configuración de empresa."}
 

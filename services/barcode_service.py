@@ -41,7 +41,7 @@ class BarcodeService:
         return base64.b64encode(rv.getvalue()).decode('utf-8')
 
     @staticmethod
-    def generate_afip_qr(c, empresa, cliente_dir):
+    async def generate_afip_qr(c, empresa, cliente_dir):
         """Genera el QR de AFIP en formato base64."""
         # Datos para el JSON del QR
         # https://www.afip.gob.ar/fe/qr/especificaciones.asp
@@ -71,5 +71,5 @@ class BarcodeService:
         img = qr.make_image(fill_color="black", back_color="white")
         
         buffered = BytesIO()
-        img.save(buffered, format="PNG")
+        await img.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode('utf-8')

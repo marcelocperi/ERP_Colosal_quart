@@ -33,7 +33,7 @@ class QuotationMailer:
     def __init__(self, enterprise_id):
         self.enterprise_id = enterprise_id
         
-    def generate_security_hash(self, provider_code):
+    async def generate_security_hash(self, provider_code):
         """Genera hash único: CODIGO_70chars"""
         chars = string.ascii_letters + string.digits
         random_str = ''.join(secrets.choice(chars) for _ in range(70))
@@ -133,7 +133,7 @@ class QuotationMailer:
         
         filename = f"SC_{cotizacion_id}_{security_hash[:10]}.xlsx"
         filepath = OUTBOX_DIR / filename
-        wb.save(filepath)
+        await wb.save(filepath)
         return str(filepath)
 
     def generate_html_body(self, empresa_nombre, cotizacion_id, security_hash, fecha_vencimiento=None):
@@ -184,12 +184,12 @@ class QuotationMailer:
         </html>
         """
 
-    def send_email_real(self, to_email, subject, body, attachment_path):
+    async def send_email_real(self, to_email, subject, body, attachment_path):
         """
         Envía correo real usando el servicio centralizado.
         Referencia: https://github.com/marcelocperi/BibliotecaWEBPy
         """
-        success, error = email_service._enviar_email(
+        success, error = await email_service._enviar_email(
             recipient_email=to_email,
             subject=subject,
             html_content=body,
@@ -201,11 +201,11 @@ class QuotationMailer:
             print("   [OK] Email de cotización enviado exitosamente.")
         return success, error
 
-    def process_pending_quotations(self):
+    async def process_pending_quotations(self):
         processed_count = 0
-        with get_db_cursor(dictionary=True) as c:
+        async with get_db_cursor(dictionary=True) as c:
             # Buscar cotizaciones ENVIADA que aun no tengan hash (retrocompatibilidad) o simplemente ENVIADA
-            c.execute("""
+            await c.execute("""
                 SELECT c.id, c.proveedor_id, p.nombre as razon_social, p.cuit, p.email, e.nombre as empresa_nombre, c.security_hash, c.fecha_vencimiento
                 FROM cmp_cotizaciones c
                 JOIN erp_terceros p ON c.proveedor_id = p.id
@@ -214,7 +214,7 @@ class QuotationMailer:
                 ORDER BY c.id DESC LIMIT 5
             """, (self.enterprise_id,))
             
-            pendientes = c.fetchall()
+            pendientes = await c.fetchall()
             if not pendientes:
                 print("No hay cotizaciones pendientes.")
                 return 0
@@ -227,20 +227,20 @@ class QuotationMailer:
                     # Prefijo con Codigo Proveedor (o ID si no tiene codigo explicito)
                     # Usaremos ID_CUIT para ser unicos
                     prefijo = f"PROV{cot['proveedor_id']}"
-                    current_hash = self.generate_security_hash(prefijo)
+                    current_hash = await self.generate_security_hash(prefijo)
                     
                     # Guardar en BD
-                    c.execute("UPDATE cmp_cotizaciones SET security_hash = %s WHERE id = %s AND enterprise_id = %s", (current_hash, cot['id'], self.enterprise_id))
+                    await c.execute("UPDATE cmp_cotizaciones SET security_hash = %s WHERE id = %s AND enterprise_id = %s", (current_hash, cot['id'], self.enterprise_id))
                     cot['security_hash'] = current_hash # Actualizar dict local
                 
                 # Items
-                c.execute("""
+                await c.execute("""
                     SELECT i.articulo_id, a.codigo as codigo_interno, a.nombre as nombre_articulo, i.cantidad
                     FROM cmp_items_cotizacion i
                     JOIN stk_articulos a ON i.articulo_id = a.id
                     WHERE i.cotizacion_id = %s AND i.enterprise_id = %s
                 """, (cot['id'], self.enterprise_id))
-                items = c.fetchall()
+                items = await c.fetchall()
                 
                 # Generar Archivos con HASH y Protección
                 excel_path = self.generate_excel_attachment(cot['id'], cot['razon_social'], items, cot['security_hash'], cot['fecha_vencimiento'])
@@ -256,7 +256,7 @@ class QuotationMailer:
                     continue
 
                 print(f"   Preparando envío a {cot['email']} (Hash: {cot['security_hash'][:15]}...)...")
-                self.send_email_real(
+                await self.send_email_real(
                     to_email=cot['email'], 
                     subject=f"Solicitud Cotización #{cot['id']} - REF: {cot['security_hash'][:10]}",
                     body=html_body,
@@ -270,6 +270,6 @@ class QuotationMailer:
 if __name__ == "__main__":
     try:
         service = QuotationMailer(enterprise_id=0)
-        service.process_pending_quotations()
+        await service.process_pending_quotations()
     except Exception as e:
         print(f"Error: {e}")

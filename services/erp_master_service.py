@@ -5,12 +5,12 @@ logger = logging.getLogger(__name__)
 
 class ErpMasterService:
     @staticmethod
-    def initialize_db():
+    async def initialize_db():
         """Inicializa las tablas maestras del ERP."""
         try:
-            with get_db_cursor() as cursor:
+            async with get_db_cursor() as cursor:
                 # Tabla de Puestos
-                cursor.execute("""
+                await cursor.execute("""
                     CREATE TABLE IF NOT EXISTS erp_puestos (
                         id INT AUTO_INCREMENT PRIMARY KEY,
                         enterprise_id INT NOT NULL,
@@ -22,8 +22,9 @@ class ErpMasterService:
                 """)
                 
                 # Seed básico si no hay datos
-                cursor.execute("SELECT COUNT(*) FROM erp_puestos")
-                if cursor.fetchone()[0] == 0:
+                await cursor.execute("SELECT COUNT(*) FROM erp_puestos")
+                count_row = await cursor.fetchone()
+                if count_row[0] == 0:
                     logger.info("Sembrando puestos iniciales...")
                     puestos = [
                         (1, 'Gerente de Compras', 'COMPRAS'),
@@ -42,19 +43,19 @@ class ErpMasterService:
                         (1, 'Analista de Cuentas a Pagar', 'GENERAL'),
                         (1, 'Analista de Cuentas a Cobrar', 'GENERAL')
                     ]
-                    cursor.executemany("INSERT INTO erp_puestos (enterprise_id, nombre, area) VALUES (%s, %s, %s)", puestos)
+                    await cursor.executemany("INSERT INTO erp_puestos (enterprise_id, nombre, area) VALUES (%s, %s, %s)", puestos)
             logger.info("Tablas maestras ERP inicializadas.")
         except Exception as e:
             logger.error(f"Error inicializando DB ERP: {e}")
 
     @staticmethod
-    def get_puestos(enterprise_id, area=None):
-        with get_db_cursor(dictionary=True) as cursor:
+    async def get_puestos(enterprise_id, area=None):
+        async with get_db_cursor(dictionary=True) as cursor:
             query = "SELECT * FROM erp_puestos WHERE enterprise_id = %s AND activo = 1"
             params = [enterprise_id]
             if area:
                 query += " AND area = %s"
                 params.append(area)
             query += " ORDER BY nombre"
-            cursor.execute(query, params)
-            return cursor.fetchall()
+            await cursor.execute(query, params)
+            return await cursor.fetchall()
